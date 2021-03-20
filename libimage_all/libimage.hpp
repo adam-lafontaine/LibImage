@@ -44,7 +44,7 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_MATH
 
-	constexpr size_t N_HIST_BUCKETS = 16;
+	constexpr size_t N_HIST_BUCKETS = 256; // use each shade for histograms
 
 #endif // !LIBIMAGE_NO_MATH
 	
@@ -256,7 +256,7 @@ namespace libimage
 	using view_t = rgba_image_view_t;
 
 
-	inline pixel_t to_pixel(u8 red, u8 green, u8 blue, u8 alpha)
+	constexpr pixel_t to_pixel(u8 red, u8 green, u8 blue, u8 alpha)
 	{
 		pixel_t pixel{};
 		pixel.red = red;
@@ -268,13 +268,13 @@ namespace libimage
 	}
 
 
-	inline pixel_t to_pixel(u8 red, u8 green, u8 blue)
+	constexpr pixel_t to_pixel(u8 red, u8 green, u8 blue)
 	{
 		return to_pixel(red, green, blue, 255);
 	}
 
 
-	inline pixel_t to_pixel(u8 value)
+	constexpr pixel_t to_pixel(u8 value)
 	{
 		return to_pixel(value, value, value, 255);
 	}
