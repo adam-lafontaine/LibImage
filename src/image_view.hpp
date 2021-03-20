@@ -6,7 +6,6 @@ Copyright (c) 2021 Adam Lafontaine
 */
 
 #include <cstdint>
-#include <functional>
 #include <iterator>
 #include <cassert>
 
@@ -156,18 +155,6 @@ namespace libimage
 				assert(loc_y <= y_end);
 			}
 
-			/*void next_in_row()
-			{
-				++loc_x;
-			}
-
-			void next_in_column()
-			{
-				++loc_y;
-			}
-
-			std::function<void()> increment = [&]() { next(); };*/
-
 		public:
 
 			using iterator_category = std::forward_iterator_tag;
@@ -190,15 +177,6 @@ namespace libimage
 
 				loc_x = x_begin;
 				loc_y = y_begin;
-
-				/*if (y_end - y_begin == 1)
-				{
-					increment = [&]() { next_in_row(); };
-				}
-				else if (x_end - x_begin == 1)
-				{
-					increment = [&]() { next_in_column(); };
-				}*/
 			}
 
 			iterator end()
@@ -206,7 +184,6 @@ namespace libimage
 				loc_x = x_end - 1;
 				loc_y = y_end - 1;
 
-				//increment();
 				next();
 
 				return *this;
@@ -214,8 +191,6 @@ namespace libimage
 
 			iterator& operator ++ ()
 			{
-				//increment();
-
 				next();
 
 				return *this;
@@ -347,18 +322,6 @@ namespace libimage
 					assert(loc_y <= y_end);
 				}
 
-				/*void next_in_row()
-				{
-					++loc_x;
-				}
-
-				void next_in_column()
-				{
-					++loc_y;
-				}
-
-				std::function<void()> increment = [&]() { next(); };*/
-
 			public:
 
 				using iterator_category = std::forward_iterator_tag;
@@ -381,23 +344,12 @@ namespace libimage
 
 					loc_x = x_begin;
 					loc_y = y_begin;
-
-					/*if (y_begin == y_end)
-					{
-						increment = [&]() { next_in_row(); };
-					}
-					else if (x_begin == x_end)
-					{
-						increment = [&]() { next_in_column(); };
-					}*/
 				}
 
 				iterator end()
 				{
 					loc_x = x_end - 1;
 					loc_y = y_end - 1;
-
-					//increment();
 					next();
 
 					return *this;
@@ -405,8 +357,6 @@ namespace libimage
 
 				iterator& operator ++ ()
 				{
-					//increment();
-
 					next();
 
 					return *this;
@@ -446,8 +396,6 @@ namespace libimage
 		pixel.alpha = alpha;
 
 		return pixel;
-
-		//return { red, green, blue, alpha };
 	}
 
 

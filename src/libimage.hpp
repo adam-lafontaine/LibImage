@@ -8,7 +8,6 @@ Copyright (c) 2021 Adam Lafontaine
 #include "image_view.hpp"
 
 #include <cstdint>
-#include <functional>
 
 //#define LIBIMAGE_NO_WRITE
 //#define LIBIMAGE_NO_RESIZE
