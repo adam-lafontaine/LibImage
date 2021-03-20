@@ -16,8 +16,6 @@ Copyright (c) 2021 Adam Lafontaine
 #define STBI_NO_TGA
 
 
-
-
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -32,8 +30,3 @@ Copyright (c) 2021 Adam Lafontaine
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "stb_image_resize.h"
 #endif // !LIBIMAGE_NO_RESIZE
-
-
-
-
-

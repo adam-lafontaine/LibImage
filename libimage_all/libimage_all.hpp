@@ -5,21 +5,34 @@ Copyright (c) 2021 Adam Lafontaine
 
 */
 
+//#define LIBIMAGE_NO_COLOR
+//#define LIBIMAGE_NO_GRAYSCALE
 //#define LIBIMAGE_NO_WRITE
 //#define LIBIMAGE_NO_RESIZE
+//#define LIBIMAGE_NO_FS
 //#define LIBIMAGE_NO_ALGORITHM
 //#define LIBIMAGE_NO_MATH
 
 #include <cstdint>
 #include <iterator>
-#include <filesystem>
 #include <cassert>
+
+#ifndef LIBIMAGE_NO_FS
+#include <filesystem>
+namespace fs = std::filesystem;
+#endif // !LIBIMAGE_NO_FS
+
+#ifndef LIBIMAGE_NO_ALGORITHM
 #include <functional>
 #include <algorithm>
 #include <execution>
-#include <array>
+#endif // !LIBIMAGE_NO_ALGORITHM
 
-namespace fs = std::filesystem;
+#ifndef LIBIMAGE_NO_MATH
+#include <array>
+#endif // !LIBIMAGE_NO_MATH
+
+
 
 using u8 = uint8_t;
 using u32 = uint32_t;
@@ -50,6 +63,7 @@ namespace libimage
 
 	} pixel_range_t;
 
+#ifndef LIBIMAGE_NO_COLOR
 
 	// color pixel
 	typedef union rgba_pixel_t
@@ -244,6 +258,32 @@ namespace libimage
 	using view_t = rgba_image_view_t;
 
 
+	inline pixel_t to_pixel(u8 red, u8 green, u8 blue, u8 alpha)
+	{
+		pixel_t pixel{};
+		pixel.red = red;
+		pixel.green = green;
+		pixel.blue = blue;
+		pixel.alpha = alpha;
+
+		return pixel;
+	}
+
+
+	inline pixel_t to_pixel(u8 red, u8 green, u8 blue)
+	{
+		return to_pixel(red, green, blue, 255);
+	}
+
+
+	inline pixel_t to_pixel(u8 value)
+	{
+		return to_pixel(value, value, value, 255);
+	}
+
+#endif // !LIBIMAGE_NO_COLOR
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
 	namespace gray
 	{
 		// grayscale value as an unsigned 8-bit integer
@@ -412,31 +452,11 @@ namespace libimage
 
 	namespace grey = gray;
 
-	inline pixel_t to_pixel(u8 red, u8 green, u8 blue, u8 alpha)
-	{
-		pixel_t pixel{};
-		pixel.red = red;
-		pixel.green = green;
-		pixel.blue = blue;
-		pixel.alpha = alpha;
-
-		return pixel;
-	}
-
-
-	inline pixel_t to_pixel(u8 red, u8 green, u8 blue)
-	{
-		return to_pixel(red, green, blue, 255);
-	}
-
-
-	inline pixel_t to_pixel(u8 value)
-	{
-		return to_pixel(value, value, value, 255);
-	}
+#endif // !LIBIMAGE_NO_GRAYSCALE
 
 
 	//======= libimage.hpp ==================
+#ifndef LIBIMAGE_NO_COLOR
 
 	void read_image_from_file(const char* img_path_src, image_t& image_dst);
 
@@ -481,6 +501,10 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_RESIZE
 
+#endif // !LIBIMAGE_NO_COLOR
+
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
 	void read_image_from_file(const char* file_path_src, gray::image_t& image_dst);
 
 	void make_image(gray::image_t& image_dst, u32 width, u32 height);
@@ -507,6 +531,7 @@ namespace libimage
 
 	gray::view_t column_view(gray::view_t const& view, u32 y_begin, u32 y_end, u32 x);
 
+
 #ifndef LIBIMAGE_NO_WRITE
 
 	void write_image(gray::image_t const& image_src, const char* file_path_dst);
@@ -523,8 +548,12 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_RESIZE
 
+#endif // !LIBIMAGE_NO_GRAYSCALE
 
 	//======= libimage_fs ===================
+#ifndef LIBIMAGE_NO_FS
+
+#ifndef LIBIMAGE_NO_COLOR
 
 	inline void read_image_from_file(fs::path const& img_path_src, image_t& image_dst)
 	{
@@ -548,8 +577,9 @@ namespace libimage
 
 		write_view(view_src, file_path_str.c_str());
 	}
+#endif // !LIBIMAGE_NO_COLOR
 
-
+#ifndef LIBIMAGE_NO_GRAYSCALE
 	inline void read_image_from_file(fs::path const& img_path_src, gray::image_t& image_dst)
 	{
 		auto file_path_str = img_path_src.string();
@@ -572,11 +602,14 @@ namespace libimage
 
 		write_view(view_src, file_path_str.c_str());
 	}
+#endif // !LIBIMAGE_NO_GRAYSCALE
 
+#endif // !LIBIMAGE_NO_FS
 
 	//======= libimage_algorithm.hpp ===================
-
 #ifndef LIBIMAGE_NO_ALGORITHM
+
+#ifndef LIBIMAGE_NO_COLOR
 
 	// for_each
 	using fe_ref_t = std::function<void(pixel_t& p)>;
@@ -658,10 +691,9 @@ namespace libimage
 			std::transform(std::execution::par, src1.begin(), src1.end(), src2.begin(), dst.begin(), func);
 		}
 	}
+#endif // !LIBIMAGE_NO_COLOR
 
-
-	//======= GRAYSCALE OVERLOADS ================
-
+#ifndef LIBIMAGE_NO_GRAYSCALE
 	namespace gray
 	{
 		// for_each
@@ -754,6 +786,7 @@ namespace libimage
 			std::transform(std::execution::par, src1.begin(), src1.end(), src2.begin(), dst.begin(), func);
 		}
 	}
+#endif // !LIBIMAGE_NO_GRAYSCALE
 
 #endif // !LIBIMAGE_NO_ALGORITHM
 
@@ -787,13 +820,19 @@ namespace libimage
 	} rgb_stats_t;
 
 
+#ifndef LIBIMAGE_NO_COLOR
+
 	rgb_stats_t calc_stats(view_t const& view);
 
+	void draw_histogram(rgb_stats_t const& rgb_stats, image_t& image_dst);
+
+#endif // !LIBIMAGE_NO_COLOR
+
+#ifndef	LIBIMAGE_NO_GRAYSCALE
 	stats_t calc_stats(gray::view_t const& view);
 
 	void draw_histogram(hist_t const& hist, gray::image_t& image_dst);
-
-	void draw_histogram(rgb_stats_t const& rgb_stats, image_t& image_dst);
+#endif // !LIBIMAGE_NO_GRAYSCALE
 
 #endif // !LIBIMAGE_NO_MATH
 
