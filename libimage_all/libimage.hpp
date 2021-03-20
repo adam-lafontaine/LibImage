@@ -32,8 +32,6 @@ namespace fs = std::filesystem;
 #include <array>
 #endif // !LIBIMAGE_NO_MATH
 
-
-
 using u8 = uint8_t;
 using u32 = uint32_t;
 using u64 = uint64_t;
@@ -454,7 +452,6 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
-
 	//======= libimage.hpp ==================
 #ifndef LIBIMAGE_NO_COLOR
 
@@ -789,7 +786,6 @@ namespace libimage
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
 #endif // !LIBIMAGE_NO_ALGORITHM
-
 
 	//======= libimage_math.hpp =========================
 #ifndef LIBIMAGE_NO_MATH

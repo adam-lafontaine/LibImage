@@ -143,14 +143,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\libimage_all\libimage_all.hpp" />
+    <ClInclude Include="..\..\libimage_all\libimage.hpp" />
     <ClInclude Include="..\..\libimage_all\stb_all.hpp" />
     <ClInclude Include="..\..\libimage_all\stb_image.h" />
     <ClInclude Include="..\..\libimage_all\stb_image_resize.h" />
     <ClInclude Include="..\..\libimage_all\stb_image_write.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\libimage_all\libimage_all.cpp" />
+    <ClCompile Include="..\..\libimage_all\libimage.cpp" />
     <ClCompile Include="libimage_all_tests_main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

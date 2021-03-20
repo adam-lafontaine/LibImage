@@ -4,13 +4,17 @@ Copyright (c) 2021 Adam Lafontaine
 
 */
 
-#include "libimage_all.hpp"
+#include "libimage.hpp"
 #include "stb_all.hpp"
 
+#ifndef LIBIMAGE_NO_MATH
 #include <numeric>
+#endif // !LIBIMAGE_NO_MATH
+
 
 namespace libimage
 {
+
 #ifndef LIBIMAGE_NO_COLOR
 
 	void read_image_from_file(const char* img_path_src, image_t& image_dst)
@@ -748,7 +752,6 @@ namespace libimage
 		}
 	}
 #endif // !LIBIMAGE_NO_COLOR
-
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 	stats_t calc_stats(gray::view_t const& view)

@@ -1,4 +1,4 @@
-#include "../../libimage_all/libimage_all.hpp"
+#include "../../libimage_all/libimage.hpp"
 
 //#define CHECK_LEAKS
 
