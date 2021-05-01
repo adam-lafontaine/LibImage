@@ -1,5 +1,6 @@
 #include "../../src/libimage_fs.hpp"
 #include "../../src/libimage_math.hpp"
+#include "../utils/stopwatch.hpp"
 
 //#define CHECK_LEAKS
 
@@ -8,7 +9,10 @@
 #endif
 
 #include <iostream>
-#include <mutex>
+#include <random>
+#include <algorithm>
+#include <execution>
+#include <functional>
 
 namespace fs = std::filesystem;
 namespace img = libimage;
@@ -31,6 +35,8 @@ void print(img::stats_t const& stats);
 
 void basic_tests(fs::path const& out_dir);
 void math_tests(fs::path const& out_dir);
+void for_each_tests();
+void transform_tests();
 
 
 int main()
@@ -46,10 +52,64 @@ int main()
 	auto dst_root = fs::path(DST_IMAGE_ROOT);
 	empty_dir(dst_root);
 
-	basic_tests(dst_root);
-	math_tests(dst_root);
+	//basic_tests(dst_root);
+	//math_tests(dst_root);
+	for_each_tests();
+	transform_tests();
 
 	std::cout << "\nDone.\n";
+}
+
+
+void transform_tests()
+{
+	std::cout << "transform:\n";
+
+	std::random_device rd;
+	std::default_random_engine reng(rd());
+	std::uniform_int_distribution<int> dist(0, 255);
+
+	auto const random_pixel = [&]()
+	{
+		img::pixel_t p;
+
+		for (u32 i = 0; i < 4; ++i)
+		{
+			p.channels[i] = dist(reng);
+		}
+
+		return p;
+	};
+
+	auto const random_blended_pixel = [&](img::pixel_t& p)
+	{
+		img::pixel_t src = random_pixel();
+
+		return alpha_blend_linear(src, p);
+	};
+
+	Stopwatch sw;
+
+	u32 size = 10000;
+	for (u32 i = 0; i < 10; ++i, size *= 3)
+	{
+		img::image_t src;
+		make_image(src, size);
+		img::image_t dst;
+		make_image(dst, size);
+
+		std::cout << "image_t size = " << size << '\n';
+
+		sw.start();
+		std::transform(src.begin(), src.end(), dst.begin(), random_blended_pixel);
+		auto t = sw.get_time_milli();
+		std::cout << "    stl: " << 1000 * t / size << '\n';
+
+		sw.start();
+		std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), random_blended_pixel);
+		t = sw.get_time_milli();
+		std::cout << "stl par: " << 1000 * t / size << "\n\n";
+	}
 }
 
 
@@ -168,6 +228,105 @@ void basic_tests(fs::path const& out_dir)
 
 	std::cout << '\n';
 }
+
+
+void make_image(img::image_t& image, u32 size)
+{
+	u32 width = size / 5;
+	u32 height = size / width;
+
+	img::make_image(image, width, height);
+}
+
+
+void for_each_pixel(img::image_t& image, std::function<void(img::pixel_t&)> const& func)
+{
+	u32 size = image.width * image.height;
+	for (u32 i = 0; i < size; ++i)
+	{
+		func(image.data[i]);
+	}
+}
+
+
+img::pixel_t alpha_blend_linear(img::pixel_t const& src, img::pixel_t const& current)
+{
+	auto const to_r32 = [](u8 c) { return static_cast<r32>(c) / 255.0f; };
+
+	auto a = to_r32(src.alpha);
+
+	auto const blend = [&](u8 s, u8 c)
+	{
+		auto sf = static_cast<r32>(s);
+		auto cf = static_cast<r32>(c);
+
+		auto blended = a * cf + (1.0f - a) * sf;
+
+		return static_cast<u8>(blended);
+	};
+
+	auto red = blend(src.red, current.red);
+	auto green = blend(src.green, current.green);
+	auto blue = blend(src.blue, current.blue);
+
+	return img::to_pixel(red, green, blue);
+}
+
+
+void for_each_tests()
+{
+	std::cout << "for_each:\n";
+
+	std::random_device rd;
+	std::default_random_engine reng(rd());
+	std::uniform_int_distribution<int> dist(0, 255);
+
+	auto const random_pixel = [&]()
+	{
+		img::pixel_t p;
+
+		for (u32 i = 0; i < 4; ++i)
+		{
+			p.channels[i] = dist(reng);
+		}
+
+		return p;
+	};
+
+	auto const random_blended_pixel = [&](img::pixel_t& p)
+	{
+		img::pixel_t src = random_pixel();
+
+		p = alpha_blend_linear(src, p);
+	};
+
+	Stopwatch sw;
+
+	u32 size = 10000;
+	for (u32 i = 0; i < 10; ++i, size *= 3)
+	{
+		img::image_t image;
+		make_image(image, size);
+
+		std::cout << "image_t size = " << size << '\n';
+
+		sw.start();
+		std::for_each(image.begin(), image.end(), random_blended_pixel);
+		auto t = sw.get_time_milli();
+		std::cout << "    stl: " << 1000 * t / size << '\n';
+
+		sw.start();
+		std::for_each(std::execution::par, image.begin(), image.end(), random_blended_pixel);
+		t = sw.get_time_milli();
+		std::cout << "stl par: " << 1000 * t / size << '\n';
+
+		sw.start();
+		for_each_pixel(image, random_blended_pixel);
+		t = sw.get_time_milli();
+		std::cout << "   loop: " << 1000 * t / size << "\n\n";
+	}
+}
+
 
 
 void empty_dir(fs::path const& dir)
