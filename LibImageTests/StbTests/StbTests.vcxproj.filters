@@ -30,9 +30,6 @@
     <ClInclude Include="..\..\src\libimage.hpp">
       <Filter>Header Files\src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\libimage_algorithm.hpp">
-      <Filter>Header Files\src</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\libimage_fs.hpp">
       <Filter>Header Files\src</Filter>
     </ClInclude>

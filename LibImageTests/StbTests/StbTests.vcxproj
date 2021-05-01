@@ -21,7 +21,6 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\image_view.hpp" />
     <ClInclude Include="..\..\src\libimage.hpp" />
-    <ClInclude Include="..\..\src\libimage_algorithm.hpp" />
     <ClInclude Include="..\..\src\libimage_fs.hpp" />
     <ClInclude Include="..\..\src\libimage_math.hpp" />
     <ClInclude Include="..\..\src\libimage_math_256.hpp" />
