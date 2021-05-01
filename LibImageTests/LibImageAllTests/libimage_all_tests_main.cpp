@@ -48,8 +48,6 @@ int main()
 	empty_dir(dst_root);
 
 	basic_tests(dst_root);
-	for_each_tests(dst_root);
-	transform_tests(dst_root);
 	math_tests(dst_root);
 
 	std::cout << "\nDone.\n";
@@ -88,110 +86,6 @@ void math_tests(fs::path const& out_dir)
 	print(stats.blue);
 
 	img::write_image(stats_image, out_dir / "stats_image.png");
-
-	std::cout << '\n';
-}
-
-
-void transform_tests(fs::path const& out_dir)
-{
-	std::cout << "transform_pixels:\n";
-
-	img::image_t image;
-	img::read_image_from_file(SRC_IMAGE_PATH, image);
-	auto view = img::make_view(image);
-
-	auto const func = [](img::pixel_t const& p) 
-	{ 
-		auto pix = p;
-		pix.red /= 2;
-		pix.green /= 2;
-		pix.blue /= 2;
-		return pix;
-	};
-
-	img::image_t dst_image;
-	img::make_image(dst_image, image.width, image.height);
-	auto dst_view = img::make_view(dst_image);
-
-	img::seq::transform_pixels(view, dst_view, func);
-	img::write_view(dst_view, out_dir / "transform_seq.png");
-
-	img::par::transform_pixels(view, dst_view, func);
-	img::write_view(dst_view, out_dir / "transform_par.png");
-
-	img::gray::image_t image_gray;
-	img::read_image_from_file(SRC_IMAGE_PATH, image_gray);
-	auto view_gray = img::make_view(image_gray);
-
-	auto const func_gray = [](img::gray::pixel_t const& p) 
-	{ 
-		auto pix = p;
-		pix /= 2;
-		return pix;
-	};
-
-	img::gray::image_t dst_image_gray;
-	img::make_image(dst_image_gray, image_gray.width, image_gray.height);
-	auto dst_view_gray = img::make_view(dst_image_gray);
-
-	img::seq::transform_pixels(view_gray, dst_view_gray, func_gray);
-	img::write_view(dst_view_gray, out_dir / "transform_gray_seq.png");
-
-	img::par::transform_pixels(view_gray, dst_view_gray, func_gray);
-	img::write_view(dst_view_gray, out_dir / "transform_gray_par.png");
-
-	std::cout << '\n';
-}
-
-
-void for_each_tests(fs::path const& out_dir)
-{
-	std::cout << "for_each_pixel:\n";
-	using uint_t = unsigned long long;
-	std::mutex mtx;
-
-	img::image_t image;
-	img::read_image_from_file(SRC_IMAGE_PATH, image);
-	auto view = img::make_view(image);
-
-	uint_t total_red = 0;
-	auto const count_func = [&](img::pixel_t const& p) { total_red += p.red; };
-	img::seq::for_each_pixel(view, count_func);
-	std::cout << "red seq: " << total_red << "\n";
-
-	total_red = 0;
-	auto const lk_count_func = [&](img::pixel_t const& p) { std::lock_guard<std::mutex> lk(mtx); total_red += p.red; };
-	img::par::for_each_pixel(view, lk_count_func);
-	std::cout << "red par: " << total_red << "\n";
-
-	img::gray::image_t image_gray;
-	img::read_image_from_file(SRC_IMAGE_PATH, image_gray);
-	auto view_gray = img::make_view(image_gray);
-
-	uint_t total_gray = 0;
-	auto const count_func_gray = [&](img::gray::pixel_t const& p) { total_gray += p; };
-	img::seq::for_each_pixel(view_gray, count_func_gray);
-	std::cout << "gray seq: " << total_gray << "\n";
-
-	total_gray = 0;
-	auto const lk_count_func_gray = [&](img::gray::pixel_t const& p) { std::lock_guard<std::mutex> lk(mtx); total_gray += p; };
-	img::par::for_each_pixel(view_gray, lk_count_func_gray);
-	std::cout << "gray par: " << total_gray << "\n";
-
-
-	auto const red_func = [](img::pixel_t& p) { p.red /= 2; };
-	img::seq::for_each_pixel(view, red_func);
-	img::write_view(view, out_dir / "for_each_seq.png");
-	img::par::for_each_pixel(view, red_func);
-	img::write_view(view, out_dir / "for_each_par.png");
-
-
-	auto const gray_func = [](img::gray::pixel_t& p) { p /= 2; };
-	img::seq::for_each_pixel(view_gray, gray_func);
-	img::write_view(view_gray, out_dir / "for_each_gray_seq.png");
-	img::par::for_each_pixel(view_gray, gray_func);
-	img::write_view(view_gray, out_dir / "for_each_gray_par.png");
 
 	std::cout << '\n';
 }
