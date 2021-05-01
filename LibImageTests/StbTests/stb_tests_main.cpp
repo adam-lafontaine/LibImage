@@ -30,8 +30,6 @@ void print(img::gray::view_t const& view);
 void print(img::stats_t const& stats);
 
 void basic_tests(fs::path const& out_dir);
-void for_each_tests(fs::path const& out_dir);
-void transform_tests(fs::path const& out_dir);
 void math_tests(fs::path const& out_dir);
 
 
