@@ -128,7 +128,7 @@ namespace libimage
 		template<typename F>
 		inline void for_each_pixel(gray::view_t const& view, F const& func)
 		{
-			std::for_each(view.cbegin(), view.cend(), func);
+			std::for_each(view.begin(), view.end(), func);
 		}
 
 

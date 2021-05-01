@@ -26,7 +26,7 @@ namespace libimage
 			}
 		};
 
-		std::for_each(view.cbegin(), view.cend(), update);
+		std::for_each(view.begin(), view.end(), update);
 
 		auto num_pixels = static_cast<size_t>(view.width) * view.height;
 
@@ -81,7 +81,7 @@ namespace libimage
 			count += shade;
 		};
 
-		std::for_each(view.cbegin(), view.cend(), update);
+		std::for_each(view.begin(), view.end(), update);
 
 		auto num_pixels = static_cast<size_t>(view.width) * view.height;
 
@@ -115,7 +115,7 @@ namespace libimage
 		assert(!image_dst.width);
 		assert(!image_dst.height);
 		assert(!image_dst.data);
-		assert(N_HIST_BUCKETS < CHANNEL_SIZE);
+		assert(N_HIST_BUCKETS <= CHANNEL_SIZE);
 		assert(hist.size() == N_HIST_BUCKETS);
 
 		u32 const max_relative_qty = 200;
@@ -166,7 +166,7 @@ namespace libimage
 		assert(!image_dst.width);
 		assert(!image_dst.height);
 		assert(!image_dst.data);
-		assert(N_HIST_BUCKETS < CHANNEL_SIZE);
+		assert(N_HIST_BUCKETS <= CHANNEL_SIZE);
 
 		constexpr auto n_channels = RGBA_CHANNELS - 1;
 

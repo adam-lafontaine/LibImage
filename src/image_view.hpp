@@ -58,7 +58,7 @@ namespace libimage
 
 		pixel_t* data = 0;
 
-		~rgba_image_t()
+		void clear()
 		{
 			if (data)
 			{
@@ -66,8 +66,15 @@ namespace libimage
 			}
 		}
 
+		~rgba_image_t()
+		{
+			clear();
+		}
+
 		rgba_pixel_t* begin() { return data; }
 		rgba_pixel_t* end() { return data + (u64)width * (u64)height; }
+		rgba_pixel_t* begin() const { return data; }
+		rgba_pixel_t* end() const { return data + (u64)width * (u64)height; }
 	};
 
 	using image_t = rgba_image_t;
@@ -203,18 +210,17 @@ namespace libimage
 			bool operator != (iterator other) const { return !(*this == other); }
 
 			reference operator * () const { return *loc_ptr(); }
-		};
+		};		
+		/* ^^^^^^^^^ ITERATOR ^^^^^^^^^^ */
 
-		
-		/******* ITERATOR ************/
 
 		iterator begin() { return iterator(*this); }
 
 		iterator end() { return iterator(*this).end(); }
 
-		iterator cbegin() const { return iterator(*this); }
+		iterator begin() const { return iterator(*this); }
 
-		iterator cend() const { return iterator(*this).end(); }
+		iterator end() const { return iterator(*this).end(); }
 
 	};
 
@@ -236,7 +242,7 @@ namespace libimage
 
 			pixel_t* data = 0;
 
-			~image_t()
+			void clear()
 			{
 				if (data)
 				{
@@ -244,8 +250,18 @@ namespace libimage
 				}
 			}
 
+			~image_t()
+			{
+				clear();
+			}
+
 			pixel_t* begin() { return data; }
+
 			pixel_t* end() { return data + (u64)width * (u64)height; }
+
+			pixel_t* begin() const { return data; }
+
+			pixel_t* end() const { return data + (u64)width * (u64)height; }
 		};
 
 
@@ -370,16 +386,15 @@ namespace libimage
 
 				reference operator * () const { return *loc_ptr(); }
 			};
-
-			/******* ITERATOR ************/
+			/* ^^^^^^^^^ ITERATOR ^^^^^^^^^^ */
 
 			iterator begin() { return iterator(*this); }
 
 			iterator end() { return iterator(*this).end(); }
 
-			iterator cbegin() const { return iterator(*this); }
+			iterator begin() const { return iterator(*this); }
 
-			iterator cend() const { return iterator(*this).end(); }
+			iterator end() const { return iterator(*this).end(); }
 		};
 
 		using view_t = image_view_t;
