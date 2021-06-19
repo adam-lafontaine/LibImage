@@ -5,7 +5,7 @@ Copyright (c) 2021 Adam Lafontaine
 */
 
 #include "libimage.hpp"
-#include "stb_all.hpp"
+#include "stb_include.hpp"
 
 #ifndef LIBIMAGE_NO_MATH
 #include <numeric>
