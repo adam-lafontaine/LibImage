@@ -17,7 +17,7 @@
 namespace fs = std::filesystem;
 namespace img = libimage;
 
-const auto ROOT_PATH = fs::path("C:/D_Data/repos/LibImage/LibImageTests/StbTests");
+const auto ROOT_PATH = fs::path("C:/D_Data/repos/LibImage/LibImageTests/LibImageAllTests");
 
 const auto CORVETTE_PATH = ROOT_PATH / "in_files/png/corvette.png";
 const auto CADILLAC_PATH = ROOT_PATH / "in_files/png/cadillac.png";

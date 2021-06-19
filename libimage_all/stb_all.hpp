@@ -3,6 +3,8 @@
 
 Copyright (c) 2021 Adam Lafontaine
 
+TODO: delete
+
 */
 
 #define STBI_NO_JPEG
@@ -14,8 +16,6 @@ Copyright (c) 2021 Adam Lafontaine
 #define STBI_NO_PNM
 #define STBI_NO_HDR
 #define STBI_NO_TGA
-
-
 
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -32,8 +32,3 @@ Copyright (c) 2021 Adam Lafontaine
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "stb_image_resize.h"
 #endif // !LIBIMAGE_NO_RESIZE
-
-
-
-
-

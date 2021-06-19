@@ -2,6 +2,8 @@
 
 March 13, 2021: Warnings removed by Adam Lafontaine
 
+TODO: delete
+
 */
 
 /* stb_image_write - v1.15 - public domain - http://nothings.org/stb
@@ -945,7 +947,7 @@ STBIWDEF unsigned char * stbi_zlib_compress(unsigned char *data, int data_len, i
          hlist = hash_table[h];
          n = stbiw__sbcount(hlist);
          for (j=0; j < n; ++j) {
-            if (hlist[j]-data > i-32767) {
+            if (hlist[j]-data > (long long)i-32767) {
                int e = stbiw__zlib_countm(hlist[j], data+i+1, data_len-i-1);
                if (e > best) { // if next match is better, bail on current match
                   bestloc = NULL;
