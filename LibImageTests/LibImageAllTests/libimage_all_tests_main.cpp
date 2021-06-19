@@ -1,4 +1,5 @@
 #include "../../libimage_all/libimage.hpp"
+#include "../../libimage_all/math/libimage_math.hpp"
 #include "../utils/stopwatch.hpp"
 
 //#define CHECK_LEAKS
