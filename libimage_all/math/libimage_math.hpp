@@ -5,7 +5,9 @@
 #include <array>
 #include <algorithm>
 
-using r32 = float;
+// median
+// draw stats
+// rgba_stats_t, alpha (Grayscale) = 0.299R + 0.587G + 0.114B
 
 
 namespace libimage
@@ -21,6 +23,7 @@ namespace libimage
 		r32 mean;
 		r32 std_dev;
 		hist_t hist;
+
 
 	} stats_t;
 
