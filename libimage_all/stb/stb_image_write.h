@@ -2,8 +2,6 @@
 
 March 13, 2021: Warnings removed by Adam Lafontaine
 
-TODO: delete
-
 */
 
 /* stb_image_write - v1.15 - public domain - http://nothings.org/stb

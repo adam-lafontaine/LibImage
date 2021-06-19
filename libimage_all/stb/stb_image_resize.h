@@ -2,8 +2,6 @@
 
 March 13, 2021: Warnings removed by Adam Lafontaine
 
-TODO: delete
-
 */
 
 /* stb_image_resize - v0.96 - public domain image resizing
