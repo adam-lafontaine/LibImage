@@ -7,10 +7,6 @@ Copyright (c) 2021 Adam Lafontaine
 #include "libimage.hpp"
 #include "stb_include.hpp"
 
-#ifndef LIBIMAGE_NO_MATH
-#include <numeric>
-#endif // !LIBIMAGE_NO_MATH
-
 
 namespace libimage
 {

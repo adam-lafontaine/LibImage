@@ -30,7 +30,7 @@ namespace libimage
 	constexpr auto RGBA_CHANNELS = 4u;
 	
 
-	//======= image_view.hpp =============
+	//======= Class Definitions =============
 
 	// region of interest in an image
 	typedef struct
@@ -269,6 +269,7 @@ namespace libimage
 #endif // !LIBIMAGE_NO_COLOR
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
+
 	namespace gray
 	{
 		// grayscale value as an unsigned 8-bit integer
@@ -448,7 +449,9 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
-	//======= libimage.hpp ==================
+
+	//======= Functions ==================
+
 #ifndef LIBIMAGE_NO_COLOR
 
 	void read_image_from_file(const char* img_path_src, image_t& image_dst);
@@ -498,6 +501,7 @@ namespace libimage
 
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
+
 	void read_image_from_file(const char* file_path_src, gray::image_t& image_dst);
 
 	void make_image(gray::image_t& image_dst, u32 width, u32 height);
@@ -543,7 +547,6 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
-	//======= libimage_fs ===================
 #ifndef LIBIMAGE_NO_FS
 
 #ifndef LIBIMAGE_NO_COLOR
@@ -573,6 +576,7 @@ namespace libimage
 #endif // !LIBIMAGE_NO_COLOR
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
+
 	inline void read_image_from_file(fs::path const& img_path_src, gray::image_t& image_dst)
 	{
 		auto file_path_str = img_path_src.string();
