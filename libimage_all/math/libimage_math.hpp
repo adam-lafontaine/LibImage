@@ -4,8 +4,8 @@
 
 #include <array>
 #include <algorithm>
+#include <functional>
 
-// median
 // draw stats
 // rgba_stats_t, alpha (Grayscale) = 0.299R + 0.587G + 0.114B
 
@@ -42,11 +42,30 @@ namespace libimage
 	} rgb_stats_t;
 
 
+	typedef union rgba_channel_stats_t
+	{
+		struct
+		{
+			stats_t red;
+			stats_t green;
+			stats_t blue;
+			stats_t alpha;
+		};
+
+		stats_t stats[4];
+
+	} rgba_stats_t;
+
+
 #ifndef LIBIMAGE_NO_COLOR
 
 	rgb_stats_t calc_stats(image_t const& image);
 	
 	rgb_stats_t calc_stats(view_t const& view);
+
+	void transform_alpha(image_t const& image, std::function<u8(u8 red, u8 green, u8 blue)> const& func);
+
+	void transform_alpha(view_t const& view, std::function<u8(u8 red, u8 green, u8 blue)> const& func);
 
 	void draw_histogram(rgb_stats_t const& rgb_stats, image_t& image_dst);
 

@@ -1,7 +1,7 @@
 #include "libimage_math.hpp"
 
 #include <numeric>
-
+#include <execution>
 
 
 
@@ -100,6 +100,24 @@ namespace libimage
 		}
 
 		return rgb_stats;
+	}
+
+
+	void transform_alpha(image_t const& image, std::function<u8(u8 red, u8 green, u8 blue)> const& func)
+	{
+		auto const update = [&](pixel_t& p) { p.alpha = func(p.red, p.green, p.blue);  };
+
+		std::for_each(image.begin(), image.end(), update);
+		//std::for_each(std::execution::par, image.begin(), image.end(), update);
+	}
+
+
+	void transform_alpha(view_t const& view, std::function<u8(u8 red, u8 green, u8 blue)> const& func)
+	{
+		auto const update = [&](pixel_t& p) { p.alpha = func(p.red, p.green, p.blue);  };
+
+		std::for_each(view.begin(), view.end(), update);
+		//std::for_each(std::execution::par, view.begin(), view.end(), update);
 	}
 
 
