@@ -1,11 +1,12 @@
 #include "libimage_math.hpp"
-#include "libimage.hpp"
 
 #include <numeric>
 
 
 namespace libimage
 {
+#ifndef LIBIMAGE_NO_COLOR
+
 	rgb_stats_t calc_stats(view_t const& view)
 	{
 		constexpr auto n_channels = RGBA_CHANNELS - 1;
@@ -66,6 +67,70 @@ namespace libimage
 		return rgb_stats;
 	}
 
+
+	void draw_histogram(rgb_stats_t const& rgb_stats, image_t& image_dst)
+	{
+		assert(!image_dst.width);
+		assert(!image_dst.height);
+		assert(!image_dst.data);
+		assert(N_HIST_BUCKETS <= CHANNEL_SIZE);
+
+		constexpr auto n_channels = RGBA_CHANNELS - 1;
+
+		u32 const max_relative_qty = 200;
+		u32 const channel_spacing = 1;
+		u32 const channel_height = max_relative_qty + channel_spacing;
+		u32 const image_height = channel_height * n_channels;
+
+		u32 const n_buckets = static_cast<u32>(N_HIST_BUCKETS);
+
+		u32 const bucket_width = 20;
+		u32 const bucket_spacing = 1;
+		u32 const image_width = n_buckets * (bucket_spacing + bucket_width) + bucket_spacing;
+
+		pixel_t white = to_pixel(255, 255, 255);
+
+		make_image(image_dst, image_width, image_height);
+		std::fill(image_dst.begin(), image_dst.end(), white);
+
+		for (u32 c = 0; c < n_channels; ++c)
+		{
+			auto& hist = rgb_stats.stats[c].hist;
+
+			auto max = std::accumulate(hist.begin(), hist.end(), 0.0f);
+
+			const auto norm = [&](u32 count)
+			{
+				return static_cast<u32>(count / max * max_relative_qty);
+			};
+
+			pixel_range_t bar_range;
+			bar_range.x_begin = bucket_spacing;
+			bar_range.x_end = bar_range.x_begin + bucket_width;
+			bar_range.y_begin = 0;
+			bar_range.y_end = channel_height * (c + 1);
+
+			for (u32 bucket = 0; bucket < n_buckets; ++bucket)
+			{
+				bar_range.y_begin = bar_range.y_end - norm(hist[bucket]);
+				if (bar_range.y_end > bar_range.y_begin)
+				{
+					u8 shade = 200; // n_buckets* (bucket + 1) - 1;
+					pixel_t color = to_pixel(0, 0, 0, 255);
+					color.channels[c] = shade;
+					auto bar_view = sub_view(image_dst, bar_range);
+					std::fill(bar_view.begin(), bar_view.end(), color);
+				}
+
+				bar_range.x_begin += (bucket_spacing + bucket_width);
+				bar_range.x_end += (bucket_spacing + bucket_width);
+			}
+		}
+	}
+
+#endif // !LIBIMAGE_NO_COLOR
+
+#ifndef	LIBIMAGE_NO_GRAYSCALE
 
 	stats_t calc_stats(gray::view_t const& view)
 	{
@@ -160,68 +225,6 @@ namespace libimage
 
 	}
 
-
-	void draw_histogram(rgb_stats_t const& rgb_stats, image_t& image_dst)
-	{
-		assert(!image_dst.width);
-		assert(!image_dst.height);
-		assert(!image_dst.data);
-		assert(N_HIST_BUCKETS <= CHANNEL_SIZE);
-
-		constexpr auto n_channels = RGBA_CHANNELS - 1;
-
-		u32 const max_relative_qty = 200;
-		u32 const channel_spacing = 1;
-		u32 const channel_height = max_relative_qty + channel_spacing;
-		u32 const image_height = channel_height * n_channels;
-
-		u32 const n_buckets = static_cast<u32>(N_HIST_BUCKETS);
-
-		u32 const bucket_width = 20;
-		u32 const bucket_spacing = 1;
-		u32 const image_width = n_buckets * (bucket_spacing + bucket_width) + bucket_spacing;
-
-		pixel_t white = to_pixel(255, 255, 255);
-
-		make_image(image_dst, image_width, image_height);
-		std::fill(image_dst.begin(), image_dst.end(), white);
-
-		for (u32 c = 0; c < n_channels; ++c)
-		{
-			auto& hist = rgb_stats.stats[c].hist;
-
-			auto max = std::accumulate(hist.begin(), hist.end(), 0.0f);
-
-			const auto norm = [&](u32 count)
-			{
-				return static_cast<u32>(count / max * max_relative_qty);
-			};
-
-			pixel_range_t bar_range;
-			bar_range.x_begin = bucket_spacing;
-			bar_range.x_end = bar_range.x_begin + bucket_width;
-			bar_range.y_begin = 0;
-			bar_range.y_end = channel_height * (c + 1);
-
-			for (u32 bucket = 0; bucket < n_buckets; ++bucket)
-			{
-				bar_range.y_begin = bar_range.y_end - norm(hist[bucket]);
-				if (bar_range.y_end > bar_range.y_begin)
-				{
-					u8 shade = 200; // n_buckets* (bucket + 1) - 1;
-					pixel_t color = to_pixel(0, 0, 0, 255);
-					color.channels[c] = shade;
-					auto bar_view = sub_view(image_dst, bar_range);
-					std::fill(bar_view.begin(), bar_view.end(), color);
-				}
-
-				bar_range.x_begin += (bucket_spacing + bucket_width);
-				bar_range.x_end += (bucket_spacing + bucket_width);
-			}
-		}
-
-
-
-
-	}
+#endif // !LIBIMAGE_NO_GRAYSCALE
+	
 }

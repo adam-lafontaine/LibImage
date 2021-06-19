@@ -1,4 +1,5 @@
 #include "../../libimage_all/libimage.hpp"
+#include "../../libimage_all/math/libimage_math.hpp"
 #include "../utils/stopwatch.hpp"
 
 //#define CHECK_LEAKS
@@ -16,7 +17,7 @@
 namespace fs = std::filesystem;
 namespace img = libimage;
 
-const auto ROOT_PATH = fs::path("D:/repos/LibImage/LibImageTests/StbTests");
+const auto ROOT_PATH = fs::path("C:/D_Data/repos/LibImage/LibImageTests/LibImageAllTests");
 
 const auto CORVETTE_PATH = ROOT_PATH / "in_files/png/corvette.png";
 const auto CADILLAC_PATH = ROOT_PATH / "in_files/png/cadillac.png";
@@ -266,7 +267,7 @@ void for_each_tests()
 	u32 size_start = 10000;
 
 	u32 size = size_start;
-	for (u32 i = 0; i < 10; ++i, size *= 3)
+	for (u32 i = 0; i < 10; ++i, size *= 2)
 	{
 		img::image_t image;
 		make_image(image, size);
@@ -295,7 +296,7 @@ void for_each_tests()
 
 	size = size_start;
 
-	for (u32 i = 0; i < 10; ++i, size *= 3)
+	for (u32 i = 0; i < 10; ++i, size *= 2)
 	{
 		range.x_end = size / 5;
 		range.y_end = size / range.x_end;
@@ -355,7 +356,7 @@ void transform_tests()
 	u32 size_start = 10000;
 
 	u32 size =size_start;
-	for (u32 i = 0; i < 10; ++i, size *= 3)
+	for (u32 i = 0; i < 10; ++i, size *= 2)
 	{
 		img::image_t src;
 		make_image(src, size);
@@ -383,7 +384,7 @@ void transform_tests()
 
 	size = size_start;
 
-	for (u32 i = 0; i < 10; ++i, size *= 3)
+	for (u32 i = 0; i < 10; ++i, size *= 2)
 	{
 		range.x_end = size / 5;
 		range.y_end = size / range.x_end;

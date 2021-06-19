@@ -10,7 +10,6 @@ Copyright (c) 2021 Adam Lafontaine
 //#define LIBIMAGE_NO_WRITE
 //#define LIBIMAGE_NO_RESIZE
 //#define LIBIMAGE_NO_FS
-//#define LIBIMAGE_NO_MATH
 
 #include <cstdint>
 #include <iterator>
@@ -21,10 +20,6 @@ Copyright (c) 2021 Adam Lafontaine
 namespace fs = std::filesystem;
 #endif // !LIBIMAGE_NO_FS
 
-#ifndef LIBIMAGE_NO_MATH
-#include <array>
-#endif // !LIBIMAGE_NO_MATH
-
 using u8 = uint8_t;
 using u32 = uint32_t;
 using u64 = uint64_t;
@@ -33,16 +28,9 @@ using r32 = float;
 namespace libimage
 {
 	constexpr auto RGBA_CHANNELS = 4u;
-	constexpr size_t CHANNEL_SIZE = 256; // 8 bit channel
-
-#ifndef LIBIMAGE_NO_MATH
-
-	constexpr size_t N_HIST_BUCKETS = 256; // use each shade for histograms
-
-#endif // !LIBIMAGE_NO_MATH
 	
 
-	//======= image_view.hpp =============
+	//======= Class Definitions =============
 
 	// region of interest in an image
 	typedef struct
@@ -281,6 +269,7 @@ namespace libimage
 #endif // !LIBIMAGE_NO_COLOR
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
+
 	namespace gray
 	{
 		// grayscale value as an unsigned 8-bit integer
@@ -460,7 +449,9 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
-	//======= libimage.hpp ==================
+
+	//======= Functions ==================
+
 #ifndef LIBIMAGE_NO_COLOR
 
 	void read_image_from_file(const char* img_path_src, image_t& image_dst);
@@ -510,6 +501,7 @@ namespace libimage
 
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
+
 	void read_image_from_file(const char* file_path_src, gray::image_t& image_dst);
 
 	void make_image(gray::image_t& image_dst, u32 width, u32 height);
@@ -555,7 +547,6 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
-	//======= libimage_fs ===================
 #ifndef LIBIMAGE_NO_FS
 
 #ifndef LIBIMAGE_NO_COLOR
@@ -585,6 +576,7 @@ namespace libimage
 #endif // !LIBIMAGE_NO_COLOR
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
+
 	inline void read_image_from_file(fs::path const& img_path_src, gray::image_t& image_dst)
 	{
 		auto file_path_str = img_path_src.string();
@@ -610,51 +602,5 @@ namespace libimage
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
 #endif // !LIBIMAGE_NO_FS
-
-	//======= libimage_math.hpp =========================
-#ifndef LIBIMAGE_NO_MATH
-
-	using hist_t = std::array<u32, N_HIST_BUCKETS>;
-
-
-	typedef struct channel_stats_t
-	{
-		r32 mean;
-		r32 std_dev;
-		hist_t hist;
-
-	} stats_t;
-
-
-	typedef union rgb_channel_stats_t
-	{
-		struct
-		{
-			stats_t red;
-			stats_t green;
-			stats_t blue;
-		};
-
-		stats_t stats[3];
-
-	} rgb_stats_t;
-
-
-#ifndef LIBIMAGE_NO_COLOR
-
-	rgb_stats_t calc_stats(view_t const& view);
-
-	void draw_histogram(rgb_stats_t const& rgb_stats, image_t& image_dst);
-
-#endif // !LIBIMAGE_NO_COLOR
-
-#ifndef	LIBIMAGE_NO_GRAYSCALE
-	stats_t calc_stats(gray::view_t const& view);
-
-	void draw_histogram(hist_t const& hist, gray::image_t& image_dst);
-#endif // !LIBIMAGE_NO_GRAYSCALE
-
-#endif // !LIBIMAGE_NO_MATH
-
 
 }

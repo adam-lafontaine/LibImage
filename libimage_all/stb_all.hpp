@@ -3,6 +3,8 @@
 
 Copyright (c) 2021 Adam Lafontaine
 
+TODO: delete
+
 */
 
 #define STBI_NO_JPEG

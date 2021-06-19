@@ -19,22 +19,34 @@
     <Filter Include="Source Files\libimage_all">
       <UniqueIdentifier>{05b681e6-343d-4066-a992-4f2fc03b5d71}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\libimage_all\stb">
+      <UniqueIdentifier>{8f65480f-b010-4bd4-ad86-f17f10d3a99e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\libimage_all\math">
+      <UniqueIdentifier>{0c90e911-fa34-49cf-88b9-ecf1ef40dbb8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\math">
+      <UniqueIdentifier>{7bc04823-4637-4ba8-a459-d48689c9e640}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\libimage_all\stb_all.hpp">
-      <Filter>Header Files\libimage_all</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\libimage_all\stb_image.h">
-      <Filter>Header Files\libimage_all</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\libimage_all\stb_image_resize.h">
-      <Filter>Header Files\libimage_all</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\libimage_all\stb_image_write.h">
-      <Filter>Header Files\libimage_all</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\libimage_all\libimage.hpp">
       <Filter>Header Files\libimage_all</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage_all\stb\stb_image.h">
+      <Filter>Header Files\libimage_all\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage_all\stb\stb_image_resize.h">
+      <Filter>Header Files\libimage_all\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage_all\stb\stb_image_write.h">
+      <Filter>Header Files\libimage_all\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage_all\stb_include.hpp">
+      <Filter>Header Files\libimage_all</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage_all\math\libimage_math.hpp">
+      <Filter>Header Files\libimage_all\math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -43,6 +55,9 @@
     </ClCompile>
     <ClCompile Include="..\..\libimage_all\libimage.cpp">
       <Filter>Source Files\libimage_all</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libimage_all\math\libimage_math.cpp">
+      <Filter>Source Files\math</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "image_view.hpp"
+#include "../libimage.hpp"
 
 #include <array>
 #include <algorithm>
@@ -39,11 +39,19 @@ namespace libimage
 	} rgb_stats_t;
 
 
+#ifndef LIBIMAGE_NO_COLOR
+
 	rgb_stats_t calc_stats(view_t const& view);
+
+	void draw_histogram(rgb_stats_t const& rgb_stats, image_t& image_dst);
+
+#endif // !LIBIMAGE_NO_COLOR
+
+#ifndef	LIBIMAGE_NO_GRAYSCALE
 
 	stats_t calc_stats(gray::view_t const& view);
 
 	void draw_histogram(hist_t const& hist, gray::image_t& image_dst);
 
-	void draw_histogram(rgb_stats_t const& rgb_stats, image_t& image_dst);
+#endif // !LIBIMAGE_NO_GRAYSCALE
 }
