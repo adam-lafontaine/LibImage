@@ -176,6 +176,17 @@ void math_tests(fs::path const& out_dir)
 
 	img::write_image(stats_image, out_dir / "stats_image.png");
 
+	auto const to_grayscale = [](u8 R, u8 G, u8 B) { return static_cast<u8>(0.299 * R + 0.587 * G + 0.114 * B); };
+	img::transform_alpha(image, to_grayscale);
+	auto alpha_stats = img::calc_stats(image, img::Channel::Alpha);
+
+	img::gray::image_t alpha_stats_image;
+	img::draw_histogram(alpha_stats.hist, alpha_stats_image);
+
+	print(alpha_stats);
+
+	img::write_image(alpha_stats_image, out_dir / "alpha_stats.png");
+
 	std::cout << '\n';
 }
 

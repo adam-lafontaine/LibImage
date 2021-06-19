@@ -8,8 +8,14 @@
 
 namespace libimage
 {
-	constexpr auto RGB_CHANNELS = RGBA_CHANNELS - 1;
 	constexpr auto HIST_BUCKET_SIZE = CHANNEL_SIZE / N_HIST_BUCKETS;
+
+	typedef struct
+	{
+		r32 mean;
+		hist_t hist;
+
+	} basic_stats_t;
 
 
 	static r32 calc_std_dev(hist_t const& hist, r32 mean)
@@ -57,13 +63,13 @@ namespace libimage
 
 		rgb_stats_t rgb_stats = {};
 
-		for (u32 c = 0; c < RGB_CHANNELS; ++c)
+		for_each_channel_rgb([&](u32 c) 
 		{
 			auto mean = c_counts[c] / num_pixels;
 
 			r32 std_dev = calc_std_dev(c_hists[c], mean);
 			rgb_stats.stats[c] = { mean, std_dev, c_hists[c] };
-		}
+		});
 
 		return rgb_stats;
 	}
@@ -76,13 +82,13 @@ namespace libimage
 
 		auto const update = [&](pixel_t const& p)
 		{
-			for (u32 c = 0; c < RGB_CHANNELS; ++c)
+			for_each_channel_rgb([&](u32 c) 
 			{
 				auto bucket = p.channels[c] / HIST_BUCKET_SIZE;
 
 				++c_hists[c][bucket];
 				c_counts[c] += p.channels[c];
-			}
+			});
 		};
 
 		std::for_each(view.begin(), view.end(), update);
@@ -91,15 +97,89 @@ namespace libimage
 
 		rgb_stats_t rgb_stats = {};
 
-		for (u32 c = 0; c < RGB_CHANNELS; ++c)
+		for_each_channel_rgb([&](u32 c) 
 		{
 			auto mean = c_counts[c] / num_pixels;
 
 			r32 std_dev = calc_std_dev(c_hists[c], mean);
 			rgb_stats.stats[c] = { mean, std_dev, c_hists[c] };
-		}
+		});
 
 		return rgb_stats;
+	}
+
+
+	static basic_stats_t calc_basic_stats(image_t const& image, u32 channel)
+	{
+		hist_t hist = { 0 };
+		r32 count = 0.0f;
+
+		auto const update = [&](pixel_t const& p)
+		{
+			auto shade = p.channels[channel];
+			auto bucket = shade / HIST_BUCKET_SIZE;
+			++hist[bucket];
+			count += shade;
+		};
+
+		std::for_each(image.begin(), image.end(), update);
+
+		auto num_pixels = image.width * image.height;
+		r32 mean = count / num_pixels;
+
+		assert(mean >= 0);
+		assert(mean < CHANNEL_SIZE);
+
+		return { mean, std::move(hist) };
+	}
+
+
+	static basic_stats_t calc_basic_stats(view_t const& view, u32 channel)
+	{
+		hist_t hist = { 0 };
+		r32 count = 0.0f;
+
+		auto const update = [&](pixel_t const& p)
+		{
+			auto shade = p.channels[channel];
+			auto bucket = shade / HIST_BUCKET_SIZE;
+			++hist[bucket];
+			count += shade;
+		};
+
+		std::for_each(view.begin(), view.end(), update);
+
+		auto num_pixels = view.width * view.height;
+		r32 mean = count / num_pixels;
+
+		assert(mean >= 0);
+		assert(mean < CHANNEL_SIZE);
+
+		return { mean, std::move(hist) };
+	}
+
+
+	stats_t calc_stats(image_t const& image, Channel ch)
+	{
+		assert(channel < RGBA_CHANNELS);
+
+		auto basic = calc_basic_stats(image, to_channel_index(ch));
+
+		r32 std_dev = calc_std_dev(basic.hist, basic.mean);
+
+		return { basic.mean, std_dev, std::move(basic.hist) };
+	}
+
+
+	stats_t calc_stats(view_t const& view, Channel ch)
+	{
+		assert(channel < RGBA_CHANNELS);
+
+		auto basic = calc_basic_stats(view, to_channel_index(ch));
+
+		r32 std_dev = calc_std_dev(basic.hist, basic.mean);
+
+		return { basic.mean, std_dev, std::move(basic.hist) };
 	}
 
 
@@ -184,14 +264,6 @@ namespace libimage
 
 #ifndef	LIBIMAGE_NO_GRAYSCALE
 
-	typedef struct
-	{
-		r32 mean;
-		hist_t hist;
-
-	} basic_stats_t;
-
-
 	static basic_stats_t calc_basic_stats(gray::image_t const& image)
 	{
 		hist_t hist = { 0 };
@@ -208,6 +280,7 @@ namespace libimage
 
 		auto num_pixels = image.width * image.height;
 		r32 mean = count / num_pixels;
+
 		assert(mean >= 0);
 		assert(mean < CHANNEL_SIZE);
 
@@ -231,6 +304,7 @@ namespace libimage
 
 		auto num_pixels = view.width * view.height;
 		r32 mean = count / num_pixels;
+
 		assert(mean >= 0);
 		assert(mean < CHANNEL_SIZE);
 

@@ -6,9 +6,6 @@
 #include <algorithm>
 #include <functional>
 
-// draw stats
-// rgba_stats_t, alpha (Grayscale) = 0.299R + 0.587G + 0.114B
-
 
 namespace libimage
 {
@@ -23,7 +20,6 @@ namespace libimage
 		r32 mean;
 		r32 std_dev;
 		hist_t hist;
-
 
 	} stats_t;
 
@@ -42,26 +38,15 @@ namespace libimage
 	} rgb_stats_t;
 
 
-	typedef union rgba_channel_stats_t
-	{
-		struct
-		{
-			stats_t red;
-			stats_t green;
-			stats_t blue;
-			stats_t alpha;
-		};
-
-		stats_t stats[4];
-
-	} rgba_stats_t;
-
-
 #ifndef LIBIMAGE_NO_COLOR
 
 	rgb_stats_t calc_stats(image_t const& image);
 	
 	rgb_stats_t calc_stats(view_t const& view);
+
+	stats_t calc_stats(image_t const& image, Channel ch);
+
+	stats_t calc_stats(view_t const& view, Channel ch);
 
 	void transform_alpha(image_t const& image, std::function<u8(u8 red, u8 green, u8 blue)> const& func);
 
