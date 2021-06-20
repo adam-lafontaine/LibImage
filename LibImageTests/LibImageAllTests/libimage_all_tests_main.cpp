@@ -142,7 +142,6 @@ void basic_tests(fs::path const& out_dir)
 }
 
 
-
 void math_tests(fs::path const& out_dir)
 {
 	std::cout << "math:\n";
@@ -186,6 +185,13 @@ void math_tests(fs::path const& out_dir)
 	print(alpha_stats);
 
 	img::write_image(alpha_stats_image, out_dir / "alpha_stats.png");
+
+	auto const binarize = [&](u8 p) { return p > stats_gray.mean ? 255 : 0; };
+	img::gray::image_t binary;
+	img::make_image(binary, image_gray.width, image_gray.height);
+	std::transform(image_gray.begin(), image_gray.end(), binary.begin(), binarize);
+
+	img::write_image(binary, out_dir / "binary.png");
 
 	std::cout << '\n';
 }
