@@ -2,7 +2,7 @@
 
 #include <numeric>
 #include <execution>
-
+#include <cmath>
 
 
 
@@ -35,7 +35,7 @@ namespace libimage
 			diff_sq_total += qty * diff * diff;
 		}
 
-		return qty_total == 0 ? 0.0f : sqrtf(diff_sq_total / qty_total);
+		return qty_total == 0 ? 0.0f : std::sqrt(diff_sq_total / qty_total);
 	}
 
 
