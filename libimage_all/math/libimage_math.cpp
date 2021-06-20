@@ -161,8 +161,6 @@ namespace libimage
 
 	stats_t calc_stats(image_t const& image, Channel ch)
 	{
-		assert(channel < RGBA_CHANNELS);
-
 		auto basic = calc_basic_stats(image, to_channel_index(ch));
 
 		r32 std_dev = calc_std_dev(basic.hist, basic.mean);
@@ -173,8 +171,6 @@ namespace libimage
 
 	stats_t calc_stats(view_t const& view, Channel ch)
 	{
-		assert(channel < RGBA_CHANNELS);
-
 		auto basic = calc_basic_stats(view, to_channel_index(ch));
 
 		r32 std_dev = calc_std_dev(basic.hist, basic.mean);
@@ -224,18 +220,28 @@ namespace libimage
 		make_image(image_dst, image_width, image_height);
 		std::fill(image_dst.begin(), image_dst.end(), white);
 
+		u32 max_count = 0;
+		for_each_channel_rgb([&](u32 c) 
+		{
+			auto& hist = rgb_stats.stats[c].hist;
+			auto max = *std::max_element(hist.begin(), hist.end());
+
+			if (max > max_count)
+			{
+				max_count = max;
+			}
+		});
+
+		const auto norm = [&](u32 count)
+		{
+			return static_cast<u32>(static_cast<r32>(count) / max_count * max_relative_qty);
+		};
+
 		for (u32 c = 0; c < RGB_CHANNELS; ++c)
 		{
 			auto& hist = rgb_stats.stats[c].hist;
 
-			auto max = std::accumulate(hist.begin(), hist.end(), 0.0f);
-
-			const auto norm = [&](u32 count)
-			{
-				return static_cast<u32>(count / max * max_relative_qty);
-			};
-
-			pixel_range_t bar_range;
+			pixel_range_t bar_range = {};
 			bar_range.x_begin = bucket_spacing;
 			bar_range.x_end = bar_range.x_begin + bucket_width;
 			bar_range.y_begin = 0;
@@ -352,14 +358,14 @@ namespace libimage
 		make_image(image_dst, image_width, image_height);
 		std::fill(image_dst.begin(), image_dst.end(), 255);
 
-		auto max = std::accumulate(hist.begin(), hist.end(), 0.0f);
+		auto max_count = *std::max_element(hist.begin(), hist.end());
 
 		const auto norm = [&](u32 count)
 		{
-			return max_relative_qty - static_cast<u32>(count / max * max_relative_qty);
-		};		
+			return static_cast<u32>(static_cast<r32>(count) / max_count * max_relative_qty);
+		};
 
-		pixel_range_t bar_range;
+		pixel_range_t bar_range = {};
 		bar_range.x_begin = bucket_spacing;
 		bar_range.x_end = (bucket_spacing + bucket_width);
 		bar_range.y_begin = 0;
@@ -367,7 +373,7 @@ namespace libimage
 
 		for (u32 bucket = 0; bucket < n_buckets; ++bucket)
 		{
-			bar_range.y_begin = norm(hist[bucket]);
+			bar_range.y_begin = bar_range.y_end - norm(hist[bucket]);
 
 			if (bar_range.y_end > bar_range.y_begin)
 			{
@@ -381,8 +387,6 @@ namespace libimage
 		}
 
 	}
-
-
 
 
 #endif // !LIBIMAGE_NO_GRAYSCALE

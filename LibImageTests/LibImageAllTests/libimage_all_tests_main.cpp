@@ -159,7 +159,6 @@ void math_tests(fs::path const& out_dir)
 
 	img::write_image(stats_image_gray, out_dir / "stats_image_gray.png");
 
-
 	img::image_t image;
 	img::read_image_from_file(SRC_IMAGE_PATH, image);
 	auto view = img::make_view(image);
