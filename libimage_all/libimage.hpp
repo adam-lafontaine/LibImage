@@ -20,6 +20,10 @@ Copyright (c) 2021 Adam Lafontaine
 namespace fs = std::filesystem;
 #endif // !LIBIMAGE_NO_FS
 
+#ifndef LIBIMAGE_NO_COLOR
+#include <functional>
+#endif // !LIBIMAGE_NO_COLOR
+
 using u8 = uint8_t;
 using u32 = uint32_t;
 using u64 = uint64_t;
@@ -27,9 +31,6 @@ using r32 = float;
 
 namespace libimage
 {
-	constexpr auto RGBA_CHANNELS = 4u;
-	
-
 	//======= Class Definitions =============
 
 	// region of interest in an image
@@ -42,7 +43,44 @@ namespace libimage
 
 	} pixel_range_t;
 
+
 #ifndef LIBIMAGE_NO_COLOR
+
+	constexpr auto RGB_CHANNELS = 3u;
+	constexpr auto RGBA_CHANNELS = 4u;
+	
+	enum class Channel : u32
+	{
+		Red = 0,
+		Green,
+		Blue,
+		Alpha
+	};
+
+
+	inline u32 to_channel_index(Channel ch)
+	{
+		return static_cast<u32>(ch);
+	}
+
+
+	inline void for_each_channel_rgb(std::function<void(u32 ch_id)> const& func)
+	{
+		for (u32 id = 0; id < RGB_CHANNELS; ++id)
+		{
+			func(id);
+		}
+	}
+
+
+	inline void for_each_channel_rgba(std::function<void(u32 ch_id)> const& func)
+	{
+		for (u32 id = 0; id < RGBA_CHANNELS; ++id)
+		{
+			func(id);
+		}
+	}
+
 
 	// color pixel
 	typedef union rgba_pixel_t

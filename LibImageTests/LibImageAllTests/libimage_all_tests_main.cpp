@@ -142,7 +142,6 @@ void basic_tests(fs::path const& out_dir)
 }
 
 
-
 void math_tests(fs::path const& out_dir)
 {
 	std::cout << "math:\n";
@@ -160,7 +159,6 @@ void math_tests(fs::path const& out_dir)
 
 	img::write_image(stats_image_gray, out_dir / "stats_image_gray.png");
 
-
 	img::image_t image;
 	img::read_image_from_file(SRC_IMAGE_PATH, image);
 	auto view = img::make_view(image);
@@ -175,6 +173,24 @@ void math_tests(fs::path const& out_dir)
 	print(stats.blue);
 
 	img::write_image(stats_image, out_dir / "stats_image.png");
+
+	auto const to_grayscale = [](u8 R, u8 G, u8 B) { return static_cast<u8>(0.299 * R + 0.587 * G + 0.114 * B); };
+	img::transform_alpha(image, to_grayscale);
+	auto alpha_stats = img::calc_stats(image, img::Channel::Alpha);
+
+	img::gray::image_t alpha_stats_image;
+	img::draw_histogram(alpha_stats.hist, alpha_stats_image);
+
+	print(alpha_stats);
+
+	img::write_image(alpha_stats_image, out_dir / "alpha_stats.png");
+
+	auto const binarize = [&](u8 p) { return p > stats_gray.mean ? 255 : 0; };
+	img::gray::image_t binary;
+	img::make_image(binary, image_gray.width, image_gray.height);
+	std::transform(image_gray.begin(), image_gray.end(), binary.begin(), binarize);
+
+	img::write_image(binary, out_dir / "binary.png");
 
 	std::cout << '\n';
 }

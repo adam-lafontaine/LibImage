@@ -4,8 +4,7 @@
 
 #include <array>
 #include <algorithm>
-
-using r32 = float;
+#include <functional>
 
 
 namespace libimage
@@ -41,7 +40,17 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR
 
+	rgb_stats_t calc_stats(image_t const& image);
+	
 	rgb_stats_t calc_stats(view_t const& view);
+
+	stats_t calc_stats(image_t const& image, Channel ch);
+
+	stats_t calc_stats(view_t const& view, Channel ch);
+
+	void transform_alpha(image_t const& image, std::function<u8(u8 red, u8 green, u8 blue)> const& func);
+
+	void transform_alpha(view_t const& view, std::function<u8(u8 red, u8 green, u8 blue)> const& func);
 
 	void draw_histogram(rgb_stats_t const& rgb_stats, image_t& image_dst);
 
@@ -49,6 +58,8 @@ namespace libimage
 
 #ifndef	LIBIMAGE_NO_GRAYSCALE
 
+	stats_t calc_stats(gray::image_t const& image);
+	
 	stats_t calc_stats(gray::view_t const& view);
 
 	void draw_histogram(hist_t const& hist, gray::image_t& image_dst);
