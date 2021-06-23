@@ -10,7 +10,7 @@
 namespace libimage
 {
 	constexpr size_t CHANNEL_SIZE = 256; // 8 bit channel
-	constexpr size_t N_HIST_BUCKETS = 16;
+	constexpr size_t N_HIST_BUCKETS = 256;
 
 	using hist_t = std::array<u32, N_HIST_BUCKETS>;
 

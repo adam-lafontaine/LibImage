@@ -28,6 +28,12 @@
     <Filter Include="Source Files\math">
       <UniqueIdentifier>{7bc04823-4637-4ba8-a459-d48689c9e640}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\libimage_all\proc">
+      <UniqueIdentifier>{2b434698-0a1f-4c28-8196-af16b8f86032}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\proc">
+      <UniqueIdentifier>{6a2db850-0f84-4fb9-99cb-61c5c3bec522}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\libimage_all\libimage.hpp">
@@ -48,6 +54,9 @@
     <ClInclude Include="..\..\libimage_all\math\libimage_math.hpp">
       <Filter>Header Files\libimage_all\math</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\libimage_all\proc\process.hpp">
+      <Filter>Header Files\libimage_all\proc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="libimage_all_tests_main.cpp">
@@ -58,6 +67,9 @@
     </ClCompile>
     <ClCompile Include="..\..\libimage_all\math\libimage_math.cpp">
       <Filter>Source Files\math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libimage_all\proc\process.cpp">
+      <Filter>Source Files\proc</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
