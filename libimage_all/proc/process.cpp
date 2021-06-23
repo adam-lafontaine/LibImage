@@ -225,15 +225,31 @@ namespace libimage
 	}
 
 
-	void something(gray::image_t const& src, gray::image_t const& dst, u8 low, u8 high)
+	void adjust_contrast(gray::image_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high)
 	{
 		assert(verify_src_dst(src, dst));
-		assert(low < high);
+		assert(src_low < src_high);
 
-		u8 src_low = 0;
-		u8 src_high = 255;
+		u8 dst_low = 0;
+		u8 dst_high = 255;
 
-		auto const conv = [&](gray::pixel_t const& p) { return lerp(src_low, src_high, low, high, p); };
+		auto const conv = [&](gray::pixel_t const& p) { return lerp(src_low, src_high, dst_low, dst_high, p); };
 		std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), conv);
 	}
+
+
+	void adjust_contrast(gray::image_t const& src, u8 src_low, u8 src_high)
+	{
+		assert(verify(src));
+		assert(src_low < src_high);
+
+		u8 dst_low = 0;
+		u8 dst_high = 255;
+
+		auto const conv = [&](gray::pixel_t& p) { p = lerp(src_low, src_high, dst_low, dst_high, p); };
+		std::for_each(std::execution::par, src.begin(), src.end(), conv);
+	}
+
+
+
 }

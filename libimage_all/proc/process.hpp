@@ -31,7 +31,9 @@ namespace libimage
 
 	void convert_alpha(view_t const& src, std::function<u8(pixel_t const& p)> const& func);
 	
+	void adjust_contrast(gray::image_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high);
 
+	void adjust_contrast(gray::image_t const& src, u8 src_low, u8 src_high);
 }
 
 
