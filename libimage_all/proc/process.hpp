@@ -31,6 +31,7 @@ namespace libimage
 
 	void convert_alpha(view_t const& src, std::function<u8(pixel_t const& p)> const& func);
 	
+
 }
 
 
