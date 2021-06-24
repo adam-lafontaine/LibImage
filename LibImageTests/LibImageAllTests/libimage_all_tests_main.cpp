@@ -1,5 +1,6 @@
 #include "../../libimage_all/libimage.hpp"
 #include "../../libimage_all/math/libimage_math.hpp"
+#include "../../libimage_all/proc/process.hpp"
 #include "../utils/stopwatch.hpp"
 
 //#define CHECK_LEAKS
@@ -37,6 +38,7 @@ void basic_tests(fs::path const& out_dir);
 void math_tests(fs::path const& out_dir);
 void for_each_tests();
 void transform_tests();
+void process_tests(fs::path const& out_dir);
 
 
 int main()
@@ -52,11 +54,13 @@ int main()
 	auto dst_root = fs::path(DST_IMAGE_ROOT);
 	empty_dir(dst_root);
 
-	basic_tests(dst_root);
+	/*basic_tests(dst_root);
 	math_tests(dst_root);
 
 	for_each_tests();
-	transform_tests();
+	transform_tests();*/
+
+	process_tests(dst_root);
 
 	std::cout << "\nDone.\n";
 }
@@ -174,16 +178,7 @@ void math_tests(fs::path const& out_dir)
 
 	img::write_image(stats_image, out_dir / "stats_image.png");
 
-	auto const to_grayscale = [](u8 R, u8 G, u8 B) { return static_cast<u8>(0.299 * R + 0.587 * G + 0.114 * B); };
-	img::transform_alpha(image, to_grayscale);
-	auto alpha_stats = img::calc_stats(image, img::Channel::Alpha);
-
-	img::gray::image_t alpha_stats_image;
-	img::draw_histogram(alpha_stats.hist, alpha_stats_image);
-
-	print(alpha_stats);
-
-	img::write_image(alpha_stats_image, out_dir / "alpha_stats.png");
+	
 
 	auto const binarize = [&](u8 p) { return p > stats_gray.mean ? 255 : 0; };
 	img::gray::image_t binary;
@@ -422,6 +417,36 @@ void transform_tests()
 		t = sw.get_time_milli();
 		std::cout << "stl par: " << 1000 * t / sz << "\n\n";
 	}
+}
+
+
+void process_tests(fs::path const& out_dir)
+{
+	std::cout << "process:\n";
+
+	img::image_t image;
+	img::read_image_from_file(SRC_IMAGE_PATH, image);
+
+	img::gray::image_t gray_image;
+	img::make_image(gray_image, image.width, image.height);
+
+	img::convert_grayscale(image, gray_image);
+	img::write_image(gray_image, out_dir / "convert_grayscale.bmp");
+	
+	auto gray_stats = img::calc_stats(gray_image);
+	img::gray::image_t gray_stats_image;
+	img::draw_histogram(gray_stats.hist, gray_stats_image);
+	img::write_image(gray_stats_image, out_dir / "gray_stats.png");
+	print(gray_stats);
+
+	img::convert_alpha_grayscale(image);
+	auto alpha_stats = img::calc_stats(image, img::Channel::Alpha);
+	img::gray::image_t alpha_stats_image;
+	img::draw_histogram(alpha_stats.hist, alpha_stats_image);
+	img::write_image(alpha_stats_image, out_dir / "alpha_stats.png");
+	print(alpha_stats);
+		
+	
 }
 
 

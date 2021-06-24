@@ -127,7 +127,7 @@ namespace libimage
 	}
 
 
-	void convert(image_t const& src, gray::image_t const& dst, std::function<u8(pixel_t const& p)> const& func)
+	void convert(image_t const& src, gray::image_t const& dst, pixel_to_u8_f const& func)
 	{
 		assert(verify_src_dst(src, dst));
 
@@ -135,7 +135,7 @@ namespace libimage
 	}
 
 
-	void convert(image_t const& src, gray::view_t const& dst, std::function<u8(pixel_t const& p)> const& func)
+	void convert(image_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
 	{
 		assert(verify_src_dst(src, dst));
 
@@ -143,7 +143,7 @@ namespace libimage
 	}
 
 
-	void convert(view_t const& src, gray::image_t const& dst, std::function<u8(pixel_t const& p)> const& func)
+	void convert(view_t const& src, gray::image_t const& dst, pixel_to_u8_f const& func)
 	{
 		assert(verify_src_dst(src, dst));
 
@@ -151,7 +151,7 @@ namespace libimage
 	}
 
 
-	void convert(view_t const& src, gray::view_t const& dst, std::function<u8(pixel_t const& p)> const& func)
+	void convert(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
 	{
 		assert(verify_src_dst(src, dst));
 
@@ -193,21 +193,17 @@ namespace libimage
 
 	void convert_alpha_grayscale(image_t const& image)
 	{
-		assert(verify(image));
-
-		std::for_each(image.begin(), image.end(), pixel_grayscale_standard);
+		convert_alpha(image, pixel_grayscale_standard);
 	}
 
 
 	void convert_alpha_grayscale(view_t const& view)
 	{
-		assert(verify(view));
-
-		std::for_each(view.begin(), view.end(), pixel_grayscale_standard);
+		convert_alpha(view, pixel_grayscale_standard);
 	}
 
 
-	void convert_alpha(image_t const& image, std::function<u8(pixel_t const& p)> const& func)
+	void convert_alpha(image_t const& image, pixel_to_u8_f const& func)
 	{
 		assert(verify(image));
 
@@ -216,7 +212,7 @@ namespace libimage
 	}
 
 
-	void convert_alpha(view_t const& view, std::function<u8(pixel_t const& p)> const& func)
+	void convert_alpha(view_t const& view, pixel_to_u8_f const& func)
 	{
 		assert(verify(view));
 
@@ -253,7 +249,7 @@ namespace libimage
 
 	namespace par
 	{
-		void convert(image_t const& src, gray::image_t const& dst, std::function<u8(pixel_t const& p)> const& func)
+		void convert(image_t const& src, gray::image_t const& dst, pixel_to_u8_f const& func)
 		{
 			assert(verify_src_dst(src, dst));
 
@@ -261,7 +257,7 @@ namespace libimage
 		}
 
 
-		void convert(image_t const& src, gray::view_t const& dst, std::function<u8(pixel_t const& p)> const& func)
+		void convert(image_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
 		{
 			assert(verify_src_dst(src, dst));
 
@@ -269,7 +265,7 @@ namespace libimage
 		}
 
 
-		void convert(view_t const& src, gray::image_t const& dst, std::function<u8(pixel_t const& p)> const& func)
+		void convert(view_t const& src, gray::image_t const& dst, pixel_to_u8_f const& func)
 		{
 			assert(verify_src_dst(src, dst));
 
@@ -277,7 +273,7 @@ namespace libimage
 		}
 
 
-		void convert(view_t const& src, gray::view_t const& dst, std::function<u8(pixel_t const& p)> const& func)
+		void convert(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
 		{
 			assert(verify_src_dst(src, dst));
 
@@ -333,7 +329,7 @@ namespace libimage
 		}
 
 
-		void convert_alpha(image_t const& image, std::function<u8(pixel_t const& p)> const& func)
+		void convert_alpha(image_t const& image, pixel_to_u8_f const& func)
 		{
 			assert(verify(image));
 
@@ -342,7 +338,7 @@ namespace libimage
 		}
 
 
-		void convert_alpha(view_t const& view, std::function<u8(pixel_t const& p)> const& func)
+		void convert_alpha(view_t const& view, pixel_to_u8_f const& func)
 		{
 			assert(verify(view));
 
