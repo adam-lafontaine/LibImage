@@ -14,6 +14,8 @@ namespace libimage
 {
 	using pixel_to_u8_f = std::function<u8(pixel_t const& p)>;
 
+	using u8_to_u8_f = std::function<u8(u8)>;
+
 	void convert_grayscale(image_t const& src, gray::image_t const& dst);
 
 	void convert_grayscale(image_t const& src, gray::view_t const& dst);
@@ -29,6 +31,14 @@ namespace libimage
 	void convert(view_t const& src, gray::image_t const& dst, pixel_to_u8_f const& func);
 
 	void convert(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func);
+
+	void convert(gray::image_t const& src, gray::image_t const& dst, u8_to_u8_f const& func);
+
+	void convert(gray::image_t const& src, gray::view_t const& dst, u8_to_u8_f const& func);
+
+	void convert(gray::view_t const& src, gray::image_t const& dst, u8_to_u8_f const& func);
+
+	void convert(gray::view_t const& src, gray::view_t const& dst, u8_to_u8_f const& func);
 
 	void convert_alpha_grayscale(image_t const& src);
 
@@ -60,6 +70,14 @@ namespace libimage
 		void convert(view_t const& src, gray::image_t const& dst, pixel_to_u8_f const& func);
 
 		void convert(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func);
+
+		void convert(gray::image_t const& src, gray::image_t const& dst, u8_to_u8_f const& func);
+
+		void convert(gray::image_t const& src, gray::view_t const& dst, u8_to_u8_f const& func);
+
+		void convert(gray::view_t const& src, gray::image_t const& dst, u8_to_u8_f const& func);
+
+		void convert(gray::view_t const& src, gray::view_t const& dst, u8_to_u8_f const& func);
 
 		void convert_alpha_grayscale(image_t const& src);
 

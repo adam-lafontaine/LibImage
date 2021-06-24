@@ -159,6 +159,38 @@ namespace libimage
 	}
 
 
+	void convert(gray::image_t const& src, gray::image_t const& dst, u8_to_u8_f const& func)
+	{
+		assert(verify_src_dst(src, dst));
+
+		std::transform(src.begin(), src.end(), dst.begin(), func);
+	}
+
+
+	void convert(gray::image_t const& src, gray::view_t const& dst, u8_to_u8_f const& func)
+	{
+		assert(verify_src_dst(src, dst));
+
+		std::transform(src.begin(), src.end(), dst.begin(), func);
+	}
+
+
+	void convert(gray::view_t const& src, gray::image_t const& dst, u8_to_u8_f const& func)
+	{
+		assert(verify_src_dst(src, dst));
+
+		std::transform(src.begin(), src.end(), dst.begin(), func);
+	}
+
+
+	void convert(gray::view_t const& src, gray::view_t const& dst, u8_to_u8_f const& func)
+	{
+		assert(verify_src_dst(src, dst));
+
+		std::transform(src.begin(), src.end(), dst.begin(), func);
+	}
+
+
 	void convert_grayscale(image_t const& src, gray::image_t const& dst)
 	{
 		assert(verify_src_dst(src, dst));
@@ -274,6 +306,38 @@ namespace libimage
 
 
 		void convert(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
+		{
+			assert(verify_src_dst(src, dst));
+
+			std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
+		}
+
+
+		void convert(gray::image_t const& src, gray::image_t const& dst, u8_to_u8_f const& func)
+		{
+			assert(verify_src_dst(src, dst));
+
+			std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
+		}
+
+
+		void convert(gray::image_t const& src, gray::view_t const& dst, u8_to_u8_f const& func)
+		{
+			assert(verify_src_dst(src, dst));
+
+			std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
+		}
+
+
+		void convert(gray::view_t const& src, gray::image_t const& dst, u8_to_u8_f const& func)
+		{
+			assert(verify_src_dst(src, dst));
+
+			std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
+		}
+
+
+		void convert(gray::view_t const& src, gray::view_t const& dst, u8_to_u8_f const& func)
 		{
 			assert(verify_src_dst(src, dst));
 
