@@ -18,8 +18,17 @@ namespace libimage
 	}
 
 
-	static u8 lerp(u8 src_low, u8 src_high, u8 dst_low, u8 dst_high, u8 val)
+	static u8 lerp_clamp(u8 src_low, u8 src_high, u8 dst_low, u8 dst_high, u8 val)
 	{
+		if (val < src_low)
+		{
+			return dst_low;
+		}
+		else if (val > src_high)
+		{
+			return dst_high;
+		}
+
 		auto const ratio = (static_cast<r64>(val) - src_low) / (src_high - src_low);
 
 		assert(ratio >= 0.0);
@@ -270,7 +279,7 @@ namespace libimage
 		u8 dst_low = 0;
 		u8 dst_high = 255;
 
-		auto const conv = [&](gray::pixel_t const& p) { return lerp(src_low, src_high, dst_low, dst_high, p); };
+		auto const conv = [&](gray::pixel_t const& p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
 		convert(src, dst, conv);
 	}
 
@@ -282,7 +291,7 @@ namespace libimage
 		u8 dst_low = 0;
 		u8 dst_high = 255;
 
-		auto const conv = [&](gray::pixel_t const& p) { return lerp(src_low, src_high, dst_low, dst_high, p); };
+		auto const conv = [&](gray::pixel_t const& p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
 		convert(src, dst, conv);
 	}
 
@@ -294,7 +303,7 @@ namespace libimage
 		u8 dst_low = 0;
 		u8 dst_high = 255;
 
-		auto const conv = [&](gray::pixel_t const& p) { return lerp(src_low, src_high, dst_low, dst_high, p); };
+		auto const conv = [&](gray::pixel_t const& p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
 		convert(src, dst, conv);
 	}
 
@@ -306,7 +315,7 @@ namespace libimage
 		u8 dst_low = 0;
 		u8 dst_high = 255;
 
-		auto const conv = [&](gray::pixel_t const& p) { return lerp(src_low, src_high, dst_low, dst_high, p); };
+		auto const conv = [&](gray::pixel_t const& p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
 		convert(src, dst, conv);
 	}
 
@@ -318,7 +327,7 @@ namespace libimage
 		u8 dst_low = 0;
 		u8 dst_high = 255;
 
-		auto const conv = [&](gray::pixel_t const& p) { return lerp(src_low, src_high, dst_low, dst_high, p); };
+		auto const conv = [&](gray::pixel_t const& p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
 		convert(src, conv);
 	}
 
@@ -330,7 +339,7 @@ namespace libimage
 		u8 dst_low = 0;
 		u8 dst_high = 255;
 
-		auto const conv = [&](gray::pixel_t const& p) { return lerp(src_low, src_high, dst_low, dst_high, p); };
+		auto const conv = [&](gray::pixel_t const& p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
 		convert(src, conv);
 	}
 
@@ -480,7 +489,7 @@ namespace libimage
 			u8 dst_low = 0;
 			u8 dst_high = 255;
 
-			auto const conv = [&](gray::pixel_t const& p) { return lerp(src_low, src_high, dst_low, dst_high, p); };
+			auto const conv = [&](gray::pixel_t const& p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
 			par::convert(src, dst, conv);
 		}
 
@@ -492,7 +501,7 @@ namespace libimage
 			u8 dst_low = 0;
 			u8 dst_high = 255;
 
-			auto const conv = [&](gray::pixel_t const& p) { return lerp(src_low, src_high, dst_low, dst_high, p); };
+			auto const conv = [&](gray::pixel_t const& p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
 			par::convert(src, dst, conv);
 		}
 
@@ -504,7 +513,7 @@ namespace libimage
 			u8 dst_low = 0;
 			u8 dst_high = 255;
 
-			auto const conv = [&](gray::pixel_t const& p) { return lerp(src_low, src_high, dst_low, dst_high, p); };
+			auto const conv = [&](gray::pixel_t const& p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
 			par::convert(src, dst, conv);
 		}
 
@@ -516,7 +525,7 @@ namespace libimage
 			u8 dst_low = 0;
 			u8 dst_high = 255;
 
-			auto const conv = [&](gray::pixel_t const& p) { return lerp(src_low, src_high, dst_low, dst_high, p); };
+			auto const conv = [&](gray::pixel_t const& p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
 			par::convert(src, dst, conv);
 		}
 
@@ -528,7 +537,7 @@ namespace libimage
 			u8 dst_low = 0;
 			u8 dst_high = 255;
 
-			auto const conv = [&](gray::pixel_t const& p) { return lerp(src_low, src_high, dst_low, dst_high, p); };
+			auto const conv = [&](gray::pixel_t const& p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
 			par::convert(src, conv);
 		}
 
@@ -540,7 +549,7 @@ namespace libimage
 			u8 dst_low = 0;
 			u8 dst_high = 255;
 
-			auto const conv = [&](gray::pixel_t const& p) { return lerp(src_low, src_high, dst_low, dst_high, p); };
+			auto const conv = [&](gray::pixel_t const& p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
 			par::convert(src, conv);
 		}
 

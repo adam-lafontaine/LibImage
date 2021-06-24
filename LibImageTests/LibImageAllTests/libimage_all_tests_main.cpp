@@ -446,7 +446,13 @@ void process_tests(fs::path const& out_dir)
 	img::write_image(alpha_stats_image, out_dir / "alpha_stats.png");
 	print(alpha_stats);
 		
-	
+	auto shade_min = static_cast<u8>(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
+	auto shade_max = static_cast<u8>(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
+
+	img::gray::image_t contrast_image;
+	img::make_image(contrast_image, gray_image.width, gray_image.height);
+	img::adjust_contrast(gray_image, contrast_image, shade_min, shade_max);
+	img::write_image(contrast_image, out_dir / "contrast.png");
 }
 
 
