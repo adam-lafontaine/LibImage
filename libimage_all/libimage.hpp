@@ -113,6 +113,25 @@ namespace libimage
 
 		pixel_t* data = 0;
 
+		pixel_t* row_begin(u32 y) const
+		{
+			assert(y < height);
+
+			auto offset = y * width;
+
+			auto ptr = data + static_cast<u64>(offset);
+			assert(ptr);
+
+			return ptr;
+		}
+
+		pixel_t* xy_at(u32 x, u32 y) const
+		{
+			assert(y < height);
+			assert(x < width);
+			return row_begin(y) + x;
+		}
+
 		void clear()
 		{
 			if (data)
