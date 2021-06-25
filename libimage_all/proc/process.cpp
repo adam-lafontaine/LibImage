@@ -411,6 +411,7 @@ namespace libimage
 	void alpha_blend(image_t const& src, image_t const& current, image_t const& dst)
 	{
 		assert(verify(src, current));
+		assert(verify(src, dst));
 
 		auto it_src = src.begin();
 		auto it_current = current.begin();
@@ -418,6 +419,19 @@ namespace libimage
 		for (;it_src != src.end(); ++it_src, ++it_current, ++it_dst)
 		{
 			*it_dst = alpha_blend_linear(*it_src, *it_current);
+		}
+	}
+
+
+	void alpha_blend(image_t const& src, image_t const& current_dst)
+	{
+		assert(verify(src, current_dst));
+
+		auto it_src = src.begin();
+		auto it_current_dst = current_dst.begin();
+		for (; it_src != src.end(); ++it_src, ++it_current_dst)
+		{
+			*it_current_dst = alpha_blend_linear(*it_src, *it_current_dst);
 		}
 	}
 

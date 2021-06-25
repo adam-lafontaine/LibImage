@@ -83,7 +83,9 @@ namespace libimage
 	void binarize(gray::view_t const& src, u8_to_bool_f const& func);
 
 
-	void alpha_blend();
+	void alpha_blend(image_t const& src, image_t const& current, image_t const& dst);
+
+	void alpha_blend(image_t const& src, image_t const& current_dst);
 
 
 	namespace par

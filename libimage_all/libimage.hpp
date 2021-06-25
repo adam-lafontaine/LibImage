@@ -45,6 +45,14 @@ namespace libimage
 	} pixel_range_t;
 
 
+	typedef struct
+	{
+		u32 x;
+		u32 y;
+
+	} xy_loc_t;
+
+
 #ifndef LIBIMAGE_NO_COLOR
 
 	constexpr auto RGB_CHANNELS = 3u;
@@ -277,6 +285,8 @@ namespace libimage
 				return *this;
 			}
 
+			xy_loc_t get_xy() { return { loc_x, loc_y }; }
+
 			iterator operator ++ (int) { iterator result = *this; ++(*this); return result; }
 
 			bool operator == (iterator other) const { return loc_x == other.loc_x && loc_y == other.loc_y; }
@@ -295,7 +305,6 @@ namespace libimage
 		iterator begin() const { return iterator(*this); }
 
 		iterator end() const { return iterator(*this).end(); }
-
 	};
 
 	using view_t = rgba_image_view_t;
@@ -478,6 +487,8 @@ namespace libimage
 
 					return *this;
 				}
+
+				xy_loc_t get_xy() { return { loc_x, loc_y }; }
 
 				iterator operator ++ (int) { iterator result = *this; ++(*this); return result; }
 
