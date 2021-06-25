@@ -40,6 +40,28 @@ namespace libimage
 	}
 
 
+	static pixel_t alpha_blend_linear(pixel_t const& src, pixel_t const& current)
+	{
+		auto const a = static_cast<r32>(src.alpha) / 255.0f;
+
+		auto const blend = [&](u8 s, u8 c)
+		{
+			auto sf = static_cast<r32>(s);
+			auto cf = static_cast<r32>(c);
+
+			auto blended = a * cf + (1.0f - a) * sf;
+
+			return static_cast<u8>(blended);
+		};
+
+		auto red = blend(src.red, current.red);
+		auto green = blend(src.green, current.green);
+		auto blue = blend(src.blue, current.blue);
+
+		return to_pixel(red, green, blue);
+	}
+
+
 	static bool verify(image_t const& image)
 	{
 		return image.data && image.width && image.height;
@@ -64,73 +86,73 @@ namespace libimage
 	}
 
 
-	static bool verify_src_dst(image_t const& src, image_t const& dst)
+	static bool verify(image_t const& src, image_t const& dst)
 	{
 		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
 	}
 
 
-	static bool verify_src_dst(image_t const& src, view_t const& dst)
+	static bool verify(image_t const& src, view_t const& dst)
 	{
 		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
 	}
 
 
-	static bool verify_src_dst(view_t const& src, view_t const& dst)
+	static bool verify(view_t const& src, view_t const& dst)
 	{
 		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
 	}
 
 
-	static bool verify_src_dst(view_t const& src, image_t const& dst)
+	static bool verify(view_t const& src, image_t const& dst)
 	{
 		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
 	}
 
 
-	static bool verify_src_dst(image_t const& src, gray::image_t const& dst)
+	static bool verify(image_t const& src, gray::image_t const& dst)
 	{
 		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
 	}
 
 
-	static bool verify_src_dst(image_t const& src, gray::view_t const& dst)
+	static bool verify(image_t const& src, gray::view_t const& dst)
 	{
 		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
 	}
 
 
-	static bool verify_src_dst(view_t const& src, gray::view_t const& dst)
+	static bool verify(view_t const& src, gray::view_t const& dst)
 	{
 		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
 	}
 
 
-	static bool verify_src_dst(view_t const& src, gray::image_t const& dst)
+	static bool verify(view_t const& src, gray::image_t const& dst)
 	{
 		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
 	}
 
 
-	static bool verify_src_dst(gray::image_t const& src, gray::image_t const& dst)
+	static bool verify(gray::image_t const& src, gray::image_t const& dst)
 	{
 		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
 	}
 
 
-	static bool verify_src_dst(gray::image_t const& src, gray::view_t const& dst)
+	static bool verify(gray::image_t const& src, gray::view_t const& dst)
 	{
 		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
 	}
 
 
-	static bool verify_src_dst(gray::view_t const& src, gray::view_t const& dst)
+	static bool verify(gray::view_t const& src, gray::view_t const& dst)
 	{
 		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
 	}
 
 
-	static bool verify_src_dst(gray::view_t const& src, gray::image_t const& dst)
+	static bool verify(gray::view_t const& src, gray::image_t const& dst)
 	{
 		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
 	}
@@ -138,7 +160,7 @@ namespace libimage
 
 	void convert(image_t const& src, gray::image_t const& dst, pixel_to_u8_f const& func)
 	{
-		assert(verify_src_dst(src, dst));
+		assert(verify(src, dst));
 
 		std::transform(src.begin(), src.end(), dst.begin(), func);
 	}
@@ -146,7 +168,7 @@ namespace libimage
 
 	void convert(image_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
 	{
-		assert(verify_src_dst(src, dst));
+		assert(verify(src, dst));
 
 		std::transform(src.begin(), src.end(), dst.begin(), func);
 	}
@@ -154,7 +176,7 @@ namespace libimage
 
 	void convert(view_t const& src, gray::image_t const& dst, pixel_to_u8_f const& func)
 	{
-		assert(verify_src_dst(src, dst));
+		assert(verify(src, dst));
 
 		std::transform(src.begin(), src.end(), dst.begin(), func);
 	}
@@ -162,7 +184,7 @@ namespace libimage
 
 	void convert(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
 	{
-		assert(verify_src_dst(src, dst));
+		assert(verify(src, dst));
 
 		std::transform(src.begin(), src.end(), dst.begin(), func);
 	}
@@ -170,7 +192,7 @@ namespace libimage
 
 	void convert(gray::image_t const& src, gray::image_t const& dst, u8_to_u8_f const& func)
 	{
-		assert(verify_src_dst(src, dst));
+		assert(verify(src, dst));
 
 		std::transform(src.begin(), src.end(), dst.begin(), func);
 	}
@@ -178,7 +200,7 @@ namespace libimage
 
 	void convert(gray::image_t const& src, gray::view_t const& dst, u8_to_u8_f const& func)
 	{
-		assert(verify_src_dst(src, dst));
+		assert(verify(src, dst));
 
 		std::transform(src.begin(), src.end(), dst.begin(), func);
 	}
@@ -186,7 +208,7 @@ namespace libimage
 
 	void convert(gray::view_t const& src, gray::image_t const& dst, u8_to_u8_f const& func)
 	{
-		assert(verify_src_dst(src, dst));
+		assert(verify(src, dst));
 
 		std::transform(src.begin(), src.end(), dst.begin(), func);
 	}
@@ -194,7 +216,7 @@ namespace libimage
 
 	void convert(gray::view_t const& src, gray::view_t const& dst, u8_to_u8_f const& func)
 	{
-		assert(verify_src_dst(src, dst));
+		assert(verify(src, dst));
 
 		std::transform(src.begin(), src.end(), dst.begin(), func);
 	}
@@ -386,11 +408,25 @@ namespace libimage
 	}
 
 
+	void alpha_blend(image_t const& src, image_t const& current, image_t const& dst)
+	{
+		assert(verify(src, current));
+
+		auto it_src = src.begin();
+		auto it_current = current.begin();
+		auto it_dst = dst.begin();
+		for (;it_src != src.end(); ++it_src, ++it_current, ++it_dst)
+		{
+			*it_dst = alpha_blend_linear(*it_src, *it_current);
+		}
+	}
+
+
 	namespace par
 	{
 		void convert(image_t const& src, gray::image_t const& dst, pixel_to_u8_f const& func)
 		{
-			assert(verify_src_dst(src, dst));
+			assert(verify(src, dst));
 
 			std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
 		}
@@ -398,7 +434,7 @@ namespace libimage
 
 		void convert(image_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
 		{
-			assert(verify_src_dst(src, dst));
+			assert(verify(src, dst));
 
 			std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
 		}
@@ -406,7 +442,7 @@ namespace libimage
 
 		void convert(view_t const& src, gray::image_t const& dst, pixel_to_u8_f const& func)
 		{
-			assert(verify_src_dst(src, dst));
+			assert(verify(src, dst));
 
 			std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
 		}
@@ -414,7 +450,7 @@ namespace libimage
 
 		void convert(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
 		{
-			assert(verify_src_dst(src, dst));
+			assert(verify(src, dst));
 
 			std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
 		}
@@ -422,7 +458,7 @@ namespace libimage
 
 		void convert(gray::image_t const& src, gray::image_t const& dst, u8_to_u8_f const& func)
 		{
-			assert(verify_src_dst(src, dst));
+			assert(verify(src, dst));
 
 			std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
 		}
@@ -430,7 +466,7 @@ namespace libimage
 
 		void convert(gray::image_t const& src, gray::view_t const& dst, u8_to_u8_f const& func)
 		{
-			assert(verify_src_dst(src, dst));
+			assert(verify(src, dst));
 
 			std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
 		}
@@ -438,7 +474,7 @@ namespace libimage
 
 		void convert(gray::view_t const& src, gray::image_t const& dst, u8_to_u8_f const& func)
 		{
-			assert(verify_src_dst(src, dst));
+			assert(verify(src, dst));
 
 			std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
 		}
@@ -446,7 +482,7 @@ namespace libimage
 
 		void convert(gray::view_t const& src, gray::view_t const& dst, u8_to_u8_f const& func)
 		{
-			assert(verify_src_dst(src, dst));
+			assert(verify(src, dst));
 
 			std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
 		}

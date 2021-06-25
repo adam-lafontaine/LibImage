@@ -5,7 +5,6 @@
 #include <functional>
 
 // TODO: alpha blending
-// TODO: binarize
 
 
 
@@ -84,6 +83,9 @@ namespace libimage
 	void binarize(gray::view_t const& src, u8_to_bool_f const& func);
 
 
+	void alpha_blend();
+
+
 	namespace par
 	{
 		void convert(image_t const& src, gray::image_t const& dst, pixel_to_u8_f const& func);
@@ -150,6 +152,9 @@ namespace libimage
 		void binarize(gray::image_t const& src, u8_to_bool_f const& func);
 
 		void binarize(gray::view_t const& src, u8_to_bool_f const& func);
+
+
+
 	}
 }
 

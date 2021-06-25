@@ -1,6 +1,7 @@
 #include "../../libimage_all/libimage.hpp"
 #include "../../libimage_all/math/libimage_math.hpp"
 #include "../../libimage_all/proc/process.hpp"
+
 #include "../utils/stopwatch.hpp"
 
 //#define CHECK_LEAKS
@@ -457,6 +458,8 @@ void process_tests(fs::path const& out_dir)
 	auto const is_white = [&](u8 p) { return static_cast<r32>(p) > gray_stats.mean; };
 	img::binarize(gray_image, gray_dst, is_white);
 	img::write_image(gray_dst, out_dir / "binarize.png");
+
+
 }
 
 
