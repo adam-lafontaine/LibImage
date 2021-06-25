@@ -66,6 +66,13 @@ namespace libimage
 	}
 
 
+	view_t make_view(image_t& image, u32 width, u32 height)
+	{
+		make_image(image, width, height);
+		return make_view(image);
+	}
+
+
 	view_t sub_view(image_t const& image, pixel_range_t const& range)
 	{
 		assert(image.width);
@@ -370,6 +377,13 @@ namespace libimage
 		view.height = img.height;
 
 		return view;
+	}
+
+
+	gray::view_t make_view(gray::image_t& image, u32 width, u32 height)
+	{
+		make_image(image, width, height);
+		return make_view(image);
 	}
 
 

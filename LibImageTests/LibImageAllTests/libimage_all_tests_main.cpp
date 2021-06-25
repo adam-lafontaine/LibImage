@@ -427,11 +427,14 @@ void process_tests(fs::path const& out_dir)
 
 	img::image_t image;
 	img::read_image_from_file(SRC_IMAGE_PATH, image);
+	auto const width = image.width;
+	auto const height = image.height;
+	auto view = img::make_view(image);
 
 	img::gray::image_t gray_image;
-	img::make_image(gray_image, image.width, image.height);
+	auto gray_view = img::make_view(gray_image, width, height);
 
-	img::convert_grayscale(image, gray_image);
+	img::convert_grayscale(view, gray_view);
 	img::write_image(gray_image, out_dir / "convert_grayscale.bmp");
 	
 	auto gray_stats = img::calc_stats(gray_image);
@@ -440,7 +443,7 @@ void process_tests(fs::path const& out_dir)
 	img::write_image(gray_stats_image, out_dir / "gray_stats.png");
 	print(gray_stats);
 
-	img::convert_alpha_grayscale(image);
+	img::convert_alpha_grayscale(view);
 	auto alpha_stats = img::calc_stats(image, img::Channel::Alpha);
 	img::gray::image_t alpha_stats_image;
 	img::draw_histogram(alpha_stats.hist, alpha_stats_image);
@@ -451,12 +454,12 @@ void process_tests(fs::path const& out_dir)
 	auto shade_max = static_cast<u8>(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
 
 	img::gray::image_t gray_dst;
-	img::make_image(gray_dst, gray_image.width, gray_image.height);
-	img::adjust_contrast(gray_image, gray_dst, shade_min, shade_max);
+	auto gray_view_dst = img::make_view(gray_dst, width, height);
+	img::adjust_contrast(gray_view, gray_view_dst, shade_min, shade_max);
 	img::write_image(gray_dst, out_dir / "contrast.png");
 
 	auto const is_white = [&](u8 p) { return static_cast<r32>(p) > gray_stats.mean; };
-	img::binarize(gray_image, gray_dst, is_white);
+	img::binarize(gray_view, gray_view_dst, is_white);
 	img::write_image(gray_dst, out_dir / "binarize.png");
 
 

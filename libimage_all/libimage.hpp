@@ -529,6 +529,8 @@ namespace libimage
 
 	view_t make_view(image_t const& image);
 
+	view_t make_view(image_t& image, u32 width, u32 height);
+
 	view_t sub_view(image_t const& image, pixel_range_t const& range);
 
 	view_t sub_view(view_t const& view, pixel_range_t const& range);
@@ -576,6 +578,8 @@ namespace libimage
 	void make_image(gray::image_t& image_dst, u32 width, u32 height);
 
 	gray::view_t make_view(gray::image_t const& image);
+
+	gray::view_t make_view(gray::image_t& image, u32 width, u32 height);
 
 	gray::view_t sub_view(gray::image_t const& image, pixel_range_t const& range);
 
