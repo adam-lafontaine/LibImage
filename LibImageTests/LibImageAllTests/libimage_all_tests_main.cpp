@@ -426,7 +426,7 @@ void process_tests(fs::path const& out_dir)
 	std::cout << "process:\n";
 
 	img::image_t image;
-	img::read_image_from_file(SRC_IMAGE_PATH, image);
+	img::read_image_from_file(CORVETTE_PATH, image);
 	auto const width = image.width;
 	auto const height = image.height;
 	auto view = img::make_view(image);
@@ -461,7 +461,19 @@ void process_tests(fs::path const& out_dir)
 	auto const is_white = [&](u8 p) { return static_cast<r32>(p) > gray_stats.mean; };
 	img::binarize(gray_view, gray_view_dst, is_white);
 	img::write_image(gray_dst, out_dir / "binarize.png");
-
+	
+	img::image_t caddy_read;
+	img::read_image_from_file(CADILLAC_PATH, caddy_read);
+	img::image_t caddy;
+	caddy.width = width;
+	caddy.height = height;
+	img::resize_image(caddy_read, caddy);
+	auto caddy_view = make_view(caddy);
+	img::image_t image_dst;
+	auto view_dst = img::make_view(image_dst, width, height);
+	img::convert_alpha(caddy_view, [](auto const& p) { return 128; });
+	img::alpha_blend(caddy_view, view, view_dst);
+	img::write_image(image_dst, out_dir / "alpha_blend.png");
 
 }
 
