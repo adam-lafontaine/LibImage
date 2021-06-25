@@ -15,6 +15,8 @@ namespace libimage
 
 	using u8_to_u8_f = std::function<u8(u8)>;
 
+	using u8_to_bool_f = std::function<bool(u8)>;
+
 
 	void convert(image_t const& src, gray::image_t const& dst, pixel_to_u8_f const& func);
 
@@ -67,6 +69,19 @@ namespace libimage
 	void adjust_contrast(gray::image_t const& src, u8 src_low, u8 src_high);
 
 	void adjust_contrast(gray::view_t const& src, u8 src_low, u8 src_high);
+
+
+	void binarize(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& func);
+
+	void binarize(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& func);
+
+	void binarize(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& func);
+
+	void binarize(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& func);
+
+	void binarize(gray::image_t const& src, u8_to_bool_f const& func);
+
+	void binarize(gray::view_t const& src, u8_to_bool_f const& func);
 
 
 	namespace par
@@ -122,6 +137,19 @@ namespace libimage
 		void adjust_contrast(gray::image_t const& src, u8 src_low, u8 src_high);
 
 		void adjust_contrast(gray::view_t const& src, u8 src_low, u8 src_high);
+
+
+		void binarize(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& func);
+
+		void binarize(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& func);
+
+		void binarize(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& func);
+
+		void binarize(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& func);
+
+		void binarize(gray::image_t const& src, u8_to_bool_f const& func);
+
+		void binarize(gray::view_t const& src, u8_to_bool_f const& func);
 	}
 }
 

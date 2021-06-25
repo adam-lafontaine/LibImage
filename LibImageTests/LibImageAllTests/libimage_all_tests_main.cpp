@@ -449,10 +449,14 @@ void process_tests(fs::path const& out_dir)
 	auto shade_min = static_cast<u8>(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
 	auto shade_max = static_cast<u8>(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
 
-	img::gray::image_t contrast_image;
-	img::make_image(contrast_image, gray_image.width, gray_image.height);
-	img::adjust_contrast(gray_image, contrast_image, shade_min, shade_max);
-	img::write_image(contrast_image, out_dir / "contrast.png");
+	img::gray::image_t gray_dst;
+	img::make_image(gray_dst, gray_image.width, gray_image.height);
+	img::adjust_contrast(gray_image, gray_dst, shade_min, shade_max);
+	img::write_image(gray_dst, out_dir / "contrast.png");
+
+	auto const is_white = [&](u8 p) { return static_cast<r32>(p) > gray_stats.mean; };
+	img::binarize(gray_image, gray_dst, is_white);
+	img::write_image(gray_dst, out_dir / "binarize.png");
 }
 
 
