@@ -145,6 +145,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\libimage_all\libimage.hpp" />
     <ClInclude Include="..\..\libimage_all\math\libimage_math.hpp" />
+    <ClInclude Include="..\..\libimage_all\proc\convolve.hpp" />
     <ClInclude Include="..\..\libimage_all\proc\process.hpp" />
     <ClInclude Include="..\..\libimage_all\proc\proc_template.hpp" />
     <ClInclude Include="..\..\libimage_all\stb\stb_image.h" />

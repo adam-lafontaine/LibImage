@@ -1,9 +1,9 @@
 #include "process.hpp"
+#include "convolve.hpp"
 
 #include <cassert>
 #include <algorithm>
 #include <execution>
-#include <array>
 
 namespace libimage
 {
@@ -91,6 +91,28 @@ namespace libimage
 	{
 		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
 	}
+
+
+	static r32 rms_contrast(gray::view_t const& view)
+	{
+		assert(verify(view));
+
+		auto const norm = [](auto p) { return p / 255.0f; };
+
+		auto total = std::accumulate(view.begin(), view.end(), 0.0f);
+		auto mean = norm(total / (view.width * view.height));
+
+		total = std::accumulate(view.begin(), view.end(), 0.0f, [&](r32 total, u8 p) { auto diff = norm(p) - mean; return diff * diff; });
+		mean = total / (view.width * view.height);
+
+		return std::sqrtf(mean);
+	}
+
+
+
+
+
+	
 
 
 	void convert(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
@@ -221,130 +243,7 @@ namespace libimage
 	}
 
 
-	r32 rms_contrast(gray::view_t const& view)
-	{
-		assert(verify(view));
-
-		auto const norm = [](auto p) { return p / 255.0f; };
-
-		auto total = std::accumulate(view.begin(), view.end(), 0.0f);
-		auto mean = norm(total / (view.width * view.height));		
-
-		total = std::accumulate(view.begin(), view.end(), 0.0f, [&](r32 total, u8 p) { auto diff = norm(p) - mean; return diff * diff; });
-		mean = total / (view.width * view.height);
-
-		return std::sqrtf(mean);
-	}
-
-
-	static u8 weighted(gray::view_t const& view, u32 x, u32 y, std::array<r32, 9> const& weights)
-	{
-		assert(x < view.width);
-		assert(x > 0);
-		assert(view.width - x > 1);
-		assert(y < view.height);
-		assert(y > 0);
-		assert(view.height - y > 1);
-
-		u32 y_begin = y - 1;
-		u32 y_end = y + 1;
-		u32 x_begin = x - 1;
-		u32 x_end = x + 1;
-
-		u32 w = 0;
-		r32 p = 0.0f;
-
-		for (u32 vy = y_begin; vy < y_end; ++vy)
-		{
-			auto row = view.row_begin(vy);
-			for (u32 vx = x_begin; vx < x_end; ++vx)
-			{
-				p += weights[w] * row[vx];
-				++w;
-			}
-		}
-
-		if (p < 0.0f)
-		{
-			p *= -1.0f;
-		}
-
-		assert(p <= 255.0f);
-
-		return static_cast<u8>(p);
-	}
-
-
-	static u8 weighted(gray::view_t const& view, u32 x, u32 y, std::array<r32, 25> const& weights)
-	{
-		assert(x < view.width);
-		assert(x > 1);
-		assert(view.width - x > 2);
-		assert(y < view.height);
-		assert(y > 1);
-		assert(view.height - y > 2);
-
-		u32 y_begin = y - 2;
-		u32 y_end = y + 2;
-		u32 x_begin = x - 2;
-		u32 x_end = x + 2;
-
-		u32 w = 0;
-		r32 p = 0.0f;
-
-		for (u32 vy = y_begin; vy < y_end; ++vy)
-		{
-			auto row = view.row_begin(vy);
-			for (u32 vx = x_begin; vx < x_end; ++vx)
-			{
-				p += weights[w] * row[vx];
-				++w;
-			}
-		}
-
-		if (p < 0.0f)
-		{
-			p *= -1.0f;
-		}
-
-		assert(p <= 255.0f);
-
-		return static_cast<u8>(p);
-	}
-
-
-	static u8 gauss3(gray::view_t const& view, u32 x, u32 y)
-	{
-		constexpr auto rw = [](u8 w) { return w / 16.0f; };
-		constexpr std::array<r32, 9> gauss
-		{
-			rw(1), rw(2), rw(1),
-			rw(2), rw(4), rw(2),
-			rw(1), rw(2), rw(1),
-		};
-
-		u32 y_begin = y - 1;
-		u32 y_end = y + 1;
-		u32 x_begin = x - 1;
-		u32 x_end = x + 1;
-
-		return weighted(view, x, y, gauss);
-	}
-
-	static u8 gauss5(gray::view_t const& view, u32 x, u32 y)
-	{
-		constexpr auto rw = [](u8 w) { return w / 256.0f; };
-		constexpr std::array<r32, 25> gauss
-		{
-			rw(1), rw(4), rw(6), rw(4), rw(1),
-			rw(4), rw(16), rw(24), rw(16), rw(4),
-			rw(6), rw(24), rw(36), rw(24), rw(6),
-			rw(4), rw(16), rw(24), rw(16), rw(4),
-			rw(1), rw(4), rw(6), rw(4), rw(1),
-		};
-
-		return weighted(view, x, y, gauss);
-	}
+	
 
 
 	void blur(gray::view_t const& src, gray::view_t const& dst)

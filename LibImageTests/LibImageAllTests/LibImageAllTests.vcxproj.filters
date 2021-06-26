@@ -60,6 +60,9 @@
     <ClInclude Include="..\..\libimage_all\proc\proc_template.hpp">
       <Filter>Header Files\libimage_all\proc</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\libimage_all\proc\convolve.hpp">
+      <Filter>Header Files\libimage_all\proc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="libimage_all_tests_main.cpp">
