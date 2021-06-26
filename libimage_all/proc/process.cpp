@@ -3,6 +3,7 @@
 #include <cassert>
 #include <algorithm>
 #include <execution>
+#include <array>
 
 namespace libimage
 {
@@ -200,6 +201,174 @@ namespace libimage
 		for (; it_src != src.end(); ++it_src, ++it_current_dst)
 		{
 			*it_current_dst = alpha_blend_linear(*it_src, *it_current_dst);
+		}
+	}
+
+
+	r32 rms_contrast(gray::view_t const& view)
+	{
+		assert(verify(view));
+
+		auto const norm = [](auto p) { return p / 255.0f; };
+
+		auto total = std::accumulate(view.begin(), view.end(), 0.0f);
+		auto mean = norm(total / (view.width * view.height));		
+
+		total = std::accumulate(view.begin(), view.end(), 0.0f, [&](u8 p) { auto diff = norm(p) - mean; return diff * diff; });
+		mean = total / (view.width * view.height);
+
+		return std::sqrtf(mean);
+	}
+
+
+	static u8 gauss3(gray::view_t const& view, u32 x, u32 y)
+	{
+		assert(x < view.width);
+		assert(x > 0);
+		assert(view.width - x > 1);
+		assert(y < view.height);
+		assert(y > 0);
+		assert(view.height - y > 1);
+
+		constexpr std::array<u8, 9> gauss
+		{
+			1, 2, 1,
+			2, 4, 2,
+			1, 2, 1
+		};
+
+		constexpr r32 divisor = 16.0f;
+
+		u32 y_begin = y - 1;
+		u32 y_end = y + 1;
+		u32 x_begin = x - 1;
+		u32 x_end = x + 1;
+
+		u32 g = 0;
+		r32 total = 0.0f;
+
+		for (u32 vy = y_begin; vy < y_end; ++vy)
+		{
+			auto row = view.row_begin(vy);
+			for (u32 vx = x_begin; vx < x_end; ++vx)
+			{
+				total += gauss[g] * row[vx];
+				++g;
+			}
+		}
+
+		r32 p = total / divisor;
+		assert(p >= 0.0f);
+		assert(p <= 255.0f);
+
+		return static_cast<u8>(p);
+	}
+
+
+	static u8 gauss5(gray::view_t const& view, u32 x, u32 y)
+	{
+		assert(x < view.width);
+		assert(x > 1);
+		assert(view.width - x > 2);
+		assert(y < view.height);
+		assert(y > 1);
+		assert(view.height - y > 2);
+
+		constexpr std::array<u8, 25> gauss
+		{
+			1, 4, 6, 4, 1,
+			4, 16, 24, 16, 4,
+			6, 24, 36, 24, 6,
+			4, 16, 24, 16, 4,
+			1, 4, 6, 4, 1,
+		};
+
+		constexpr r32 divisor = 256.0f;
+
+		u32 y_begin = y - 2;
+		u32 y_end = y + 2;
+		u32 x_begin = x - 2;
+		u32 x_end = x + 2;
+
+		u32 g = 0;
+		r32 total = 0.0f;
+
+		for (u32 vy = y_begin; vy < y_end; ++vy)
+		{
+			auto row = view.row_begin(vy);
+			for (u32 vx = x_begin; vx < x_end; ++vx)
+			{
+				total += gauss[g] * row[vx];
+				++g;
+			}
+		}
+
+		r32 p = total / divisor;
+		assert(p >= 0.0f);
+		assert(p <= 255.0f);
+
+		return static_cast<u8>(p);
+	}
+
+
+	void blur(gray::view_t const& src, gray::view_t const& dst)
+	{
+		assert(verify(src, dst));
+
+		u32 x_first = 0;
+		u32 y_first = 0;
+		u32 x_last = src.width - 1;
+		u32 y_last = src.height - 1;
+
+		auto top = dst.row_begin(y_first);
+		auto bottom = dst.row_begin(y_last);
+		for (u32 x = x_first; x <= x_last; ++x)
+		{
+			top[x] = 0;
+			bottom[x] = 0;
+		}
+		
+		++y_first;		
+		--y_last;
+
+		for (u32 y = y_first; y <= y_last; ++y)
+		{
+			auto row = dst.row_begin(y);
+			row[x_first] = 0;
+			row[x_last] = 0;
+		}
+
+		++x_first;
+		--x_last;
+
+		top = dst.row_begin(y_first);
+		bottom = dst.row_begin(y_last);
+		for (u32 x = x_first; x <= x_last; ++x)
+		{
+			top[x] = gauss3(src, x, y_first);
+			bottom[x] = gauss3(src, x, y_last);
+		}
+
+		++y_first;
+		--y_last;
+
+		for (u32 y = y_first; y <= y_last; ++y)
+		{
+			auto row = dst.row_begin(y);
+			row[x_first] = gauss3(src, x_first, y);
+			row[x_last] = gauss3(src, x_last, y);
+		}
+
+		++x_first;
+		--x_last;
+
+		for (u32 y = y_first; y <= y_last; ++y)
+		{
+			auto row = dst.row_begin(y);
+			for (u32 x = x_first; x <= x_last; ++x)
+			{
+				row[x] = gauss5(src, x, y);
+			}
 		}
 	}
 

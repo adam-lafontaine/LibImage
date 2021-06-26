@@ -4,8 +4,6 @@
 
 #include <functional>
 
-// TODO: alpha blending
-
 
 
 namespace libimage

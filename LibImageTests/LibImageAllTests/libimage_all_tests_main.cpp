@@ -475,6 +475,10 @@ void process_tests(fs::path const& out_dir)
 	img::alpha_blend(caddy_view, view, view_dst);
 	img::write_image(image_dst, out_dir / "alpha_blend.png");
 
+	// combo
+
+	//blur
+
 }
 
 
