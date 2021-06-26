@@ -518,15 +518,15 @@ void process_tests(fs::path const& out_dir)
 	src_sub = img::sub_view(src_gray_view, range);
 	dst_sub = img::sub_view(dst_gray_view, range);
 	auto const is_black = [&](u8 p) { return static_cast<r32>(p) < gray_stats.mean; };
-	img::binarize(src_sub, dst_sub, is_black);
-
-	img::write_image(dst_gray_image, out_dir / "combo.png");
+	img::binarize(src_sub, dst_sub, is_black);	
 
 	range.x_begin = width / 2;
 	range.x_end = width;
-
+	src_sub = img::sub_view(src_gray_view, range);
+	dst_sub = img::sub_view(dst_gray_view, range);
+	img::blur(src_sub, dst_sub);
 	
-
+	img::write_image(dst_gray_image, out_dir / "combo.png");
 }
 
 

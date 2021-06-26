@@ -237,7 +237,7 @@ namespace libimage
 	}
 
 
-	static u8 gauss3(gray::view_t const& view, u32 x, u32 y)
+	static u8 weighted(gray::view_t const& view, u32 x, u32 y, std::array<r32, 9> const& weights)
 	{
 		assert(x < view.width);
 		assert(x > 0);
@@ -246,42 +246,36 @@ namespace libimage
 		assert(y > 0);
 		assert(view.height - y > 1);
 
-		constexpr std::array<u8, 9> gauss
-		{
-			1, 2, 1,
-			2, 4, 2,
-			1, 2, 1
-		};
-
-		constexpr r32 divisor = 16.0f;
-
 		u32 y_begin = y - 1;
 		u32 y_end = y + 1;
 		u32 x_begin = x - 1;
 		u32 x_end = x + 1;
 
-		u32 g = 0;
-		r32 total = 0.0f;
+		u32 w = 0;
+		r32 p = 0.0f;
 
 		for (u32 vy = y_begin; vy < y_end; ++vy)
 		{
 			auto row = view.row_begin(vy);
 			for (u32 vx = x_begin; vx < x_end; ++vx)
 			{
-				total += gauss[g] * row[vx];
-				++g;
+				p += weights[w] * row[vx];
+				++w;
 			}
 		}
 
-		r32 p = total / divisor;
-		assert(p >= 0.0f);
+		if (p < 0.0f)
+		{
+			p *= -1.0f;
+		}
+
 		assert(p <= 255.0f);
 
 		return static_cast<u8>(p);
 	}
 
 
-	static u8 gauss5(gray::view_t const& view, u32 x, u32 y)
+	static u8 weighted(gray::view_t const& view, u32 x, u32 y, std::array<r32, 25> const& weights)
 	{
 		assert(x < view.width);
 		assert(x > 1);
@@ -290,40 +284,66 @@ namespace libimage
 		assert(y > 1);
 		assert(view.height - y > 2);
 
-		constexpr std::array<u8, 25> gauss
-		{
-			1, 4, 6, 4, 1,
-			4, 16, 24, 16, 4,
-			6, 24, 36, 24, 6,
-			4, 16, 24, 16, 4,
-			1, 4, 6, 4, 1,
-		};
-
-		constexpr r32 divisor = 256.0f;
-
 		u32 y_begin = y - 2;
 		u32 y_end = y + 2;
 		u32 x_begin = x - 2;
 		u32 x_end = x + 2;
 
-		u32 g = 0;
-		r32 total = 0.0f;
+		u32 w = 0;
+		r32 p = 0.0f;
 
 		for (u32 vy = y_begin; vy < y_end; ++vy)
 		{
 			auto row = view.row_begin(vy);
 			for (u32 vx = x_begin; vx < x_end; ++vx)
 			{
-				total += gauss[g] * row[vx];
-				++g;
+				p += weights[w] * row[vx];
+				++w;
 			}
 		}
 
-		r32 p = total / divisor;
-		assert(p >= 0.0f);
+		if (p < 0.0f)
+		{
+			p *= -1.0f;
+		}
+
 		assert(p <= 255.0f);
 
 		return static_cast<u8>(p);
+	}
+
+
+	static u8 gauss3(gray::view_t const& view, u32 x, u32 y)
+	{
+		constexpr auto rw = [](u8 w) { return w / 16.0f; };
+		constexpr std::array<r32, 9> gauss
+		{
+			rw(1), rw(2), rw(1),
+			rw(2), rw(4), rw(2),
+			rw(1), rw(2), rw(1),
+		};
+
+		u32 y_begin = y - 1;
+		u32 y_end = y + 1;
+		u32 x_begin = x - 1;
+		u32 x_end = x + 1;
+
+		return weighted(view, x, y, gauss);
+	}
+
+	static u8 gauss5(gray::view_t const& view, u32 x, u32 y)
+	{
+		constexpr auto rw = [](u8 w) { return w / 256.0f; };
+		constexpr std::array<r32, 25> gauss
+		{
+			rw(1), rw(4), rw(6), rw(4), rw(1),
+			rw(4), rw(16), rw(24), rw(16), rw(4),
+			rw(6), rw(24), rw(36), rw(24), rw(6),
+			rw(4), rw(16), rw(24), rw(16), rw(4),
+			rw(1), rw(4), rw(6), rw(4), rw(1),
+		};
+
+		return weighted(view, x, y, gauss);
 	}
 
 
@@ -391,6 +411,12 @@ namespace libimage
 				dst_row[x] = gauss5(src, x, y);
 			}
 		}
+	}
+
+
+	void gradient(gray::view_t const& src, gray::view_t const& dst)
+	{
+
 	}
 
 
