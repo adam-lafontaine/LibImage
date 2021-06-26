@@ -108,10 +108,44 @@ namespace libimage
 	}
 
 
+	static u8 gauss3(gray::view_t const& view, u32 x, u32 y)
+	{
+		constexpr auto rw = [](u8 w) { return w / 16.0f; };
+		constexpr std::array<r32, 9> gauss
+		{
+			rw(1), rw(2), rw(1),
+			rw(2), rw(4), rw(2),
+			rw(1), rw(2), rw(1),
+		};
+
+		auto p = weighted_center(view, x, y, gauss);
+
+		assert(p >= 0.0f);
+		assert(p <= 255.0f);
+
+		return static_cast<u8>(p);
+	}
 
 
+	static u8 gauss5(gray::view_t const& view, u32 x, u32 y)
+	{
+		constexpr auto rw = [](u8 w) { return w / 256.0f; };
+		constexpr std::array<r32, 25> gauss
+		{
+			rw(1), rw(4), rw(6), rw(4), rw(1),
+			rw(4), rw(16), rw(24), rw(16), rw(4),
+			rw(6), rw(24), rw(36), rw(24), rw(6),
+			rw(4), rw(16), rw(24), rw(16), rw(4),
+			rw(1), rw(4), rw(6), rw(4), rw(1),
+		};
 
-	
+		auto p = weighted_center(view, x, y, gauss);
+
+		assert(p >= 0.0f);
+		assert(p <= 255.0f);
+
+		return static_cast<u8>(p);
+	}
 
 
 	void convert(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
@@ -239,10 +273,7 @@ namespace libimage
 		{
 			*it_current_dst = alpha_blend_linear(*it_src, *it_current_dst);
 		}
-	}
-
-
-	
+	}	
 
 
 	void blur(gray::view_t const& src, gray::view_t const& dst)

@@ -7,7 +7,7 @@
 namespace libimage
 {
 	template<size_t N>
-	u8 apply_weights(gray::view_t const& view, pixel_range_t const& range, std::array<r32, N> weights)
+	r32 apply_weights(gray::view_t const& view, pixel_range_t const& range, std::array<r32, N> weights)
 	{
 		assert((range.x_end - range.x_begin) * (range.y_end - range.y_begin) == weights.size());
 		u32 w = 0;
@@ -23,14 +23,7 @@ namespace libimage
 			}
 		}
 
-		if (p < 0.0f)
-		{
-			p *= -1.0f;
-		}
-
-		assert(p <= 255.0f);
-
-		return static_cast<u8>(p);
+		return p;
 	}
 
 
@@ -92,17 +85,27 @@ namespace libimage
 	}
 
 
+	void top_or_bottom_5_high(pixel_range_t& range, u32 y, u32 height)
+	{
+		// top or bottom (5 high)
+		assert(y >= 2);
+		assert(y <= height - 3);
+		range.y_begin = y - 2;
+		range.y_end = y + 3;
+	}
+	
+	
 	void left_or_right_5_wide(pixel_range_t& range, u32 x, u32 width)
 	{
 		// left or right (5 wide)
 		assert(x >= 2);
-		assert(width - x > 2);
+		assert(x <= width - 3);
 		range.x_begin = x - 2;
 		range.x_end = x + 3;
 	}
 
 
-	u8 weighted_center(gray::view_t const& view, u32 x, u32 y, std::array<r32, 9> const& weights)
+	r32 weighted_center(gray::view_t const& view, u32 x, u32 y, std::array<r32, 9> const& weights)
 	{
 		pixel_range_t range = {};
 
@@ -114,11 +117,11 @@ namespace libimage
 	}
 
 
-	u8 weighted_center(gray::view_t const& view, u32 x, u32 y, std::array<r32, 25> const& weights)
+	r32 weighted_center(gray::view_t const& view, u32 x, u32 y, std::array<r32, 25> const& weights)
 	{
 		pixel_range_t range = {};
 
-		top_or_bottom_3_high(range, y, view.height);
+		top_or_bottom_5_high(range, y, view.height);
 
 		left_or_right_5_wide(range, x, view.width);
 
@@ -126,7 +129,7 @@ namespace libimage
 	}
 
 
-	u8 weighted_top_left(gray::view_t const& view, u32 x, u32 y, std::array<r32, 4> const& weights)
+	r32 weighted_top_left(gray::view_t const& view, u32 x, u32 y, std::array<r32, 4> const& weights)
 	{
 		pixel_range_t range = {};
 
@@ -138,7 +141,7 @@ namespace libimage
 	}
 
 
-	u8 weighted_top_right(gray::view_t const& view, u32 x, u32 y, std::array<r32, 4> const& weights)
+	r32 weighted_top_right(gray::view_t const& view, u32 x, u32 y, std::array<r32, 4> const& weights)
 	{
 		pixel_range_t range = {};
 
@@ -150,7 +153,7 @@ namespace libimage
 	}
 
 
-	u8 weighted_bottom_left(gray::view_t const& view, u32 x, u32 y, std::array<r32, 4> const& weights)
+	r32 weighted_bottom_left(gray::view_t const& view, u32 x, u32 y, std::array<r32, 4> const& weights)
 	{
 		pixel_range_t range = {};
 
@@ -162,7 +165,7 @@ namespace libimage
 	}
 
 
-	u8 weighted_bottom_right(gray::view_t const& view, u32 x, u32 y, std::array<r32, 4> const& weights)
+	r32 weighted_bottom_right(gray::view_t const& view, u32 x, u32 y, std::array<r32, 4> const& weights)
 	{
 		pixel_range_t range = {};
 
@@ -174,7 +177,7 @@ namespace libimage
 	}
 
 
-	u8 weighted_top(gray::view_t const& view, u32 x, u32 y, std::array<r32, 6> const& weights)
+	r32 weighted_top(gray::view_t const& view, u32 x, u32 y, std::array<r32, 6> const& weights)
 	{
 		pixel_range_t range = {};
 
@@ -186,7 +189,7 @@ namespace libimage
 	}
 
 
-	u8 weighted_bottom(gray::view_t const& view, u32 x, u32 y, std::array<r32, 6> const& weights)
+	r32 weighted_bottom(gray::view_t const& view, u32 x, u32 y, std::array<r32, 6> const& weights)
 	{
 		pixel_range_t range = {};
 
@@ -198,7 +201,7 @@ namespace libimage
 	}
 
 
-	u8 weighted_left(gray::view_t const& view, u32 x, u32 y, std::array<r32, 6> const& weights)
+	r32 weighted_left(gray::view_t const& view, u32 x, u32 y, std::array<r32, 6> const& weights)
 	{
 		pixel_range_t range = {};
 
@@ -210,7 +213,7 @@ namespace libimage
 	}
 
 
-	u8 weighted_right(gray::view_t const& view, u32 x, u32 y, std::array<r32, 6> const& weights)
+	r32 weighted_right(gray::view_t const& view, u32 x, u32 y, std::array<r32, 6> const& weights)
 	{
 		pixel_range_t range = {};
 
@@ -222,32 +225,8 @@ namespace libimage
 	}
 
 
-	u8 gauss3(gray::view_t const& view, u32 x, u32 y)
-	{
-		constexpr auto rw = [](u8 w) { return w / 16.0f; };
-		constexpr std::array<r32, 9> gauss
-		{
-			rw(1), rw(2), rw(1),
-			rw(2), rw(4), rw(2),
-			rw(1), rw(2), rw(1),
-		};
-
-		return weighted_center(view, x, y, gauss);
-	}
+	
 
 
-	u8 gauss5(gray::view_t const& view, u32 x, u32 y)
-	{
-		constexpr auto rw = [](u8 w) { return w / 256.0f; };
-		constexpr std::array<r32, 25> gauss
-		{
-			rw(1), rw(4), rw(6), rw(4), rw(1),
-			rw(4), rw(16), rw(24), rw(16), rw(4),
-			rw(6), rw(24), rw(36), rw(24), rw(6),
-			rw(4), rw(16), rw(24), rw(16), rw(4),
-			rw(1), rw(4), rw(6), rw(4), rw(1),
-		};
 
-		return weighted_center(view, x, y, gauss);
-	}
 }
