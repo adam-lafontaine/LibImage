@@ -214,7 +214,7 @@ namespace libimage
 		auto total = std::accumulate(view.begin(), view.end(), 0.0f);
 		auto mean = norm(total / (view.width * view.height));		
 
-		total = std::accumulate(view.begin(), view.end(), 0.0f, [&](u8 p) { auto diff = norm(p) - mean; return diff * diff; });
+		total = std::accumulate(view.begin(), view.end(), 0.0f, [&](r32 total, u8 p) { auto diff = norm(p) - mean; return diff * diff; });
 		mean = total / (view.width * view.height);
 
 		return std::sqrtf(mean);
@@ -320,12 +320,14 @@ namespace libimage
 		u32 x_last = src.width - 1;
 		u32 y_last = src.height - 1;
 
-		auto top = dst.row_begin(y_first);
-		auto bottom = dst.row_begin(y_last);
+		auto src_top = src.row_begin(y_first);
+		auto src_bottom = src.row_begin(y_last);
+		auto dst_top = dst.row_begin(y_first);
+		auto dst_bottom = dst.row_begin(y_last);
 		for (u32 x = x_first; x <= x_last; ++x)
 		{
-			top[x] = 0;
-			bottom[x] = 0;
+			dst_top[x] = src_top[x];
+			dst_bottom[x] = src_bottom[x];
 		}
 		
 		++y_first;		
@@ -333,20 +335,21 @@ namespace libimage
 
 		for (u32 y = y_first; y <= y_last; ++y)
 		{
-			auto row = dst.row_begin(y);
-			row[x_first] = 0;
-			row[x_last] = 0;
+			auto src_row = src.row_begin(y);
+			auto dst_row = dst.row_begin(y);
+			dst_row[x_first] = src_row[x_first];
+			dst_row[x_last] = src_row[x_first];
 		}
 
 		++x_first;
 		--x_last;
 
-		top = dst.row_begin(y_first);
-		bottom = dst.row_begin(y_last);
+		dst_top = dst.row_begin(y_first);
+		dst_bottom = dst.row_begin(y_last);
 		for (u32 x = x_first; x <= x_last; ++x)
 		{
-			top[x] = gauss3(src, x, y_first);
-			bottom[x] = gauss3(src, x, y_last);
+			dst_top[x] = gauss3(src, x, y_first);
+			dst_bottom[x] = gauss3(src, x, y_last);
 		}
 
 		++y_first;
@@ -354,9 +357,9 @@ namespace libimage
 
 		for (u32 y = y_first; y <= y_last; ++y)
 		{
-			auto row = dst.row_begin(y);
-			row[x_first] = gauss3(src, x_first, y);
-			row[x_last] = gauss3(src, x_last, y);
+			auto dst_row = dst.row_begin(y);
+			dst_row[x_first] = gauss3(src, x_first, y);
+			dst_row[x_last] = gauss3(src, x_last, y);
 		}
 
 		++x_first;
@@ -364,10 +367,10 @@ namespace libimage
 
 		for (u32 y = y_first; y <= y_last; ++y)
 		{
-			auto row = dst.row_begin(y);
+			auto dst_row = dst.row_begin(y);
 			for (u32 x = x_first; x <= x_last; ++x)
 			{
-				row[x] = gauss5(src, x, y);
+				dst_row[x] = gauss5(src, x, y);
 			}
 		}
 	}
