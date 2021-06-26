@@ -425,43 +425,21 @@ void process_tests(fs::path const& out_dir)
 {
 	std::cout << "process:\n";
 
-	img::image_t image;
-	img::read_image_from_file(CORVETTE_PATH, image);
-	auto const width = image.width;
-	auto const height = image.height;
-	auto view = img::make_view(image);
+	// get image
+	img::image_t corvette_image;
+	img::read_image_from_file(CORVETTE_PATH, corvette_image);
+	auto const width = corvette_image.width;
+	auto const height = corvette_image.height;
+	auto corvette_view = img::make_view(corvette_image);
 
-	img::gray::image_t gray_image;
-	auto gray_view = img::make_view(gray_image, width, height);
+	img::image_t dst_image;
+	auto dst_view = img::make_view(dst_image, width, height);
 
-	img::convert_grayscale(view, gray_view);
-	img::write_image(gray_image, out_dir / "convert_grayscale.bmp");
-	
-	auto gray_stats = img::calc_stats(gray_image);
-	img::gray::image_t gray_stats_image;
-	img::draw_histogram(gray_stats.hist, gray_stats_image);
-	img::write_image(gray_stats_image, out_dir / "gray_stats.png");
-	print(gray_stats);
+	img::gray::image_t dst_gray_image;
+	auto dst_gray_view = img::make_view(dst_gray_image, width, height);
 
-	img::convert_alpha_grayscale(view);
-	auto alpha_stats = img::calc_stats(image, img::Channel::Alpha);
-	img::gray::image_t alpha_stats_image;
-	img::draw_histogram(alpha_stats.hist, alpha_stats_image);
-	img::write_image(alpha_stats_image, out_dir / "alpha_stats.png");
-	print(alpha_stats);
-		
-	auto shade_min = static_cast<u8>(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
-	auto shade_max = static_cast<u8>(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
-
-	img::gray::image_t gray_dst;
-	auto gray_view_dst = img::make_view(gray_dst, width, height);
-	img::adjust_contrast(gray_view, gray_view_dst, shade_min, shade_max);
-	img::write_image(gray_dst, out_dir / "contrast.png");
-
-	auto const is_white = [&](u8 p) { return static_cast<r32>(p) > gray_stats.mean; };
-	img::binarize(gray_view, gray_view_dst, is_white);
-	img::write_image(gray_dst, out_dir / "binarize.png");
-	
+	// get another image for blending
+	// make sure it is the same size
 	img::image_t caddy_read;
 	img::read_image_from_file(CADILLAC_PATH, caddy_read);
 	img::image_t caddy;
@@ -469,13 +447,79 @@ void process_tests(fs::path const& out_dir)
 	caddy.height = height;
 	img::resize_image(caddy_read, caddy);
 	auto caddy_view = make_view(caddy);
-	img::image_t image_dst;
-	auto view_dst = img::make_view(image_dst, width, height);
+
+	// alpha blending
 	img::convert_alpha(caddy_view, [](auto const& p) { return 128; });
-	img::alpha_blend(caddy_view, view, view_dst);
-	img::write_image(image_dst, out_dir / "alpha_blend.png");
+	img::alpha_blend(caddy_view, corvette_view, dst_view);
+	img::write_image(dst_image, out_dir / "alpha_blend.png");
+
+	// grayscale
+	img::convert_grayscale(corvette_view, dst_gray_view);
+	img::write_image(dst_gray_image, out_dir / "convert_grayscale.bmp");
+	
+	// stats
+	auto gray_stats = img::calc_stats(dst_gray_image);
+	img::gray::image_t gray_stats_image;
+	img::draw_histogram(gray_stats.hist, gray_stats_image);
+	img::write_image(gray_stats_image, out_dir / "gray_stats.png");
+	print(gray_stats);
+
+	// alpha grayscale
+	img::convert_alpha_grayscale(corvette_view);
+	auto alpha_stats = img::calc_stats(corvette_image, img::Channel::Alpha);
+	img::gray::image_t alpha_stats_image;
+	img::draw_histogram(alpha_stats.hist, alpha_stats_image);
+	img::write_image(alpha_stats_image, out_dir / "alpha_stats.png");
+	print(alpha_stats);
+
+	// create a new grayscale source
+	img::gray::image_t src_gray_image;
+	auto src_gray_view = img::make_view(src_gray_image, width, height);
+	img::copy(dst_gray_view, src_gray_view);
+
+	// contrast
+	auto shade_min = static_cast<u8>(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
+	auto shade_max = static_cast<u8>(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
+	img::adjust_contrast(src_gray_view, dst_gray_view, shade_min, shade_max);
+	img::write_image(dst_gray_image, out_dir / "contrast.png");
+
+	// binarize
+	auto const is_white = [&](u8 p) { return static_cast<r32>(p) > gray_stats.mean; };
+	img::binarize(src_gray_view, dst_gray_view, is_white);
+	img::write_image(dst_gray_image, out_dir / "binarize.png");
+	
+	// regular grayscale to start
+	img::copy(src_gray_view, dst_gray_view);
 
 	// combo
+	img::pixel_range_t range;
+	range.x_begin = 0;
+	range.x_end = width / 2;
+	range.y_begin = 0;
+	range.y_end = height / 2;
+	auto src_sub = img::sub_view(src_gray_view, range);
+	auto dst_sub = img::sub_view(dst_gray_view, range);
+	img::adjust_contrast(src_sub, dst_sub, shade_min, shade_max);
+
+	range.x_begin = width / 2;
+	range.x_end = width;
+	src_sub = img::sub_view(src_gray_view, range);
+	dst_sub = img::sub_view(dst_gray_view, range);
+	img::binarize(src_sub, dst_sub, is_white);	
+
+	range.x_begin = 0;
+	range.x_end = width / 2;
+	range.y_begin = height / 2;
+	range.y_end = height;
+	src_sub = img::sub_view(src_gray_view, range);
+	dst_sub = img::sub_view(dst_gray_view, range);
+	auto const is_black = [&](u8 p) { return static_cast<r32>(p) < gray_stats.mean; };
+	img::binarize(src_sub, dst_sub, is_black);
+
+	img::write_image(dst_gray_image, out_dir / "combo.png");
+
+	range.x_begin = width / 2;
+	range.x_end = width;
 
 	//blur
 

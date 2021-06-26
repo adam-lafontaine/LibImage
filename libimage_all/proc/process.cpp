@@ -118,6 +118,22 @@ namespace libimage
 	}
 
 
+	void copy(view_t const& src, view_t const& dst)
+	{
+		assert(verify(src, dst));
+
+		std::copy(src.begin(), src.end(), dst.begin());
+	}
+
+
+	void copy(gray::view_t const& src, gray::view_t const& dst)
+	{
+		assert(verify(src, dst));
+
+		std::copy(src.begin(), src.end(), dst.begin());
+	}
+
+
 	void convert_grayscale(view_t const& src, gray::view_t const& dst)
 	{
 		convert(src, dst, pixel_grayscale_standard);
@@ -400,6 +416,22 @@ namespace libimage
 
 			auto const conv = [&](u8& p) { p = func(p); };
 			std::for_each(std::execution::par, src.begin(), src.end(), conv);
+		}
+
+
+		void copy(view_t const& src, view_t const& dst)
+		{
+			assert(verify(src, dst));
+
+			std::copy(std::execution::par, src.begin(), src.end(), dst.begin());
+		}
+
+
+		void copy(gray::view_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+
+			std::copy(std::execution::par, src.begin(), src.end(), dst.begin());
 		}
 
 

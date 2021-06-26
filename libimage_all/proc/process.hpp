@@ -21,6 +21,10 @@ namespace libimage
 
 	void convert(gray::view_t const& src, u8_to_u8_f const& func);
 
+	void copy(view_t const& src, view_t const& dst);
+
+	void copy(gray::view_t const& src, gray::view_t const& dst);
+
 	void convert_grayscale(view_t const& src, gray::view_t const& dst);
 
 	void convert_alpha(view_t const& src, pixel_to_u8_f const& func);
@@ -47,6 +51,10 @@ namespace libimage
 		void convert(gray::view_t const& src, gray::view_t const& dst, u8_to_u8_f const& func);
 
 		void convert(gray::view_t const& src, u8_to_u8_f const& func);
+
+		void copy(view_t const& src, view_t const& dst);
+
+		void copy(gray::view_t const& src, gray::view_t const& dst);
 
 		void convert_grayscale(view_t const& src, gray::view_t const& dst);
 
