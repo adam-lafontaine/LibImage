@@ -1,7 +1,6 @@
 #include "process.hpp"
 #include "convolve.hpp"
 
-#include <cassert>
 #include <algorithm>
 #include <execution>
 
