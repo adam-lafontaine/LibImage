@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <execution>
+#include <cmath>
 
 namespace libimage
 {
@@ -106,47 +107,7 @@ namespace libimage
 
 		return std::sqrtf(mean);
 	}
-
-
-	static u8 gauss3(gray::view_t const& view, u32 x, u32 y)
-	{
-		constexpr auto rw = [](u8 w) { return w / 16.0f; };
-		constexpr std::array<r32, 9> gauss
-		{
-			rw(1), rw(2), rw(1),
-			rw(2), rw(4), rw(2),
-			rw(1), rw(2), rw(1),
-		};
-
-		auto p = weighted_center(view, x, y, gauss);
-
-		assert(p >= 0.0f);
-		assert(p <= 255.0f);
-
-		return static_cast<u8>(p);
-	}
-
-
-	static u8 gauss5(gray::view_t const& view, u32 x, u32 y)
-	{
-		constexpr auto rw = [](u8 w) { return w / 256.0f; };
-		constexpr std::array<r32, 25> gauss
-		{
-			rw(1), rw(4), rw(6), rw(4), rw(1),
-			rw(4), rw(16), rw(24), rw(16), rw(4),
-			rw(6), rw(24), rw(36), rw(24), rw(6),
-			rw(4), rw(16), rw(24), rw(16), rw(4),
-			rw(1), rw(4), rw(6), rw(4), rw(1),
-		};
-
-		auto p = weighted_center(view, x, y, gauss);
-
-		assert(p >= 0.0f);
-		assert(p <= 255.0f);
-
-		return static_cast<u8>(p);
-	}
-
+	
 
 	void convert(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
 	{
@@ -343,9 +304,53 @@ namespace libimage
 	}
 
 
-	void gradient(gray::view_t const& src, gray::view_t const& dst)
+	void edges(gray::view_t const& src, gray::view_t const& dst, u8 threshold)
 	{
+		assert(verify(src, dst));
 
+		gray::image_t temp;
+		auto temp_view = make_view(temp, src.width, src.height);
+		blur(src, temp_view);
+
+		u32 x_first = 0;
+		u32 y_first = 0;
+		u32 x_last = src.width - 1;
+		u32 y_last = src.height - 1;
+
+		auto dst_top = dst.row_begin(y_first);
+		auto dst_bottom = dst.row_begin(y_last);
+		for (u32 x = x_first; x <= x_last; ++x) // top and bottom rows
+		{
+			dst_top[x] = 0;
+			dst_bottom[x] = 0;
+		}
+
+		++y_first;
+		--y_last;
+
+		for (u32 y = y_first; y <= y_last; ++y) // left and right columns
+		{
+			auto dst_row = dst.row_begin(y);
+			dst_row[x_first] = 0;
+			dst_row[x_last] = 0;
+		}
+
+		++x_first;
+		--x_last;
+
+		for (u32 y = y_first; y <= y_last; ++y)
+		{
+			auto dst_row = dst.row_begin(y);
+			for (u32 x = x_first; x <= x_last; ++x)
+			{
+				auto gx = std::abs(x_gradient(temp_view, x, y));
+				auto gy = std::abs(y_gradient(temp_view, x, y));
+				auto g = std::hypot(gx, gy);
+				dst_row[x] = g < threshold ? 0 : 255;
+			}
+		}
+
+		// TODO: temp.clear(); in new thread
 	}
 
 

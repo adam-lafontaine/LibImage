@@ -77,5 +77,8 @@
     <ClCompile Include="..\..\libimage_all\proc\process.cpp">
       <Filter>Source Files\proc</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\libimage_all\proc\convolve.cpp">
+      <Filter>Header Files\libimage_all\proc</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

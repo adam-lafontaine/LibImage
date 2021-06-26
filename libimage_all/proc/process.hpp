@@ -45,6 +45,8 @@ namespace libimage
 
 	void blur(gray::view_t const& src, gray::view_t const& dst);
 
+	void edges(gray::view_t const& src, gray::view_t const& dst, u8 threshold);
+
 
 	namespace par
 	{
