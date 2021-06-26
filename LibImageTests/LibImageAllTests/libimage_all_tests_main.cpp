@@ -455,7 +455,7 @@ void process_tests(fs::path const& out_dir)
 
 	// grayscale
 	img::convert_grayscale(corvette_view, dst_gray_view);
-	img::write_image(dst_gray_image, out_dir / "convert_grayscale.bmp");
+	img::write_image(dst_gray_image, out_dir / "convert_grayscale.png");
 	
 	// stats
 	auto gray_stats = img::calc_stats(dst_gray_image);
@@ -487,11 +487,15 @@ void process_tests(fs::path const& out_dir)
 	auto const is_white = [&](u8 p) { return static_cast<r32>(p) > gray_stats.mean; };
 	img::binarize(src_gray_view, dst_gray_view, is_white);
 	img::write_image(dst_gray_image, out_dir / "binarize.png");
+
+	//blur
+	img::blur(src_gray_view, dst_gray_view);
+	img::write_image(dst_gray_image, out_dir / "blur.png");
 	
+	// combine transformations in the same image
 	// regular grayscale to start
 	img::copy(src_gray_view, dst_gray_view);
 
-	// combo
 	img::pixel_range_t range;
 	range.x_begin = 0;
 	range.x_end = width / 2;
@@ -521,7 +525,7 @@ void process_tests(fs::path const& out_dir)
 	range.x_begin = width / 2;
 	range.x_end = width;
 
-	//blur
+	
 
 }
 

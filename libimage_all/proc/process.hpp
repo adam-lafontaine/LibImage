@@ -43,6 +43,8 @@ namespace libimage
 
 	void alpha_blend(view_t const& src, view_t const& current_dst);
 
+	void blur(gray::view_t const& src, gray::view_t const& dst);
+
 
 	namespace par
 	{

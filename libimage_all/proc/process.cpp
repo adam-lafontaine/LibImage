@@ -336,11 +336,12 @@ namespace libimage
 		u32 x_last = src.width - 1;
 		u32 y_last = src.height - 1;
 
+		// outer edges equal to source
 		auto src_top = src.row_begin(y_first);
 		auto src_bottom = src.row_begin(y_last);
 		auto dst_top = dst.row_begin(y_first);
 		auto dst_bottom = dst.row_begin(y_last);
-		for (u32 x = x_first; x <= x_last; ++x)
+		for (u32 x = x_first; x <= x_last; ++x) // top and bottom rows
 		{
 			dst_top[x] = src_top[x];
 			dst_bottom[x] = src_bottom[x];
@@ -348,8 +349,7 @@ namespace libimage
 		
 		++y_first;		
 		--y_last;
-
-		for (u32 y = y_first; y <= y_last; ++y)
+		for (u32 y = y_first; y <= y_last; ++y) // left and right columns
 		{
 			auto src_row = src.row_begin(y);
 			auto dst_row = dst.row_begin(y);
@@ -360,9 +360,10 @@ namespace libimage
 		++x_first;
 		--x_last;
 
+		// first inner edges use 3 x 3 gaussian kernel
 		dst_top = dst.row_begin(y_first);
 		dst_bottom = dst.row_begin(y_last);
-		for (u32 x = x_first; x <= x_last; ++x)
+		for (u32 x = x_first; x <= x_last; ++x) // top and bottom rows
 		{
 			dst_top[x] = gauss3(src, x, y_first);
 			dst_bottom[x] = gauss3(src, x, y_last);
@@ -371,7 +372,7 @@ namespace libimage
 		++y_first;
 		--y_last;
 
-		for (u32 y = y_first; y <= y_last; ++y)
+		for (u32 y = y_first; y <= y_last; ++y) // left and right columns
 		{
 			auto dst_row = dst.row_begin(y);
 			dst_row[x_first] = gauss3(src, x_first, y);
@@ -381,6 +382,7 @@ namespace libimage
 		++x_first;
 		--x_last;
 
+		// inner pixels use 5 x 5 gaussian kernel
 		for (u32 y = y_first; y <= y_last; ++y)
 		{
 			auto dst_row = dst.row_begin(y);
