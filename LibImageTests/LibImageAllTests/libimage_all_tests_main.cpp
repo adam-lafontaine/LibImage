@@ -531,8 +531,9 @@ void process_tests(fs::path const& out_dir)
 	// edge detection
 	img::gray::image_t contrast_gray;
 	auto contrast_gray_view = img::make_view(contrast_gray, width, height);
-	img::adjust_contrast(src_gray_view, contrast_gray_view, shade_min, shade_max);
-	img::edges(contrast_gray_view, dst_gray_view, 100);
+	/*img::adjust_contrast(src_gray_view, contrast_gray_view, shade_min, shade_max);
+	img::edges(contrast_gray_view, dst_gray_view, 100);*/
+	img::edges(src_gray_view, dst_gray_view, 150);
 	img::write_image(dst_gray_image, out_dir / "edges.png");
 
 }

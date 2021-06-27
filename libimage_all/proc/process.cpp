@@ -234,7 +234,7 @@ namespace libimage
 		{
 			*it_current_dst = alpha_blend_linear(*it_src, *it_current_dst);
 		}
-	}	
+	}
 
 
 	void blur(gray::view_t const& src, gray::view_t const& dst)
