@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <execution>
 #include <cmath>
+#include <vector>
 
 namespace libimage
 {
@@ -460,6 +461,52 @@ namespace libimage
 		{
 			auto const conv = [&](gray::pixel_t const& p) { return func(p) ? 255 : 0; };
 			par::convert(src, conv);
+		}
+
+
+		void alpha_blend(view_t const& src, view_t const& current, view_t const& dst)
+		{
+			assert(verify(src, current));
+			assert(verify(src, dst));
+
+			auto const blend_row = [&](u32 y) 
+			{
+				auto p_src = src.row_begin(y);
+				auto p_current = current.row_begin(y);
+				auto p_dst = dst.row_begin(y);
+
+				for (u32 x = 0; x < src.width; ++x)
+				{
+					*p_dst = alpha_blend_linear(*p_src, *p_current);
+				}
+			};
+
+			std::vector<u32> ids(src.height);
+			std::iota(ids.begin(), ids.end(), 0); // TODO: ranges
+
+			std::for_each(ids.begin(), ids.end(), blend_row);
+		}
+
+
+		void alpha_blend(view_t const& src, view_t const& current_dst)
+		{
+			assert(verify(src, current_dst));
+
+			auto const blend_row = [&](u32 y)
+			{
+				auto p_src = src.row_begin(y);
+				auto p_current_dst = current_dst.row_begin(y);
+
+				for (u32 x = 0; x < src.width; ++x)
+				{
+					*p_current_dst = alpha_blend_linear(*p_src, *p_current_dst);
+				}
+			};
+
+			std::vector<u32> ids(src.height);
+			std::iota(ids.begin(), ids.end(), 0); // TODO: ranges
+
+			std::for_each(ids.begin(), ids.end(), blend_row);
 		}
 
 	}
