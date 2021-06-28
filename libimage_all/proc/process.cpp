@@ -265,7 +265,7 @@ namespace libimage
 			auto src_row = src.row_begin(y);
 			auto dst_row = dst.row_begin(y);
 			dst_row[x_first] = src_row[x_first];
-			dst_row[x_last] = src_row[x_first];
+			dst_row[x_last] = src_row[x_last];
 		}
 
 		++x_first;
@@ -506,7 +506,104 @@ namespace libimage
 			std::vector<u32> ids(src.height);
 			std::iota(ids.begin(), ids.end(), 0); // TODO: ranges
 
-			std::for_each(ids.begin(), ids.end(), blend_row);
+			std::for_each(std::execution::par, ids.begin(), ids.end(), blend_row);
+		}
+
+
+		void blur(gray::view_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+
+			using gv_t = gray::view_t;
+
+			auto const width = src.width;
+			auto const height = src.height;
+
+			
+
+			// outer edges equal to source
+
+			auto const copy_top_bottom = [&]() // top and bottom rows
+			{
+				u32 const x_first = 0;
+				u32 const x_last = width - 1;
+				u32 const y_first = 0;
+				u32 const y_last = height - 1;
+
+				auto src_top = src.row_begin(y_first);
+				auto src_bottom = src.row_begin(y_last);
+				auto dst_top = dst.row_begin(y_first);
+				auto dst_bottom = dst.row_begin(y_last);
+				for (u32 x = x_first; x <= x_last; ++x)
+				{
+					dst_top[x] = src_top[x];
+					dst_bottom[x] = src_bottom[x];
+				}
+			};
+
+			auto const copy_left_right = [&]() // left and right columns
+			{
+				u32 const x_first = 0;
+				u32 const x_last = width - 1;
+				u32 const y_first = 1;				
+				u32 const y_last = height - 2;
+
+				for (u32 y = y_first; y <= y_last; ++y)
+				{
+					auto src_row = src.row_begin(y);
+					auto dst_row = dst.row_begin(y);
+					dst_row[x_first] = src_row[x_first];
+					dst_row[x_last] = src_row[x_last];
+				}
+			};
+
+			// first inner edges use 3 x 3 gaussian kernel
+
+			auto const inner_gauss_top_bottom = [&]() 
+			{
+				u32 const x_first = 1;
+				u32 const x_last = width - 2;
+				u32 const y_first = 1;
+				u32 const y_last = height - 2;
+
+				auto dst_top = dst.row_begin(y_first);
+				auto dst_bottom = dst.row_begin(y_last);
+				for (u32 x = x_first; x <= x_last; ++x)
+				{
+					dst_top[x] = gauss3(src, x, y_first);
+					dst_bottom[x] = gauss3(src, x, y_last);
+				}
+			};
+
+			auto const inner_gauss_left_right = [&]() 
+			{
+				u32 const x_first = 0;
+				u32 const x_last = width - 1;
+				u32 const y_first = 1;
+				u32 const y_last = height - 2;
+
+				for (u32 y = y_first; y <= y_last; ++y)
+				{
+					auto dst_row = dst.row_begin(y);
+					dst_row[x_first] = gauss3(src, x_first, y);
+					dst_row[x_last] = gauss3(src, x_last, y);
+				}
+			};
+
+			// inner pixels use 5 x 5 gaussian kernel
+
+			auto const gauss_row = []() {};
+
+
+
+			for (u32 y = y_first; y <= y_last; ++y)
+			{
+				auto dst_row = dst.row_begin(y);
+				for (u32 x = x_first; x <= x_last; ++x)
+				{
+					dst_row[x] = gauss5(src, x, y);
+				}
+			}
 		}
 
 	}

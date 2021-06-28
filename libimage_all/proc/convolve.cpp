@@ -9,6 +9,7 @@ namespace libimage
 	static r32 apply_weights(gray::view_t const& view, pixel_range_t const& range, std::array<r32, N> weights)
 	{
 		assert((range.x_end - range.x_begin) * (range.y_end - range.y_begin) == weights.size());
+
 		u32 w = 0;
 		r32 p = 0.0f;
 
