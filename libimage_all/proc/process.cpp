@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <execution>
 #include <cmath>
-#include <vector>
+#include <array>
 
 namespace libimage
 {
@@ -503,10 +503,10 @@ namespace libimage
 				}
 			};
 
-			std::vector<u32> ids(src.height);
-			std::iota(ids.begin(), ids.end(), 0); // TODO: ranges
+			std::vector<u32> y_ids(src.height);
+			std::iota(y_ids.begin(), y_ids.end(), 0); // TODO: ranges
 
-			std::for_each(std::execution::par, ids.begin(), ids.end(), blend_row);
+			std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), blend_row);
 		}
 
 
@@ -577,10 +577,10 @@ namespace libimage
 
 			auto const inner_gauss_left_right = [&]() 
 			{
-				u32 const x_first = 0;
-				u32 const x_last = width - 1;
-				u32 const y_first = 1;
-				u32 const y_last = height - 2;
+				u32 const x_first = 1;
+				u32 const x_last = width - 2;
+				u32 const y_first = 2;
+				u32 const y_last = height - 3;
 
 				for (u32 y = y_first; y <= y_last; ++y)
 				{
@@ -591,19 +591,51 @@ namespace libimage
 			};
 
 			// inner pixels use 5 x 5 gaussian kernel
+			pixel_range_t range = {};
+			range.x_begin = 2;
+			range.x_end = width - 2;
+			range.y_begin = 2;
+			range.y_end = height - 2;
 
-			auto const gauss_row = []() {};
+			u32 const y_begin = 2;
+			u32 const y_length = height - 4;
+			u32 const x_begin = 2;
+			u32 const x_length = width - 4;
 
+			std::vector<u32> y_ids(y_length);
+			std::iota(y_ids.begin(), y_ids.end(), y_begin); // TODO: ranges
+			std::vector<u32> x_ids(x_length);
+			std::iota(x_ids.begin(), x_ids.end(), x_begin); // TODO: ranges			
 
-
-			for (u32 y = y_first; y <= y_last; ++y)
+			auto const gauss_row = [&](u32 y) 
 			{
 				auto dst_row = dst.row_begin(y);
-				for (u32 x = x_first; x <= x_last; ++x)
+
+				auto const gauss_x = [&](u32 x)
 				{
 					dst_row[x] = gauss5(src, x, y);
-				}
-			}
+				};
+
+				std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), gauss_x);
+			};
+
+			auto const inner_gauss = [&]() 
+			{
+				std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), gauss_row);
+			};
+
+
+			std::array<std::function<void()>, 5> f_list =
+			{
+				copy_top_bottom,
+				copy_left_right,
+				inner_gauss_top_bottom,
+				inner_gauss_left_right,
+				inner_gauss
+			};
+
+			// finally do everything
+			std::for_each(std::execution::par, f_list.begin(), f_list.end(), [](auto const& f) { f(); });
 		}
 
 	}
