@@ -321,14 +321,17 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
+		auto const width = src.width;
+		auto const height = src.height;
+
 		gray::image_t temp;
 		auto temp_view = make_view(temp, src.width, src.height);
 		blur(src, temp_view);
 
 		u32 x_first = 0;
 		u32 y_first = 0;
-		u32 x_last = src.width - 1;
-		u32 y_last = src.height - 1;
+		u32 x_last = width - 1;
+		u32 y_last = height - 1;
 
 		auto dst_top = dst.row_begin(y_first);
 		auto dst_bottom = dst.row_begin(y_last);
@@ -338,8 +341,10 @@ namespace libimage
 			dst_bottom[x] = 0;
 		}
 
-		++y_first;
-		--y_last;
+		x_first = 0;
+		y_first = 1;
+		x_last = width - 1;
+		y_last = height - 2;
 
 		for (u32 y = y_first; y <= y_last; ++y) // left and right columns
 		{
@@ -348,8 +353,10 @@ namespace libimage
 			dst_row[x_last] = 0;
 		}
 
-		++x_first;
-		--x_last;
+		x_first = 1;
+		y_first = 1;
+		x_last = width - 2;
+		y_last = height - 2;
 
 		for (u32 y = y_first; y <= y_last; ++y)
 		{
@@ -362,8 +369,6 @@ namespace libimage
 				dst_row[x] = g < threshold ? 0 : 255;
 			}
 		}
-
-		// TODO: temp.clear(); in new thread
 	}
 
 
@@ -607,9 +612,9 @@ namespace libimage
 
 			// inner pixels use 5 x 5 gaussian kernel
 			u32 const x_begin = 2;
-			u32 const x_length = width - 4;
+			u32 const x_length = width - 2 * x_begin;
 			u32 const y_begin = 2;
-			u32 const y_length = height - 4;			
+			u32 const y_length = height - 2 * y_begin;
 
 			std::vector<u32> y_ids(y_length);
 			std::iota(y_ids.begin(), y_ids.end(), y_begin); // TODO: ranges
@@ -644,6 +649,89 @@ namespace libimage
 			};
 
 			// finally execute everything
+			std::for_each(std::execution::par, f_list.begin(), f_list.end(), [](auto const& f) { f(); });
+		}
+
+
+		void edges(gray::view_t const& src, gray::view_t const& dst, u8 threshold)
+		{
+			assert(verify(src, dst));
+
+			auto const width = src.width;
+			auto const height = src.height;				
+
+			auto const zero_top_bottom = [&]() 
+			{
+				u32 const x_first = 0;
+				u32 const y_first = 0;
+				u32 const x_last = width - 1;
+				u32 const y_last = height - 1;
+
+				auto dst_top = dst.row_begin(y_first);
+				auto dst_bottom = dst.row_begin(y_last);
+				for (u32 x = x_first; x <= x_last; ++x) // top and bottom rows
+				{
+					dst_top[x] = 0;
+					dst_bottom[x] = 0;
+				}
+			};
+
+			auto const zero_left_right = [&]() 
+			{
+				u32 const x_first = 0;
+				u32 const y_first = 1;
+				u32 const x_last = width - 1;
+				u32 const y_last = height - 2;
+
+				for (u32 y = y_first; y <= y_last; ++y) // left and right columns
+				{
+					auto dst_row = dst.row_begin(y);
+					dst_row[x_first] = 0;
+					dst_row[x_last] = 0;
+				}
+			};
+
+			u32 const x_begin = 1;
+			u32 const x_length = width - 2 * x_begin;
+			u32 const y_begin = 1;
+			u32 const y_length = height - 2 * y_begin;
+
+			std::vector<u32> y_ids(y_length);
+			std::iota(y_ids.begin(), y_ids.end(), y_begin); // TODO: ranges
+			std::vector<u32> x_ids(x_length);
+			std::iota(x_ids.begin(), x_ids.end(), x_begin); // TODO: ranges
+
+			gray::image_t temp;
+			auto temp_view = make_view(temp, width, height);
+			par::blur(src, temp_view);
+
+			auto const grad_row = [&](u32 y) 
+			{
+				auto dst_row = dst.row_begin(y);
+
+				auto const grad_x = [&](u32 x) 
+				{
+					auto gx = std::abs(x_gradient(temp_view, x, y));
+					auto gy = std::abs(y_gradient(temp_view, x, y));
+					auto g = std::hypot(gx, gy);
+					dst_row[x] = g < threshold ? 0 : 255;
+				};
+
+				std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), grad_x);
+			};
+
+			auto const gradients_inner = [&]() 
+			{
+				std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), grad_row);
+			};
+
+			std::array<std::function<void()>, 3> f_list
+			{
+				zero_top_bottom,
+				zero_left_right,
+				gradients_inner
+			};
+
 			std::for_each(std::execution::par, f_list.begin(), f_list.end(), [](auto const& f) { f(); });
 		}
 
