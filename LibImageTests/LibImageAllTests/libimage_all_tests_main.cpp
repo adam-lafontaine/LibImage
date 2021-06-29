@@ -27,7 +27,7 @@ const auto CADILLAC_PATH = ROOT_PATH / "in_files/png/cadillac.png";
 const auto SRC_IMAGE_PATH = CORVETTE_PATH;
 const auto DST_IMAGE_ROOT = ROOT_PATH / "out_files";
 
-const auto RED = ROOT_PATH / "in_files/bmp/red.bmp";
+const auto RED_PATH = ROOT_PATH / "in_files/bmp/red.bmp";
 
 
 void empty_dir(fs::path const& dir);
@@ -52,16 +52,15 @@ int main()
 	_CrtSetDbgFlag(dbgFlags);
 #endif
 
-	auto dst_root = fs::path(DST_IMAGE_ROOT);
-	empty_dir(dst_root);
+	auto dst_root = fs::path(DST_IMAGE_ROOT);	
 
-	/*basic_tests(dst_root);
-	math_tests(dst_root);
+	basic_tests(dst_root / "basic");
+	math_tests(dst_root / "math");
 
-	for_each_tests();
-	transform_tests();*/
+	//for_each_tests();
+	//transform_tests();
 
-	process_tests(dst_root);
+	process_tests(dst_root / "process");
 
 	std::cout << "\nDone.\n";
 }
@@ -70,6 +69,7 @@ int main()
 void basic_tests(fs::path const& out_dir)
 {
 	std::cout << "basic:\n";
+	empty_dir(out_dir);
 
 	img::image_t image;
 	img::read_image_from_file(SRC_IMAGE_PATH, image);
@@ -78,7 +78,7 @@ void basic_tests(fs::path const& out_dir)
 	img::write_image(image, out_dir / "image.bmp");
 
 	img::image_t red_image;
-	img::read_image_from_file(RED, red_image);
+	img::read_image_from_file(RED_PATH, red_image);
 	auto red_view = img::make_view(red_image);
 	img::write_image(red_image, out_dir / "red_image.png");
 	img::write_view(red_view, out_dir / "red_view.png");
@@ -150,6 +150,7 @@ void basic_tests(fs::path const& out_dir)
 void math_tests(fs::path const& out_dir)
 {
 	std::cout << "math:\n";
+	empty_dir(out_dir);
 
 	img::gray::image_t image_gray;
 	img::read_image_from_file(SRC_IMAGE_PATH, image_gray);
@@ -424,6 +425,7 @@ void transform_tests()
 void process_tests(fs::path const& out_dir)
 {
 	std::cout << "process:\n";
+	empty_dir(out_dir);
 
 	// get image
 	img::image_t corvette_image;
@@ -533,7 +535,7 @@ void process_tests(fs::path const& out_dir)
 	auto contrast_gray_view = img::make_view(contrast_gray, width, height);
 	/*img::adjust_contrast(src_gray_view, contrast_gray_view, shade_min, shade_max);
 	img::edges(contrast_gray_view, dst_gray_view, 100);*/
-	img::edges(src_gray_view, dst_gray_view, 150);
+	img::par::edges(src_gray_view, dst_gray_view, 150);
 	img::write_image(dst_gray_image, out_dir / "edges.png");
 
 }

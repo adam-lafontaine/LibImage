@@ -6,6 +6,9 @@
 #include <cmath>
 #include <array>
 
+
+constexpr u32 VIEW_MIN_DIM = 5;
+
 namespace libimage
 {
 	static u8 rgb_grayscale_standard(u8 red, u8 green, u8 blue)
@@ -244,6 +247,9 @@ namespace libimage
 
 		u32 const width = src.width;
 		u32 const height = src.height;
+
+		assert(width >= VIEW_MIN_DIM);
+		assert(height >= VIEW_MIN_DIM);
 
 		u32 x_first = 0;
 		u32 y_first = 0;
@@ -533,13 +539,18 @@ namespace libimage
 
 			std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), blend_row);
 		}
-
+				
 
 		void blur(gray::view_t const& src, gray::view_t const& dst)
 		{
 			assert(verify(src, dst));
 			auto const width = src.width;
-			auto const height = src.height;			
+			auto const height = src.height;
+
+			assert(width >= VIEW_MIN_DIM);
+			assert(height >= VIEW_MIN_DIM);
+
+			// lamdas, lots of lamdas
 
 			// outer edges equal to source
 
