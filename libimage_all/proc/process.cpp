@@ -242,10 +242,13 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
+		u32 const width = src.width;
+		u32 const height = src.height;
+
 		u32 x_first = 0;
 		u32 y_first = 0;
-		u32 x_last = src.width - 1;
-		u32 y_last = src.height - 1;
+		u32 x_last = width - 1;
+		u32 y_last = height - 1;
 
 		// outer edges equal to source
 		auto src_top = src.row_begin(y_first);
@@ -257,9 +260,12 @@ namespace libimage
 			dst_top[x] = src_top[x];
 			dst_bottom[x] = src_bottom[x];
 		}
-		
-		++y_first;		
-		--y_last;
+
+		x_first = 0;
+		y_first = 1;
+		x_last = width - 1;
+		y_last = height - 2;
+
 		for (u32 y = y_first; y <= y_last; ++y) // left and right columns
 		{
 			auto src_row = src.row_begin(y);
@@ -268,8 +274,10 @@ namespace libimage
 			dst_row[x_last] = src_row[x_last];
 		}
 
-		++x_first;
-		--x_last;
+		x_first = 1;
+		y_first = 1;
+		x_last = width - 2;
+		y_last = height - 2;
 
 		// first inner edges use 3 x 3 gaussian kernel
 		dst_top = dst.row_begin(y_first);
@@ -280,8 +288,10 @@ namespace libimage
 			dst_bottom[x] = gauss3(src, x, y_last);
 		}
 
-		++y_first;
-		--y_last;
+		x_first = 1;
+		y_first = 2;
+		x_last = width - 2;
+		y_last = height - 3;
 
 		for (u32 y = y_first; y <= y_last; ++y) // left and right columns
 		{
@@ -290,8 +300,10 @@ namespace libimage
 			dst_row[x_last] = gauss3(src, x_last, y);
 		}
 
-		++x_first;
-		--x_last;
+		x_first = 2;
+		y_first = 2;
+		x_last = width - 3;
+		y_last = height - 3;
 
 		// inner pixels use 5 x 5 gaussian kernel
 		for (u32 y = y_first; y <= y_last; ++y)
@@ -469,22 +481,26 @@ namespace libimage
 			assert(verify(src, current));
 			assert(verify(src, dst));
 
+			std::vector<u32> y_ids(src.height);
+			std::iota(y_ids.begin(), y_ids.end(), 0); // TODO: ranges
+			std::vector<u32> x_ids(src.width);
+			std::iota(x_ids.begin(), x_ids.end(), 0); // TODO: ranges
+
 			auto const blend_row = [&](u32 y) 
 			{
 				auto p_src = src.row_begin(y);
 				auto p_current = current.row_begin(y);
 				auto p_dst = dst.row_begin(y);
 
-				for (u32 x = 0; x < src.width; ++x)
+				auto const blend_x = [&](u32 x) 
 				{
-					*p_dst = alpha_blend_linear(*p_src, *p_current);
-				}
+					p_dst[x] = alpha_blend_linear(p_src[x], p_current[x]);
+				};
+
+				std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), blend_x);
 			};
 
-			std::vector<u32> ids(src.height);
-			std::iota(ids.begin(), ids.end(), 0); // TODO: ranges
-
-			std::for_each(ids.begin(), ids.end(), blend_row);
+			std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), blend_row);
 		}
 
 
@@ -492,19 +508,23 @@ namespace libimage
 		{
 			assert(verify(src, current_dst));
 
+			std::vector<u32> y_ids(src.height);
+			std::iota(y_ids.begin(), y_ids.end(), 0); // TODO: ranges
+			std::vector<u32> x_ids(src.width);
+			std::iota(x_ids.begin(), x_ids.end(), 0); // TODO: ranges
+
 			auto const blend_row = [&](u32 y)
 			{
 				auto p_src = src.row_begin(y);
 				auto p_current_dst = current_dst.row_begin(y);
 
-				for (u32 x = 0; x < src.width; ++x)
+				auto const blend_x = [&](u32 x) 
 				{
-					*p_current_dst = alpha_blend_linear(*p_src, *p_current_dst);
-				}
-			};
+					p_current_dst[x] = alpha_blend_linear(p_src[x], p_current_dst[x]);
+				};
 
-			std::vector<u32> y_ids(src.height);
-			std::iota(y_ids.begin(), y_ids.end(), 0); // TODO: ranges
+				std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), blend_x);
+			};			
 
 			std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), blend_row);
 		}
@@ -513,21 +533,16 @@ namespace libimage
 		void blur(gray::view_t const& src, gray::view_t const& dst)
 		{
 			assert(verify(src, dst));
-
-			using gv_t = gray::view_t;
-
 			auto const width = src.width;
-			auto const height = src.height;
-
-			
+			auto const height = src.height;			
 
 			// outer edges equal to source
 
 			auto const copy_top_bottom = [&]() // top and bottom rows
 			{
 				u32 const x_first = 0;
-				u32 const x_last = width - 1;
 				u32 const y_first = 0;
+				u32 const x_last = width - 1;
 				u32 const y_last = height - 1;
 
 				auto src_top = src.row_begin(y_first);
@@ -544,8 +559,8 @@ namespace libimage
 			auto const copy_left_right = [&]() // left and right columns
 			{
 				u32 const x_first = 0;
+				u32 const y_first = 1;
 				u32 const x_last = width - 1;
-				u32 const y_first = 1;				
 				u32 const y_last = height - 2;
 
 				for (u32 y = y_first; y <= y_last; ++y)
@@ -562,8 +577,8 @@ namespace libimage
 			auto const inner_gauss_top_bottom = [&]() 
 			{
 				u32 const x_first = 1;
-				u32 const x_last = width - 2;
 				u32 const y_first = 1;
+				u32 const x_last = width - 2;				
 				u32 const y_last = height - 2;
 
 				auto dst_top = dst.row_begin(y_first);
@@ -578,8 +593,8 @@ namespace libimage
 			auto const inner_gauss_left_right = [&]() 
 			{
 				u32 const x_first = 1;
-				u32 const x_last = width - 2;
 				u32 const y_first = 2;
+				u32 const x_last = width - 2;				
 				u32 const y_last = height - 3;
 
 				for (u32 y = y_first; y <= y_last; ++y)
@@ -591,16 +606,10 @@ namespace libimage
 			};
 
 			// inner pixels use 5 x 5 gaussian kernel
-			pixel_range_t range = {};
-			range.x_begin = 2;
-			range.x_end = width - 2;
-			range.y_begin = 2;
-			range.y_end = height - 2;
-
-			u32 const y_begin = 2;
-			u32 const y_length = height - 4;
 			u32 const x_begin = 2;
 			u32 const x_length = width - 4;
+			u32 const y_begin = 2;
+			u32 const y_length = height - 4;			
 
 			std::vector<u32> y_ids(y_length);
 			std::iota(y_ids.begin(), y_ids.end(), y_begin); // TODO: ranges
@@ -624,7 +633,7 @@ namespace libimage
 				std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), gauss_row);
 			};
 
-
+			// put the lambdas in an array
 			std::array<std::function<void()>, 5> f_list =
 			{
 				copy_top_bottom,
@@ -634,7 +643,7 @@ namespace libimage
 				inner_gauss
 			};
 
-			// finally do everything
+			// finally execute everything
 			std::for_each(std::execution::par, f_list.begin(), f_list.end(), [](auto const& f) { f(); });
 		}
 
