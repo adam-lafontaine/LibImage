@@ -179,24 +179,6 @@ namespace libimage
 	}
 
 
-	void transform_alpha(image_t const& image, std::function<u8(u8 red, u8 green, u8 blue)> const& func)
-	{
-		auto const update = [&](pixel_t& p) { p.alpha = func(p.red, p.green, p.blue);  };
-
-		std::for_each(image.begin(), image.end(), update);
-		//std::for_each(std::execution::par, image.begin(), image.end(), update);
-	}
-
-
-	void transform_alpha(view_t const& view, std::function<u8(u8 red, u8 green, u8 blue)> const& func)
-	{
-		auto const update = [&](pixel_t& p) { p.alpha = func(p.red, p.green, p.blue);  };
-
-		std::for_each(view.begin(), view.end(), update);
-		//std::for_each(std::execution::par, view.begin(), view.end(), update);
-	}
-
-
 	void draw_histogram(rgb_stats_t const& rgb_stats, image_t& image_dst)
 	{
 		assert(!image_dst.width);
@@ -262,6 +244,90 @@ namespace libimage
 				bar_range.x_begin += (bucket_spacing + bucket_width);
 				bar_range.x_end += (bucket_spacing + bucket_width);
 			}
+		}
+	}
+
+
+	typedef struct
+	{
+		std::vector<u32> data;
+		pixel_t color;
+
+	} data_color_t;
+
+
+	void draw_bar_chart(std::vector<data_color_t> const& data, image_t& image_dst)
+	{
+		assert(!image_dst.width);
+		assert(!image_dst.height);
+		assert(!image_dst.data);
+		assert(!data.empty());
+
+		u32 const n_buckets = data[0].data.size();
+		for (auto const& item : data)
+		{
+			if (item.data.size() != n_buckets)
+			{
+				assert(false);
+				return;
+			}
+		}
+
+		u32 const max_relative_qty = 200;
+		u32 const image_height = max_relative_qty + 1;		
+
+		u32 const bucket_width = 20;
+		u32 const bucket_spacing = 1;
+		u32 const n_groups = data.size();
+		u32 const group_spacing = 3;
+		u32 const group_width = n_groups * bucket_width + (n_groups - 1) * bucket_spacing;
+		u32 const image_width = n_buckets * group_width + (n_buckets - 1) * group_spacing + bucket_spacing;
+
+		make_image(image_dst, image_width, image_height);
+		std::fill(image_dst.begin(), image_dst.end(), 255);
+
+		u32 max_count = 0;
+		for (auto const& item : data)
+		{
+			auto& vec = item.data;
+			auto max = *std::max_element(vec.begin(), vec.end());
+
+			if (max > max_count)
+			{
+				max_count = max;
+			}
+		}
+
+		const auto norm = [&](u32 count)
+		{
+			return static_cast<u32>(static_cast<r32>(count) / max_count * max_relative_qty);
+		};
+
+		pixel_range_t bar_range = {};
+		bar_range.x_begin = bucket_spacing;
+		bar_range.x_end = bucket_spacing + bucket_width;
+		bar_range.y_begin = 0;
+		bar_range.y_end = image_height;
+
+		for (u32 bucket = 0; bucket < n_buckets; ++bucket)
+		{
+			for (u32 group = 0; group < n_groups; ++group)
+			{
+
+			}
+
+
+			bar_range.y_begin = bar_range.y_end - norm(data[bucket]);
+
+			if (bar_range.y_end > bar_range.y_begin)
+			{
+				u8 shade = 50;// n_buckets* (bucket + 1) - 1;
+				auto bar_view = sub_view(image_dst, bar_range);
+				std::fill(bar_view.begin(), bar_view.end(), shade);
+			}
+
+			bar_range.x_begin += (bucket_spacing + bucket_width);
+			bar_range.x_end += (bucket_spacing + bucket_width);
 		}
 	}
 
@@ -349,7 +415,7 @@ namespace libimage
 		u32 const max_relative_qty = 200;
 		u32 const image_height = max_relative_qty + 1;
 
-		u32 const n_buckets = static_cast<u32>(N_HIST_BUCKETS);	
+		u32 const n_buckets = static_cast<u32>(hist.size());	
 
 		u32 const bucket_width = 20;
 		u32 const bucket_spacing = 1;

@@ -3,6 +3,7 @@
 #include "../libimage.hpp"
 
 #include <array>
+#include <vector>
 #include <algorithm>
 #include <functional>
 
@@ -47,10 +48,6 @@ namespace libimage
 	stats_t calc_stats(image_t const& image, Channel ch);
 
 	stats_t calc_stats(view_t const& view, Channel ch);
-
-	void transform_alpha(image_t const& image, std::function<u8(u8 red, u8 green, u8 blue)> const& func);
-
-	void transform_alpha(view_t const& view, std::function<u8(u8 red, u8 green, u8 blue)> const& func);
 
 	void draw_histogram(rgb_stats_t const& rgb_stats, image_t& image_dst);
 

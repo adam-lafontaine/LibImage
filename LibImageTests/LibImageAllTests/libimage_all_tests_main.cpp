@@ -178,9 +178,7 @@ void math_tests(fs::path const& out_dir)
 	print(stats.green);
 	print(stats.blue);
 
-	img::write_image(stats_image, out_dir / "stats_image.png");
-
-	
+	img::write_image(stats_image, out_dir / "stats_image.png");	
 
 	auto const binarize = [&](u8 p) { return p > stats_gray.mean ? 255 : 0; };
 	img::gray::image_t binary;
