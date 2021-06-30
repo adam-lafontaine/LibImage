@@ -34,6 +34,7 @@ void empty_dir(fs::path const& dir);
 void print(img::view_t const& view);
 void print(img::gray::view_t const& view);
 void print(img::stats_t const& stats);
+void make_image(img::image_t& image, u32 size);
 
 void basic_tests(fs::path const& out_dir);
 void math_tests(fs::path const& out_dir);
@@ -74,38 +75,44 @@ void basic_tests(fs::path const& out_dir)
 	img::image_t image;
 	img::read_image_from_file(SRC_IMAGE_PATH, image);
 
+	// write different file types
 	img::write_image(image, out_dir / "image.png");
 	img::write_image(image, out_dir / "image.bmp");
 
+	// write a view from an image file
 	img::image_t red_image;
 	img::read_image_from_file(RED_PATH, red_image);
 	auto red_view = img::make_view(red_image);
 	img::write_image(red_image, out_dir / "red_image.png");
 	img::write_view(red_view, out_dir / "red_view.png");
 
-
 	auto view = img::make_view(image);
 	print(view);
 
+	// write views with different file types
 	img::write_view(view, out_dir / "view.png");
 	img::write_view(view, out_dir / "view.bmp");
 
 	auto w = view.width;
 	auto h = view.height;
 
+	// get a portion of an existing image
 	img::pixel_range_t range = { w * 1 / 3, w * 2 / 3, h * 1 / 3, h * 2 / 3 };
 	auto sub_view = img::sub_view(view, range);
 	print(sub_view);
 	img::write_view(sub_view, out_dir / "sub.png");
 
+	// get one row from an image
 	auto row_view = img::row_view(view, h / 2);
 	print(row_view);
 	img::write_view(row_view, out_dir / "row_view.bmp");
 
+	// get one column from an image
 	auto col_view = img::column_view(view, w / 2);
 	print(col_view);
 	img::write_view(col_view, out_dir / "col_view.bmp");
 
+	// resize an image
 	img::image_t resize_image;
 	resize_image.width = w / 4;
 	resize_image.height = h / 2;
@@ -114,27 +121,32 @@ void basic_tests(fs::path const& out_dir)
 	img::write_image(resize_image, out_dir / "resize_image.bmp");
 	img::write_view(resize_view, out_dir / "resize_view.bmp");
 
-
+	// read a color image to grayscale
 	img::gray::image_t image_gray;
 	img::read_image_from_file(SRC_IMAGE_PATH, image_gray);
 	img::write_image(image_gray, out_dir / "image_gray.bmp");
 
+	// create a grayscale view
 	auto view_gray = img::make_view(image_gray);
 	print(view_gray);
 	img::write_view(view_gray, out_dir / "view_gray.bmp");
 
+	// portion of a grayscale image
 	auto sub_view_gray = img::sub_view(view_gray, range);
 	print(sub_view_gray);
 	img::write_view(sub_view_gray, out_dir / "sub_view_gray.png");
 
+	// row from a grayscale image
 	auto row_view_gray = img::row_view(view_gray, view_gray.height / 2);
 	print(row_view_gray);
 	img::write_view(row_view_gray, out_dir / "row_view_gray.png");
 
+	// column from a grayscale image
 	auto col_view_gray = img::column_view(view_gray, view_gray.width / 2);
 	print(col_view_gray);
 	img::write_view(col_view_gray, out_dir / "col_view_gray.png");
 
+	// resize a grayscale image
 	img::gray::image_t resize_image_gray;
 	resize_image_gray.width = w / 4;
 	resize_image_gray.height = h / 2;
@@ -156,30 +168,31 @@ void math_tests(fs::path const& out_dir)
 	img::read_image_from_file(SRC_IMAGE_PATH, image_gray);
 	auto view_gray = img::make_view(image_gray);
 
+	// get shade histogram, mean and standard deviation from a grayscale image
 	auto stats_gray = img::calc_stats(view_gray);
 
+	// write the histogram to a new image
 	img::gray::image_t stats_image_gray;
 	img::draw_histogram(stats_gray.hist, stats_image_gray);
-
 	print(stats_gray);
-
 	img::write_image(stats_image_gray, out_dir / "stats_image_gray.png");
 
 	img::image_t image;
 	img::read_image_from_file(SRC_IMAGE_PATH, image);
 	auto view = img::make_view(image);
 
+	// histogram, mean and standard deviation of each rgb channel
 	auto stats = img::calc_stats(view);
 
+	// draw each histogram to a new image
 	img::image_t stats_image;
 	img::draw_histogram(stats, stats_image);
-
 	print(stats.red);
 	print(stats.green);
 	print(stats.blue);
-
 	img::write_image(stats_image, out_dir / "stats_image.png");	
 
+	// create a grayscale image and set each pixel with a predicate
 	auto const binarize = [&](u8 p) { return p > stats_gray.mean ? 255 : 0; };
 	img::gray::image_t binary;
 	img::make_image(binary, image_gray.width, image_gray.height);
@@ -188,15 +201,6 @@ void math_tests(fs::path const& out_dir)
 	img::write_image(binary, out_dir / "binary.png");
 
 	std::cout << '\n';
-}
-
-
-void make_image(img::image_t& image, u32 size)
-{
-	u32 width = size / 5;
-	u32 height = size / width;
-
-	img::make_image(image, width, height);
 }
 
 
@@ -597,4 +601,12 @@ void print(img::gray::view_t const& view)
 void print(img::stats_t const& stats)
 {
 	std::cout << "mean = " << (double)stats.mean << " sigma = " << (double)stats.std_dev << '\n';
+}
+
+void make_image(img::image_t& image, u32 size)
+{
+	u32 width = size / 5;
+	u32 height = size / width;
+
+	img::make_image(image, width, height);
 }
