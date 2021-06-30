@@ -271,7 +271,7 @@ namespace libimage
 		u32 const bar_width = 20;
 		u32 const bar_spacing = 2;
 		u32 const n_groups = static_cast<u32>(data.size());
-		u32 const group_spacing = 5;
+		u32 const group_spacing = 10;
 		u32 const group_width = n_groups * bar_width + (n_groups - 1) * bar_spacing;
 		u32 const image_width = n_buckets * group_width + (n_buckets - 1) * group_spacing + 2 * bar_spacing;
 
