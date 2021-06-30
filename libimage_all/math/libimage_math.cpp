@@ -248,14 +248,6 @@ namespace libimage
 	}
 
 
-	typedef struct
-	{
-		std::vector<u32> data;
-		pixel_t color;
-
-	} data_color_t;
-
-
 	void draw_bar_chart(std::vector<data_color_t> const& data, image_t& image_dst)
 	{
 		assert(!image_dst.width);
@@ -263,7 +255,7 @@ namespace libimage
 		assert(!image_dst.data);
 		assert(!data.empty());
 
-		u32 const n_buckets = data[0].data.size();
+	    u32 const n_buckets = static_cast<u32>(data[0].data.size());
 		for (auto const& item : data)
 		{
 			if (item.data.size() != n_buckets)
@@ -276,17 +268,19 @@ namespace libimage
 		u32 const max_relative_qty = 200;
 		u32 const image_height = max_relative_qty + 1;		
 
-		u32 const bucket_width = 20;
-		u32 const bucket_spacing = 1;
-		u32 const n_groups = data.size();
-		u32 const group_spacing = 3;
-		u32 const group_width = n_groups * bucket_width + (n_groups - 1) * bucket_spacing;
-		u32 const image_width = n_buckets * group_width + (n_buckets - 1) * group_spacing + bucket_spacing;
+		u32 const bar_width = 20;
+		u32 const bar_spacing = 2;
+		u32 const n_groups = static_cast<u32>(data.size());
+		u32 const group_spacing = 5;
+		u32 const group_width = n_groups * bar_width + (n_groups - 1) * bar_spacing;
+		u32 const image_width = n_buckets * group_width + (n_buckets - 1) * group_spacing + 2 * bar_spacing;
+
+		pixel_t white = to_pixel(255, 255, 255);
 
 		make_image(image_dst, image_width, image_height);
-		std::fill(image_dst.begin(), image_dst.end(), 255);
+		std::fill(image_dst.begin(), image_dst.end(), white);
 
-		u32 max_count = 0;
+		r32 max_count = 0.0f;
 		for (auto const& item : data)
 		{
 			auto& vec = item.data;
@@ -298,14 +292,12 @@ namespace libimage
 			}
 		}
 
-		const auto norm = [&](u32 count)
+		const auto norm = [&](r32 val)
 		{
-			return static_cast<u32>(static_cast<r32>(count) / max_count * max_relative_qty);
+			return static_cast<u32>(val / max_count * max_relative_qty);
 		};
 
 		pixel_range_t bar_range = {};
-		bar_range.x_begin = bucket_spacing;
-		bar_range.x_end = bucket_spacing + bucket_width;
 		bar_range.y_begin = 0;
 		bar_range.y_end = image_height;
 
@@ -313,21 +305,18 @@ namespace libimage
 		{
 			for (u32 group = 0; group < n_groups; ++group)
 			{
+				auto& d = data[group];
 
+				bar_range.x_begin = bar_spacing + bucket * (group_width + group_spacing) + group * (bar_width + bar_spacing);
+				bar_range.x_end = bar_range.x_begin + bar_width;
+				bar_range.y_begin = bar_range.y_end - norm(d.data[bucket]);
+
+				if (bar_range.y_end > bar_range.y_begin)
+				{
+					auto bar_view = sub_view(image_dst, bar_range);
+					std::fill(bar_view.begin(), bar_view.end(), d.color);
+				}
 			}
-
-
-			bar_range.y_begin = bar_range.y_end - norm(data[bucket]);
-
-			if (bar_range.y_end > bar_range.y_begin)
-			{
-				u8 shade = 50;// n_buckets* (bucket + 1) - 1;
-				auto bar_view = sub_view(image_dst, bar_range);
-				std::fill(bar_view.begin(), bar_view.end(), shade);
-			}
-
-			bar_range.x_begin += (bucket_spacing + bucket_width);
-			bar_range.x_end += (bucket_spacing + bucket_width);
 		}
 	}
 

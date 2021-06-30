@@ -37,7 +37,7 @@ void print(img::stats_t const& stats);
 
 void basic_tests(fs::path const& out_dir);
 void math_tests(fs::path const& out_dir);
-void for_each_tests();
+void for_each_tests(fs::path const& out_dir);
 void transform_tests();
 void process_tests(fs::path const& out_dir);
 
@@ -57,7 +57,7 @@ int main()
 	basic_tests(dst_root / "basic");
 	math_tests(dst_root / "math");
 
-	//for_each_tests();
+	for_each_tests(dst_root / "for_each");
 	//transform_tests();
 
 	process_tests(dst_root / "process");
@@ -247,9 +247,10 @@ img::pixel_t alpha_blend_linear(img::pixel_t const& src, img::pixel_t const& cur
 }
 
 
-void for_each_tests()
+void for_each_tests(fs::path const& out_dir)
 {
 	std::cout << "for_each:\n";
+	empty_dir(out_dir);
 
 	std::random_device rd;
 	std::default_random_engine reng(rd());
@@ -274,65 +275,80 @@ void for_each_tests()
 		p = alpha_blend_linear(src, p);
 	};
 
+
+	img::data_color_t stl_times;
+	stl_times.color = img::to_pixel(255, 0, 0);
+
+	img::data_color_t stl_par_times;
+	stl_par_times.color = img::to_pixel(0, 255, 0);
+
+	img::data_color_t loop_times;
+	loop_times.color = img::to_pixel(0, 0, 255);	
+
 	Stopwatch sw;
 	u32 size_start = 10000;
 
 	u32 size = size_start;
+	auto const scale = [&](auto t) { return static_cast<r32>(10000 * t / size); };
+
 	for (u32 i = 0; i < 10; ++i, size *= 2)
 	{
 		img::image_t image;
 		make_image(image, size);
 
-		std::cout << "image_t size = " << size <<'\n';
+		sw.start();
+		for_each_pixel(image, random_blended_pixel);
+		auto t = sw.get_time_milli();
+		loop_times.data.push_back(scale(t));
 
 		sw.start();
 		std::for_each(image.begin(), image.end(), random_blended_pixel);
-		auto t = sw.get_time_milli();
-		std::cout << "    stl: " << 1000 * t / size << '\n';
+		t = sw.get_time_milli();
+		stl_times.data.push_back(scale(t));
 
 		sw.start();
 		std::for_each(std::execution::par, image.begin(), image.end(), random_blended_pixel);
 		t = sw.get_time_milli();
-		std::cout << "stl par: " << 1000 * t / size << '\n';
-
-		sw.start();
-		for_each_pixel(image, random_blended_pixel);
-		t = sw.get_time_milli();
-		std::cout << "   loop: " << 1000 * t / size << "\n\n";
+		stl_par_times.data.push_back(scale(t));		
 	}
 
-	img::image_t image;
-	make_image(image, size);	
-	img::pixel_range_t range = {};
+	img::image_t image_chart;
+	std::vector<img::data_color_t> image_data = { loop_times, stl_times, stl_par_times };
+	img::draw_bar_chart(image_data, image_chart);
+	img::write_image(image_chart, out_dir / "image_times.png");
+
+	stl_times.data.clear();
+	stl_par_times.data.clear();
+	loop_times.data.clear();
 
 	size = size_start;
 
 	for (u32 i = 0; i < 10; ++i, size *= 2)
 	{
-		range.x_end = size / 5;
-		range.y_end = size / range.x_end;
+		img::image_t image;
+		make_image(image, size);
+		auto view = img::make_view(image);
 
-		auto view = img::sub_view(image, range);
-
-		auto sz = view.width * view.height;
-
-		std::cout << "view_t size = " << sz << '\n';
+		sw.start();
+		for_each_pixel(view, random_blended_pixel);
+		auto t = sw.get_time_milli();
+		loop_times.data.push_back(scale(t));
 
 		sw.start();
 		std::for_each(view.begin(), view.end(), random_blended_pixel);
-		auto t = sw.get_time_milli();
-		std::cout << "    stl: " << 1000 * t / sz << '\n';
+		t = sw.get_time_milli();
+		stl_times.data.push_back(scale(t));
 
 		sw.start();
 		std::for_each(std::execution::par, view.begin(), view.end(), random_blended_pixel);
 		t = sw.get_time_milli();
-		std::cout << "stl par: " << 1000 * t / sz << '\n';
-
-		sw.start();
-		for_each_pixel(view, random_blended_pixel);
-		t = sw.get_time_milli();
-		std::cout << "   loop: " << 1000 * t / sz << "\n\n";
+		stl_par_times.data.push_back(scale(t));		
 	}
+
+	img::image_t view_chart;
+	std::vector<img::data_color_t> view_data = { loop_times, stl_times, stl_par_times };
+	img::draw_bar_chart(view_data, view_chart);
+	img::write_image(view_chart, out_dir / "view_times.png");
 }
 
 

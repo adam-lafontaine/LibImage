@@ -39,6 +39,14 @@ namespace libimage
 	} rgb_stats_t;
 
 
+	typedef struct
+	{
+		std::vector<r32> data;
+		pixel_t color;
+
+	} data_color_t;
+
+
 #ifndef LIBIMAGE_NO_COLOR
 
 	rgb_stats_t calc_stats(image_t const& image);
@@ -50,6 +58,8 @@ namespace libimage
 	stats_t calc_stats(view_t const& view, Channel ch);
 
 	void draw_histogram(rgb_stats_t const& rgb_stats, image_t& image_dst);
+
+	void draw_bar_chart(std::vector<data_color_t> const& data, image_t& image_dst);
 
 #endif // !LIBIMAGE_NO_COLOR
 
