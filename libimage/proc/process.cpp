@@ -164,8 +164,8 @@ namespace libimage
 	{
 		assert(verify(view));
 
-		auto const update = [&](pixel_t& p) { p.alpha = func(p); };
-		std::for_each(view.begin(), view.end(), update);
+		auto const conv = [&](pixel_t& p) { p.alpha = func(p); };
+		std::for_each(view.begin(), view.end(), conv);
 	}
 
 
@@ -251,12 +251,11 @@ namespace libimage
 		assert(width >= VIEW_MIN_DIM);
 		assert(height >= VIEW_MIN_DIM);
 
+		// top and bottom rows equal to src
 		u32 x_first = 0;
 		u32 y_first = 0;
 		u32 x_last = width - 1;
 		u32 y_last = height - 1;
-
-		// outer edges equal to source
 		auto src_top = src.row_begin(y_first);
 		auto src_bottom = src.row_begin(y_last);
 		auto dst_top = dst.row_begin(y_first);
@@ -267,12 +266,12 @@ namespace libimage
 			dst_bottom[x] = src_bottom[x];
 		}
 
+		// left and right columns equal to src
 		x_first = 0;
 		y_first = 1;
 		x_last = width - 1;
 		y_last = height - 2;
-
-		for (u32 y = y_first; y <= y_last; ++y) // left and right columns
+		for (u32 y = y_first; y <= y_last; ++y)
 		{
 			auto src_row = src.row_begin(y);
 			auto dst_row = dst.row_begin(y);
@@ -280,38 +279,36 @@ namespace libimage
 			dst_row[x_last] = src_row[x_last];
 		}
 
+		// first inner top and bottom rows use 3 x 3 gaussian kernel
 		x_first = 1;
 		y_first = 1;
 		x_last = width - 2;
-		y_last = height - 2;
-
-		// first inner edges use 3 x 3 gaussian kernel
+		y_last = height - 2;		
 		dst_top = dst.row_begin(y_first);
 		dst_bottom = dst.row_begin(y_last);
-		for (u32 x = x_first; x <= x_last; ++x) // top and bottom rows
+		for (u32 x = x_first; x <= x_last; ++x)
 		{
 			dst_top[x] = gauss3(src, x, y_first);
 			dst_bottom[x] = gauss3(src, x, y_last);
 		}
 
+		// first inner left and right columns use 3 x 3 gaussian kernel
 		x_first = 1;
 		y_first = 2;
 		x_last = width - 2;
 		y_last = height - 3;
-
-		for (u32 y = y_first; y <= y_last; ++y) // left and right columns
+		for (u32 y = y_first; y <= y_last; ++y)
 		{
 			auto dst_row = dst.row_begin(y);
 			dst_row[x_first] = gauss3(src, x_first, y);
 			dst_row[x_last] = gauss3(src, x_last, y);
 		}
 
+		// inner pixels use 5 x 5 gaussian kernel
 		x_first = 2;
 		y_first = 2;
 		x_last = width - 3;
-		y_last = height - 3;
-
-		// inner pixels use 5 x 5 gaussian kernel
+		y_last = height - 3;		
 		for (u32 y = y_first; y <= y_last; ++y)
 		{
 			auto dst_row = dst.row_begin(y);
@@ -334,36 +331,36 @@ namespace libimage
 		auto temp_view = make_view(temp, src.width, src.height);
 		blur(src, temp_view);
 
+		// top and bottom rows are black
 		u32 x_first = 0;
 		u32 y_first = 0;
 		u32 x_last = width - 1;
 		u32 y_last = height - 1;
-
 		auto dst_top = dst.row_begin(y_first);
 		auto dst_bottom = dst.row_begin(y_last);
-		for (u32 x = x_first; x <= x_last; ++x) // top and bottom rows
+		for (u32 x = x_first; x <= x_last; ++x)
 		{
 			dst_top[x] = 0;
 			dst_bottom[x] = 0;
 		}
 
+		// left and right columns are black
 		x_first = 0;
 		y_first = 1;
 		x_last = width - 1;
 		y_last = height - 2;
-
-		for (u32 y = y_first; y <= y_last; ++y) // left and right columns
+		for (u32 y = y_first; y <= y_last; ++y)
 		{
 			auto dst_row = dst.row_begin(y);
 			dst_row[x_first] = 0;
 			dst_row[x_last] = 0;
 		}
 
+		// get gradient magnitude of inner pixels
 		x_first = 1;
 		y_first = 1;
 		x_last = width - 2;
 		y_last = height - 2;
-
 		for (u32 y = y_first; y <= y_last; ++y)
 		{
 			auto dst_row = dst.row_begin(y);
@@ -476,7 +473,7 @@ namespace libimage
 		void binarize(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& func)
 		{
 			auto const conv = [&](gray::pixel_t const& p) { return func(p) ? 255 : 0; };
-			par::convert(src, conv);
+			par::convert(src, dst, conv);
 		}
 
 
@@ -552,9 +549,8 @@ namespace libimage
 
 			// lamdas, lots of lamdas
 
-			// outer edges equal to source
-
-			auto const copy_top_bottom = [&]() // top and bottom rows
+			// top and bottom rows equal to src
+			auto const copy_top_bottom = [&]()
 			{
 				u32 const x_first = 0;
 				u32 const y_first = 0;
@@ -572,7 +568,8 @@ namespace libimage
 				}
 			};
 
-			auto const copy_left_right = [&]() // left and right columns
+			// left and right columns equal to src
+			auto const copy_left_right = [&]()
 			{
 				u32 const x_first = 0;
 				u32 const y_first = 1;
@@ -588,8 +585,7 @@ namespace libimage
 				}
 			};
 
-			// first inner edges use 3 x 3 gaussian kernel
-
+			// first inner top and bottom rows use 3 x 3 gaussian kernel
 			auto const inner_gauss_top_bottom = [&]() 
 			{
 				u32 const x_first = 1;
@@ -606,6 +602,7 @@ namespace libimage
 				}
 			};
 
+			// first inner left and right columns use 3 x 3 gaussian kernel
 			auto const inner_gauss_left_right = [&]() 
 			{
 				u32 const x_first = 1;
@@ -671,6 +668,7 @@ namespace libimage
 			auto const width = src.width;
 			auto const height = src.height;				
 
+			// top and bottom rows are black
 			auto const zero_top_bottom = [&]() 
 			{
 				u32 const x_first = 0;
@@ -680,13 +678,14 @@ namespace libimage
 
 				auto dst_top = dst.row_begin(y_first);
 				auto dst_bottom = dst.row_begin(y_last);
-				for (u32 x = x_first; x <= x_last; ++x) // top and bottom rows
+				for (u32 x = x_first; x <= x_last; ++x)
 				{
 					dst_top[x] = 0;
 					dst_bottom[x] = 0;
 				}
 			};
 
+			// left and right columns are black
 			auto const zero_left_right = [&]() 
 			{
 				u32 const x_first = 0;
@@ -702,6 +701,7 @@ namespace libimage
 				}
 			};
 
+			// get gradient magnitude of inner pixels
 			u32 const x_begin = 1;
 			u32 const x_length = width - 2 * x_begin;
 			u32 const y_begin = 1;
@@ -736,6 +736,7 @@ namespace libimage
 				std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), grad_row);
 			};
 
+			// put the lambdas in an array
 			std::array<std::function<void()>, 3> f_list
 			{
 				zero_top_bottom,
@@ -743,6 +744,7 @@ namespace libimage
 				gradients_inner
 			};
 
+			// finally execute everything
 			std::for_each(std::execution::par, f_list.begin(), f_list.end(), [](auto const& f) { f(); });
 		}
 

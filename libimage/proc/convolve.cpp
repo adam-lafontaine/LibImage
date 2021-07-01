@@ -249,11 +249,11 @@ namespace libimage
 		constexpr auto rw = [](u8 w) { return w / 256.0f; };
 		constexpr std::array<r32, 25> gauss
 		{
-			rw(1), rw(4), rw(6), rw(4), rw(1),
+			rw(1), rw(4),  rw(6),  rw(4),  rw(1),
 			rw(4), rw(16), rw(24), rw(16), rw(4),
 			rw(6), rw(24), rw(36), rw(24), rw(6),
 			rw(4), rw(16), rw(24), rw(16), rw(4),
-			rw(1), rw(4), rw(6), rw(4), rw(1),
+			rw(1), rw(4),  rw(6),  rw(4),  rw(1),
 		};
 
 		auto p = weighted_center(view, x, y, gauss);
@@ -282,8 +282,8 @@ namespace libimage
 	{
 		constexpr std::array<r32, 9> kernel
 		{
-			1.0f, 2.0f, 1.0f,
-			0.0f, 0.0f, 0.0f,
+			 1.0f,  2.0f,  1.0f,
+			 0.0f,  0.0f,  0.0f,
 			-1.0f, -2.0f, -1.0f,
 		};
 

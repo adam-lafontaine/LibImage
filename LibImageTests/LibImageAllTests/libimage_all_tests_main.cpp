@@ -58,8 +58,8 @@ int main()
 	basic_tests(dst_root / "basic");
 	math_tests(dst_root / "math");
 
-	for_each_tests(dst_root / "for_each");
-	transform_tests(dst_root / "transform");
+	//for_each_tests(dst_root / "for_each");
+	//transform_tests(dst_root / "transform");
 
 	process_tests(dst_root / "process");
 
@@ -479,12 +479,12 @@ void process_tests(fs::path const& out_dir)
 	auto caddy_view = make_view(caddy);
 
 	// alpha blending
-	img::convert_alpha(caddy_view, [](auto const& p) { return 128; });
+	img::par::convert_alpha(caddy_view, [](auto const& p) { return 128; });
 	img::alpha_blend(caddy_view, corvette_view, dst_view);
 	img::write_image(dst_image, out_dir / "alpha_blend.png");
 
 	// grayscale
-	img::convert_grayscale(corvette_view, dst_gray_view);
+	img::par::convert_grayscale(corvette_view, dst_gray_view);
 	img::write_image(dst_gray_image, out_dir / "convert_grayscale.png");
 	
 	// stats
@@ -505,21 +505,22 @@ void process_tests(fs::path const& out_dir)
 	// create a new grayscale source
 	img::gray::image_t src_gray_image;
 	auto src_gray_view = img::make_view(src_gray_image, width, height);
-	img::copy(dst_gray_view, src_gray_view);
+	img::par::copy(dst_gray_view, src_gray_view);
 
 	// contrast
 	auto shade_min = static_cast<u8>(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
 	auto shade_max = static_cast<u8>(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
-	img::adjust_contrast(src_gray_view, dst_gray_view, shade_min, shade_max);
+	img::par::adjust_contrast(src_gray_view, dst_gray_view, shade_min, shade_max);
 	img::write_image(dst_gray_image, out_dir / "contrast.png");
 
 	// binarize
 	auto const is_white = [&](u8 p) { return static_cast<r32>(p) > gray_stats.mean; };
-	img::binarize(src_gray_view, dst_gray_view, is_white);
+	//img::binarize(src_gray_view, dst_gray_view, is_white);
+	img::par::binarize(src_gray_view, dst_gray_view, is_white);
 	img::write_image(dst_gray_image, out_dir / "binarize.png");
 
 	//blur
-	img::blur(src_gray_view, dst_gray_view);
+	img::par::blur(src_gray_view, dst_gray_view);
 	img::write_image(dst_gray_image, out_dir / "blur.png");
 	
 	// combine transformations in the same image
