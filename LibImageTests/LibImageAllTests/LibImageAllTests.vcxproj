@@ -143,22 +143,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\libimage_all\libimage.hpp" />
-    <ClInclude Include="..\..\libimage_all\math\libimage_math.hpp" />
-    <ClInclude Include="..\..\libimage_all\proc\convolve.hpp" />
-    <ClInclude Include="..\..\libimage_all\proc\process.hpp" />
-    <ClInclude Include="..\..\libimage_all\proc\proc_template.hpp" />
-    <ClInclude Include="..\..\libimage_all\stb\stb_image.h" />
-    <ClInclude Include="..\..\libimage_all\stb\stb_image_resize.h" />
-    <ClInclude Include="..\..\libimage_all\stb\stb_image_write.h" />
-    <ClInclude Include="..\..\libimage_all\stb_include.hpp" />
+    <ClCompile Include="..\..\libimage\math\libimage_math.cpp" />
+    <ClCompile Include="..\..\libimage\proc\convolve.cpp" />
+    <ClCompile Include="..\..\libimage\proc\process.cpp" />
+    <ClCompile Include="..\..\libimage\stb_wrapper\stb_libimage.cpp" />
+    <ClCompile Include="libimage_all_tests_main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\libimage_all\libimage.cpp" />
-    <ClCompile Include="..\..\libimage_all\math\libimage_math.cpp" />
-    <ClCompile Include="..\..\libimage_all\proc\convolve.cpp" />
-    <ClCompile Include="..\..\libimage_all\proc\process.cpp" />
-    <ClCompile Include="libimage_all_tests_main.cpp" />
+    <ClInclude Include="..\..\libimage\libimage.hpp" />
+    <ClInclude Include="..\..\libimage\math\libimage_math.hpp" />
+    <ClInclude Include="..\..\libimage\proc\convolve.hpp" />
+    <ClInclude Include="..\..\libimage\proc\process.hpp" />
+    <ClInclude Include="..\..\libimage\stb_wrapper\stb_all.hpp" />
+    <ClInclude Include="..\..\libimage\stb_wrapper\stb_include.hpp" />
+    <ClInclude Include="..\utils\stopwatch.hpp" />
+    <ClInclude Include="..\utils\win32_leak_check.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

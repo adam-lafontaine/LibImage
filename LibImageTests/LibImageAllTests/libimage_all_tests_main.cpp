@@ -1,6 +1,6 @@
-#include "../../libimage_all/libimage.hpp"
-#include "../../libimage_all/math/libimage_math.hpp"
-#include "../../libimage_all/proc/process.hpp"
+#include "../../libimage/libimage.hpp"
+#include "../../libimage/math/libimage_math.hpp"
+#include "../../libimage/proc/process.hpp"
 
 #include "../utils/stopwatch.hpp"
 
