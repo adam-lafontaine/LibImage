@@ -710,22 +710,29 @@ namespace libimage
 					dst_top[x] = 0;
 					dst_bottom[x] = 0;
 				};
+
+				std::for_each(x_ids.begin(), x_ids.end(), zero);
 			};
 
 			// left and right columns are black
 			auto const zero_left_right = [&]() 
 			{
 				u32 const x_first = 0;
-				u32 const y_first = 1;
 				u32 const x_last = width - 1;
-				u32 const y_last = height - 2;
+				u32 const y_begin = 1;
+				u32 const y_length = height - 2 * y_begin;
 
-				for (u32 y = y_first; y <= y_last; ++y) // left and right columns
+				std::vector<u32> y_ids(y_length);
+				std::iota(y_ids.begin(), y_ids.end(), y_begin); // TODO: ranges
+
+				auto const zero = [&](u32 y) 
 				{
 					auto dst_row = dst.row_begin(y);
 					dst_row[x_first] = 0;
 					dst_row[x_last] = 0;
-				}
+				};
+
+				std::for_each(y_ids.begin(), y_ids.end(), zero);
 			};
 
 			// get gradient magnitude of inner pixels
