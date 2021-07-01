@@ -525,7 +525,7 @@ void process_tests(fs::path const& out_dir)
 	
 	// combine transformations in the same image
 	// regular grayscale to start
-	img::copy(src_gray_view, dst_gray_view);
+	img::par::copy(src_gray_view, dst_gray_view);
 
 	img::pixel_range_t range;
 	range.x_begin = 0;
@@ -534,13 +534,13 @@ void process_tests(fs::path const& out_dir)
 	range.y_end = height / 2;
 	auto src_sub = img::sub_view(src_gray_view, range);
 	auto dst_sub = img::sub_view(dst_gray_view, range);
-	img::adjust_contrast(src_sub, dst_sub, shade_min, shade_max);
+	img::par::adjust_contrast(src_sub, dst_sub, shade_min, shade_max);
 
 	range.x_begin = width / 2;
 	range.x_end = width;
 	src_sub = img::sub_view(src_gray_view, range);
 	dst_sub = img::sub_view(dst_gray_view, range);
-	img::binarize(src_sub, dst_sub, is_white);	
+	img::par::binarize(src_sub, dst_sub, is_white);
 
 	range.x_begin = 0;
 	range.x_end = width / 2;
@@ -549,13 +549,13 @@ void process_tests(fs::path const& out_dir)
 	src_sub = img::sub_view(src_gray_view, range);
 	dst_sub = img::sub_view(dst_gray_view, range);
 	auto const is_black = [&](u8 p) { return static_cast<r32>(p) < gray_stats.mean; };
-	img::binarize(src_sub, dst_sub, is_black);	
+	img::par::binarize(src_sub, dst_sub, is_black);
 
 	range.x_begin = width / 2;
 	range.x_end = width;
 	src_sub = img::sub_view(src_gray_view, range);
 	dst_sub = img::sub_view(dst_gray_view, range);
-	img::blur(src_sub, dst_sub);
+	img::par::blur(src_sub, dst_sub);
 	
 	img::write_image(dst_gray_image, out_dir / "combo.png");
 
