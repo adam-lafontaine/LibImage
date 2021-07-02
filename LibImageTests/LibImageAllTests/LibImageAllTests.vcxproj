@@ -143,6 +143,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\libimage\libimage.cpp" />
     <ClCompile Include="..\..\libimage\math\libimage_math.cpp" />
     <ClCompile Include="..\..\libimage\proc\convolve.cpp" />
     <ClCompile Include="..\..\libimage\proc\process.cpp" />

@@ -57,6 +57,9 @@
     <ClCompile Include="..\..\libimage\proc\process.cpp">
       <Filter>Source Files\libimage\proc</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\libimage\libimage.cpp">
+      <Filter>Source Files\libimage</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\libimage\libimage.hpp">

@@ -13,12 +13,12 @@ namespace libimage
 		u32 w = 0;
 		r32 p = 0.0f;
 
-		for (u32 vy = range.y_begin; vy < range.y_end; ++vy)
+		for (u32 y = range.y_begin; y < range.y_end; ++y)
 		{
-			auto row = view.row_begin(vy);
-			for (u32 vx = range.x_begin; vx < range.x_end; ++vx)
+			auto row = view.row_begin(y);
+			for (u32 x = range.x_begin; x < range.x_end; ++x)
 			{
-				p += weights[w] * row[vx];
+				p += weights[w] * row[x];
 				++w;
 			}
 		}

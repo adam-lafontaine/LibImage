@@ -551,6 +551,10 @@ namespace libimage
 
 	view_t column_view(view_t const& view, u32 y_begin, u32 y_end, u32 x);
 
+	/*void for_each_pixel(image_t const& image, std::function<void(pixel_t const& p)> const& func);
+
+	void for_each_pixel(view_t const& image, std::function<void(pixel_t const& p)> const& func);*/
+
 #ifndef LIBIMAGE_NO_WRITE
 
 	void write_image(image_t const& image_src, const char* file_path_dst);
