@@ -59,9 +59,9 @@ int main()
 	//math_tests(dst_root / "math");
 
 	//for_each_tests(dst_root / "for_each");
-	//transform_tests(dst_root / "transform");
+	transform_tests(dst_root / "transform");
 
-	process_tests(dst_root / "process");
+	//process_tests(dst_root / "process");
 
 	std::cout << "\nDone.\n";
 }
@@ -421,19 +421,20 @@ void transform_tests(fs::path const& out_dir)
 		image_stl_times.data.push_back(scale(t));
 
 		sw.start();
-		std::transform(image.begin(), image.end(), dst.begin(), random_blended_pixel);
+		std::transform(std::execution::par, image.begin(), image.end(), dst.begin(), random_blended_pixel);
 		t = sw.get_time_milli();
 		image_par_times.data.push_back(scale(t));
 
 		auto view = img::make_view(image);
+		auto dst_view = img::make_view(dst);
 
 		sw.start();
-		std::transform(std::execution::par, image.begin(), image.end(), dst.begin(), random_blended_pixel);
+		std::transform(view.begin(), view.end(), dst_view.begin(), random_blended_pixel);
 		t = sw.get_time_milli();
 		view_stl_times.data.push_back(scale(t));
 
 		sw.start();
-		std::transform(std::execution::par, image.begin(), image.end(), dst.begin(), random_blended_pixel);
+		std::transform(std::execution::par, view.begin(), view.end(), dst_view.begin(), random_blended_pixel);
 		t = sw.get_time_milli();
 		view_par_times.data.push_back(scale(t));
 	}
@@ -571,6 +572,26 @@ void process_tests(fs::path const& out_dir)
 	img::par::edges(src_gray_view, dst_gray_view, 150);
 	img::write_image(dst_gray_image, out_dir / "edges.png");
 
+	// compare edge detection speeds
+	/*auto green = img::to_pixel(88, 100, 29);
+	auto blue = img::to_pixel(0, 119, 182);
+
+	img::data_color_t seq_times;
+	seq_times.color = green;
+
+	img::data_color_t par_times;
+	par_times.color = blue;
+
+	Stopwatch sw;
+	u32 size_start = 10000;
+
+	u32 size = size_start;
+	auto const scale = [&](auto t) { return static_cast<r32>(10000 * t / size); };
+
+	for (u32 i = 0; i < 10; ++i, size *= 2)
+	{
+
+	}*/
 }
 
 
