@@ -39,15 +39,14 @@ namespace libimage
 	} rgb_stats_t;
 
 
+#ifndef LIBIMAGE_NO_COLOR
+
 	typedef struct DataColor
 	{
 		std::vector<r32> data;
 		pixel_t color = to_pixel(0);
 
 	} data_color_t;
-
-
-#ifndef LIBIMAGE_NO_COLOR
 
 	rgb_stats_t calc_stats(image_t const& image);
 	

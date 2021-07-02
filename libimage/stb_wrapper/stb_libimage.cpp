@@ -7,6 +7,8 @@ Copyright (c) 2021 Adam Lafontaine
 #include "../libimage.hpp"
 #include "stb_include.hpp"
 
+#include <algorithm>
+
 
 namespace libimage
 {
@@ -253,7 +255,7 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_RESIZE
 
-#endif // !#ifndef LIBIMAGE_NO_GRAYSCALE
+#endif // !LIBIMAGE_NO_GRAYSCALE
 
 }
 

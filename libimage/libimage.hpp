@@ -9,20 +9,15 @@ Copyright (c) 2021 Adam Lafontaine
 //#define LIBIMAGE_NO_GRAYSCALE
 //#define LIBIMAGE_NO_WRITE
 //#define LIBIMAGE_NO_RESIZE
-//#define LIBIMAGE_NO_FS
 
 #include <cstdint>
 #include <iterator>
 #include <cassert>
+#include <functional>
 
-#ifndef LIBIMAGE_NO_FS
 #include <filesystem>
 namespace fs = std::filesystem;
-#endif // !LIBIMAGE_NO_FS
 
-#ifndef LIBIMAGE_NO_COLOR
-#include <functional>
-#endif // !LIBIMAGE_NO_COLOR
 
 using u8 = uint8_t;
 using u32 = uint32_t;

@@ -5,8 +5,13 @@ Copyright (c) 2021 Adam Lafontaine
 */
 
 #include "process.hpp"
-#include "convolve.hpp"
 #include "index_range.hpp"
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+#include "convolve.hpp"
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
 
 #include <algorithm>
 #include <execution>
@@ -17,39 +22,36 @@ namespace libimage
 {
 	constexpr u32 VIEW_MIN_DIM = 5;
 
+	constexpr static r32 q_inv_sqrt(r32 n)
+	{
+		const float threehalfs = 1.5F;
+		float y = n;
+
+		long i = *(long*)&y;
+
+		i = 0x5f3759df - (i >> 1);
+		y = *(float*)&i;
+
+		y = y * (threehalfs - ((n * 0.5F) * y * y));
+
+		return y;
+	}
+
+
 	static constexpr u8 rgb_grayscale_standard(u8 red, u8 green, u8 blue)
 	{
 		return static_cast<u8>(0.299 * red + 0.587 * green + 0.114 * blue);
 	}
+	
+	
+	
 
+#ifndef LIBIMAGE_NO_COLOR
 
 	static constexpr u8 pixel_grayscale_standard(pixel_t const& p)
 	{
 		return rgb_grayscale_standard(p.red, p.green, p.blue);
 	}
-
-
-	static constexpr u8 lerp_clamp(u8 src_low, u8 src_high, u8 dst_low, u8 dst_high, u8 val)
-	{
-		if (val < src_low)
-		{
-			return dst_low;
-		}
-		else if (val > src_high)
-		{
-			return dst_high;
-		}
-
-		auto const ratio = (static_cast<r64>(val) - src_low) / (src_high - src_low);
-
-		assert(ratio >= 0.0);
-		assert(ratio <= 1.0);
-
-		auto const diff = ratio * (dst_high - dst_low);
-
-		return dst_low + static_cast<u8>(diff);
-	}
-
 
 	static constexpr pixel_t alpha_blend_linear(pixel_t const& src, pixel_t const& current)
 	{
@@ -79,43 +81,88 @@ namespace libimage
 	}
 
 
-	static bool verify(gray::view_t const& view)
-	{
-		return view.image_data && view.width && view.height;
-	}
-
-
 	static bool verify(view_t const& src, view_t const& dst)
 	{
 		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
 	}
 
 
-	static bool verify(view_t const& src, gray::view_t const& dst)
+	void copy(view_t const& src, view_t const& dst)
 	{
-		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+		assert(verify(src, dst));
+
+		std::copy(src.begin(), src.end(), dst.begin());
+	}
+
+
+	void convert_alpha(view_t const& view, pixel_to_u8_f const& func)
+	{
+		assert(verify(view));
+
+		auto const conv = [&](pixel_t& p) { p.alpha = func(p); };
+		std::for_each(view.begin(), view.end(), conv);
+	}
+
+
+	void convert_alpha_grayscale(view_t const& view)
+	{
+		convert_alpha(view, pixel_grayscale_standard);
+	}
+
+
+	void alpha_blend(view_t const& src, view_t const& current, view_t const& dst)
+	{
+		assert(verify(src, current));
+		assert(verify(src, dst));
+
+		std::transform(src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+	}
+
+
+	void alpha_blend(view_t const& src, view_t const& current_dst)
+	{
+		assert(verify(src, current_dst));
+
+		std::transform(src.begin(), src.end(), current_dst.begin(), current_dst.begin(), alpha_blend_linear);
+	}
+
+
+#endif // !LIBIMAGE_NO_COLOR
+
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	static constexpr u8 lerp_clamp(u8 src_low, u8 src_high, u8 dst_low, u8 dst_high, u8 val)
+	{
+		if (val < src_low)
+		{
+			return dst_low;
+		}
+		else if (val > src_high)
+		{
+			return dst_high;
+		}
+
+		auto const ratio = (static_cast<r64>(val) - src_low) / (src_high - src_low);
+
+		assert(ratio >= 0.0);
+		assert(ratio <= 1.0);
+
+		auto const diff = ratio * (dst_high - dst_low);
+
+		return dst_low + static_cast<u8>(diff);
+	}
+
+
+	static bool verify(gray::view_t const& view)
+	{
+		return view.image_data && view.width && view.height;
 	}
 
 
 	static bool verify(gray::view_t const& src, gray::view_t const& dst)
 	{
 		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
-	}
-
-
-	static r32 q_inv_sqrt(r32 n)
-	{
-		const float threehalfs = 1.5F;
-		float y = n;
-
-		long i = *(long*)&y;
-
-		i = 0x5f3759df - (i >> 1);
-		y = *(float*)&i;
-
-		y = y * (threehalfs - ((n * 0.5F) * y * y));
-
-		return y;
 	}
 
 
@@ -133,14 +180,6 @@ namespace libimage
 		auto inv_mean = (view.width * view.height) / total;
 
 		return q_inv_sqrt(inv_mean);
-	}
-	
-
-	void convert(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
-	{
-		assert(verify(src, dst));
-
-		std::transform(src.begin(), src.end(), dst.begin(), func);
 	}
 
 
@@ -161,40 +200,11 @@ namespace libimage
 	}
 
 
-	void copy(view_t const& src, view_t const& dst)
-	{
-		assert(verify(src, dst));
-
-		std::copy(src.begin(), src.end(), dst.begin());
-	}
-
-
 	void copy(gray::view_t const& src, gray::view_t const& dst)
 	{
 		assert(verify(src, dst));
 
 		std::copy(src.begin(), src.end(), dst.begin());
-	}
-
-
-	void convert_grayscale(view_t const& src, gray::view_t const& dst)
-	{
-		convert(src, dst, pixel_grayscale_standard);
-	}
-
-
-	void convert_alpha(view_t const& view, pixel_to_u8_f const& func)
-	{
-		assert(verify(view));
-
-		auto const conv = [&](pixel_t& p) { p.alpha = func(p); };
-		std::for_each(view.begin(), view.end(), conv);
-	}
-
-
-	void convert_alpha_grayscale(view_t const& view)
-	{
-		convert_alpha(view, pixel_grayscale_standard);
 	}
 
 
@@ -250,23 +260,6 @@ namespace libimage
 	}
 
 
-	void alpha_blend(view_t const& src, view_t const& current, view_t const& dst)
-	{
-		assert(verify(src, current));
-		assert(verify(src, dst));
-
-		std::transform(src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
-	}
-
-
-	void alpha_blend(view_t const& src, view_t const& current_dst)
-	{
-		assert(verify(src, current_dst));
-
-		std::transform(src.begin(), src.end(), current_dst.begin(), current_dst.begin(), alpha_blend_linear);
-	}
-
-
 	void blur(gray::view_t const& src, gray::view_t const& dst)
 	{
 		assert(verify(src, dst));
@@ -310,7 +303,7 @@ namespace libimage
 		x_first = 1;
 		y_first = 1;
 		x_last = width - 2;
-		y_last = height - 2;		
+		y_last = height - 2;
 		dst_top = dst.row_begin(y_first);
 		dst_bottom = dst.row_begin(y_last);
 		for (u32 x = x_first; x <= x_last; ++x)
@@ -335,7 +328,7 @@ namespace libimage
 		x_first = 2;
 		y_first = 2;
 		x_last = width - 3;
-		y_last = height - 3;		
+		y_last = height - 3;
 		for (u32 y = y_first; y <= y_last; ++y)
 		{
 			auto dst_row = dst.row_begin(y);
@@ -401,16 +394,90 @@ namespace libimage
 		}
 	}
 
+#endif // !LIBIMAGE_NO_GRAYSCALE
+
+
+	
+#ifndef LIBIMAGE_NO_COLOR
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	
+
+
+	
+
+
+	static bool verify(view_t const& src, gray::view_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	void convert(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
+	{
+		assert(verify(src, dst));
+
+		std::transform(src.begin(), src.end(), dst.begin(), func);
+	}
+
+
+	void convert_grayscale(view_t const& src, gray::view_t const& dst)
+	{
+		convert(src, dst, pixel_grayscale_standard);
+	}
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+#endif // !LIBIMAGE_NO_COLOR
+	
 
 	namespace par
 	{
-		void convert(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
+
+#ifndef LIBIMAGE_NO_COLOR
+
+		void copy(view_t const& src, view_t const& dst)
 		{
 			assert(verify(src, dst));
 
-			std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
+			std::copy(std::execution::par, src.begin(), src.end(), dst.begin());
 		}
 
+
+		void convert_alpha(view_t const& view, pixel_to_u8_f const& func)
+		{
+			assert(verify(view));
+
+			auto const update = [&](pixel_t& p) { p.alpha = func(p); };
+			std::for_each(view.begin(), view.end(), update);
+		}
+
+
+		void convert_alpha_grayscale(view_t const& view)
+		{
+			par::convert_alpha(view, pixel_grayscale_standard);
+		}
+
+
+		void alpha_blend(view_t const& src, view_t const& current, view_t const& dst)
+		{
+			assert(verify(src, current));
+			assert(verify(src, dst));
+
+			std::transform(std::execution::par, src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+		}
+
+
+		void alpha_blend(view_t const& src, view_t const& current_dst)
+		{
+			assert(verify(src, current_dst));
+
+			std::transform(std::execution::par, src.begin(), src.end(), current_dst.begin(), current_dst.begin(), alpha_blend_linear);
+		}
+
+#endif // !LIBIMAGE_NO_COLOR
+
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
 
 		void convert(gray::view_t const& src, gray::view_t const& dst, u8_to_u8_f const& func)
 		{
@@ -429,40 +496,11 @@ namespace libimage
 		}
 
 
-		void copy(view_t const& src, view_t const& dst)
-		{
-			assert(verify(src, dst));
-
-			std::copy(std::execution::par, src.begin(), src.end(), dst.begin());
-		}
-
-
 		void copy(gray::view_t const& src, gray::view_t const& dst)
 		{
 			assert(verify(src, dst));
 
 			std::copy(std::execution::par, src.begin(), src.end(), dst.begin());
-		}
-
-
-		void convert_grayscale(view_t const& src, gray::view_t const& dst)
-		{
-			par::convert(src, dst, pixel_grayscale_standard);
-		}
-
-
-		void convert_alpha(view_t const& view, pixel_to_u8_f const& func)
-		{
-			assert(verify(view));
-
-			auto const update = [&](pixel_t& p) { p.alpha = func(p); };
-			std::for_each(view.begin(), view.end(), update);
-		}
-
-
-		void convert_alpha_grayscale(view_t const& view)
-		{
-			par::convert_alpha(view, pixel_grayscale_standard);
 		}
 
 
@@ -525,23 +563,6 @@ namespace libimage
 		}
 
 
-		void alpha_blend(view_t const& src, view_t const& current, view_t const& dst)
-		{
-			assert(verify(src, current));
-			assert(verify(src, dst));
-
-			std::transform(std::execution::par, src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
-		}
-
-
-		void alpha_blend(view_t const& src, view_t const& current_dst)
-		{
-			assert(verify(src, current_dst));
-
-			std::transform(std::execution::par, src.begin(), src.end(), current_dst.begin(), current_dst.begin(), alpha_blend_linear);
-		}
-		
-
 		void blur(gray::view_t const& src, gray::view_t const& dst)
 		{
 			assert(verify(src, dst));
@@ -553,7 +574,7 @@ namespace libimage
 
 			// lamdas, lots of lamdas			
 
-			auto const copy_top = [&]() 
+			auto const copy_top = [&]()
 			{
 				auto src_top = row_view(src, 0);
 				auto dst_top = row_view(dst, 0);
@@ -561,7 +582,7 @@ namespace libimage
 				par::copy(src_top, dst_top);
 			};
 
-			auto const copy_bottom = [&]() 
+			auto const copy_bottom = [&]()
 			{
 				auto src_bottom = row_view(src, height - 1);
 				auto dst_bottom = row_view(dst, height - 1);
@@ -569,7 +590,7 @@ namespace libimage
 				par::copy(src_bottom, dst_bottom);
 			};
 
-			auto const copy_left = [&]() 
+			auto const copy_left = [&]()
 			{
 				pixel_range_t r = {};
 				r.x_begin = 0;
@@ -597,7 +618,7 @@ namespace libimage
 				par::copy(src_right, dst_right);
 			};
 
-			auto const gauss_inner_top = [&]() 
+			auto const gauss_inner_top = [&]()
 			{
 				u32 const x_begin = 1;
 				u32 const x_end = width - 1;
@@ -615,7 +636,7 @@ namespace libimage
 				std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), gauss);
 			};
 
-			auto const gauss_inner_bottom = [&]() 
+			auto const gauss_inner_bottom = [&]()
 			{
 				u32 const x_begin = 1;
 				u32 const x_end = width - 1;
@@ -633,7 +654,7 @@ namespace libimage
 				std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), gauss);
 			};
 
-			auto const gauss_inner_left = [&]() 
+			auto const gauss_inner_left = [&]()
 			{
 				u32 const y_begin = 2;
 				u32 const y_end = height - 2;
@@ -665,7 +686,7 @@ namespace libimage
 				};
 
 				std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), gauss);
-			};			
+			};
 
 			// inner pixels use 5 x 5 gaussian kernel
 
@@ -673,7 +694,7 @@ namespace libimage
 			u32 const x_end = width - 2;
 			u32_range_t x_ids(x_begin, x_end);
 
-			auto const gauss_row = [&](u32 y) 
+			auto const gauss_row = [&](u32 y)
 			{
 				auto dst_row = dst.row_begin(y);
 
@@ -685,7 +706,7 @@ namespace libimage
 				std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), gauss_x);
 			};
 
-			auto const inner_gauss = [&]() 
+			auto const inner_gauss = [&]()
 			{
 				u32 const y_begin = 2;
 				u32 const y_end = height - 2;
@@ -768,14 +789,14 @@ namespace libimage
 
 			// get gradient magnitude of inner pixels
 			u32 const x_begin = 1;
-			u32 const x_end = width - 1;		
+			u32 const x_end = width - 1;
 			u32_range_t x_ids(x_begin, x_end);
 
-			auto const grad_row = [&](u32 y) 
+			auto const grad_row = [&](u32 y)
 			{
 				auto dst_row = dst.row_begin(y);
 
-				auto const grad_x = [&](u32 x) 
+				auto const grad_x = [&](u32 x)
 				{
 					auto gx = x_gradient(temp_view, x, y);
 					auto gy = y_gradient(temp_view, x, y);
@@ -786,7 +807,7 @@ namespace libimage
 				std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), grad_x);
 			};
 
-			auto const gradients_inner = [&]() 
+			auto const gradients_inner = [&]()
 			{
 				u32 const y_begin = 1;
 				u32 const y_end = height - 1;
@@ -803,11 +824,43 @@ namespace libimage
 				zero_left,
 				zero_right,
 				gradients_inner
-			};			
+			};
 
 			// finally execute everything
 			std::for_each(std::execution::par, f_list.begin(), f_list.end(), [](auto const& f) { f(); });
 		}
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+
+
+#ifndef LIBIMAGE_NO_COLOR
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+		void convert(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
+		{
+			assert(verify(src, dst));
+
+			std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
+		}
+
+
+		void convert_grayscale(view_t const& src, gray::view_t const& dst)
+		{
+			par::convert(src, dst, pixel_grayscale_standard);
+		}
+
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+#endif // !LIBIMAGE_NO_COLOR		
+
+
+		
+
+
+		
+		
+
+		
 
 	}
 
