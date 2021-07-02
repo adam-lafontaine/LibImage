@@ -417,9 +417,9 @@ namespace libimage
 		assert(view.height);
 		assert(view.image_data);
 
-		assert(range.x_begin >= view.x_begin);
+		assert(range.x_begin < view.x_end);
 		assert(range.x_end <= view.x_end);
-		assert(range.y_begin >= view.y_begin);
+		assert(range.y_begin < view.y_end);
 		assert(range.y_end <= view.y_end);
 
 		gray::view_t sub_view;

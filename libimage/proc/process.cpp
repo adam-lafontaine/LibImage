@@ -366,8 +366,8 @@ namespace libimage
 			auto dst_row = dst.row_begin(y);
 			for (u32 x = x_first; x <= x_last; ++x)
 			{
-				auto gx = std::abs(x_gradient(temp_view, x, y));
-				auto gy = std::abs(y_gradient(temp_view, x, y));
+				auto gx = x_gradient(temp_view, x, y);
+				auto gy = y_gradient(temp_view, x, y);
 				auto g = std::hypot(gx, gy);
 				dst_row[x] = g < threshold ? 0 : 255;
 			}
@@ -548,54 +548,58 @@ namespace libimage
 			assert(height >= VIEW_MIN_DIM);
 
 			// lamdas, lots of lamdas
+			
 
-			// TODO: sub views?
-
-			// top and bottom rows equal to src
-			auto const copy_top_bottom = [&]()
+			auto const copy_top = [&]() 
 			{
-				u32 const x_begin = 0;
-				u32 const x_length = width - 2 * x_begin;
-				u32 const y_first = 0;
-				u32 const y_last = height - 1;
+				pixel_range_t range = {};
+				range.x_begin = 0;
+				range.x_end = width;
+				range.y_begin = 0;
+				range.y_end = 1;
+				auto src_top = sub_view(src, range);
+				auto dst_top = sub_view(dst, range);
 
-				auto src_top = src.row_begin(y_first);
-				auto src_bottom = src.row_begin(y_last);
-				auto dst_top = dst.row_begin(y_first);
-				auto dst_bottom = dst.row_begin(y_last);
-
-				std::vector<u32> x_ids(x_length);
-				std::iota(x_ids.begin(), x_ids.end(), x_begin); // TODO: ranges
-
-				auto const copy = [&](u32 x) 
-				{
-					dst_top[x] = src_top[x];
-					dst_bottom[x] = src_bottom[x];
-				};
-
-				std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), copy);
+				par::copy(src_top, dst_top);
 			};
 
-			// left and right columns equal to src
-			auto const copy_left_right = [&]()
+			auto const copy_bottom = [&]() 
 			{
-				u32 const x_first = 0;
-				u32 const x_last = width - 1;
-				u32 const y_begin = 1;
-				u32 const y_length = height - 2 * y_begin;
+				pixel_range_t range = {};
+				range.x_begin = 0;
+				range.x_end = 1;
+				range.y_begin = height - 1;
+				range.y_end = height;
+				auto src_bottom = sub_view(src, range);
+				auto dst_bottom = sub_view(dst, range);
 
-				std::vector<u32> y_ids(y_length);
-				std::iota(y_ids.begin(), y_ids.end(), y_begin); // TODO: ranges
+				par::copy(src_bottom, dst_bottom);
+			};
 
-				auto const copy = [&](u32 y) 
-				{
-					auto src_row = src.row_begin(y);
-					auto dst_row = dst.row_begin(y);
-					dst_row[x_first] = src_row[x_first];
-					dst_row[x_last] = src_row[x_last];
-				};
+			auto const copy_left = [&]() 
+			{
+				pixel_range_t range = {};
+				range.x_begin = 0;
+				range.x_end = 1;
+				range.y_begin = 1;
+				range.y_end = height - 1;
+				auto src_left = sub_view(src, range);
+				auto dst_left = sub_view(dst, range);
 
-				std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), copy);
+				par::copy(src_left, dst_left);
+			};
+
+			auto const copy_right = [&]()
+			{
+				pixel_range_t range = {};
+				range.x_begin = width - 1;
+				range.x_end = width;
+				range.y_begin = 1;
+				range.y_end = height - 1;
+				auto src_right = sub_view(src, range);
+				auto dst_right = sub_view(dst, range);
+
+				par::copy(src_right, dst_right);
 			};
 
 			// first inner top and bottom rows use 3 x 3 gaussian kernel
@@ -670,10 +674,12 @@ namespace libimage
 			};
 
 			// put the lambdas in an array
-			std::array<std::function<void()>, 5> f_list =
+			std::array<std::function<void()>, 7> f_list =
 			{
-				copy_top_bottom,
-				copy_left_right,
+				copy_top,
+				copy_bottom,
+				copy_left,
+				copy_right,
 				inner_gauss_top_bottom,
 				inner_gauss_left_right,
 				inner_gauss
@@ -689,50 +695,56 @@ namespace libimage
 			assert(verify(src, dst));
 
 			auto const width = src.width;
-			auto const height = src.height;				
+			auto const height = src.height;
 
-			// top and bottom rows are black
-			auto const zero_top_bottom = [&]() 
+			auto const zero = [](u8 p) { u8 val = 0;  return val; };
+
+			auto const zero_top = [&]()
 			{
-				u32 const x_begin = 0;
-				u32 const x_length = width - 2 * x_begin;
-				u32 const y_first = 0;
-				u32 const y_last = height - 1;
+				pixel_range_t range = {};
+				range.x_begin = 0;
+				range.x_end = width;
+				range.y_begin = 0;
+				range.y_end = 1;
+				auto dst_top = sub_view(dst, range);
 
-				auto dst_top = dst.row_begin(y_first);
-				auto dst_bottom = dst.row_begin(y_last);
-
-				std::vector<u32> x_ids(x_length);
-				std::iota(x_ids.begin(), x_ids.end(), x_begin); // TODO: ranges
-
-				auto const zero = [&](u32 x) 
-				{
-					dst_top[x] = 0;
-					dst_bottom[x] = 0;
-				};
-
-				std::for_each(x_ids.begin(), x_ids.end(), zero);
+				par::convert(dst_top, zero);
 			};
 
-			// left and right columns are black
-			auto const zero_left_right = [&]() 
+			auto const zero_bottom = [&]()
 			{
-				u32 const x_first = 0;
-				u32 const x_last = width - 1;
-				u32 const y_begin = 1;
-				u32 const y_length = height - 2 * y_begin;
+				pixel_range_t range = {};
+				range.x_begin = 0;
+				range.x_end = 1;
+				range.y_begin = height - 1;
+				range.y_end = height;
+				auto dst_bottom = sub_view(dst, range);
 
-				std::vector<u32> y_ids(y_length);
-				std::iota(y_ids.begin(), y_ids.end(), y_begin); // TODO: ranges
+				par::convert(dst_bottom, zero);
+			};
 
-				auto const zero = [&](u32 y) 
-				{
-					auto dst_row = dst.row_begin(y);
-					dst_row[x_first] = 0;
-					dst_row[x_last] = 0;
-				};
+			auto const zero_left = [&]()
+			{
+				pixel_range_t range = {};
+				range.x_begin = 0;
+				range.x_end = 1;
+				range.y_begin = 1;
+				range.y_end = height - 1;
+				auto dst_left = sub_view(dst, range);
 
-				std::for_each(y_ids.begin(), y_ids.end(), zero);
+				par::convert(dst_left, zero);
+			};
+
+			auto const zero_right = [&]()
+			{
+				pixel_range_t range = {};
+				range.x_begin = width - 1;
+				range.x_end = width;
+				range.y_begin = 1;
+				range.y_end = height - 1;
+				auto dst_right = sub_view(dst, range);
+
+				par::convert(dst_right, zero);
 			};
 
 			// get gradient magnitude of inner pixels
@@ -756,8 +768,8 @@ namespace libimage
 
 				auto const grad_x = [&](u32 x) 
 				{
-					auto gx = std::abs(x_gradient(temp_view, x, y));
-					auto gy = std::abs(y_gradient(temp_view, x, y));
+					auto gx = x_gradient(temp_view, x, y);
+					auto gy = y_gradient(temp_view, x, y);
 					auto g = std::hypot(gx, gy);
 					dst_row[x] = g < threshold ? 0 : 255;
 				};
@@ -771,10 +783,12 @@ namespace libimage
 			};
 
 			// put the lambdas in an array
-			std::array<std::function<void()>, 3> f_list
+			std::array<std::function<void()>, 5> f_list
 			{
-				zero_top_bottom,
-				zero_left_right,
+				zero_top,
+				zero_bottom,
+				zero_left,
+				zero_right,
 				gradients_inner
 			};
 
