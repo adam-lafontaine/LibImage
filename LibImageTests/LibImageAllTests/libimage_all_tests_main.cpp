@@ -35,6 +35,7 @@ void print(img::view_t const& view);
 void print(img::gray::view_t const& view);
 void print(img::stats_t const& stats);
 void make_image(img::image_t& image, u32 size);
+void make_image(img::gray::image_t& image, u32 size);
 
 void basic_tests(fs::path const& out_dir);
 void math_tests(fs::path const& out_dir);
@@ -55,13 +56,13 @@ int main()
 
 	auto dst_root = fs::path(DST_IMAGE_ROOT);	
 
-	//basic_tests(dst_root / "basic");
-	//math_tests(dst_root / "math");
+	basic_tests(dst_root / "basic");
+	math_tests(dst_root / "math");
 
-	//for_each_tests(dst_root / "for_each");
+	for_each_tests(dst_root / "for_each");
 	transform_tests(dst_root / "transform");
 
-	//process_tests(dst_root / "process");
+	process_tests(dst_root / "process");
 
 	std::cout << "\nDone.\n";
 }
@@ -573,7 +574,7 @@ void process_tests(fs::path const& out_dir)
 	img::write_image(dst_gray_image, out_dir / "edges.png");
 
 	// compare edge detection speeds
-	/*auto green = img::to_pixel(88, 100, 29);
+	auto green = img::to_pixel(88, 100, 29);
 	auto blue = img::to_pixel(0, 119, 182);
 
 	img::data_color_t seq_times;
@@ -590,8 +591,32 @@ void process_tests(fs::path const& out_dir)
 
 	for (u32 i = 0; i < 10; ++i, size *= 2)
 	{
+		img::gray::image_t image;
+		make_image(image, size);
+		img::gray::image_t dst;
+		make_image(dst, size);
+		auto view = img::make_view(image);
+		auto dst_view = img::make_view(dst);
 
-	}*/
+		sw.start();
+		img::edges(view, dst_view, 150);
+		auto t = sw.get_time_milli();
+		seq_times.data.push_back(scale(t));
+
+		sw.start();
+		img::par::edges(view, dst_view, 150);
+		t = sw.get_time_milli();
+		par_times.data.push_back(scale(t));
+	}
+
+	img::image_t view_chart;
+	std::vector<img::data_color_t> view_data =
+	{
+		seq_times, par_times
+	};
+
+	img::draw_bar_chart(view_data, view_chart);
+	img::write_image(view_chart, out_dir / "edges_times.png");
 }
 
 
@@ -629,7 +654,17 @@ void print(img::stats_t const& stats)
 	std::cout << "mean = " << (double)stats.mean << " sigma = " << (double)stats.std_dev << '\n';
 }
 
+
 void make_image(img::image_t& image, u32 size)
+{
+	u32 width = size / 5;
+	u32 height = size / width;
+
+	img::make_image(image, width, height);
+}
+
+
+void make_image(img::gray::image_t& image, u32 size)
 {
 	u32 width = size / 5;
 	u32 height = size / width;
