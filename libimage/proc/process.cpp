@@ -249,13 +249,7 @@ namespace libimage
 		assert(verify(src, current));
 		assert(verify(src, dst));
 
-		auto it_src = src.begin();
-		auto it_current = current.begin();
-		auto it_dst = dst.begin();
-		for (;it_src != src.end(); ++it_src, ++it_current, ++it_dst)
-		{
-			*it_dst = alpha_blend_linear(*it_src, *it_current);
-		}
+		std::transform(src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
 	}
 
 
@@ -263,12 +257,7 @@ namespace libimage
 	{
 		assert(verify(src, current_dst));
 
-		auto it_src = src.begin();
-		auto it_current_dst = current_dst.begin();
-		for (; it_src != src.end(); ++it_src, ++it_current_dst)
-		{
-			*it_current_dst = alpha_blend_linear(*it_src, *it_current_dst);
-		}
+		std::transform(src.begin(), src.end(), current_dst.begin(), current_dst.begin(), alpha_blend_linear);
 	}
 
 
@@ -534,26 +523,7 @@ namespace libimage
 			assert(verify(src, current));
 			assert(verify(src, dst));
 
-			std::vector<u32> y_ids(src.height);
-			std::iota(y_ids.begin(), y_ids.end(), 0); // TODO: ranges
-			std::vector<u32> x_ids(src.width);
-			std::iota(x_ids.begin(), x_ids.end(), 0); // TODO: ranges
-
-			auto const blend_row = [&](u32 y) 
-			{
-				auto p_src = src.row_begin(y);
-				auto p_current = current.row_begin(y);
-				auto p_dst = dst.row_begin(y);
-
-				auto const blend_x = [&](u32 x) 
-				{
-					p_dst[x] = alpha_blend_linear(p_src[x], p_current[x]);
-				};
-
-				std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), blend_x);
-			};
-
-			std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), blend_row);
+			std::transform(std::execution::par, src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
 		}
 
 
@@ -561,25 +531,7 @@ namespace libimage
 		{
 			assert(verify(src, current_dst));
 
-			std::vector<u32> y_ids(src.height);
-			std::iota(y_ids.begin(), y_ids.end(), 0); // TODO: ranges
-			std::vector<u32> x_ids(src.width);
-			std::iota(x_ids.begin(), x_ids.end(), 0); // TODO: ranges
-
-			auto const blend_row = [&](u32 y)
-			{
-				auto p_src = src.row_begin(y);
-				auto p_current_dst = current_dst.row_begin(y);
-
-				auto const blend_x = [&](u32 x) 
-				{
-					p_current_dst[x] = alpha_blend_linear(p_src[x], p_current_dst[x]);
-				};
-
-				std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), blend_x);
-			};			
-
-			std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), blend_row);
+			std::transform(std::execution::par, src.begin(), src.end(), current_dst.begin(), current_dst.begin(), alpha_blend_linear);
 		}
 				
 

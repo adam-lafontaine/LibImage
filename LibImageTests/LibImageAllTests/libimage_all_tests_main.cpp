@@ -480,8 +480,12 @@ void process_tests(fs::path const& out_dir)
 
 	// alpha blending
 	img::par::convert_alpha(caddy_view, [](auto const& p) { return 128; });
-	img::alpha_blend(caddy_view, corvette_view, dst_view);
+	img::par::alpha_blend(caddy_view, corvette_view, dst_view);
 	img::write_image(dst_image, out_dir / "alpha_blend.png");
+
+	img::copy(corvette_view, dst_view);
+	img::par::alpha_blend(caddy_view, dst_view);
+	img::write_image(dst_image, out_dir / "alpha_blend_src_dst.png");
 
 	// grayscale
 	img::par::convert_grayscale(corvette_view, dst_gray_view);
