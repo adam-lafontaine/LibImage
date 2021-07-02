@@ -7,24 +7,23 @@
 #include <cmath>
 #include <array>
 
-
-constexpr u32 VIEW_MIN_DIM = 5;
-
 namespace libimage
 {
-	static u8 rgb_grayscale_standard(u8 red, u8 green, u8 blue)
+	constexpr u32 VIEW_MIN_DIM = 5;
+
+	static constexpr u8 rgb_grayscale_standard(u8 red, u8 green, u8 blue)
 	{
 		return static_cast<u8>(0.299 * red + 0.587 * green + 0.114 * blue);
 	}
 
 
-	static u8 pixel_grayscale_standard(pixel_t const& p)
+	static constexpr u8 pixel_grayscale_standard(pixel_t const& p)
 	{
 		return rgb_grayscale_standard(p.red, p.green, p.blue);
 	}
 
 
-	static u8 lerp_clamp(u8 src_low, u8 src_high, u8 dst_low, u8 dst_high, u8 val)
+	static constexpr u8 lerp_clamp(u8 src_low, u8 src_high, u8 dst_low, u8 dst_high, u8 val)
 	{
 		if (val < src_low)
 		{
@@ -46,7 +45,7 @@ namespace libimage
 	}
 
 
-	static pixel_t alpha_blend_linear(pixel_t const& src, pixel_t const& current)
+	static constexpr pixel_t alpha_blend_linear(pixel_t const& src, pixel_t const& current)
 	{
 		auto const a = static_cast<r32>(src.alpha) / 255.0f;
 

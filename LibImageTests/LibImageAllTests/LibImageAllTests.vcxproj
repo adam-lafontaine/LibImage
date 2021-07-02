@@ -147,7 +147,7 @@
     <ClCompile Include="..\..\libimage\proc\convolve.cpp" />
     <ClCompile Include="..\..\libimage\proc\process.cpp" />
     <ClCompile Include="..\..\libimage\stb_wrapper\stb_libimage.cpp" />
-    <ClCompile Include="libimage_all_tests_main.cpp" />
+    <ClCompile Include="libimage_tests_main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\libimage\libimage.hpp" />

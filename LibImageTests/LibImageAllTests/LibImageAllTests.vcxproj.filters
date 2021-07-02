@@ -42,7 +42,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="libimage_all_tests_main.cpp">
+    <ClCompile Include="libimage_tests_main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\libimage\stb_wrapper\stb_libimage.cpp">

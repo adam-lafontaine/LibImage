@@ -1,10 +1,14 @@
 # LibImage
-A Basic image processing libray for C++ using stb_image (https://github.com/nothings/stb)
+A Basic image processing libray for C++
 
 * C++17
-* Similar interface to that of boost::GIL
+* Interface inspired by boost::GIL
+* Uses stb_image to read, write and resize images (https://github.com/nothings/stb)
 * image_t owns the memory, view_t points to image_t memory with custom iterator
 * Forward iterator begin() and end() to allow using the STL algorithms
-* Read, write and modify images in code
-* Preprocessor flags available in libimage.hpp enable/disable features
-* No OpenCV type functionality yet
+* Preprocessor flags available in libimage.hpp to enable/disable features
+* Histogram, mean, standard deviation
+* Copy, conversion, binarization, alpha blending, edge detection
+* Sequential and parallel processing available
+* Widespread abuse of lambdas
+* See libimage_tests.cpp for demonstration
