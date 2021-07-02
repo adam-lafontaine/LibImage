@@ -62,9 +62,6 @@
     <ClInclude Include="..\..\libimage\libimage.hpp">
       <Filter>Header Files\libimage</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\libimage\stb_wrapper\stb_all.hpp">
-      <Filter>Header Files\libimage\stb_wrapper</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\libimage\stb_wrapper\stb_include.hpp">
       <Filter>Header Files\libimage\stb_wrapper</Filter>
     </ClInclude>
