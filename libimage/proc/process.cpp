@@ -216,6 +216,20 @@ namespace libimage
 	}
 
 
+	void binarize(gray::view_t const& src, gray::view_t const& dst, u8 min_threashold)
+	{
+		auto const conv = [&](gray::pixel_t const& p) { return p >= min_threashold ? 255 : 0; };
+		convert(src, dst, conv);
+	}
+
+
+	void binarize(gray::view_t const& src, u8 min_threashold)
+	{
+		auto const conv = [&](gray::pixel_t const& p) { return p >= min_threashold ? 255 : 0; };
+		convert(src, conv);
+	}
+
+
 	void binarize(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& func)
 	{
 		auto const conv = [&](gray::pixel_t const& p) { return func(p) ? 255 : 0; };
@@ -476,6 +490,20 @@ namespace libimage
 			u8 dst_high = 255;
 
 			auto const conv = [&](gray::pixel_t const& p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
+			par::convert(src, conv);
+		}
+
+
+		void binarize(gray::view_t const& src, gray::view_t const& dst, u8 min_threashold)
+		{
+			auto const conv = [&](gray::pixel_t const& p) { return p >= min_threashold ? 255 : 0; };
+			par::convert(src, dst, conv);
+		}
+
+
+		void binarize(gray::view_t const& src, u8 min_threashold)
+		{
+			auto const conv = [&](gray::pixel_t const& p) { return p >= min_threashold ? 255 : 0; };
 			par::convert(src, conv);
 		}
 
