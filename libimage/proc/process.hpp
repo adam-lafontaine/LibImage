@@ -35,6 +35,10 @@ namespace libimage
 
 	void adjust_contrast(gray::view_t const& src, u8 src_low, u8 src_high);
 
+	void binarize(gray::view_t const& src, gray::view_t const& dst, u8 min_threashold);
+
+	void binarize(gray::view_t const& src, u8 min_threashold);
+
 	void binarize(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& func);
 
 	void binarize(gray::view_t const& src, u8_to_bool_f const& func);
@@ -69,6 +73,10 @@ namespace libimage
 		void adjust_contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high);
 
 		void adjust_contrast(gray::view_t const& src, u8 src_low, u8 src_high);
+
+		void binarize(gray::view_t const& src, gray::view_t const& dst, u8 min_threashold);
+
+		void binarize(gray::view_t const& src, u8 min_threashold);
 
 		void binarize(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& func);
 
