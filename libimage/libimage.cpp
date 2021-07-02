@@ -201,6 +201,31 @@ namespace libimage
 		return sub_view(view, range);
 	}
 
+
+	void for_each_pixel(image_t const& image, std::function<void(u32 x, u32 y)> const& func)
+	{
+		for (u32 y = 0; y < image.height; ++y)
+		{
+			auto row = image.row_begin(y);
+			for (u32 x = 0; x < image.width; ++x)
+			{
+				func(x, y);
+			}
+		}
+	}
+
+
+	void for_each_pixel(view_t const& view, std::function<void(u32 x, u32 y)> const& func)
+	{
+		for (u32 y = 0; y < view.height; ++y)
+		{
+			for (u32 x = 0; x < view.width; ++x)
+			{
+				func(x, y);
+			}
+		}
+	}
+
 #endif // !LIBIMAGE_NO_COLOR
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
@@ -392,6 +417,31 @@ namespace libimage
 		range.y_end = y_end;
 
 		return sub_view(view, range);
+	}
+
+
+	void for_each_pixel(gray::image_t const& image, std::function<void(u32 x, u32 y)> const& func)
+	{
+		for (u32 y = 0; y < image.height; ++y)
+		{
+			auto row = image.row_begin(y);
+			for (u32 x = 0; x < image.width; ++x)
+			{
+				func(x, y);
+			}
+		}
+	}
+
+
+	void for_each_pixel(gray::view_t const& view, std::function<void(u32 x, u32 y)> const& func)
+	{
+		for (u32 y = 0; y < view.height; ++y)
+		{
+			for (u32 x = 0; x < view.width; ++x)
+			{
+				func(x, y);
+			}
+		}
 	}
 
 #endif // !LIBIMAGE_NO_GRAYSCALE

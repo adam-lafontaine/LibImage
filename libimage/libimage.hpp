@@ -352,6 +352,25 @@ namespace libimage
 
 			pixel_t* data = 0;
 
+			pixel_t* row_begin(u32 y) const
+			{
+				assert(y < height);
+
+				auto offset = y * width;
+
+				auto ptr = data + static_cast<u64>(offset);
+				assert(ptr);
+
+				return ptr;
+			}
+
+			pixel_t* xy_at(u32 x, u32 y) const
+			{
+				assert(y < height);
+				assert(x < width);
+				return row_begin(y) + x;
+			}
+
 			void clear()
 			{
 				if (data)
@@ -364,6 +383,8 @@ namespace libimage
 			{
 				clear();
 			}
+
+
 
 			pixel_t* begin() { return data; }
 
@@ -551,9 +572,9 @@ namespace libimage
 
 	view_t column_view(view_t const& view, u32 y_begin, u32 y_end, u32 x);
 
-	/*void for_each_pixel(image_t const& image, std::function<void(pixel_t const& p)> const& func);
+	void for_each_pixel(image_t const& image, std::function<void(u32 x, u32 y)> const& func);
 
-	void for_each_pixel(view_t const& image, std::function<void(pixel_t const& p)> const& func);*/
+	void for_each_pixel(view_t const& view, std::function<void(u32 x, u32 y)> const& func);
 
 #ifndef LIBIMAGE_NO_WRITE
 
@@ -605,6 +626,9 @@ namespace libimage
 
 	gray::view_t column_view(gray::view_t const& view, u32 y_begin, u32 y_end, u32 x);
 
+	void for_each_pixel(gray::image_t const& image, std::function<void(u32 x, u32 y)> const& func);
+
+	void for_each_pixel(gray::view_t const& view, std::function<void(u32 x, u32 y)> const& func);
 
 #ifndef LIBIMAGE_NO_WRITE
 
@@ -650,6 +674,7 @@ namespace libimage
 
 		write_view(view_src, file_path_str.c_str());
 	}
+
 #endif // !LIBIMAGE_NO_COLOR
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
@@ -676,6 +701,7 @@ namespace libimage
 
 		write_view(view_src, file_path_str.c_str());
 	}
+
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
 #endif // !LIBIMAGE_NO_FS
