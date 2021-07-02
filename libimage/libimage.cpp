@@ -202,11 +202,36 @@ namespace libimage
 	}
 
 
-	void for_each_pixel(image_t const& image, std::function<void(u32 x, u32 y)> const& func)
+	void for_each_pixel(image_t const& image, std::function<void(pixel_t& p)> const& func)
 	{
 		for (u32 y = 0; y < image.height; ++y)
 		{
 			auto row = image.row_begin(y);
+			for (u32 x = 0; x < image.width; ++x)
+			{
+				func(row[x]);
+			}
+		}
+	}
+
+
+	void for_each_pixel(view_t const& view, std::function<void(pixel_t& p)> const& func)
+	{
+		for (u32 y = 0; y < view.height; ++y)
+		{
+			auto row = view.row_begin(y);
+			for (u32 x = 0; x < view.width; ++x)
+			{
+				func(row[x]);
+			}
+		}
+	}
+
+
+	void for_each_xy(image_t const& image, std::function<void(u32 x, u32 y)> const& func)
+	{
+		for (u32 y = 0; y < image.height; ++y)
+		{
 			for (u32 x = 0; x < image.width; ++x)
 			{
 				func(x, y);
@@ -215,7 +240,7 @@ namespace libimage
 	}
 
 
-	void for_each_pixel(view_t const& view, std::function<void(u32 x, u32 y)> const& func)
+	void for_each_xy(view_t const& view, std::function<void(u32 x, u32 y)> const& func)
 	{
 		for (u32 y = 0; y < view.height; ++y)
 		{
@@ -420,11 +445,36 @@ namespace libimage
 	}
 
 
-	void for_each_pixel(gray::image_t const& image, std::function<void(u32 x, u32 y)> const& func)
+	void for_each_pixel(gray::image_t const& image, std::function<void(gray::pixel_t& p)> const& func)
 	{
 		for (u32 y = 0; y < image.height; ++y)
 		{
 			auto row = image.row_begin(y);
+			for (u32 x = 0; x < image.width; ++x)
+			{
+				func(row[x]);
+			}
+		}
+	}
+
+
+	void for_each_pixel(gray::view_t const& view, std::function<void(gray::pixel_t& p)> const& func)
+	{
+		for (u32 y = 0; y < view.height; ++y)
+		{
+			auto row = view.row_begin(y);
+			for (u32 x = 0; x < view.width; ++x)
+			{
+				func(row[x]);
+			}
+		}
+	}
+
+
+	void for_each_xy(gray::image_t const& image, std::function<void(u32 x, u32 y)> const& func)
+	{
+		for (u32 y = 0; y < image.height; ++y)
+		{
 			for (u32 x = 0; x < image.width; ++x)
 			{
 				func(x, y);
@@ -433,7 +483,7 @@ namespace libimage
 	}
 
 
-	void for_each_pixel(gray::view_t const& view, std::function<void(u32 x, u32 y)> const& func)
+	void for_each_xy(gray::view_t const& view, std::function<void(u32 x, u32 y)> const& func)
 	{
 		for (u32 y = 0; y < view.height; ++y)
 		{

@@ -572,9 +572,13 @@ namespace libimage
 
 	view_t column_view(view_t const& view, u32 y_begin, u32 y_end, u32 x);
 
-	void for_each_pixel(image_t const& image, std::function<void(u32 x, u32 y)> const& func);
+	void for_each_pixel(image_t const& image, std::function<void(pixel_t& p)> const& func);
 
-	void for_each_pixel(view_t const& view, std::function<void(u32 x, u32 y)> const& func);
+	void for_each_pixel(view_t const& view, std::function<void(pixel_t& p)> const& func);
+
+	void for_each_xy(image_t const& image, std::function<void(u32 x, u32 y)> const& func);
+
+	void for_each_xy(view_t const& view, std::function<void(u32 x, u32 y)> const& func);
 
 #ifndef LIBIMAGE_NO_WRITE
 
@@ -626,9 +630,13 @@ namespace libimage
 
 	gray::view_t column_view(gray::view_t const& view, u32 y_begin, u32 y_end, u32 x);
 
-	void for_each_pixel(gray::image_t const& image, std::function<void(u32 x, u32 y)> const& func);
+	void for_each_pixel(gray::image_t const& image, std::function<void(gray::pixel_t& p)> const& func);
 
-	void for_each_pixel(gray::view_t const& view, std::function<void(u32 x, u32 y)> const& func);
+	void for_each_pixel(gray::view_t const& view, std::function<void(gray::pixel_t& p)> const& func);
+
+	void for_each_xy(gray::image_t const& image, std::function<void(u32 x, u32 y)> const& func);
+
+	void for_each_xy(gray::view_t const& view, std::function<void(u32 x, u32 y)> const& func);	
 
 #ifndef LIBIMAGE_NO_WRITE
 

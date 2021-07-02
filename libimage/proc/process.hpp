@@ -1,9 +1,13 @@
 #pragma once
+/*
+
+Copyright (c) 2021 Adam Lafontaine
+
+*/
 
 #include "../libimage.hpp"
 
 #include <functional>
-
 
 
 namespace libimage

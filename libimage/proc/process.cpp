@@ -1,3 +1,9 @@
+/*
+
+Copyright (c) 2021 Adam Lafontaine
+
+*/
+
 #include "process.hpp"
 #include "convolve.hpp"
 #include "index_range.hpp"
