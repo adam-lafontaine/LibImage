@@ -39,10 +39,10 @@ namespace libimage
 	} rgb_stats_t;
 
 
-	typedef struct
+	typedef struct DataColor
 	{
 		std::vector<r32> data;
-		pixel_t color;
+		pixel_t color = to_pixel(0);
 
 	} data_color_t;
 

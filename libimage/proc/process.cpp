@@ -1,5 +1,6 @@
 #include "process.hpp"
 #include "convolve.hpp"
+#include "index_range.hpp"
 
 #include <algorithm>
 #include <execution>
@@ -271,6 +272,42 @@ namespace libimage
 		assert(width >= VIEW_MIN_DIM);
 		assert(height >= VIEW_MIN_DIM);
 
+		/*
+		
+		auto const copy_top = [&]()
+		{
+			auto src_top = row_view(src, 0);
+			auto dst_top = row_view(dst, 0);
+
+			copy(src_top, dst_top);
+		};
+
+		auto const copy_bottom = [&]()
+		{
+			auto src_bottom = row_view(src, height - 1);
+			auto dst_bottom = row_view(dst, height - 1);
+
+			copy(src_bottom, dst_bottom);
+		};
+
+		auto const copy_left = [&]()
+		{
+			auto src_left = column_view(src, 0);
+			auto dst_left = column_view(dst, 0);
+
+			copy(src_left, dst_left);
+		};
+
+		auto const copy_right = [&]()
+		{
+			auto src_right = column_view(src, width - 1);
+			auto dst_right = column_view(dst, width - 1);
+
+			copy(src_right, dst_right);
+		};
+		
+		*/
+
 		// top and bottom rows equal to src
 		u32 x_first = 0;
 		u32 y_first = 0;
@@ -535,6 +572,12 @@ namespace libimage
 		}
 				
 
+		static void to_white(u8& p)
+		{
+			p = 255;
+		}
+
+
 		void blur(gray::view_t const& src, gray::view_t const& dst)
 		{
 			assert(verify(src, dst));
@@ -545,113 +588,130 @@ namespace libimage
 			assert(height >= VIEW_MIN_DIM);
 
 			// lamdas, lots of lamdas
+
+			std::for_each(dst.begin(), dst.end(), to_white);
 			
 
 			auto const copy_top = [&]() 
 			{
-				pixel_range_t range = {};
-				range.x_begin = 0;
-				range.x_end = width;
-				range.y_begin = 0;
-				range.y_end = 1;
-				auto src_top = sub_view(src, range);
-				auto dst_top = sub_view(dst, range);
+				auto src_top = row_view(src, 0);
+				auto dst_top = row_view(dst, 0);
 
 				par::copy(src_top, dst_top);
 			};
 
 			auto const copy_bottom = [&]() 
 			{
-				pixel_range_t range = {};
-				range.x_begin = 0;
-				range.x_end = 1;
-				range.y_begin = height - 1;
-				range.y_end = height;
-				auto src_bottom = sub_view(src, range);
-				auto dst_bottom = sub_view(dst, range);
+				auto src_bottom = row_view(src, height - 1);
+				auto dst_bottom = row_view(dst, height - 1);
 
 				par::copy(src_bottom, dst_bottom);
 			};
 
 			auto const copy_left = [&]() 
 			{
-				pixel_range_t range = {};
-				range.x_begin = 0;
-				range.x_end = 1;
-				range.y_begin = 1;
-				range.y_end = height - 1;
-				auto src_left = sub_view(src, range);
-				auto dst_left = sub_view(dst, range);
+				pixel_range_t r = {};
+				r.x_begin = 0;
+				r.x_end = 1;
+				r.y_begin = 1;
+				r.y_end = height - 1;
+
+				auto src_left = sub_view(src, r);
+				auto dst_left = sub_view(dst, r);
 
 				par::copy(src_left, dst_left);
 			};
 
 			auto const copy_right = [&]()
 			{
-				pixel_range_t range = {};
-				range.x_begin = width - 1;
-				range.x_end = width;
-				range.y_begin = 1;
-				range.y_end = height - 1;
-				auto src_right = sub_view(src, range);
-				auto dst_right = sub_view(dst, range);
+				pixel_range_t r = {};
+				r.x_begin = width - 1;
+				r.x_end = width;
+				r.y_begin = 1;
+				r.y_end = height - 1;
+
+				auto src_right = sub_view(src, r);
+				auto dst_right = sub_view(dst, r);
 
 				par::copy(src_right, dst_right);
 			};
 
-			// first inner top and bottom rows use 3 x 3 gaussian kernel
-			auto const inner_gauss_top_bottom = [&]() 
+			auto const gauss_inner_top = [&]() 
 			{
 				u32 const x_begin = 1;
-				u32 const x_length = width - 2 * x_begin;
-				u32 const y_first = 1;
-				u32 const y_last = height - 2;
+				u32 const x_end = width - 1;
+				u32 const y = 1;
 
-				auto dst_top = dst.row_begin(y_first);
-				auto dst_bottom = dst.row_begin(y_last);
+				auto dst_top = dst.row_begin(y);
 
-				std::vector<u32> x_ids(x_length);
-				std::iota(x_ids.begin(), x_ids.end(), x_begin); // TODO: ranges
+				u32_range_t x_ids(x_begin, x_end);
 
 				auto const gauss = [&](u32 x)
 				{
-					dst_top[x] = gauss3(src, x, y_first);
-					dst_bottom[x] = gauss3(src, x, y_last);
+					dst_top[x] = gauss3(src, x, y);
 				};
 
 				std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), gauss);
 			};
 
-			// first inner left and right columns use 3 x 3 gaussian kernel
-			auto const inner_gauss_left_right = [&]() 
+			auto const gauss_inner_bottom = [&]() 
 			{
-				u32 const x_first = 1;
-				u32 const x_last = width - 2;
+				u32 const x_begin = 1;
+				u32 const x_end = width - 1;
+				u32 const y = height - 2;
+
+				auto dst_bottom = dst.row_begin(y);
+
+				u32_range_t x_ids(x_begin, x_end);
+
+				auto const gauss = [&](u32 x)
+				{
+					dst_bottom[x] = gauss3(src, x, y);
+				};
+
+				std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), gauss);
+			};
+
+			auto const gauss_inner_left = [&]() 
+			{
 				u32 const y_begin = 2;
-				u32 const y_length = height - 2 * y_begin;
+				u32 const y_end = height - 2;
+				u32 const x = 1;
 
-				std::vector<u32> y_ids(y_length);
-				std::iota(y_ids.begin(), y_ids.end(), y_begin); // TODO: ranges
+				u32_range_t y_ids(y_begin, y_end);
 
-				auto const gauss = [&](u32 y) 
+				auto const gauss = [&](u32 y)
 				{
 					auto dst_row = dst.row_begin(y);
-					dst_row[x_first] = gauss3(src, x_first, y);
-					dst_row[x_last] = gauss3(src, x_last, y);
+					dst_row[x] = gauss3(src, x, y);
 				};
+
 				std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), gauss);
 			};
 
-			// inner pixels use 5 x 5 gaussian kernel
-			u32 const x_begin = 2;
-			u32 const x_length = width - 2 * x_begin;
-			u32 const y_begin = 2;
-			u32 const y_length = height - 2 * y_begin;
+			auto const gauss_inner_right = [&]()
+			{
+				u32 const y_begin = 2;
+				u32 const y_end = height - 2;
+				u32 const x = width - 2;
 
-			std::vector<u32> y_ids(y_length);
-			std::iota(y_ids.begin(), y_ids.end(), y_begin); // TODO: ranges
-			std::vector<u32> x_ids(x_length);
-			std::iota(x_ids.begin(), x_ids.end(), x_begin); // TODO: ranges			
+				u32_range_t y_ids(y_begin, y_end);
+
+				auto const gauss = [&](u32 y)
+				{
+					auto dst_row = dst.row_begin(y);
+					dst_row[x] = gauss3(src, x, y);
+				};
+
+				std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), gauss);
+			};			
+
+			// inner pixels use 5 x 5 gaussian kernel
+
+			u32 const x_begin = 2;
+			u32 const x_end = width - 2;
+
+			u32_range_t x_ids(x_begin, x_end);
 
 			auto const gauss_row = [&](u32 y) 
 			{
@@ -667,18 +727,25 @@ namespace libimage
 
 			auto const inner_gauss = [&]() 
 			{
+				u32 const y_begin = 2;
+				u32 const y_end = height - 2;
+
+				u32_range_t y_ids(y_begin, y_end);
+
 				std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), gauss_row);
 			};
 
 			// put the lambdas in an array
-			std::array<std::function<void()>, 7> f_list =
+			std::array<std::function<void()>, 9> f_list =
 			{
 				copy_top,
 				copy_bottom,
 				copy_left,
 				copy_right,
-				inner_gauss_top_bottom,
-				inner_gauss_left_right,
+				gauss_inner_top,
+				gauss_inner_bottom,
+				gauss_inner_left,
+				gauss_inner_right,
 				inner_gauss
 			};
 
@@ -698,12 +765,12 @@ namespace libimage
 
 			auto const zero_top = [&]()
 			{
-				pixel_range_t range = {};
-				range.x_begin = 0;
-				range.x_end = width;
-				range.y_begin = 0;
-				range.y_end = 1;
-				auto dst_top = sub_view(dst, range);
+				pixel_range_t r = {};
+				r.x_begin = 0;
+				r.x_end = width;
+				r.y_begin = 0;
+				r.y_end = 1;
+				auto dst_top = sub_view(dst, r);
 
 				par::convert(dst_top, zero);
 			};

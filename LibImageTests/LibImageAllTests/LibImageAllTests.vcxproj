@@ -153,8 +153,8 @@
     <ClInclude Include="..\..\libimage\libimage.hpp" />
     <ClInclude Include="..\..\libimage\math\libimage_math.hpp" />
     <ClInclude Include="..\..\libimage\proc\convolve.hpp" />
+    <ClInclude Include="..\..\libimage\proc\index_range.hpp" />
     <ClInclude Include="..\..\libimage\proc\process.hpp" />
-    <ClInclude Include="..\..\libimage\proc\zipper.hpp" />
     <ClInclude Include="..\..\libimage\stb_wrapper\stb_include.hpp" />
     <ClInclude Include="..\utils\stopwatch.hpp" />
     <ClInclude Include="..\utils\win32_leak_check.h" />

@@ -80,7 +80,7 @@
     <ClInclude Include="..\utils\win32_leak_check.h">
       <Filter>Header Files\utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\libimage\proc\zipper.hpp">
+    <ClInclude Include="..\..\libimage\proc\index_range.hpp">
       <Filter>Header Files\libimage\proc</Filter>
     </ClInclude>
   </ItemGroup>
