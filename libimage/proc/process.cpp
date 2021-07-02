@@ -272,41 +272,6 @@ namespace libimage
 		assert(width >= VIEW_MIN_DIM);
 		assert(height >= VIEW_MIN_DIM);
 
-		/*
-		
-		auto const copy_top = [&]()
-		{
-			auto src_top = row_view(src, 0);
-			auto dst_top = row_view(dst, 0);
-
-			copy(src_top, dst_top);
-		};
-
-		auto const copy_bottom = [&]()
-		{
-			auto src_bottom = row_view(src, height - 1);
-			auto dst_bottom = row_view(dst, height - 1);
-
-			copy(src_bottom, dst_bottom);
-		};
-
-		auto const copy_left = [&]()
-		{
-			auto src_left = column_view(src, 0);
-			auto dst_left = column_view(dst, 0);
-
-			copy(src_left, dst_left);
-		};
-
-		auto const copy_right = [&]()
-		{
-			auto src_right = column_view(src, width - 1);
-			auto dst_right = column_view(dst, width - 1);
-
-			copy(src_right, dst_right);
-		};
-		
-		*/
 
 		// top and bottom rows equal to src
 		u32 x_first = 0;
@@ -570,13 +535,7 @@ namespace libimage
 
 			std::transform(std::execution::par, src.begin(), src.end(), current_dst.begin(), current_dst.begin(), alpha_blend_linear);
 		}
-				
-
-		static void to_white(u8& p)
-		{
-			p = 255;
-		}
-
+		
 
 		void blur(gray::view_t const& src, gray::view_t const& dst)
 		{
@@ -587,10 +546,7 @@ namespace libimage
 			assert(width >= VIEW_MIN_DIM);
 			assert(height >= VIEW_MIN_DIM);
 
-			// lamdas, lots of lamdas
-
-			std::for_each(dst.begin(), dst.end(), to_white);
-			
+			// lamdas, lots of lamdas			
 
 			auto const copy_top = [&]() 
 			{
@@ -710,7 +666,6 @@ namespace libimage
 
 			u32 const x_begin = 2;
 			u32 const x_end = width - 2;
-
 			u32_range_t x_ids(x_begin, x_end);
 
 			auto const gauss_row = [&](u32 y) 
@@ -761,70 +716,55 @@ namespace libimage
 			auto const width = src.width;
 			auto const height = src.height;
 
-			auto const zero = [](u8 p) { u8 val = 0;  return val; };
+			// blur the image first
+			gray::image_t temp;
+			auto temp_view = make_view(temp, width, height);
+			par::blur(src, temp_view);
+
+			auto const zero = [](u8 p) { return static_cast<u8>(0); };
 
 			auto const zero_top = [&]()
 			{
-				pixel_range_t r = {};
-				r.x_begin = 0;
-				r.x_end = width;
-				r.y_begin = 0;
-				r.y_end = 1;
-				auto dst_top = sub_view(dst, r);
+				auto dst_top = row_view(dst, 0);
 
 				par::convert(dst_top, zero);
 			};
 
 			auto const zero_bottom = [&]()
 			{
-				pixel_range_t range = {};
-				range.x_begin = 0;
-				range.x_end = 1;
-				range.y_begin = height - 1;
-				range.y_end = height;
-				auto dst_bottom = sub_view(dst, range);
+				auto dst_bottom = row_view(dst, height - 1);
 
 				par::convert(dst_bottom, zero);
 			};
 
 			auto const zero_left = [&]()
 			{
-				pixel_range_t range = {};
-				range.x_begin = 0;
-				range.x_end = 1;
-				range.y_begin = 1;
-				range.y_end = height - 1;
-				auto dst_left = sub_view(dst, range);
+				pixel_range_t r = {};
+				r.x_begin = 0;
+				r.x_end = 1;
+				r.y_begin = 1;
+				r.y_end = height - 1;
+				auto dst_left = sub_view(dst, r);
 
 				par::convert(dst_left, zero);
 			};
 
 			auto const zero_right = [&]()
 			{
-				pixel_range_t range = {};
-				range.x_begin = width - 1;
-				range.x_end = width;
-				range.y_begin = 1;
-				range.y_end = height - 1;
-				auto dst_right = sub_view(dst, range);
+				pixel_range_t r = {};
+				r.x_begin = width - 1;
+				r.x_end = width;
+				r.y_begin = 1;
+				r.y_end = height - 1;
+				auto dst_right = sub_view(dst, r);
 
 				par::convert(dst_right, zero);
 			};
 
 			// get gradient magnitude of inner pixels
 			u32 const x_begin = 1;
-			u32 const x_length = width - 2 * x_begin;
-			u32 const y_begin = 1;
-			u32 const y_length = height - 2 * y_begin;
-
-			std::vector<u32> y_ids(y_length);
-			std::iota(y_ids.begin(), y_ids.end(), y_begin); // TODO: ranges
-			std::vector<u32> x_ids(x_length);
-			std::iota(x_ids.begin(), x_ids.end(), x_begin); // TODO: ranges
-
-			gray::image_t temp;
-			auto temp_view = make_view(temp, width, height);
-			par::blur(src, temp_view);
+			u32 const x_end = width - 1;		
+			u32_range_t x_ids(x_begin, x_end);
 
 			auto const grad_row = [&](u32 y) 
 			{
@@ -843,6 +783,10 @@ namespace libimage
 
 			auto const gradients_inner = [&]() 
 			{
+				u32 const y_begin = 1;
+				u32 const y_end = height - 1;
+				u32_range_t y_ids(y_begin, y_end);
+
 				std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), grad_row);
 			};
 
@@ -854,7 +798,7 @@ namespace libimage
 				zero_left,
 				zero_right,
 				gradients_inner
-			};
+			};			
 
 			// finally execute everything
 			std::for_each(std::execution::par, f_list.begin(), f_list.end(), [](auto const& f) { f(); });
