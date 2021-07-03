@@ -9,25 +9,21 @@ Copyright (c) 2021 Adam Lafontaine
 //#define LIBIMAGE_NO_GRAYSCALE
 //#define LIBIMAGE_NO_WRITE
 //#define LIBIMAGE_NO_RESIZE
-//#define LIBIMAGE_NO_FS
 
 #include <cstdint>
 #include <iterator>
 #include <cassert>
+#include <functional>
 
-#ifndef LIBIMAGE_NO_FS
 #include <filesystem>
 namespace fs = std::filesystem;
-#endif // !LIBIMAGE_NO_FS
 
-#ifndef LIBIMAGE_NO_COLOR
-#include <functional>
-#endif // !LIBIMAGE_NO_COLOR
 
 using u8 = uint8_t;
 using u32 = uint32_t;
 using u64 = uint64_t;
 using r32 = float;
+using r64 = double;
 
 namespace libimage
 {
@@ -42,6 +38,14 @@ namespace libimage
 		u32 y_end;   // one past last y
 
 	} pixel_range_t;
+
+
+	typedef struct
+	{
+		u32 x;
+		u32 y;
+
+	} xy_loc_t;
 
 
 #ifndef LIBIMAGE_NO_COLOR
@@ -111,6 +115,25 @@ namespace libimage
 		u32 height = 0;
 
 		pixel_t* data = 0;
+
+		pixel_t* row_begin(u32 y) const
+		{
+			assert(y < height);
+
+			auto offset = y * width;
+
+			auto ptr = data + static_cast<u64>(offset);
+			assert(ptr);
+
+			return ptr;
+		}
+
+		pixel_t* xy_at(u32 x, u32 y) const
+		{
+			assert(y < height);
+			assert(x < width);
+			return row_begin(y) + x;
+		}
 
 		void clear()
 		{
@@ -257,6 +280,8 @@ namespace libimage
 				return *this;
 			}
 
+			xy_loc_t get_xy() { return { loc_x, loc_y }; }
+
 			iterator operator ++ (int) { iterator result = *this; ++(*this); return result; }
 
 			bool operator == (iterator other) const { return loc_x == other.loc_x && loc_y == other.loc_y; }
@@ -275,7 +300,6 @@ namespace libimage
 		iterator begin() const { return iterator(*this); }
 
 		iterator end() const { return iterator(*this).end(); }
-
 	};
 
 	using view_t = rgba_image_view_t;
@@ -323,6 +347,25 @@ namespace libimage
 
 			pixel_t* data = 0;
 
+			pixel_t* row_begin(u32 y) const
+			{
+				assert(y < height);
+
+				auto offset = y * width;
+
+				auto ptr = data + static_cast<u64>(offset);
+				assert(ptr);
+
+				return ptr;
+			}
+
+			pixel_t* xy_at(u32 x, u32 y) const
+			{
+				assert(y < height);
+				assert(x < width);
+				return row_begin(y) + x;
+			}
+
 			void clear()
 			{
 				if (data)
@@ -335,6 +378,8 @@ namespace libimage
 			{
 				clear();
 			}
+
+
 
 			pixel_t* begin() { return data; }
 
@@ -459,6 +504,8 @@ namespace libimage
 					return *this;
 				}
 
+				xy_loc_t get_xy() { return { loc_x, loc_y }; }
+
 				iterator operator ++ (int) { iterator result = *this; ++(*this); return result; }
 
 				bool operator == (iterator other) const { return loc_x == other.loc_x && loc_y == other.loc_y; }
@@ -498,6 +545,8 @@ namespace libimage
 
 	view_t make_view(image_t const& image);
 
+	view_t make_view(image_t& image, u32 width, u32 height);
+
 	view_t sub_view(image_t const& image, pixel_range_t const& range);
 
 	view_t sub_view(view_t const& view, pixel_range_t const& range);
@@ -517,6 +566,14 @@ namespace libimage
 	view_t column_view(image_t const& image, u32 y_begin, u32 y_end, u32 x);
 
 	view_t column_view(view_t const& view, u32 y_begin, u32 y_end, u32 x);
+
+	void for_each_pixel(image_t const& image, std::function<void(pixel_t& p)> const& func);
+
+	void for_each_pixel(view_t const& view, std::function<void(pixel_t& p)> const& func);
+
+	void for_each_xy(image_t const& image, std::function<void(u32 x, u32 y)> const& func);
+
+	void for_each_xy(view_t const& view, std::function<void(u32 x, u32 y)> const& func);
 
 #ifndef LIBIMAGE_NO_WRITE
 
@@ -546,6 +603,8 @@ namespace libimage
 
 	gray::view_t make_view(gray::image_t const& image);
 
+	gray::view_t make_view(gray::image_t& image, u32 width, u32 height);
+
 	gray::view_t sub_view(gray::image_t const& image, pixel_range_t const& range);
 
 	gray::view_t sub_view(gray::view_t const& view, pixel_range_t const& range);
@@ -566,6 +625,13 @@ namespace libimage
 
 	gray::view_t column_view(gray::view_t const& view, u32 y_begin, u32 y_end, u32 x);
 
+	void for_each_pixel(gray::image_t const& image, std::function<void(gray::pixel_t& p)> const& func);
+
+	void for_each_pixel(gray::view_t const& view, std::function<void(gray::pixel_t& p)> const& func);
+
+	void for_each_xy(gray::image_t const& image, std::function<void(u32 x, u32 y)> const& func);
+
+	void for_each_xy(gray::view_t const& view, std::function<void(u32 x, u32 y)> const& func);	
 
 #ifndef LIBIMAGE_NO_WRITE
 
@@ -611,6 +677,7 @@ namespace libimage
 
 		write_view(view_src, file_path_str.c_str());
 	}
+
 #endif // !LIBIMAGE_NO_COLOR
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
@@ -637,6 +704,7 @@ namespace libimage
 
 		write_view(view_src, file_path_str.c_str());
 	}
+
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
 #endif // !LIBIMAGE_NO_FS

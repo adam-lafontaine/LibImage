@@ -3,6 +3,7 @@
 #include "../libimage.hpp"
 
 #include <array>
+#include <vector>
 #include <algorithm>
 #include <functional>
 
@@ -10,7 +11,7 @@
 namespace libimage
 {
 	constexpr size_t CHANNEL_SIZE = 256; // 8 bit channel
-	constexpr size_t N_HIST_BUCKETS = 16;
+	constexpr size_t N_HIST_BUCKETS = 256;
 
 	using hist_t = std::array<u32, N_HIST_BUCKETS>;
 
@@ -40,6 +41,13 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR
 
+	typedef struct DataColor
+	{
+		std::vector<r32> data;
+		pixel_t color = to_pixel(0);
+
+	} data_color_t;
+
 	rgb_stats_t calc_stats(image_t const& image);
 	
 	rgb_stats_t calc_stats(view_t const& view);
@@ -48,11 +56,9 @@ namespace libimage
 
 	stats_t calc_stats(view_t const& view, Channel ch);
 
-	void transform_alpha(image_t const& image, std::function<u8(u8 red, u8 green, u8 blue)> const& func);
-
-	void transform_alpha(view_t const& view, std::function<u8(u8 red, u8 green, u8 blue)> const& func);
-
 	void draw_histogram(rgb_stats_t const& rgb_stats, image_t& image_dst);
+
+	void draw_bar_chart(std::vector<data_color_t> const& data, image_t& image_dst);
 
 #endif // !LIBIMAGE_NO_COLOR
 

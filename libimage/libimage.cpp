@@ -5,32 +5,12 @@ Copyright (c) 2021 Adam Lafontaine
 */
 
 #include "libimage.hpp"
-#include "stb_include.hpp"
 
 
 namespace libimage
 {
 
 #ifndef LIBIMAGE_NO_COLOR
-
-	void read_image_from_file(const char* img_path_src, image_t& image_dst)
-	{
-		int width = 0;
-		int height = 0;
-		int image_channels = 0;
-		int desired_channels = 4;
-
-		auto data = (rgba_pixel*)stbi_load(img_path_src, &width, &height, &image_channels, desired_channels);
-
-		assert(data);
-		assert(width);
-		assert(height);
-
-		image_dst.data = data;
-		image_dst.width = width;
-		image_dst.height = height;
-	}
-
 
 	void make_image(image_t& image_dst, u32 width, u32 height)
 	{
@@ -63,6 +43,13 @@ namespace libimage
 		view.height = img.height;
 
 		return view;
+	}
+
+
+	view_t make_view(image_t& image, u32 width, u32 height)
+	{
+		make_image(image, width, height);
+		return make_view(image);
 	}
 
 
@@ -215,129 +202,55 @@ namespace libimage
 	}
 
 
-
-#ifndef LIBIMAGE_NO_WRITE
-
-	void write_image(image_t const& image_src, const char* file_path_dst)
+	void for_each_pixel(image_t const& image, std::function<void(pixel_t& p)> const& func)
 	{
-		assert(image_src.width);
-		assert(image_src.height);
-		assert(image_src.data);
-
-		int width = static_cast<int>(image_src.width);
-		int height = static_cast<int>(image_src.height);
-		int channels = static_cast<int>(RGBA_CHANNELS);
-		auto const data = image_src.data;
-
-		int result = 0;
-
-		auto ext = fs::path(file_path_dst).extension();
-
-		assert(ext == ".bmp" || ext == ".png");
-
-		if (ext == ".bmp" || ext == ".BMP")
+		u32 size = image.width * image.height;
+		for (u32 i = 0; i < size; ++i)
 		{
-			result = stbi_write_bmp(file_path_dst, width, height, channels, data);
+			func(image.data[i]);
 		}
-		else if (ext == ".png" || ext == ".PNG")
+	}
+
+
+	void for_each_pixel(view_t const& view, std::function<void(pixel_t& p)> const& func)
+	{
+		for (u32 y = 0; y < view.height; ++y)
 		{
-			int stride_in_bytes = width * channels;
-
-			result = stbi_write_png(file_path_dst, width, height, channels, data, stride_in_bytes);
+			auto row = view.row_begin(y);
+			for (u32 x = 0; x < view.width; ++x)
+			{
+				func(row[x]);
+			}
 		}
-		else if (ext == ".jpg" || ext == ".jpeg" || ext == ".JPG" || ext == ".JPEG")
+	}
+
+
+	void for_each_xy(image_t const& image, std::function<void(u32 x, u32 y)> const& func)
+	{
+		for (u32 y = 0; y < image.height; ++y)
 		{
-			// TODO: quality?
-			// stbi_write_jpg(char const *filename, int w, int h, int comp, const void *data, int quality);
+			for (u32 x = 0; x < image.width; ++x)
+			{
+				func(x, y);
+			}
 		}
-
-		assert(result);
 	}
 
 
-	static void make_image(view_t const& view, image_t& image_dst)
+	void for_each_xy(view_t const& view, std::function<void(u32 x, u32 y)> const& func)
 	{
-		make_image(image_dst, view.width, view.height);
-
-		std::transform(view.begin(), view.end(), image_dst.begin(), [&](auto p) { return p; });
+		for (u32 y = 0; y < view.height; ++y)
+		{
+			for (u32 x = 0; x < view.width; ++x)
+			{
+				func(x, y);
+			}
+		}
 	}
-
-
-	void write_view(view_t const& view_src, const char* file_path_dst)
-	{
-		image_t image;
-		make_image(view_src, image);
-
-		write_image(image, file_path_dst);
-	}
-
-#endif // !LIBIMAGE_NO_WRITE
-
-
-#ifndef LIBIMAGE_NO_RESIZE
-
-	void resize_image(image_t const& image_src, image_t& image_dst)
-	{
-		assert(image_src.width);
-		assert(image_src.height);
-		assert(image_src.data);
-		assert(image_dst.width);
-		assert(image_dst.height);
-
-		int channels = static_cast<int>(RGBA_CHANNELS);
-
-		int width_src = static_cast<int>(image_src.width);
-		int height_src = static_cast<int>(image_src.height);
-		int stride_bytes_src = width_src * channels;
-
-		int width_dst = static_cast<int>(image_dst.width);
-		int height_dst = static_cast<int>(image_dst.height);
-		int stride_bytes_dst = width_dst * channels;
-
-		int result = 0;
-
-		image_dst.data = (pixel_t*)malloc(sizeof(pixel_t) * image_dst.width * image_dst.height);
-
-		result = stbir_resize_uint8(
-			(u8*)image_src.data, width_src, height_src, stride_bytes_src,
-			(u8*)image_dst.data, width_dst, height_dst, stride_bytes_dst,
-			channels);
-
-		assert(result);
-	}
-
-
-	view_t make_resized_view(image_t const& img_src, image_t& img_dst)
-	{
-		resize_image(img_src, img_dst);
-
-		return make_view(img_dst);
-	}
-
-#endif // !LIBIMAGE_NO_RESIZE
 
 #endif // !LIBIMAGE_NO_COLOR
-	
+
 #ifndef LIBIMAGE_NO_GRAYSCALE
-
-	void read_image_from_file(const char* file_path_src, gray::image_t& image_dst)
-	{
-		int width = 0;
-		int height = 0;
-		int image_channels = 0;
-		int desired_channels = 1;
-
-		auto data = (gray::pixel_t*)stbi_load(file_path_src, &width, &height, &image_channels, desired_channels);
-
-		assert(data);
-		assert(width);
-		assert(height);
-
-		image_dst.data = data;
-		image_dst.width = width;
-		image_dst.height = height;
-	}
-
 
 	void make_image(gray::image_t& image_dst, u32 width, u32 height)
 	{
@@ -373,6 +286,13 @@ namespace libimage
 	}
 
 
+	gray::view_t make_view(gray::image_t& image, u32 width, u32 height)
+	{
+		make_image(image, width, height);
+		return make_view(image);
+	}
+
+
 	gray::view_t sub_view(gray::image_t const& image, pixel_range_t const& range)
 	{
 		assert(image.width);
@@ -403,9 +323,9 @@ namespace libimage
 		assert(view.height);
 		assert(view.image_data);
 
-		assert(range.x_begin >= view.x_begin);
+		assert(range.x_begin < view.x_end);
 		assert(range.x_end <= view.x_end);
-		assert(range.y_begin >= view.y_begin);
+		assert(range.y_begin < view.y_end);
 		assert(range.y_end <= view.y_end);
 
 		gray::view_t sub_view;
@@ -522,107 +442,56 @@ namespace libimage
 	}
 
 
-#ifndef LIBIMAGE_NO_WRITE
-
-	void write_image(gray::image_t const& image_src, const char* file_path_dst)
+	void for_each_pixel(gray::image_t const& image, std::function<void(gray::pixel_t& p)> const& func)
 	{
-		assert(image_src.width);
-		assert(image_src.height);
-		assert(image_src.data);
-
-		int width = static_cast<int>(image_src.width);
-		int height = static_cast<int>(image_src.height);
-		int channels = 1;
-		auto const data = image_src.data;
-
-		int result = 0;
-
-		auto ext = fs::path(file_path_dst).extension();
-
-		assert(ext == ".bmp" || ext == ".png");
-
-		if (ext == ".bmp" || ext == ".BMP")
+		for (u32 y = 0; y < image.height; ++y)
 		{
-			result = stbi_write_bmp(file_path_dst, width, height, channels, data);
+			auto row = image.row_begin(y);
+			for (u32 x = 0; x < image.width; ++x)
+			{
+				func(row[x]);
+			}
 		}
-		else if (ext == ".png" || ext == ".PNG")
+	}
+
+
+	void for_each_pixel(gray::view_t const& view, std::function<void(gray::pixel_t& p)> const& func)
+	{
+		for (u32 y = 0; y < view.height; ++y)
 		{
-			int stride_in_bytes = width * channels;
-
-			result = stbi_write_png(file_path_dst, width, height, channels, data, stride_in_bytes);
+			auto row = view.row_begin(y);
+			for (u32 x = 0; x < view.width; ++x)
+			{
+				func(row[x]);
+			}
 		}
-		else if (ext == ".jpg" || ext == ".jpeg" || ext == ".JPG" || ext == ".JPEG")
+	}
+
+
+	void for_each_xy(gray::image_t const& image, std::function<void(u32 x, u32 y)> const& func)
+	{
+		for (u32 y = 0; y < image.height; ++y)
 		{
-			// TODO: quality?
-			// stbi_write_jpg(char const *filename, int w, int h, int comp, const void *data, int quality);
+			for (u32 x = 0; x < image.width; ++x)
+			{
+				func(x, y);
+			}
 		}
-
-		assert(result);
 	}
 
 
-	static void make_image(gray::view_t const& view_src, gray::image_t& image_dst)
+	void for_each_xy(gray::view_t const& view, std::function<void(u32 x, u32 y)> const& func)
 	{
-		make_image(image_dst, view_src.width, view_src.height);
-
-		std::transform(view_src.begin(), view_src.end(), image_dst.begin(), [](auto p) { return p; });
+		for (u32 y = 0; y < view.height; ++y)
+		{
+			for (u32 x = 0; x < view.width; ++x)
+			{
+				func(x, y);
+			}
+		}
 	}
 
-
-	void write_view(gray::view_t const& view_src, const char* file_path_dst)
-	{
-		gray::image_t image;
-		make_image(view_src, image);
-
-		write_image(image, file_path_dst);
-	}
-
-#endif // !LIBIMAGE_NO_WRITE
-
-
-#ifndef LIBIMAGE_NO_RESIZE
-
-	void resize_image(gray::image_t const& image_src, gray::image_t& image_dst)
-	{
-		assert(image_src.width);
-		assert(image_src.height);
-		assert(image_src.data);
-		assert(image_dst.width);
-		assert(image_dst.height);
-
-		int channels = 1;
-
-		int width_src = static_cast<int>(image_src.width);
-		int height_src = static_cast<int>(image_src.height);
-		int stride_bytes_src = width_src * channels;
-
-		int width_dst = static_cast<int>(image_dst.width);
-		int height_dst = static_cast<int>(image_dst.height);
-		int stride_bytes_dst = width_dst * channels;
-
-		int result = 0;
-
-		image_dst.data = (gray::pixel_t*)malloc(sizeof(gray::pixel_t) * image_dst.width * image_dst.height);
-
-		result = stbir_resize_uint8(
-			(u8*)image_src.data, width_src, height_src, stride_bytes_src,
-			(u8*)image_dst.data, width_dst, height_dst, stride_bytes_dst,
-			channels);
-
-		assert(result);
-	}
-
-
-	gray::view_t make_resized_view(gray::image_t const& image_src, gray::image_t& image_dst)
-	{
-		resize_image(image_src, image_dst);
-
-		return make_view(image_dst);
-	}
-
-#endif // !LIBIMAGE_NO_RESIZE
-
-#endif // !#ifndef LIBIMAGE_NO_GRAYSCALE
+#endif // !LIBIMAGE_NO_GRAYSCALE
 
 }
 
