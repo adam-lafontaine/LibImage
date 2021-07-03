@@ -19,6 +19,13 @@
 namespace fs = std::filesystem;
 namespace img = libimage;
 
+using Image = img::image_t;
+using ImageView = img::view_t;
+using GrayImage = img::gray::image_t;
+using GrayView = img::gray::view_t;
+using Pixel = img::pixel_t;
+
+
 // set this directory for your system
 constexpr auto ROOT_DIR = "C:/D_Data/repos/LibImage/LibImageTests/LibImageAllTests";
 
@@ -32,13 +39,12 @@ const auto RED_PATH = ROOT_PATH / "in_files/bmp/red.bmp";
 const auto SRC_IMAGE_PATH = CORVETTE_PATH;
 const auto DST_IMAGE_ROOT = ROOT_PATH / "out_files";
 
-
 void empty_dir(fs::path const& dir);
-void print(img::view_t const& view);
-void print(img::gray::view_t const& view);
+void print(ImageView const& view);
+void print(GrayView const& view);
 void print(img::stats_t const& stats);
-void make_image(img::image_t& image, u32 size);
-void make_image(img::gray::image_t& image, u32 size);
+void make_image(Image& image, u32 size);
+void make_image(GrayImage& image, u32 size);
 
 void basic_tests(fs::path const& out_dir);
 void math_tests(fs::path const& out_dir);
@@ -76,7 +82,7 @@ void basic_tests(fs::path const& out_dir)
 	std::cout << "basic:\n";
 	empty_dir(out_dir);
 
-	img::image_t image;
+	Image image;
 	img::read_image_from_file(SRC_IMAGE_PATH, image);
 
 	// write different file types
@@ -84,7 +90,7 @@ void basic_tests(fs::path const& out_dir)
 	img::write_image(image, out_dir / "image.bmp");
 
 	// write a view from an image file
-	img::image_t red_image;
+	Image red_image;
 	img::read_image_from_file(RED_PATH, red_image);
 	auto red_view = img::make_view(red_image);
 	img::write_image(red_image, out_dir / "red_image.png");
@@ -117,7 +123,7 @@ void basic_tests(fs::path const& out_dir)
 	img::write_view(col_view, out_dir / "col_view.bmp");
 
 	// resize an image
-	img::image_t resize_image;
+	Image resize_image;
 	resize_image.width = w / 4;
 	resize_image.height = h / 2;
 	auto resize_view = img::make_resized_view(image, resize_image);
@@ -126,7 +132,7 @@ void basic_tests(fs::path const& out_dir)
 	img::write_view(resize_view, out_dir / "resize_view.bmp");
 
 	// read a color image to grayscale
-	img::gray::image_t image_gray;
+	GrayImage image_gray;
 	img::read_image_from_file(SRC_IMAGE_PATH, image_gray);
 	img::write_image(image_gray, out_dir / "image_gray.bmp");
 
@@ -151,7 +157,7 @@ void basic_tests(fs::path const& out_dir)
 	img::write_view(col_view_gray, out_dir / "col_view_gray.png");
 
 	// resize a grayscale image
-	img::gray::image_t resize_image_gray;
+	GrayImage resize_image_gray;
 	resize_image_gray.width = w / 4;
 	resize_image_gray.height = h / 2;
 	auto resize_view_gray = img::make_resized_view(image_gray, resize_image_gray);
@@ -168,7 +174,7 @@ void math_tests(fs::path const& out_dir)
 	std::cout << "math:\n";
 	empty_dir(out_dir);
 
-	img::gray::image_t image_gray;
+	GrayImage image_gray;
 	img::read_image_from_file(SRC_IMAGE_PATH, image_gray);
 	auto view_gray = img::make_view(image_gray);
 
@@ -176,12 +182,12 @@ void math_tests(fs::path const& out_dir)
 	auto stats_gray = img::calc_stats(view_gray);
 
 	// write the histogram to a new image
-	img::gray::image_t stats_image_gray;
+	GrayImage stats_image_gray;
 	img::draw_histogram(stats_gray.hist, stats_image_gray);
 	print(stats_gray);
 	img::write_image(stats_image_gray, out_dir / "stats_image_gray.png");
 
-	img::image_t image;
+	Image image;
 	img::read_image_from_file(SRC_IMAGE_PATH, image);
 	auto view = img::make_view(image);
 
@@ -189,7 +195,7 @@ void math_tests(fs::path const& out_dir)
 	auto stats = img::calc_stats(view);
 
 	// draw each histogram to a new image
-	img::image_t stats_image;
+	Image stats_image;
 	img::draw_histogram(stats, stats_image);
 	print(stats.red);
 	print(stats.green);
@@ -198,7 +204,7 @@ void math_tests(fs::path const& out_dir)
 
 	// create a grayscale image and set each pixel with a predicate
 	auto const binarize = [&](u8 p) { return p > stats_gray.mean ? 255 : 0; };
-	img::gray::image_t binary;
+	GrayImage binary;
 	img::make_image(binary, image_gray.width, image_gray.height);
 	std::transform(image_gray.begin(), image_gray.end(), binary.begin(), binarize);
 
@@ -208,7 +214,7 @@ void math_tests(fs::path const& out_dir)
 }
 
 
-img::pixel_t alpha_blend_linear(img::pixel_t const& src, img::pixel_t const& current)
+Pixel alpha_blend_linear(Pixel const& src, Pixel const& current)
 {
 	auto const to_r32 = [](u8 c) { return static_cast<r32>(c) / 255.0f; };
 
@@ -243,7 +249,7 @@ void for_each_tests(fs::path const& out_dir)
 
 	auto const random_pixel = [&]() 
 	{
-		img::pixel_t p;
+		Pixel p;
 
 		for (u32 i = 0; i < 4; ++i)
 		{
@@ -253,9 +259,9 @@ void for_each_tests(fs::path const& out_dir)
 		return p;
 	};
 
-	auto const random_blended_pixel = [&](img::pixel_t& p) 
+	auto const random_blended_pixel = [&](Pixel& p) 
 	{
-		img::pixel_t src = random_pixel();
+		Pixel src = random_pixel();
 
 		p = alpha_blend_linear(src, p);
 	};
@@ -292,7 +298,7 @@ void for_each_tests(fs::path const& out_dir)
 	size = size_start;
 	for (u32 i = 0; i < 10; ++i, size *= 2)
 	{
-		img::image_t image;
+		Image image;
 		make_image(image, size);
 
 		sw.start();
@@ -328,7 +334,7 @@ void for_each_tests(fs::path const& out_dir)
 		view_par_times.data.push_back(scale(t));
 	}
 
-	img::image_t view_chart;
+	Image view_chart;
 	std::vector<img::data_color_t> view_data = 
 	{ 
 		image_loop_times, image_stl_times, image_par_times,
@@ -351,7 +357,7 @@ void transform_tests(fs::path const& out_dir)
 
 	auto const random_pixel = [&]()
 	{
-		img::pixel_t p;
+		Pixel p;
 
 		for (u32 i = 0; i < 4; ++i)
 		{
@@ -361,9 +367,9 @@ void transform_tests(fs::path const& out_dir)
 		return p;
 	};
 
-	auto const random_blended_pixel = [&](img::pixel_t& p)
+	auto const random_blended_pixel = [&](Pixel& p)
 	{
-		img::pixel_t src = random_pixel();
+		Pixel src = random_pixel();
 
 		return alpha_blend_linear(src, p);
 	};
@@ -391,9 +397,9 @@ void transform_tests(fs::path const& out_dir)
 
 	for (u32 i = 0; i < 10; ++i, size *= 2)
 	{
-		img::image_t image;
+		Image image;
 		make_image(image, size);
-		img::image_t dst;
+		Image dst;
 		make_image(dst, size);
 
 		sw.start();
@@ -420,7 +426,7 @@ void transform_tests(fs::path const& out_dir)
 		view_par_times.data.push_back(scale(t));
 	}
 
-	img::image_t view_chart;
+	Image view_chart;
 	std::vector<img::data_color_t> view_data =
 	{
 		image_stl_times, image_par_times,
@@ -438,23 +444,23 @@ void process_tests(fs::path const& out_dir)
 	empty_dir(out_dir);
 
 	// get image
-	img::image_t corvette_image;
+	Image corvette_image;
 	img::read_image_from_file(CORVETTE_PATH, corvette_image);
 	auto const width = corvette_image.width;
 	auto const height = corvette_image.height;
 	auto corvette_view = img::make_view(corvette_image);
 
-	img::image_t dst_image;
+	Image dst_image;
 	auto dst_view = img::make_view(dst_image, width, height);
 
-	img::gray::image_t dst_gray_image;
+	GrayImage dst_gray_image;
 	auto dst_gray_view = img::make_view(dst_gray_image, width, height);
 
 	// get another image for blending
 	// make sure it is the same size
-	img::image_t caddy_read;
+	Image caddy_read;
 	img::read_image_from_file(CADILLAC_PATH, caddy_read);
-	img::image_t caddy;
+	Image caddy;
 	caddy.width = width;
 	caddy.height = height;
 	img::resize_image(caddy_read, caddy);
@@ -475,7 +481,7 @@ void process_tests(fs::path const& out_dir)
 	
 	// stats
 	auto gray_stats = img::calc_stats(dst_gray_image);
-	img::gray::image_t gray_stats_image;
+	GrayImage gray_stats_image;
 	img::draw_histogram(gray_stats.hist, gray_stats_image);
 	img::write_image(gray_stats_image, out_dir / "gray_stats.png");
 	print(gray_stats);
@@ -483,13 +489,13 @@ void process_tests(fs::path const& out_dir)
 	// alpha grayscale
 	img::convert_alpha_grayscale(corvette_view);
 	auto alpha_stats = img::calc_stats(corvette_image, img::Channel::Alpha);
-	img::gray::image_t alpha_stats_image;
+	GrayImage alpha_stats_image;
 	img::draw_histogram(alpha_stats.hist, alpha_stats_image);
 	img::write_image(alpha_stats_image, out_dir / "alpha_stats.png");
 	print(alpha_stats);
 
 	// create a new grayscale source
-	img::gray::image_t src_gray_image;
+	GrayImage src_gray_image;
 	auto src_gray_view = img::make_view(src_gray_image, width, height);
 	img::par::copy(dst_gray_view, src_gray_view);
 
@@ -546,7 +552,7 @@ void process_tests(fs::path const& out_dir)
 	img::write_image(dst_gray_image, out_dir / "combo.png");
 
 	// edge detection
-	img::gray::image_t contrast_gray;
+	GrayImage contrast_gray;
 	auto contrast_gray_view = img::make_view(contrast_gray, width, height);
 	/*img::adjust_contrast(src_gray_view, contrast_gray_view, shade_min, shade_max);
 	img::edges(contrast_gray_view, dst_gray_view, 100);*/
@@ -571,9 +577,9 @@ void process_tests(fs::path const& out_dir)
 
 	for (u32 i = 0; i < 10; ++i, size *= 2)
 	{
-		img::gray::image_t image;
+		GrayImage image;
 		make_image(image, size);
-		img::gray::image_t dst;
+		GrayImage dst;
 		make_image(dst, size);
 		auto view = img::make_view(image);
 		auto dst_view = img::make_view(dst);
@@ -589,7 +595,7 @@ void process_tests(fs::path const& out_dir)
 		par_times.data.push_back(scale(t));
 	}
 
-	img::image_t view_chart;
+	Image view_chart;
 	std::vector<img::data_color_t> view_data =
 	{
 		seq_times, par_times
@@ -611,7 +617,7 @@ void empty_dir(fs::path const& dir)
 }
 
 
-void print(img::view_t const& view)
+void print(ImageView const& view)
 {
 	auto w = view.width;
 	auto h = view.height;
@@ -620,7 +626,7 @@ void print(img::view_t const& view)
 }
 
 
-void print(img::gray::view_t const& view)
+void print(GrayView const& view)
 {
 	auto w = view.width;
 	auto h = view.height;
@@ -635,7 +641,7 @@ void print(img::stats_t const& stats)
 }
 
 
-void make_image(img::image_t& image, u32 size)
+void make_image(Image& image, u32 size)
 {
 	u32 width = size / 5;
 	u32 height = size / width;
@@ -644,7 +650,7 @@ void make_image(img::image_t& image, u32 size)
 }
 
 
-void make_image(img::gray::image_t& image, u32 size)
+void make_image(GrayImage& image, u32 size)
 {
 	u32 width = size / 5;
 	u32 height = size / width;

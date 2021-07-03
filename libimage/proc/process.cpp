@@ -22,7 +22,7 @@ namespace libimage
 {
 	constexpr u32 VIEW_MIN_DIM = 5;
 
-	constexpr static r32 q_inv_sqrt(r32 n)
+	static constexpr r32 q_inv_sqrt(r32 n)
 	{
 		const float threehalfs = 1.5F;
 		float y = n;
