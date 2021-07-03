@@ -208,7 +208,7 @@ namespace libimage
 	}
 
 
-	void adjust_contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high)
+	void transform_contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high)
 	{
 		assert(src_low < src_high);
 
@@ -220,7 +220,7 @@ namespace libimage
 	}
 
 
-	void adjust_contrast(gray::view_t const& src, u8 src_low, u8 src_high)
+	void transform_contrast(gray::view_t const& src, u8 src_low, u8 src_high)
 	{
 		assert(src_low < src_high);
 
@@ -504,7 +504,7 @@ namespace libimage
 		}
 
 
-		void adjust_contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high)
+		void transform_contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high)
 		{
 			assert(src_low < src_high);
 
@@ -516,7 +516,7 @@ namespace libimage
 		}
 
 
-		void adjust_contrast(gray::view_t const& src, u8 src_low, u8 src_high)
+		void transform_contrast(gray::view_t const& src, u8 src_low, u8 src_high)
 		{
 			assert(src_low < src_high);
 

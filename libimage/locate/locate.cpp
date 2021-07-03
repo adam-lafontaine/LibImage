@@ -8,6 +8,7 @@
 #include <execution>
 #include <functional>
 #include <array>
+#include <vector>
 
 
 // outer edge pixels of src are ignored
@@ -155,6 +156,81 @@ namespace libimage
 
 	void locate(gray::view_t const& view, gray::view_t const& pattern)
 	{
+		u32 const v_width = view.width;
+		u32 const v_height = view.height;
+		u32 const p_width = pattern.width;
+		u32 const p_height = pattern.height;
 
+		assert(p_width < v_width);
+		assert(p_height < v_height);
+
+		u32 const edges_width = v_width - 1;
+		u32 const edges_height = v_height - 1;
+
+		// TODO: where do these come from?
+		u32 const contrast_low = 10;
+		u32 const contrast_high = 150;
+
+		gray::image_t contrast;
+		gray::view_t contrast_view;
+		gray::image_t blur;
+		gray::view_t blur_view;
+		gray::image_t edges;
+		gray::view_t edges_view;
+
+		using func_t = std::function<void()>;
+		using func_list_t = std::array<func_t, 3>;
+
+		auto const execute = [](func_t const& f) { f(); };
+
+		// allocate memory on separate threads
+		func_list_t allocate
+		{
+			[&]() { contrast_view = make_view(contrast, v_width, v_height); },
+			[&]() { blur_view = make_view(blur, v_width, v_height); },
+			[&]() { edges_view = make_view(edges, edges_width, edges_height); }
+		};
+		std::for_each(std::execution::par, allocate.begin(), allocate.end(), execute);
+		
+		par::transform_contrast(view, contrast_view, contrast_low, contrast_high);
+
+		par::blur(contrast_view, blur_view);
+
+		// TODO: where does this come from?
+		u8 const edge_gradient_threshold = 128;
+
+		q_edges(contrast_view, edges_view, edge_gradient_threshold);
+
+		auto search_view = trim(edges_view);
+
+		// no match found?
+		assert(search_view.width > p_width);
+		assert(search_view.height > p_height);
+
+		u32 const search_x_begin = 0;
+		u32 const search_x_end = search_view.width - p_width;
+		u32 const search_y_begin = 0;
+		u32 const search_y_end = search_view.height - p_height;
+
+		std::vector<u32> delta_totals((search_y_end - search_x_begin), 0u);
+		u32_range_t x_ids(search_x_begin, search_x_end);
+		u32_range_t y_ids(search_y_begin, search_y_end);
+
+
+		auto const row_min_delta = [](u32 y) 
+		{
+			
+		};
+
+		std::for_each(y_ids.begin(), y_ids.end(), row_min_delta);
+
+		// free memory on separe threads
+		func_list_t destroy
+		{
+			[&]() { contrast.clear(); },
+			[&]() { blur.clear(); },
+			[&]() { edges.clear(); }
+		};
+		std::for_each(std::execution::par, destroy.begin(), destroy.end(), execute);
 	}
 }

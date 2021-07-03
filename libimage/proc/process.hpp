@@ -43,9 +43,9 @@ namespace libimage
 
 	void copy(gray::view_t const& src, gray::view_t const& dst);
 
-	void adjust_contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high);
+	void transform_contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high);
 
-	void adjust_contrast(gray::view_t const& src, u8 src_low, u8 src_high);
+	void transform_contrast(gray::view_t const& src, u8 src_low, u8 src_high);
 
 	void binarize(gray::view_t const& src, gray::view_t const& dst, u8 min_threashold);
 
@@ -98,9 +98,9 @@ namespace libimage
 
 		void copy(gray::view_t const& src, gray::view_t const& dst);
 
-		void adjust_contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high);
+		void transform_contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high);
 
-		void adjust_contrast(gray::view_t const& src, u8 src_low, u8 src_high);
+		void transform_contrast(gray::view_t const& src, u8 src_low, u8 src_high);
 
 		void binarize(gray::view_t const& src, gray::view_t const& dst, u8 min_threashold);
 

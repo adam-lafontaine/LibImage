@@ -502,7 +502,7 @@ void process_tests(fs::path const& out_dir)
 	// contrast
 	auto shade_min = static_cast<u8>(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
 	auto shade_max = static_cast<u8>(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
-	img::par::adjust_contrast(src_gray_view, dst_gray_view, shade_min, shade_max);
+	img::par::transform_contrast(src_gray_view, dst_gray_view, shade_min, shade_max);
 	img::write_image(dst_gray_image, out_dir / "contrast.png");
 
 	// binarize
@@ -526,7 +526,7 @@ void process_tests(fs::path const& out_dir)
 	range.y_end = height / 2;
 	auto src_sub = img::sub_view(src_gray_view, range);
 	auto dst_sub = img::sub_view(dst_gray_view, range);
-	img::par::adjust_contrast(src_sub, dst_sub, shade_min, shade_max);
+	img::par::transform_contrast(src_sub, dst_sub, shade_min, shade_max);
 
 	range.x_begin = width / 2;
 	range.x_end = width;
