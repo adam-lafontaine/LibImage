@@ -144,6 +144,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\libimage\libimage.cpp" />
+    <ClCompile Include="..\..\libimage\locate\locate.cpp" />
     <ClCompile Include="..\..\libimage\math\libimage_math.cpp" />
     <ClCompile Include="..\..\libimage\proc\convolve.cpp" />
     <ClCompile Include="..\..\libimage\proc\process.cpp" />
@@ -152,6 +153,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\libimage\libimage.hpp" />
+    <ClInclude Include="..\..\libimage\locate\locate.hpp" />
     <ClInclude Include="..\..\libimage\math\libimage_math.hpp" />
     <ClInclude Include="..\..\libimage\proc\convolve.hpp" />
     <ClInclude Include="..\..\libimage\proc\index_range.hpp" />

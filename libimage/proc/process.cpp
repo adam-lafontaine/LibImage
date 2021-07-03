@@ -792,6 +792,10 @@ namespace libimage
 			u32 const x_end = width - 1;
 			u32_range_t x_ids(x_begin, x_end);
 
+			u32 const y_begin = 1;
+			u32 const y_end = height - 1;
+			u32_range_t y_ids(y_begin, y_end);
+
 			auto const grad_row = [&](u32 y)
 			{
 				auto dst_row = dst.row_begin(y);
@@ -809,10 +813,6 @@ namespace libimage
 
 			auto const gradients_inner = [&]()
 			{
-				u32 const y_begin = 1;
-				u32 const y_end = height - 1;
-				u32_range_t y_ids(y_begin, y_end);
-
 				std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), grad_row);
 			};
 
