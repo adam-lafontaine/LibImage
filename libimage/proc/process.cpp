@@ -95,7 +95,7 @@ namespace libimage
 	}
 
 
-	void convert_alpha(view_t const& view, pixel_to_u8_f const& func)
+	void transform_alpha(view_t const& view, pixel_to_u8_f const& func)
 	{
 		assert(verify(view));
 
@@ -104,9 +104,9 @@ namespace libimage
 	}
 
 
-	void convert_alpha_grayscale(view_t const& view)
+	void transform_alpha_grayscale(view_t const& view)
 	{
-		convert_alpha(view, pixel_grayscale_standard);
+		transform_alpha(view, pixel_grayscale_standard);
 	}
 
 
@@ -183,7 +183,7 @@ namespace libimage
 	}
 
 
-	void convert(gray::view_t const& src, gray::view_t const& dst, u8_to_u8_f const& func)
+	void transform(gray::view_t const& src, gray::view_t const& dst, u8_to_u8_f const& func)
 	{
 		assert(verify(src, dst));
 
@@ -191,7 +191,7 @@ namespace libimage
 	}
 
 
-	void convert(gray::view_t const& src, u8_to_u8_f const& func)
+	void transform(gray::view_t const& src, u8_to_u8_f const& func)
 	{
 		assert(verify(src));
 
@@ -216,7 +216,7 @@ namespace libimage
 		u8 dst_high = 255;
 
 		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
-		convert(src, dst, conv);
+		transform(src, dst, conv);
 	}
 
 
@@ -228,35 +228,35 @@ namespace libimage
 		u8 dst_high = 255;
 
 		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
-		convert(src, conv);
+		transform(src, conv);
 	}
 
 
 	void binarize(gray::view_t const& src, gray::view_t const& dst, u8 min_threashold)
 	{
 		auto const conv = [&](u8 p) { return p >= min_threashold ? 255 : 0; };
-		convert(src, dst, conv);
+		transform(src, dst, conv);
 	}
 
 
 	void binarize(gray::view_t const& src, u8 min_threashold)
 	{
 		auto const conv = [&](u8 p) { return p >= min_threashold ? 255 : 0; };
-		convert(src, conv);
+		transform(src, conv);
 	}
 
 
 	void binarize(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& func)
 	{
 		auto const conv = [&](u8 p) { return func(p) ? 255 : 0; };
-		convert(src, dst, conv);
+		transform(src, dst, conv);
 	}
 
 
 	void binarize(gray::view_t const& src, u8_to_bool_f const& func)
 	{
 		auto const conv = [&](u8 p) { return func(p) ? 255 : 0; };
-		convert(src, conv);
+		transform(src, conv);
 	}
 
 
@@ -413,7 +413,7 @@ namespace libimage
 	}
 
 
-	void convert(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
+	void transform(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
 	{
 		assert(verify(src, dst));
 
@@ -421,9 +421,9 @@ namespace libimage
 	}
 
 
-	void convert_grayscale(view_t const& src, gray::view_t const& dst)
+	void transform_grayscale(view_t const& src, gray::view_t const& dst)
 	{
-		convert(src, dst, pixel_grayscale_standard);
+		transform(src, dst, pixel_grayscale_standard);
 	}
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
@@ -443,7 +443,7 @@ namespace libimage
 		}
 
 
-		void convert_alpha(view_t const& view, pixel_to_u8_f const& func)
+		void transform_alpha(view_t const& view, pixel_to_u8_f const& func)
 		{
 			assert(verify(view));
 
@@ -452,9 +452,9 @@ namespace libimage
 		}
 
 
-		void convert_alpha_grayscale(view_t const& view)
+		void transform_alpha_grayscale(view_t const& view)
 		{
-			par::convert_alpha(view, pixel_grayscale_standard);
+			par::transform_alpha(view, pixel_grayscale_standard);
 		}
 
 
@@ -479,7 +479,7 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-		void convert(gray::view_t const& src, gray::view_t const& dst, u8_to_u8_f const& func)
+		void transform(gray::view_t const& src, gray::view_t const& dst, u8_to_u8_f const& func)
 		{
 			assert(verify(src, dst));
 
@@ -487,7 +487,7 @@ namespace libimage
 		}
 
 
-		void convert(gray::view_t const& src, u8_to_u8_f const& func)
+		void transform(gray::view_t const& src, u8_to_u8_f const& func)
 		{
 			assert(verify(src));
 
@@ -512,7 +512,7 @@ namespace libimage
 			u8 dst_high = 255;
 
 			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
-			par::convert(src, dst, conv);
+			par::transform(src, dst, conv);
 		}
 
 
@@ -524,42 +524,42 @@ namespace libimage
 			u8 dst_high = 255;
 
 			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
-			par::convert(src, conv);
+			par::transform(src, conv);
 		}
 
 
 		void binarize(gray::view_t const& src, gray::view_t const& dst, u8 min_threashold)
 		{
 			auto const conv = [&](u8 p) { return p >= min_threashold ? 255 : 0; };
-			par::convert(src, dst, conv);
+			par::transform(src, dst, conv);
 		}
 
 
 		void binarize(gray::view_t const& src, u8 min_threashold)
 		{
 			auto const conv = [&](u8 p) { return p >= min_threashold ? 255 : 0; };
-			par::convert(src, conv);
+			par::transform(src, conv);
 		}
 
 
 		void binarize(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& func)
 		{
 			auto const conv = [&](u8 p) { return func(p) ? 255 : 0; };
-			par::convert(src, conv);
+			par::transform(src, conv);
 		}
 
 
 		void binarize(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& func)
 		{
 			auto const conv = [&](u8 p) { return func(p) ? 255 : 0; };
-			par::convert(src, dst, conv);
+			par::transform(src, dst, conv);
 		}
 
 
 		void binarize(gray::view_t const& src, u8_to_bool_f const& func)
 		{
 			auto const conv = [&](u8 p) { return func(p) ? 255 : 0; };
-			par::convert(src, conv);
+			par::transform(src, conv);
 		}
 
 
@@ -753,14 +753,14 @@ namespace libimage
 			{
 				auto dst_top = row_view(dst, 0);
 
-				par::convert(dst_top, zero);
+				par::transform(dst_top, zero);
 			};
 
 			auto const zero_bottom = [&]()
 			{
 				auto dst_bottom = row_view(dst, height - 1);
 
-				par::convert(dst_bottom, zero);
+				par::transform(dst_bottom, zero);
 			};
 
 			auto const zero_left = [&]()
@@ -772,7 +772,7 @@ namespace libimage
 				r.y_end = height - 1;
 				auto dst_left = sub_view(dst, r);
 
-				par::convert(dst_left, zero);
+				par::transform(dst_left, zero);
 			};
 
 			auto const zero_right = [&]()
@@ -784,7 +784,7 @@ namespace libimage
 				r.y_end = height - 1;
 				auto dst_right = sub_view(dst, r);
 
-				par::convert(dst_right, zero);
+				par::transform(dst_right, zero);
 			};
 
 			// get gradient magnitude of inner pixels
@@ -836,7 +836,7 @@ namespace libimage
 #ifndef LIBIMAGE_NO_COLOR
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-		void convert(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
+		void transform(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
 		{
 			assert(verify(src, dst));
 
@@ -844,9 +844,9 @@ namespace libimage
 		}
 
 
-		void convert_grayscale(view_t const& src, gray::view_t const& dst)
+		void transform_grayscale(view_t const& src, gray::view_t const& dst)
 		{
-			par::convert(src, dst, pixel_grayscale_standard);
+			par::transform(src, dst, pixel_grayscale_standard);
 		}
 
 

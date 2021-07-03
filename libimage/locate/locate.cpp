@@ -68,8 +68,6 @@ namespace libimage
 
 		u32 total = 0;
 
-		auto const add = [&total](u32 x, u32 y) { total += 0; };
-
 		for (u32 y = 0; y < height; ++y)
 		{
 			auto lhs_row = lhs.row_begin(y);
@@ -84,7 +82,7 @@ namespace libimage
 	}
 
 
-	static gray::view_t find_edges(gray::view_t const& view)
+	static gray::view_t trim(gray::view_t const& view)
 	{
 		u32 const width = view.width;
 		u32 const height = view.height;
@@ -152,5 +150,11 @@ namespace libimage
 		assert(r.y_end > r.y_begin);
 
 		return sub_view(view, r);
+	}
+
+
+	void locate(gray::view_t const& view, gray::view_t const& pattern)
+	{
+
 	}
 }

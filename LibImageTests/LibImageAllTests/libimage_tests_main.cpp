@@ -467,7 +467,7 @@ void process_tests(fs::path const& out_dir)
 	auto caddy_view = make_view(caddy);
 
 	// alpha blending
-	img::par::convert_alpha(caddy_view, [](auto const& p) { return 128; });
+	img::par::transform_alpha(caddy_view, [](auto const& p) { return 128; });
 	img::par::alpha_blend(caddy_view, corvette_view, dst_view);
 	img::write_image(dst_image, out_dir / "alpha_blend.png");
 
@@ -476,7 +476,7 @@ void process_tests(fs::path const& out_dir)
 	img::write_image(dst_image, out_dir / "alpha_blend_src_dst.png");
 
 	// grayscale
-	img::par::convert_grayscale(corvette_view, dst_gray_view);
+	img::par::transform_grayscale(corvette_view, dst_gray_view);
 	img::write_image(dst_gray_image, out_dir / "convert_grayscale.png");
 	
 	// stats
@@ -487,7 +487,7 @@ void process_tests(fs::path const& out_dir)
 	print(gray_stats);
 
 	// alpha grayscale
-	img::convert_alpha_grayscale(corvette_view);
+	img::transform_alpha_grayscale(corvette_view);
 	auto alpha_stats = img::calc_stats(corvette_image, img::Channel::Alpha);
 	GrayImage alpha_stats_image;
 	img::draw_histogram(alpha_stats.hist, alpha_stats_image);
