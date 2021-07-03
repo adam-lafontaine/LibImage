@@ -19,15 +19,18 @@
 namespace fs = std::filesystem;
 namespace img = libimage;
 
-const auto ROOT_PATH = fs::path("C:/D_Data/repos/LibImage/LibImageTests/LibImageAllTests");
+// set this directory for your system
+constexpr auto ROOT_DIR = "C:/D_Data/repos/LibImage/LibImageTests/LibImageAllTests";
 
+const auto ROOT_PATH = fs::path(ROOT_DIR);
+
+// make sure these files exist
 const auto CORVETTE_PATH = ROOT_PATH / "in_files/png/corvette.png";
 const auto CADILLAC_PATH = ROOT_PATH / "in_files/png/cadillac.png";
+const auto RED_PATH = ROOT_PATH / "in_files/bmp/red.bmp";
 
 const auto SRC_IMAGE_PATH = CORVETTE_PATH;
 const auto DST_IMAGE_ROOT = ROOT_PATH / "out_files";
-
-const auto RED_PATH = ROOT_PATH / "in_files/bmp/red.bmp";
 
 
 void empty_dir(fs::path const& dir);
@@ -205,29 +208,6 @@ void math_tests(fs::path const& out_dir)
 }
 
 
-void for_each_pixel(img::image_t& image, std::function<void(img::pixel_t&)> const& func)
-{
-	u32 size = image.width * image.height;
-	for (u32 i = 0; i < size; ++i)
-	{
-		func(image.data[i]);
-	}
-}
-
-
-void for_each_pixel(img::view_t& view, std::function<void(img::pixel_t&)> const& func)
-{
-	for (u32 y = 0; y < view.height; ++y)
-	{
-		auto row = view.row_begin(y);
-		for (u32 x = 0; x < view.width; ++x)
-		{
-			func(row[x]);
-		}
-	}
-}
-
-
 img::pixel_t alpha_blend_linear(img::pixel_t const& src, img::pixel_t const& current)
 {
 	auto const to_r32 = [](u8 c) { return static_cast<r32>(c) / 255.0f; };
@@ -316,7 +296,7 @@ void for_each_tests(fs::path const& out_dir)
 		make_image(image, size);
 
 		sw.start();
-		for_each_pixel(image, random_blended_pixel);
+		img::for_each_pixel(image, random_blended_pixel);
 		auto t = sw.get_time_milli();
 		image_loop_times.data.push_back(scale(t));
 
@@ -333,7 +313,7 @@ void for_each_tests(fs::path const& out_dir)
 		auto view = img::make_view(image);
 
 		sw.start();
-		for_each_pixel(view, random_blended_pixel);
+		img::for_each_pixel(view, random_blended_pixel);
 		t = sw.get_time_milli();
 		view_loop_times.data.push_back(scale(t));
 

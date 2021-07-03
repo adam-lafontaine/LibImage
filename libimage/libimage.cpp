@@ -204,13 +204,10 @@ namespace libimage
 
 	void for_each_pixel(image_t const& image, std::function<void(pixel_t& p)> const& func)
 	{
-		for (u32 y = 0; y < image.height; ++y)
+		u32 size = image.width * image.height;
+		for (u32 i = 0; i < size; ++i)
 		{
-			auto row = image.row_begin(y);
-			for (u32 x = 0; x < image.width; ++x)
-			{
-				func(row[x]);
-			}
+			func(image.data[i]);
 		}
 	}
 
