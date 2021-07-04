@@ -11,13 +11,21 @@
 #include <vector>
 
 
-// outer edge pixels of src are ignored
-constexpr u32 DST_OFFSET = 1;
-constexpr u32 DELTA_DIM = 2 * DST_OFFSET;
-constexpr u32 map_to_src(u32 dst_i) { return dst_i + DST_OFFSET; }
+// outer pixels of edges src are ignored
+constexpr u32 EDGES_OFFSET = 1;
+constexpr u32 DELTA_DIM = 2 * EDGES_OFFSET;
+constexpr u32 map_to_src(u32 dst_i) { return dst_i + EDGES_OFFSET; }
 
 namespace libimage
 {
+	using view_list_t = std::vector<gray::view_t>;
+
+	static gray::view_t make_edges_view(gray::image_t& image, u32 src_width, u32 src_height)
+	{
+		return make_view(image, src_width - EDGES_OFFSET, src_height - EDGES_OFFSET);
+	}
+
+
 	static void q_edges(gray::view_t const& src, gray::view_t const& dst, u8 threshold)
 	{
 		u32 const src_w = src.width;
@@ -29,7 +37,6 @@ namespace libimage
 		assert(src_w - dst_w == DELTA_DIM);
 		assert(src_h - dst_h == DELTA_DIM);
 
-		// get gradient magnitude of inner pixels
 		u32 const dst_x_begin = 0;
 		u32 const dst_x_end = src_w;
 		u32_range_t dst_x_ids(dst_x_begin, dst_x_end);
@@ -126,7 +133,7 @@ namespace libimage
 		{
 			for (u32 y = 0; y < height && !found; ++y)
 			{
-				if (view.row_begin(y)[x])
+				if (*view.xy_at(x, y))
 				{
 					r.x_begin = x;
 					found = true;
@@ -140,7 +147,7 @@ namespace libimage
 		{
 			for (u32 y = height; y > 0 && !found; --y)
 			{
-				if (view.row_begin(y - 1)[x - 1])
+				if (*view.xy_at(x - 1, y - 1))
 				{
 					r.x_end = y;
 				}
@@ -154,7 +161,20 @@ namespace libimage
 	}
 
 
-	void locate(gray::view_t const& view, gray::view_t const& pattern)
+	typedef struct
+	{
+		u32 contrast_low;
+		u32 contrast_high;
+		u8 edge_gradient_threshold;
+
+		gray::view_t contrast;
+		gray::view_t blur;
+		gray::view_t edges;
+
+	} locate_props_t;
+
+
+	gray::view_t locate_one(gray::view_t const& view, gray::view_t const& pattern, locate_props_t const& props)
 	{
 		u32 const v_width = view.width;
 		u32 const v_height = view.height;
@@ -164,40 +184,16 @@ namespace libimage
 		assert(p_width < v_width);
 		assert(p_height < v_height);
 
-		u32 const edges_width = v_width - 1;
-		u32 const edges_height = v_height - 1;
-
-		// TODO: where do these come from?
-		u32 const contrast_low = 10;
-		u32 const contrast_high = 150;
-
-		gray::image_t contrast;
-		gray::view_t contrast_view;
-		gray::image_t blur;
-		gray::view_t blur_view;
-		gray::image_t edges;
-		gray::view_t edges_view;
-
-		using func_t = std::function<void()>;
-		using func_list_t = std::array<func_t, 3>;
-
-		auto const execute = [](func_t const& f) { f(); };
-
-		// allocate memory on separate threads
-		func_list_t allocate
-		{
-			[&]() { contrast_view = make_view(contrast, v_width, v_height); },
-			[&]() { blur_view = make_view(blur, v_width, v_height); },
-			[&]() { edges_view = make_view(edges, edges_width, edges_height); }
-		};
-		std::for_each(std::execution::par, allocate.begin(), allocate.end(), execute);
+		auto& contrast_view = props.contrast;
+		auto& blur_view = props.blur;
+		auto& edges_view = props.edges;
+		u32 const contrast_low = props.contrast_low;
+		u32 const contrast_high = props.contrast_high;
+		u32 const edge_gradient_threshold = props.edge_gradient_threshold;
 		
 		par::transform_contrast(view, contrast_view, contrast_low, contrast_high);
 
 		par::blur(contrast_view, blur_view);
-
-		// TODO: where does this come from?
-		u8 const edge_gradient_threshold = 128;
 
 		q_edges(contrast_view, edges_view, edge_gradient_threshold);
 
@@ -212,19 +208,83 @@ namespace libimage
 		u32 const search_y_begin = 0;
 		u32 const search_y_end = search_view.height - p_height;
 
-		std::vector<u32> delta_totals((search_y_end - search_x_begin), 0u);
-		u32_range_t x_ids(search_x_begin, search_x_end);
-		u32_range_t y_ids(search_y_begin, search_y_end);
+		u32 min_delta = p_width * p_height;
+		gray::view_t search_result;
+		pixel_range_t r = {};
 
+		auto const check_min_delta = [&](u32 x, u32 y) 
+		{			
+			r.x_begin = x;
+			r.x_end = x + p_width;
+			r.y_begin = y;
+			r.y_end = y + p_height;
 
-		auto const row_min_delta = [](u32 y) 
-		{
-			
+			auto v = sub_view(search_view, r);
+
+			auto delta = edge_delta(v, pattern);
+
+			if (delta < min_delta)
+			{
+				min_delta = delta;
+				search_result = v;
+			}
 		};
 
-		std::for_each(y_ids.begin(), y_ids.end(), row_min_delta);
+		for_each_xy(search_view, check_min_delta);
 
-		// free memory on separe threads
+		return search_result;
+	}
+
+
+	static bool verify(view_list_t const& views)
+	{
+		auto w = std::all_of(std::execution::par, views.begin(), views.end(), [&](auto const& v) { return v.width == views[0].width; });
+		auto h = std::all_of(std::execution::par, views.begin(), views.end(), [&](auto const& v) { return v.height == views[0].height; });
+
+		return w && h;
+	}
+
+
+	view_list_t locate_many(view_list_t const& views, gray::view_t const& pattern)
+	{
+		assert(views.size());
+
+		auto& v_first = views[0];
+		assert(verify(views));
+
+		u32 const v_width = v_first.width;
+		u32 const v_height = v_first.height;
+		u32 const v_size = static_cast<u32>(views.size());
+
+		gray::image_t contrast;
+		gray::image_t blur;
+		gray::image_t edges;
+
+		locate_props_t props = {};
+		props.edge_gradient_threshold = 128;
+		props.contrast_low = 10;
+		props.contrast_high = 150;
+
+		using func_t = std::function<void()>;
+		using func_list_t = std::array<func_t, 3>;
+
+		auto const execute = [](func_t const& f) { f(); };
+
+		// allocate memory on separate threads
+		func_list_t allocate
+		{
+			[&]() { props.contrast = make_view(contrast, v_width, v_height); },
+			[&]() { props.blur = make_view(blur, v_width, v_height); },
+			[&]() { props.edges = make_edges_view(edges, v_width, v_height); }
+		};
+		std::for_each(std::execution::par, allocate.begin(), allocate.end(), execute);
+
+		u32_range_t view_ids(0u, v_size);
+		view_list_t results(v_size);
+		auto const locate = [&](u32 i) { results[i] = locate_one(views[i], pattern, props); };
+		std::for_each(std::execution::par, view_ids.begin(), view_ids.end(), locate);
+
+		// free memory on separate threads
 		func_list_t destroy
 		{
 			[&]() { contrast.clear(); },
@@ -232,5 +292,7 @@ namespace libimage
 			[&]() { edges.clear(); }
 		};
 		std::for_each(std::execution::par, destroy.begin(), destroy.end(), execute);
+
+		return results;
 	}
 }

@@ -149,9 +149,9 @@ namespace libimage
 		}
 
 		rgba_pixel_t* begin() { return data; }
-		rgba_pixel_t* end() { return data + (u64)width * (u64)height; }
+		rgba_pixel_t* end() { return data + static_cast<u64>(width) * static_cast<u64>(height); }
 		rgba_pixel_t* begin() const { return data; }
-		rgba_pixel_t* end() const { return data + (u64)width * (u64)height; }
+		rgba_pixel_t* end() const { return data + static_cast<u64>(width) * static_cast<u64>(height); }
 	};
 
 	using image_t = rgba_image_t;
@@ -383,11 +383,11 @@ namespace libimage
 
 			pixel_t* begin() { return data; }
 
-			pixel_t* end() { return data + (u64)width * (u64)height; }
+			pixel_t* end() { return data + static_cast<u64>(width * static_cast<u64>(height)); }
 
 			pixel_t* begin() const { return data; }
 
-			pixel_t* end() const { return data + (u64)width * (u64)height; }
+			pixel_t* end() const { return data + static_cast<u64>(width * static_cast<u64>(height)); }
 		};
 
 
@@ -410,7 +410,7 @@ namespace libimage
 			pixel_t* row_begin(u32 y) const
 			{
 				auto offset = (y_begin + y) * image_width + x_begin;
-				return image_data + (u64)offset;
+				return image_data + static_cast<u64>(offset);
 			}
 
 			pixel_t* xy_at(u32 x, u32 y) const
