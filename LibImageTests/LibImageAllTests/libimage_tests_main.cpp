@@ -552,12 +552,16 @@ void process_tests(fs::path const& out_dir)
 	img::write_image(dst_gray_image, out_dir / "combo.png");
 
 	// edge detection
-	GrayImage contrast_gray;
+	/*GrayImage contrast_gray;
 	auto contrast_gray_view = img::make_view(contrast_gray, width, height);
-	/*img::adjust_contrast(src_gray_view, contrast_gray_view, shade_min, shade_max);
+	img::transform_contrast(src_gray_view, contrast_gray_view, shade_min, shade_max);
 	img::edges(contrast_gray_view, dst_gray_view, 100);*/
 	img::par::edges(src_gray_view, dst_gray_view, 150);
 	img::write_image(dst_gray_image, out_dir / "edges.png");
+
+	// gradient
+	img::par::gradient(src_gray_view, dst_gray_view);
+	img::write_image(dst_gray_image, out_dir / "gradient.png");
 
 	// compare edge detection speeds
 	auto green = img::to_pixel(88, 100, 29);
