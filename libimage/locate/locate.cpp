@@ -63,6 +63,8 @@ namespace libimage
 
 	static void q_gradient(gray::view_t const& src, gray::view_t const& dst)
 	{
+		// TODO: get min and max gradient
+
 		u32 const src_w = src.width;
 		u32 const src_h = src.height;
 		u32 const dst_w = dst.width;
@@ -228,7 +230,9 @@ namespace libimage
 	{
 		u32 contrast_low;
 		u32 contrast_high;
-		u8 edge_gradient_threshold;
+
+		u8 edge_gradient_min;
+		u8 edge_gradient_max;
 
 		gray::view_t contrast;
 		gray::view_t blur;
@@ -251,13 +255,23 @@ namespace libimage
 		par::transform_contrast(view, props.contrast, props.contrast_low, props.contrast_high);
 		par::blur(props.contrast, props.blur);
 		q_gradient(props.blur, props.grad);
-		par::binarize(props.grad, props.edges, [&](u8 p) { return p >= props.edge_gradient_threshold; });
 
-		auto search_view = trim(props.edges);
+		u8 edge_gradient_range = props.edge_gradient_max - props.edge_gradient_min;
+		for (u8 i = 0; i < edge_gradient_range; ++i)
+		{
+			u8 threshold = props.edge_gradient_min + i;
+			par::binarize(props.grad, props.edges, [&](u8 p) { return p >= threshold; });
 
-		// no match found?
-		assert(search_view.width > p_width);
-		assert(search_view.height > p_height);
+			auto search_view = trim(props.edges);
+
+			// no match found?
+			assert(search_view.width > p_width);
+			assert(search_view.height > p_height);
+		}
+
+		
+
+		
 
 		return search(search_view, pattern);
 	}
