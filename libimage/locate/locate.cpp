@@ -9,6 +9,7 @@
 #include <functional>
 #include <array>
 #include <vector>
+#include <limits>
 
 
 // outer pixels of edges src are ignored
@@ -16,9 +17,48 @@ constexpr u32 GRADIENT_OFFSET = 1;
 constexpr u32 DELTA_DIM = 2 * GRADIENT_OFFSET;
 constexpr u32 map_to_src(u32 dst_i) { return dst_i + GRADIENT_OFFSET; }
 
+constexpr u32 U32_NOT_SET = UINT32_MAX;
+
 namespace libimage
 {
 	using view_list_t = std::vector<gray::view_t>;
+
+	typedef struct
+	{
+		u32 x = U32_NOT_SET;
+		u32 y = U32_NOT_SET;
+		u32 delta = U32_NOT_SET;
+
+	} locate_result_t;
+
+	using result_list_t = std::vector<locate_result_t>;
+
+	typedef struct
+	{
+		u32 contrast_low;
+		u32 contrast_high;
+
+		u8 edge_gradient_min;
+		u8 edge_gradient_max;
+
+		gray::view_t contrast;
+		gray::view_t blur;
+		gray::view_t grad;
+		gray::view_t edges;
+
+		std::array<locate_result_t, 256> threshold_results; // SOA?
+
+	} locate_props_t;
+
+
+	static bool verify(view_list_t const& views)
+	{
+		auto w = std::all_of(std::execution::par, views.begin(), views.end(), [&](auto const& v) { return v.width == views[0].width; });
+		auto h = std::all_of(std::execution::par, views.begin(), views.end(), [&](auto const& v) { return v.height == views[0].height; });
+
+		return w && h;
+	}
+
 
 	static gray::view_t make_gradient_view(gray::image_t& image, u32 src_width, u32 src_height)
 	{
@@ -63,8 +103,6 @@ namespace libimage
 
 	static void q_gradient(gray::view_t const& src, gray::view_t const& dst)
 	{
-		// TODO: get min and max gradient
-
 		u32 const src_w = src.width;
 		u32 const src_h = src.height;
 		u32 const dst_w = dst.width;
@@ -85,10 +123,12 @@ namespace libimage
 			{
 				auto src_x = map_to_src(dst_x);
 				auto src_y = map_to_src(dst_y);
+
 				auto gx = x_gradient(src, src_x, src_y);
 				auto gy = y_gradient(src, src_x, src_y);
-				auto g = std::hypot(gx, gy);
-				dst_row[dst_x] = static_cast<u8>(g);
+
+				auto g = static_cast<u8>(std::hypot(gx, gy));
+				dst_row[dst_x] = g;
 			};
 
 			std::for_each(std::execution::par, dst_x_ids.begin(), dst_x_ids.end(), grad_x);
@@ -114,7 +154,7 @@ namespace libimage
 			auto rhs_row = rhs.row_begin(y);
 			for (u32 x = 0; x < width; ++x)
 			{
-				total += (lhs_row[x] != rhs_row[x]);
+				total += (lhs_row[x] && rhs_row[x]) || (!lhs_row[x] && !rhs_row[x]);
 			}
 		}
 
@@ -192,14 +232,15 @@ namespace libimage
 		return sub_view(view, r);
 	}
 
-
-	static gray::view_t search(gray::view_t const& search_view, gray::view_t const& pattern)
+	
+	locate_result_t search(gray::view_t const& search_view, gray::view_t const& pattern)
 	{
 		u32 const p_width = pattern.width;
 		u32 const p_height = pattern.height;
 
-		u32 min_delta = p_width * p_height;
-		gray::view_t search_result;
+		locate_result_t search_result = {};
+		search_result.delta = p_width * p_height;
+
 		pixel_range_t r = {};
 
 		auto const check_min_delta = [&](u32 x, u32 y)
@@ -209,14 +250,11 @@ namespace libimage
 			r.y_begin = y;
 			r.y_end = y + p_height;
 
-			auto v = sub_view(search_view, r);
+			auto delta = edge_delta(sub_view(search_view, r), pattern);
 
-			auto delta = edge_delta(v, pattern);
-
-			if (delta < min_delta)
+			if (delta < search_result.delta)
 			{
-				min_delta = delta;
-				search_result = v;
+				search_result = { x, y, delta };
 			}
 		};
 
@@ -226,23 +264,7 @@ namespace libimage
 	}
 	
 	
-	typedef struct
-	{
-		u32 contrast_low;
-		u32 contrast_high;
-
-		u8 edge_gradient_min;
-		u8 edge_gradient_max;
-
-		gray::view_t contrast;
-		gray::view_t blur;
-		gray::view_t grad;
-		gray::view_t edges;
-
-	} locate_props_t;
-
-
-	gray::view_t locate_one(gray::view_t const& view, gray::view_t const& pattern, locate_props_t const& props)
+	locate_result_t locate_one(gray::view_t const& view, gray::view_t const& pattern, locate_props_t& props)
 	{
 		u32 const v_width = view.width;
 		u32 const v_height = view.height;
@@ -256,37 +278,42 @@ namespace libimage
 		par::blur(props.contrast, props.blur);
 		q_gradient(props.blur, props.grad);
 
-		u8 edge_gradient_range = props.edge_gradient_max - props.edge_gradient_min;
-		for (u8 i = 0; i < edge_gradient_range; ++i)
+		props.threshold_results = { 0 };
+
+		auto const g_begin = props.grad.begin();
+		auto const g_end = props.grad.end();
+		auto const g_max = std::max_element(std::execution::par, g_begin, g_end);
+
+		u8 edge_gradient_range = *g_max - props.edge_gradient_min;
+
+		u32 th_begin = static_cast<u32>(props.edge_gradient_min);
+		u32 th_end = static_cast<u32>(*g_max + 1);
+		u32_range_t thresh_range(th_begin, th_end);
+
+		auto const th_result = [&](u32 t) 
 		{
-			u8 threshold = props.edge_gradient_min + i;
-			par::binarize(props.grad, props.edges, [&](u8 p) { return p >= threshold; });
-
+			par::binarize(props.grad, props.edges, [&](u8 p) { return p >= t; });
 			auto search_view = trim(props.edges);
+			if (search_view.width > p_width || search_view.height > p_height) {	return; }
 
-			// no match found?
-			assert(search_view.width > p_width);
-			assert(search_view.height > p_height);
-		}
+			props.threshold_results[t] = search(search_view, pattern);
+		};
 
-		
+		std::for_each(std::execution::par, thresh_range.begin(), thresh_range.end(), th_result);
 
-		
+		auto const res_begin = props.threshold_results.begin();
+		auto const res_end = props.threshold_results.end();
+		auto const res_compare = [](auto const& lhs, auto const& rhs) { return lhs.delta < rhs.delta; };
+		auto result_min = std::min_element(std::execution::par, res_begin, res_end, res_compare);
 
-		return search(search_view, pattern);
+		return *result_min;
 	}
 
 
-	static bool verify(view_list_t const& views)
-	{
-		auto w = std::all_of(std::execution::par, views.begin(), views.end(), [&](auto const& v) { return v.width == views[0].width; });
-		auto h = std::all_of(std::execution::par, views.begin(), views.end(), [&](auto const& v) { return v.height == views[0].height; });
-
-		return w && h;
-	}
+	
 
 
-	view_list_t locate_many(view_list_t const& views, gray::view_t const& pattern)
+	result_list_t locate_many(view_list_t const& views, gray::view_t const& pattern)
 	{
 		assert(views.size());		
 		assert(verify(views));
@@ -302,7 +329,7 @@ namespace libimage
 		gray::image_t edges;
 
 		locate_props_t props = {};
-		props.edge_gradient_threshold = 128;
+		props.edge_gradient_min = 10;
 		props.contrast_low = 10;
 		props.contrast_high = 150;
 
@@ -322,7 +349,7 @@ namespace libimage
 
 		// get best matches
 		u32_range_t view_ids(0u, v_size);
-		view_list_t results(v_size);
+		result_list_t results(v_size);
 		auto const locate = [&](u32 i) { results[i] = locate_one(views[i], pattern, props); };
 		std::for_each(std::execution::par, view_ids.begin(), view_ids.end(), locate);
 
