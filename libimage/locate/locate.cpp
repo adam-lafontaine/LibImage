@@ -11,17 +11,12 @@
 #include <vector>
 #include <limits>
 
-
-// outer pixels of edges src are ignored
-constexpr u32 GRADIENT_OFFSET = 1;
-constexpr u32 DELTA_DIM = 2 * GRADIENT_OFFSET;
-constexpr u32 map_to_src(u32 dst_i) { return dst_i + GRADIENT_OFFSET; }
-
 constexpr u32 U32_NOT_SET = UINT32_MAX;
 
 namespace libimage
 {
 	using view_list_t = std::vector<gray::view_t>;
+	using image_list_t = std::vector<gray::image_t>;
 
 	typedef struct
 	{
@@ -39,12 +34,11 @@ namespace libimage
 		u32 contrast_high;
 
 		u8 edge_gradient_min;
-		u8 edge_gradient_max;
 
-		gray::view_t contrast;
-		gray::view_t blur;
-		gray::view_t grad;
-		gray::view_t edges;
+		/*view_list_t contrast;
+		view_list_t blur;
+		view_list_t gradient;
+		view_list_t edges;*/
 
 		std::array<locate_result_t, 256> threshold_results; // SOA?
 
@@ -60,81 +54,74 @@ namespace libimage
 	}
 
 
-	static gray::view_t make_gradient_view(gray::image_t& image, u32 src_width, u32 src_height)
+	static bool verify(gray::view_t const& view)
 	{
-		return make_view(image, src_width - GRADIENT_OFFSET, src_height - GRADIENT_OFFSET);
+		return view.image_data && view.width && view.height;
+	}
+
+
+	static bool verify(gray::view_t const& src, gray::view_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
 	}
 
 
 	static void q_edges(gray::view_t const& src, gray::view_t const& dst, u8 threshold)
 	{
-		u32 const src_w = src.width;
-		u32 const src_h = src.height;
-		u32 const dst_w = dst.width;
-		u32 const dst_h = dst.height;
+		verify(src, dst);
 
-		// outer edge pixels of src are ignored
-		assert(src_w - dst_w == DELTA_DIM);
-		assert(src_h - dst_h == DELTA_DIM);
+		u32 const width = src.width;
+		u32 const height = src.height;
 
-		u32_range_t dst_x_ids(0u, src_w);
-		u32_range_t dst_y_ids(0u, src_h);
+		u32_range_t x_ids(0u, width);
+		u32_range_t y_ids(0u, height);
 
-		auto const grad_row = [&](u32 dst_y)
+		auto const grad_row = [&](u32 y)
 		{
-			auto dst_row = dst.row_begin(dst_y);
+			auto dst_row = dst.row_begin(y);
 
-			auto const grad_x = [&](u32 dst_x)
+			auto const grad_x = [&](u32 x)
 			{
-				auto src_x = map_to_src(dst_x);
-				auto src_y = map_to_src(dst_y);
-				auto gx = x_gradient(src, src_x, src_y);
-				auto gy = y_gradient(src, src_x, src_y);
+				auto gx = x_gradient(src, x, y);
+				auto gy = y_gradient(src, x, y);
 				auto g = std::hypot(gx, gy);
-				dst_row[dst_x] = g < threshold ? 0 : 255;
+				dst_row[x] = g < threshold ? 0 : 255;
 			};
 
-			std::for_each(std::execution::par, dst_x_ids.begin(), dst_x_ids.end(), grad_x);
+			std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), grad_x);
 		};
 
-		std::for_each(std::execution::par, dst_y_ids.begin(), dst_y_ids.end(), grad_row);
+		std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), grad_row);
 	}
 
 
 	static void q_gradient(gray::view_t const& src, gray::view_t const& dst)
 	{
-		u32 const src_w = src.width;
-		u32 const src_h = src.height;
-		u32 const dst_w = dst.width;
-		u32 const dst_h = dst.height;
+		verify(src, dst);
 
-		// outer edge pixels of src are ignored
-		assert(src_w - dst_w == DELTA_DIM);
-		assert(src_h - dst_h == DELTA_DIM);
+		u32 const width = src.width;
+		u32 const height = src.height;
 
-		u32_range_t dst_x_ids(0u, src_w);
-		u32_range_t dst_y_ids(0u, src_h);
+		u32_range_t x_ids(0u, width);
+		u32_range_t y_ids(0u, height);
 
-		auto const grad_row = [&](u32 dst_y)
+		auto const grad_row = [&](u32 y)
 		{
-			auto dst_row = dst.row_begin(dst_y);
+			auto dst_row = dst.row_begin(y);
 
-			auto const grad_x = [&](u32 dst_x)
+			auto const grad_x = [&](u32 x)
 			{
-				auto src_x = map_to_src(dst_x);
-				auto src_y = map_to_src(dst_y);
-
-				auto gx = x_gradient(src, src_x, src_y);
-				auto gy = y_gradient(src, src_x, src_y);
-
+				auto gx = x_gradient(src, x, y);
+				auto gy = y_gradient(src, x, y);
+				
 				auto g = static_cast<u8>(std::hypot(gx, gy));
-				dst_row[dst_x] = g;
+				dst_row[x] = g;
 			};
 
-			std::for_each(std::execution::par, dst_x_ids.begin(), dst_x_ids.end(), grad_x);
+			std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), grad_x);
 		};
 
-		std::for_each(std::execution::par, dst_y_ids.begin(), dst_y_ids.end(), grad_row);
+		std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), grad_row);
 	}
 
 
@@ -264,8 +251,11 @@ namespace libimage
 	}
 	
 	
-	locate_result_t locate_one(gray::view_t const& view, gray::view_t const& pattern, locate_props_t& props)
+	locate_result_t locate_one(gray::view_t const& view, gray::view_t const& pattern, locate_props_t& props, gray::view_t& v1, gray::view_t& v2)
 	{
+		verify(view, v1);
+		verify(view, v2);
+
 		u32 const v_width = view.width;
 		u32 const v_height = view.height;
 		u32 const p_width = pattern.width;
@@ -274,15 +264,16 @@ namespace libimage
 		assert(p_width < v_width);
 		assert(p_height < v_height);
 		
-		par::transform_contrast(view, props.contrast, props.contrast_low, props.contrast_high);
-		par::blur(props.contrast, props.blur);
-		q_gradient(props.blur, props.grad);
+		par::transform_contrast(view, v1, props.contrast_low, props.contrast_high);
+		par::blur(v1, v2);
+		q_gradient(v2, v1);
+
+		auto& grad = v1;
+		auto& edges = v2;
 
 		props.threshold_results = { 0 };
 
-		auto const g_begin = props.grad.begin();
-		auto const g_end = props.grad.end();
-		auto const g_max = std::max_element(std::execution::par, g_begin, g_end);
+		auto const g_max = std::max_element(std::execution::par, grad.begin(), grad.end());
 
 		u8 edge_gradient_range = *g_max - props.edge_gradient_min;
 
@@ -292,11 +283,9 @@ namespace libimage
 
 		auto const th_result = [&](u32 t) 
 		{
-			par::binarize(props.grad, props.edges, [&](u8 p) { return p >= t; });
-			auto search_view = trim(props.edges);
-			if (search_view.width > p_width || search_view.height > p_height) {	return; }
-
-			props.threshold_results[t] = search(search_view, pattern);
+			par::binarize(grad, edges, [&](u8 p) { return p >= t; });
+			
+			props.threshold_results[t] = search(edges, pattern);
 		};
 
 		std::for_each(std::execution::par, thresh_range.begin(), thresh_range.end(), th_result);
@@ -310,23 +299,44 @@ namespace libimage
 	}
 
 
-	
+	view_list_t make_views(image_list_t& images, u32 width, u32 height)
+	{
+		assert(images.size());
+
+		view_list_t views(images.size());
+
+		u32_range_t ids(0u, static_cast<u32>(images.size()));
+
+		auto const make = [&](u32 id) { views[id] = make_view(images[id], width, height); };
+		std::for_each(std::execution::par, ids.begin(), ids.end(), make);
+
+		return views;
+	}
+
+
+	static void destroy_images(image_list_t const& images)
+	{
+		assert(images.size());
+
+		auto const destroy = [](auto const& image) { image.clear(); };
+		std::for_each(std::execution::par, images.begin(), images.end(), destroy);
+	}
 
 
 	result_list_t locate_many(view_list_t const& views, gray::view_t const& pattern)
 	{
-		assert(views.size());		
+		assert(views.size());
 		assert(verify(views));
 
-		auto& v_first = views[0];
-
-		u32 const v_width = v_first.width;
-		u32 const v_height = v_first.height;
+		u32 const v_width = views[0].width;
+		u32 const v_height = views[0].height;
 		u32 const v_size = static_cast<u32>(views.size());
 
-		gray::image_t contrast;
-		gray::image_t blur;
-		gray::image_t edges;
+		// scratch memory for parallel image calculations
+		image_list_t img_a(views.size());
+		image_list_t img_b(views.size());
+		view_list_t view_a;
+		view_list_t view_b;
 
 		locate_props_t props = {};
 		props.edge_gradient_min = 10;
@@ -334,34 +344,65 @@ namespace libimage
 		props.contrast_high = 150;
 
 		using func_t = std::function<void()>;
+		using func_list_t = std::array<func_t, 2>;
+
+		auto const execute = [](func_t const& f) { f(); };
+		
+		func_list_t create // TODO: together
+		{
+			[&]() { view_a = make_views(img_a, v_width, v_height); },
+			[&]() { view_b = make_views(img_b, v_width, v_height); },
+		};
+
+		func_list_t destroy
+		{
+			[&]() { destroy_images(img_a); },
+			[&]() { destroy_images(img_b); },
+		};
+
+		u32_range_t view_ids(0u, v_size);
+		result_list_t results(v_size);
+		auto const locate = [&](u32 i) { results[i] = locate_one(views[i], pattern, props, view_a[i], view_b[i]); };
+
+		// allocate memory on separate threads
+		std::for_each(std::execution::par, create.begin(), create.end(), execute);
+
+		// get best matches		
+		std::for_each(std::execution::par, view_ids.begin(), view_ids.end(), locate);
+
+		// free memory on separate threads		
+		std::for_each(std::execution::par, destroy.begin(), destroy.end(), execute);
+
+		return results;
+	}
+
+
+	void set_template(view_list_t const& views, gray::image_t& dst)
+	{
+		// edge gradient where all gradient views are most alike
+
+		assert(views.size());
+		assert(verify(views));
+
+		u32 v_size = views.size();
+		u32 const width = views[0].width;
+		u32 const height = views[0].height;
+
+		auto pattern = make_view(dst, width, height);
+
+		using func_t = std::function<void()>;
 		using func_list_t = std::array<func_t, 3>;
 
 		auto const execute = [](func_t const& f) { f(); };
 
-		// allocate memory on separate threads
-		func_list_t allocate
-		{
-			[&]() { props.contrast = make_view(contrast, v_width, v_height); },
-			[&]() { props.blur = make_view(blur, v_width, v_height); },
-			[&]() { props.edges = make_gradient_view(edges, v_width, v_height); }
-		};
-		std::for_each(std::execution::par, allocate.begin(), allocate.end(), execute);
+		image_list_t contrast(v_size);
+		image_list_t blur(v_size);
+		image_list_t edges(v_size);
 
-		// get best matches
-		u32_range_t view_ids(0u, v_size);
-		result_list_t results(v_size);
-		auto const locate = [&](u32 i) { results[i] = locate_one(views[i], pattern, props); };
-		std::for_each(std::execution::par, view_ids.begin(), view_ids.end(), locate);
+		view_list_t contrast_v(v_size);
+		view_list_t blur_v(v_size);
+		view_list_t edges_v(v_size);
 
-		// free memory on separate threads
-		func_list_t destroy
-		{
-			[&]() { contrast.clear(); },
-			[&]() { blur.clear(); },
-			[&]() { edges.clear(); }
-		};
-		std::for_each(std::execution::par, destroy.begin(), destroy.end(), execute);
-
-		return results;
+		auto const allocate = [](auto& v) {  };
 	}
 }
