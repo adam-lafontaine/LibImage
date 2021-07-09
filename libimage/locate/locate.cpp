@@ -18,7 +18,7 @@ namespace libimage
 	using view_list_t = std::vector<gray::view_t>;
 	using image_list_t = std::vector<gray::image_t>;
 
-	typedef struct
+	typedef struct LocateResult
 	{
 		u32 x = U32_NOT_SET;
 		u32 y = U32_NOT_SET;
@@ -72,14 +72,14 @@ namespace libimage
 		{
 			auto dst_top = row_view(dst, 0);
 
-			par::transform(dst_top, zero);
+			transform(dst_top, zero);
 		};
 
 		auto const zero_bottom = [&]()
 		{
 			auto dst_bottom = row_view(dst, height - 1);
 
-			par::transform(dst_bottom, zero);
+			transform(dst_bottom, zero);
 		};
 
 		auto const zero_left = [&]()
@@ -91,7 +91,7 @@ namespace libimage
 			r.y_end = height - 1;
 			auto dst_left = sub_view(dst, r);
 
-			par::transform(dst_left, zero);
+			transform(dst_left, zero);
 		};
 
 		auto const zero_right = [&]()
@@ -103,7 +103,7 @@ namespace libimage
 			r.y_end = height - 1;
 			auto dst_right = sub_view(dst, r);
 
-			par::transform(dst_right, zero);
+			transform(dst_right, zero);
 		};
 
 		// get gradient magnitude of inner pixels
@@ -288,8 +288,8 @@ namespace libimage
 		assert(p_width < v_width);
 		assert(p_height < v_height);
 		
-		par::transform_contrast(view, v1, props.contrast_low, props.contrast_high);
-		par::blur(v1, v2);
+		transform_contrast(view, v1, props.contrast_low, props.contrast_high);
+		blur(v1, v2);
 		q_gradient(v2, v1);
 
 		auto& grad = v1;
@@ -309,7 +309,7 @@ namespace libimage
 
 		for (u32 th = th_begin; th < th_end; ++th)
 		{
-			par::binarize(grad, edges, th);
+			binarize(grad, edges, th);
 
 			auto res = search_edges(edges, pattern);
 			if (res.delta < res_min.delta)
@@ -337,11 +337,11 @@ namespace libimage
 	}
 
 
-	static void destroy_images(image_list_t const& images)
+	static void destroy_images(image_list_t& images)
 	{
 		assert(images.size());
 
-		auto const destroy = [](auto const& image) { image.clear(); };
+		auto const destroy = [](auto& image) { image.clear(); };
 		std::for_each(std::execution::par, images.begin(), images.end(), destroy);
 	}
 
@@ -410,16 +410,10 @@ namespace libimage
 		assert(views.size());
 		assert(verify(views));
 
-		u32 v_size = views.size();
 		u32 const width = views[0].width;
 		u32 const height = views[0].height;
 
 		auto pattern = make_view(dst, width, height);
-
-		using func_t = std::function<void()>;
-		using func_list_t = std::array<func_t, 2>;
-
-		auto const execute = [](func_t const& f) { f(); };
 
 		// scratch memory for parallel image calculations
 		image_list_t img_a(views.size());

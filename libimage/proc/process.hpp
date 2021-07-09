@@ -59,6 +59,8 @@ namespace libimage
 
 	void edges(gray::view_t const& src, gray::view_t const& dst, u8 threshold);
 
+	void gradient(gray::view_t const& src, gray::view_t const& dst);
+
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
 
@@ -73,7 +75,7 @@ namespace libimage
 #endif // !LIBIMAGE_NO_COLOR	
 
 
-	namespace par
+	namespace seq
 	{
 #ifndef LIBIMAGE_NO_COLOR
 
