@@ -41,11 +41,7 @@ namespace libimage
 	static constexpr u8 rgb_grayscale_standard(u8 red, u8 green, u8 blue)
 	{
 		return static_cast<u8>(0.299 * red + 0.587 * green + 0.114 * blue);
-	}
-
-
-
-	
+	}	
 	
 	
 
@@ -145,6 +141,18 @@ namespace libimage
 		return q_inv_sqrt(inv_mean);
 	}
 
+
+	static std::array<u8, 256> to_lookup_table(u8_to_u8_f const& func)
+	{
+		std::array<u8, 256> lut = { 0 };
+
+		u32_range_t ids(0u, 256u);
+
+		std::for_each(std::execution::par, ids.begin(), ids.end(), [&](u32 id) { lut[id] = func(id); });
+
+		return lut;
+	}
+
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
 
@@ -210,6 +218,9 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
+		auto const lut = to_lookup_table(func);
+		auto const conv = [&lut](u8 p) { return lut[p]; };
+
 		std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
 	}
 
@@ -218,7 +229,9 @@ namespace libimage
 	{
 		assert(verify(src));
 
-		auto const conv = [&](u8& p) { p = func(p); };
+		auto const lut = to_lookup_table(func);
+		auto const conv = [&func](u8& p) { p = func(p); };
+
 		std::for_each(std::execution::par, src.begin(), src.end(), conv);
 	}
 
@@ -727,11 +740,27 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
+		static std::array<u8, 256> to_lookup_table(u8_to_u8_f const& func)
+		{
+			std::array<u8, 256> lut = { 0 };
+
+			u32_range_t ids(0u, 256u);
+
+			std::for_each(ids.begin(), ids.end(), [&](u32 id) { lut[id] = func(id); });
+
+			return lut;
+		}
+
+
+
 		void transform(gray::view_t const& src, gray::view_t const& dst, u8_to_u8_f const& func)
 		{
 			assert(verify(src, dst));
 
-			std::transform(src.begin(), src.end(), dst.begin(), func);
+			auto const lut = to_lookup_table(func);
+			auto const conv = [&lut](u8 p) { return lut[p]; };
+
+			std::transform(src.begin(), src.end(), dst.begin(), conv);
 		}
 
 
@@ -739,7 +768,9 @@ namespace libimage
 		{
 			assert(verify(src));
 
-			auto const conv = [&](u8& p) { p = func(p); };
+			auto const lut = to_lookup_table(func);
+			auto const conv = [&lut](u8& p) { p = lut[p]; };
+
 			std::for_each(src.begin(), src.end(), conv);
 		}
 
