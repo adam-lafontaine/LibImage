@@ -35,13 +35,6 @@ namespace libimage
 
 		u8 edge_gradient_min;
 
-		/*view_list_t contrast;
-		view_list_t blur;
-		view_list_t gradient;
-		view_list_t edges;*/
-
-		std::array<locate_result_t, 256> threshold_results; // SOA?
-
 	} locate_props_t;
 
 
@@ -66,15 +59,61 @@ namespace libimage
 	}
 
 
-	static void q_edges(gray::view_t const& src, gray::view_t const& dst, u8 threshold)
+	static void q_gradient(gray::view_t const& src, gray::view_t const& dst)
 	{
-		verify(src, dst);
+		assert(verify(src, dst));
 
-		u32 const width = src.width;
-		u32 const height = src.height;
+		auto const width = src.width;
+		auto const height = src.height;
 
-		u32_range_t x_ids(0u, width);
-		u32_range_t y_ids(0u, height);
+		auto const zero = [](u8 p) { return static_cast<u8>(0); };
+
+		auto const zero_top = [&]()
+		{
+			auto dst_top = row_view(dst, 0);
+
+			par::transform(dst_top, zero);
+		};
+
+		auto const zero_bottom = [&]()
+		{
+			auto dst_bottom = row_view(dst, height - 1);
+
+			par::transform(dst_bottom, zero);
+		};
+
+		auto const zero_left = [&]()
+		{
+			pixel_range_t r = {};
+			r.x_begin = 0;
+			r.x_end = 1;
+			r.y_begin = 1;
+			r.y_end = height - 1;
+			auto dst_left = sub_view(dst, r);
+
+			par::transform(dst_left, zero);
+		};
+
+		auto const zero_right = [&]()
+		{
+			pixel_range_t r = {};
+			r.x_begin = width - 1;
+			r.x_end = width;
+			r.y_begin = 1;
+			r.y_end = height - 1;
+			auto dst_right = sub_view(dst, r);
+
+			par::transform(dst_right, zero);
+		};
+
+		// get gradient magnitude of inner pixels
+		u32 const x_begin = 1;
+		u32 const x_end = width - 1;
+		u32_range_t x_ids(x_begin, x_end);
+
+		u32 const y_begin = 1;
+		u32 const y_end = height - 1;
+		u32_range_t y_ids(y_begin, y_end);
 
 		auto const grad_row = [&](u32 y)
 		{
@@ -85,43 +124,29 @@ namespace libimage
 				auto gx = x_gradient(src, x, y);
 				auto gy = y_gradient(src, x, y);
 				auto g = std::hypot(gx, gy);
-				dst_row[x] = g < threshold ? 0 : 255;
+				dst_row[x] = static_cast<u8>(g);
 			};
 
 			std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), grad_x);
 		};
 
-		std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), grad_row);
-	}
-
-
-	static void q_gradient(gray::view_t const& src, gray::view_t const& dst)
-	{
-		verify(src, dst);
-
-		u32 const width = src.width;
-		u32 const height = src.height;
-
-		u32_range_t x_ids(0u, width);
-		u32_range_t y_ids(0u, height);
-
-		auto const grad_row = [&](u32 y)
+		auto const gradients_inner = [&]()
 		{
-			auto dst_row = dst.row_begin(y);
-
-			auto const grad_x = [&](u32 x)
-			{
-				auto gx = x_gradient(src, x, y);
-				auto gy = y_gradient(src, x, y);
-				
-				auto g = static_cast<u8>(std::hypot(gx, gy));
-				dst_row[x] = g;
-			};
-
-			std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), grad_x);
+			std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), grad_row);
 		};
 
-		std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), grad_row);
+		// put the lambdas in an array
+		std::array<std::function<void()>, 5> f_list
+		{
+			zero_top,
+			zero_bottom,
+			zero_left,
+			zero_right,
+			gradients_inner
+		};
+
+		// finally execute everything
+		std::for_each(std::execution::par, f_list.begin(), f_list.end(), [](auto const& f) { f(); });
 	}
 
 
@@ -220,13 +245,12 @@ namespace libimage
 	}
 
 	
-	locate_result_t search(gray::view_t const& search_view, gray::view_t const& pattern)
+	locate_result_t search_edges(gray::view_t const& search_view, gray::view_t const& pattern)
 	{
 		u32 const p_width = pattern.width;
 		u32 const p_height = pattern.height;
 
-		locate_result_t search_result = {};
-		search_result.delta = p_width * p_height;
+		locate_result_t search_result;
 
 		pixel_range_t r = {};
 
@@ -271,31 +295,30 @@ namespace libimage
 		auto& grad = v1;
 		auto& edges = v2;
 
-		props.threshold_results = { 0 };
-
 		auto const g_max = std::max_element(std::execution::par, grad.begin(), grad.end());
-
-		u8 edge_gradient_range = *g_max - props.edge_gradient_min;
 
 		u32 th_begin = static_cast<u32>(props.edge_gradient_min);
 		u32 th_end = static_cast<u32>(*g_max + 1);
-		u32_range_t thresh_range(th_begin, th_end);
 
-		auto const th_result = [&](u32 t) 
+		locate_result_t res_min;
+
+		if (th_begin > th_end)
 		{
-			par::binarize(grad, edges, [&](u8 p) { return p >= t; });
-			
-			props.threshold_results[t] = search(edges, pattern);
-		};
+			th_begin = 0;
+		}
 
-		std::for_each(std::execution::par, thresh_range.begin(), thresh_range.end(), th_result);
+		for (u32 th = th_begin; th < th_end; ++th)
+		{
+			par::binarize(grad, edges, th);
 
-		auto const res_begin = props.threshold_results.begin();
-		auto const res_end = props.threshold_results.end();
-		auto const res_compare = [](auto const& lhs, auto const& rhs) { return lhs.delta < rhs.delta; };
-		auto result_min = std::min_element(std::execution::par, res_begin, res_end, res_compare);
+			auto res = search_edges(edges, pattern);
+			if (res.delta < res_min.delta)
+			{
+				res_min = res;
+			}
+		}
 
-		return *result_min;
+		return res_min;
 	}
 
 
@@ -377,6 +400,9 @@ namespace libimage
 	}
 
 
+
+
+
 	void set_template(view_list_t const& views, gray::image_t& dst)
 	{
 		// edge gradient where all gradient views are most alike
@@ -391,18 +417,41 @@ namespace libimage
 		auto pattern = make_view(dst, width, height);
 
 		using func_t = std::function<void()>;
-		using func_list_t = std::array<func_t, 3>;
+		using func_list_t = std::array<func_t, 2>;
 
 		auto const execute = [](func_t const& f) { f(); };
 
-		image_list_t contrast(v_size);
-		image_list_t blur(v_size);
-		image_list_t edges(v_size);
+		// scratch memory for parallel image calculations
+		image_list_t img_a(views.size());
+		image_list_t img_b(views.size());
+		view_list_t view_a;
+		view_list_t view_b;
 
-		view_list_t contrast_v(v_size);
-		view_list_t blur_v(v_size);
-		view_list_t edges_v(v_size);
+		using func_t = std::function<void()>;
+		using func_list_t = std::array<func_t, 2>;
 
-		auto const allocate = [](auto& v) {  };
+		auto const execute = [](func_t const& f) { f(); };
+
+		func_list_t create // TODO: together
+		{
+			[&]() { view_a = make_views(img_a, width, height); },
+			[&]() { view_b = make_views(img_b, width, height); },
+		};
+
+		func_list_t destroy
+		{
+			[&]() { destroy_images(img_a); },
+			[&]() { destroy_images(img_b); },
+		};
+
+
+		// allocate memory on separate threads
+		std::for_each(std::execution::par, create.begin(), create.end(), execute);
+
+
+
+
+		// free memory on separate threads		
+		std::for_each(std::execution::par, destroy.begin(), destroy.end(), execute);
 	}
 }
