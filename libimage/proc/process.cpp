@@ -752,7 +752,6 @@ namespace libimage
 		}
 
 
-
 		void transform(gray::view_t const& src, gray::view_t const& dst, u8_to_u8_f const& func)
 		{
 			assert(verify(src, dst));

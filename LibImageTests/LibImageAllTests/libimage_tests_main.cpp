@@ -513,8 +513,20 @@ void process_tests(fs::path const& out_dir)
 
 	//blur
 	img::blur(src_gray_view, dst_gray_view);
-	img::write_image(dst_gray_image, out_dir / "blur.png");
-	
+	img::write_image(dst_gray_image, out_dir / "blur.png");	
+
+	// edge detection
+	/*GrayImage contrast_gray;
+	auto contrast_gray_view = img::make_view(contrast_gray, width, height);
+	img::transform_contrast(src_gray_view, contrast_gray_view, shade_min, shade_max);
+	img::edges(contrast_gray_view, dst_gray_view, 100);*/
+	img::edges(src_gray_view, dst_gray_view, 150);
+	img::write_image(dst_gray_image, out_dir / "edges.png");
+
+	// gradient
+	img::gradient(src_gray_view, dst_gray_view);
+	img::write_image(dst_gray_image, out_dir / "gradient.png");
+
 	// combine transformations in the same image
 	// regular grayscale to start
 	img::copy(src_gray_view, dst_gray_view);
@@ -540,28 +552,16 @@ void process_tests(fs::path const& out_dir)
 	range.y_end = height;
 	src_sub = img::sub_view(src_gray_view, range);
 	dst_sub = img::sub_view(dst_gray_view, range);
-	auto const is_black = [&](u8 p) { return static_cast<r32>(p) < gray_stats.mean; };
-	img::binarize(src_sub, dst_sub, is_black);
+	img::blur(src_sub, dst_sub);	
 
 	range.x_begin = width / 2;
 	range.x_end = width;
 	src_sub = img::sub_view(src_gray_view, range);
 	dst_sub = img::sub_view(dst_gray_view, range);
-	img::blur(src_sub, dst_sub);
-	
+	img::gradient(src_sub, dst_sub);
+
 	img::write_image(dst_gray_image, out_dir / "combo.png");
 
-	// edge detection
-	/*GrayImage contrast_gray;
-	auto contrast_gray_view = img::make_view(contrast_gray, width, height);
-	img::transform_contrast(src_gray_view, contrast_gray_view, shade_min, shade_max);
-	img::edges(contrast_gray_view, dst_gray_view, 100);*/
-	img::edges(src_gray_view, dst_gray_view, 150);
-	img::write_image(dst_gray_image, out_dir / "edges.png");
-
-	// gradient
-	img::gradient(src_gray_view, dst_gray_view);
-	img::write_image(dst_gray_image, out_dir / "gradient.png");
 
 	// compare edge detection speeds
 	auto green = img::to_pixel(88, 100, 29);

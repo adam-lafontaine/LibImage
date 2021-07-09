@@ -322,7 +322,7 @@ namespace libimage
 	}
 
 
-	view_list_t make_views(image_list_t& images, u32 width, u32 height)
+	static view_list_t make_views(image_list_t& images, u32 width, u32 height)
 	{
 		assert(images.size());
 
