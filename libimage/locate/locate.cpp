@@ -247,29 +247,38 @@ namespace libimage
 	
 	locate_result_t search_edges(gray::view_t const& search_view, gray::view_t const& pattern)
 	{
+		u32 const v_width = search_view.width;
+		u32 const v_height = search_view.height;
 		u32 const p_width = pattern.width;
 		u32 const p_height = pattern.height;
+
+		assert(p_width <= v_width);
+		assert(p_height <= v_height);
 
 		locate_result_t search_result;
 
 		pixel_range_t r = {};
 
-		auto const check_min_delta = [&](u32 x, u32 y)
+		auto const x_end = v_width - p_width;
+		auto const y_end = v_height - p_height;
+
+		for (u32 y = 0; y < y_end; ++y)
 		{
-			r.x_begin = x;
-			r.x_end = x + p_width;
 			r.y_begin = y;
 			r.y_end = y + p_height;
-
-			auto delta = edge_delta(sub_view(search_view, r), pattern);
-
-			if (delta < search_result.delta)
+			for (u32 x = 0; x < x_end; ++x)
 			{
-				search_result = { x, y, delta };
-			}
-		};
+				r.x_begin = x;
+				r.x_end = x + p_width;				
 
-		for_each_xy(search_view, check_min_delta);
+				auto delta = edge_delta(sub_view(search_view, r), pattern);
+
+				if (delta < search_result.delta)
+				{
+					search_result = { x, y, delta };
+				}
+			}
+		}
 
 		return search_result;
 	}
