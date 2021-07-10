@@ -117,7 +117,7 @@ namespace libimage
 			return row_begin(y) + x;
 		}
 
-		void clear()
+		void dispose()
 		{
 			if (data)
 			{
@@ -127,7 +127,7 @@ namespace libimage
 
 		~RGBAImage()
 		{
-			clear();
+			dispose();
 		}
 
 		rgba_pixel_t* begin() { return data; }

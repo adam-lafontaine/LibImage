@@ -29,6 +29,11 @@ namespace libimage
 
 	void read_image_from_file(const char* img_path_src, image_t& image_dst);
 
+	inline void read_image_from_file(fs::path const& img_path_src, image_t& image_dst)
+	{
+		read_image_from_file(img_path_src.string().c_str(), image_dst);
+	}
+
 	void make_image(image_t& image_dst, u32 width, u32 height);
 
 	view_t make_view(image_t const& image);
@@ -62,12 +67,7 @@ namespace libimage
 	void for_each_xy(image_t const& image, std::function<void(u32 x, u32 y)> const& func);
 
 	void for_each_xy(view_t const& view, std::function<void(u32 x, u32 y)> const& func);
-
-
-	inline void read_image_from_file(fs::path const& img_path_src, image_t& image_dst)
-	{
-		read_image_from_file(img_path_src.string().c_str(), image_dst);
-	}
+	
 
 #ifndef LIBIMAGE_NO_WRITE
 
@@ -75,12 +75,10 @@ namespace libimage
 
 	void write_view(view_t const& view_src, const char* file_path_dst);
 
-
 	inline void write_image(image_t const& image_src, fs::path const& file_path)
 	{
 		write_image(image_src, file_path.string().c_str());
 	}
-
 
 	inline void write_view(view_t const& view_src, fs::path const& file_path)
 	{
@@ -104,6 +102,11 @@ namespace libimage
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
 	void read_image_from_file(const char* file_path_src, gray::image_t& image_dst);
+
+	inline void read_image_from_file(fs::path const& img_path_src, gray::image_t& image_dst)
+	{
+		return read_image_from_file(img_path_src.string().c_str(), image_dst);
+	}
 
 	void make_image(gray::image_t& image_dst, u32 width, u32 height);
 
@@ -138,12 +141,7 @@ namespace libimage
 	void for_each_xy(gray::image_t const& image, std::function<void(u32 x, u32 y)> const& func);
 
 	void for_each_xy(gray::view_t const& view, std::function<void(u32 x, u32 y)> const& func);
-
-
-	inline void read_image_from_file(fs::path const& img_path_src, gray::image_t& image_dst)
-	{
-		return read_image_from_file(img_path_src.string().c_str(), image_dst);
-	}
+	
 
 #ifndef LIBIMAGE_NO_WRITE
 
@@ -151,12 +149,10 @@ namespace libimage
 
 	void write_view(gray::view_t const& view_src, const char* file_path_dst);
 
-
 	inline void write_image(gray::image_t const& image_src, fs::path const& file_path_dst)
 	{
 		write_image(image_src, file_path_dst.string().c_str());
 	}
-
 
 	inline void write_view(gray::view_t const& view_src, fs::path const& file_path_dst)
 	{

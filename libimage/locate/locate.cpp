@@ -347,7 +347,7 @@ namespace libimage
 	{
 		assert(images.size());
 
-		auto const destroy = [](auto& image) { image.clear(); };
+		auto const destroy = [](auto& image) { image.dispose(); };
 		std::for_each(std::execution::par, images.begin(), images.end(), destroy);
 	}
 

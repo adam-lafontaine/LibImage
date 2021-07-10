@@ -42,7 +42,7 @@ namespace libimage
 				return row_begin(y) + x;
 			}
 
-			void clear()
+			void dispose()
 			{
 				if (data)
 				{
@@ -52,7 +52,7 @@ namespace libimage
 
 			~Image()
 			{
-				clear();
+				dispose();
 			}
 
 
@@ -326,7 +326,6 @@ namespace libimage
 
 			iterator end() const { return iterator(*this).end(); }
 		};
-
 
 
 		using image_t = Image;
