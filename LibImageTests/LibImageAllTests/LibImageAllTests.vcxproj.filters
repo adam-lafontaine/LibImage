@@ -40,6 +40,12 @@
     <Filter Include="Header Files\utils">
       <UniqueIdentifier>{7dfd7b2a-b4db-429b-93a0-9e73da4d769f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\libimage\locate">
+      <UniqueIdentifier>{90be5463-b960-42e6-b2cf-0e5aa20e0830}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\libimage\locate">
+      <UniqueIdentifier>{8dffc2b0-1b8c-4480-91bd-8b9f6a43cf77}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="libimage_tests_main.cpp">
@@ -59,6 +65,9 @@
     </ClCompile>
     <ClCompile Include="..\..\libimage\libimage.cpp">
       <Filter>Source Files\libimage</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libimage\locate\locate.cpp">
+      <Filter>Source Files\libimage\locate</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -85,6 +94,18 @@
     </ClInclude>
     <ClInclude Include="..\..\libimage\proc\index_range.hpp">
       <Filter>Header Files\libimage\proc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage\locate\locate.hpp">
+      <Filter>Header Files\libimage\locate</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage\types.hpp">
+      <Filter>Header Files\libimage</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage\rgba.hpp">
+      <Filter>Header Files\libimage</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage\gray.hpp">
+      <Filter>Header Files\libimage</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
