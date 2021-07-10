@@ -1,3 +1,7 @@
+
+// Experimental.
+// To be used in a separate machine learning libray
+
 #include "locate.hpp"
 #include "../proc/process.hpp"
 #include "../proc/index_range.hpp"
