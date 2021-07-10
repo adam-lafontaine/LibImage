@@ -98,5 +98,14 @@
     <ClInclude Include="..\..\libimage\locate\locate.hpp">
       <Filter>Header Files\libimage\locate</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\libimage\types.hpp">
+      <Filter>Header Files\libimage</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage\rgba.hpp">
+      <Filter>Header Files\libimage</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage\gray.hpp">
+      <Filter>Header Files\libimage</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

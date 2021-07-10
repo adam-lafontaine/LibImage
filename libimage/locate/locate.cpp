@@ -252,15 +252,12 @@ namespace libimage
 		u32 const p_width = pattern.width;
 		u32 const p_height = pattern.height;
 
-		assert(p_width <= v_width);
-		assert(p_height <= v_height);
-
 		locate_result_t search_result;
 
 		pixel_range_t r = {};
 
-		auto const x_end = v_width - p_width;
-		auto const y_end = v_height - p_height;
+		auto const x_end = v_width - p_width + 1;
+		auto const y_end = v_height - p_height + 1;
 
 		for (u32 y = 0; y < y_end; ++y)
 		{

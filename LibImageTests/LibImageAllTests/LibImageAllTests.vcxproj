@@ -152,9 +152,12 @@
     <ClCompile Include="libimage_tests_main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\libimage\gray.hpp" />
     <ClInclude Include="..\..\libimage\libimage.hpp" />
     <ClInclude Include="..\..\libimage\locate\locate.hpp" />
     <ClInclude Include="..\..\libimage\math\libimage_math.hpp" />
+    <ClInclude Include="..\..\libimage\rgba.hpp" />
+    <ClInclude Include="..\..\libimage\types.hpp" />
     <ClInclude Include="..\..\libimage\proc\convolve.hpp" />
     <ClInclude Include="..\..\libimage\proc\index_range.hpp" />
     <ClInclude Include="..\..\libimage\proc\process.hpp" />
