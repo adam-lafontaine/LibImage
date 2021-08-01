@@ -21,7 +21,7 @@ namespace libimage
 			u32 width = 0;
 			u32 height = 0;
 
-			pixel_t* data = 0;
+			pixel_t* data = nullptr;
 
 			pixel_t* row_begin(u32 y) const
 			{
@@ -44,9 +44,10 @@ namespace libimage
 
 			void dispose()
 			{
-				if (data)
+				if (data != nullptr)
 				{
 					free(data);
+					data = nullptr;
 				}
 			}
 
