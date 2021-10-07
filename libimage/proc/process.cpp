@@ -168,12 +168,14 @@ namespace libimage
 #endif // !LIBIMAGE_NO_COLOR
 
 
+	
+
+
 #ifndef LIBIMAGE_NO_COLOR
 
 	void copy(view_t const& src, view_t const& dst)
 	{
 		assert(verify(src, dst));
-
 		std::copy(std::execution::par, src.begin(), src.end(), dst.begin());
 	}
 
@@ -225,14 +227,14 @@ namespace libimage
 	}
 
 
-	void transform(gray::view_t const& src, u8_to_u8_f const& func)
+	void transform_self(gray::view_t const& src_dst, u8_to_u8_f const& func)
 	{
 		assert(verify(src));
 
 		auto const lut = to_lookup_table(func);
 		auto const conv = [&func](u8& p) { p = func(p); };
 
-		std::for_each(std::execution::par, src.begin(), src.end(), conv);
+		std::for_each(std::execution::par, src_dst.begin(), src_dst.end(), conv);
 	}
 
 
@@ -256,7 +258,7 @@ namespace libimage
 	}
 
 
-	void transform_contrast(gray::view_t const& src, u8 src_low, u8 src_high)
+	void transform_contrast(gray::view_t const& src_dst, u8 src_low, u8 src_high)
 	{
 		assert(src_low < src_high);
 
@@ -264,7 +266,7 @@ namespace libimage
 		u8 dst_high = 255;
 
 		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
-		transform(src, conv);
+		transform_self(src_dst, conv);
 	}
 
 
@@ -275,17 +277,10 @@ namespace libimage
 	}
 
 
-	void binarize(gray::view_t const& src, u8 min_threashold)
+	void binarize(gray::view_t const& src_dst, u8 min_threashold)
 	{
 		auto const conv = [&](u8 p) { return p >= min_threashold ? 255 : 0; };
-		transform(src, conv);
-	}
-
-
-	void binarize(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& func)
-	{
-		auto const conv = [&](u8 p) { return func(p) ? 255 : 0; };
-		transform(src, conv);
+		transform_self(src_dst, conv);
 	}
 
 
@@ -296,10 +291,10 @@ namespace libimage
 	}
 
 
-	void binarize(gray::view_t const& src, u8_to_bool_f const& func)
+	void binarize(gray::view_t const& src_dst, u8_to_bool_f const& func)
 	{
 		auto const conv = [&](u8 p) { return func(p) ? 255 : 0; };
-		transform(src, conv);
+		//transform_self(src_dst, conv);
 	}
 
 
@@ -493,14 +488,14 @@ namespace libimage
 		{
 			auto dst_top = row_view(dst, 0);
 
-			transform(dst_top, zero);
+			transform_self(dst_top, zero);
 		};
 
 		auto const zero_bottom = [&]()
 		{
 			auto dst_bottom = row_view(dst, height - 1);
 
-			transform(dst_bottom, zero);
+			transform_self(dst_bottom, zero);
 		};
 
 		auto const zero_left = [&]()
@@ -512,7 +507,7 @@ namespace libimage
 			r.y_end = height - 1;
 			auto dst_left = sub_view(dst, r);
 
-			transform(dst_left, zero);
+			transform_self(dst_left, zero);
 		};
 
 		auto const zero_right = [&]()
@@ -524,7 +519,7 @@ namespace libimage
 			r.y_end = height - 1;
 			auto dst_right = sub_view(dst, r);
 
-			transform(dst_right, zero);
+			transform_self(dst_right, zero);
 		};
 
 		// get gradient magnitude of inner pixels
@@ -589,14 +584,14 @@ namespace libimage
 		{
 			auto dst_top = row_view(dst, 0);
 
-			transform(dst_top, zero);
+			transform_self(dst_top, zero);
 		};
 
 		auto const zero_bottom = [&]()
 		{
 			auto dst_bottom = row_view(dst, height - 1);
 
-			transform(dst_bottom, zero);
+			transform_self(dst_bottom, zero);
 		};
 
 		auto const zero_left = [&]()
@@ -608,7 +603,7 @@ namespace libimage
 			r.y_end = height - 1;
 			auto dst_left = sub_view(dst, r);
 
-			transform(dst_left, zero);
+			transform_self(dst_left, zero);
 		};
 
 		auto const zero_right = [&]()
@@ -620,7 +615,7 @@ namespace libimage
 			r.y_end = height - 1;
 			auto dst_right = sub_view(dst, r);
 
-			transform(dst_right, zero);
+			transform_self(dst_right, zero);
 		};
 
 		// get gradient magnitude of inner pixels

@@ -39,21 +39,21 @@ namespace libimage
 
 	void transform(gray::view_t const& src, gray::view_t const& dst, u8_to_u8_f const& func);
 
-	void transform(gray::view_t const& src, u8_to_u8_f const& func);
+	void transform_self(gray::view_t const& src_dst, u8_to_u8_f const& func);
 
 	void copy(gray::view_t const& src, gray::view_t const& dst);
 
 	void transform_contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high);
 
-	void transform_contrast(gray::view_t const& src, u8 src_low, u8 src_high);
+	void transform_contrast(gray::view_t const& src_dst, u8 src_low, u8 src_high);
 
 	void binarize(gray::view_t const& src, gray::view_t const& dst, u8 min_threashold);
 
-	void binarize(gray::view_t const& src, u8 min_threashold);
+	void binarize(gray::view_t const& src_dst, u8 min_threashold);
 
 	void binarize(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& func);
 
-	void binarize(gray::view_t const& src, u8_to_bool_f const& func);
+	void binarize(gray::view_t const& src_dst, u8_to_bool_f const& func);
 
 	void blur(gray::view_t const& src, gray::view_t const& dst);
 
