@@ -705,135 +705,134 @@ namespace libimage
 	}
 
 
-	void blur(gray::view_t const& src, gray::view_t const& dst)
+
+
+	static void copy_top(gray::view_t const& src, gray::view_t const& dst)
 	{
-		assert(verify(src, dst));
-		auto const width = src.width;
-		auto const height = src.height;
+		auto src_top = row_view(src, 0);
+		auto dst_top = row_view(dst, 0);
 
-		assert(width >= VIEW_MIN_DIM);
-		assert(height >= VIEW_MIN_DIM);
+		copy(src_top, dst_top);
+	}
 
-		// lamdas, lots of lamdas			
 
-		auto const copy_top = [&]()
+	static void copy_bottom(gray::view_t const& src, gray::view_t const& dst)
+	{
+		auto src_bottom = row_view(src, src.height - 1);
+		auto dst_bottom = row_view(dst, src.height - 1);
+
+		copy(src_bottom, dst_bottom);
+	}
+
+
+	static void copy_left(gray::view_t const& src, gray::view_t const& dst)
+	{
+		pixel_range_t r = {};
+		r.x_begin = 0;
+		r.x_end = 1;
+		r.y_begin = 1;
+		r.y_end = src.height - 1;
+
+		auto src_left = sub_view(src, r);
+		auto dst_left = sub_view(dst, r);
+
+		copy(src_left, dst_left);
+	}
+
+
+	static void copy_right(gray::view_t const& src, gray::view_t const& dst)
+	{
+		pixel_range_t r = {};
+		r.x_begin = src.width - 1;
+		r.x_end = src.width;
+		r.y_begin = 1;
+		r.y_end = src.height - 1;
+
+		auto src_right = sub_view(src, r);
+		auto dst_right = sub_view(dst, r);
+
+		copy(src_right, dst_right);
+	}
+
+
+	static void gauss_inner_top(gray::view_t const& src, gray::view_t const& dst)
+	{
+		u32 const x_begin = 1;
+		u32 const x_end = src.width - 1;
+		u32 const y = 1;
+
+		auto dst_top = dst.row_begin(y);
+
+		u32_range_t x_ids(x_begin, x_end);
+
+		auto const gauss = [&](u32 x)
 		{
-			auto src_top = row_view(src, 0);
-			auto dst_top = row_view(dst, 0);
-
-			copy(src_top, dst_top);
+			dst_top[x] = gauss3(src, x, y);
 		};
 
-		auto const copy_bottom = [&]()
-		{
-			auto src_bottom = row_view(src, height - 1);
-			auto dst_bottom = row_view(dst, height - 1);
+		std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), gauss);
+	}
 
-			copy(src_bottom, dst_bottom);
+
+	static void gauss_inner_bottom(gray::view_t const& src, gray::view_t const& dst)
+	{
+		u32 const x_begin = 1;
+		u32 const x_end = src.width - 1;
+		u32 const y = src.height - 2;
+
+		auto dst_bottom = dst.row_begin(y);
+
+		u32_range_t x_ids(x_begin, x_end);
+
+		auto const gauss = [&](u32 x)
+		{
+			dst_bottom[x] = gauss3(src, x, y);
 		};
 
-		auto const copy_left = [&]()
+		std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), gauss);
+	}
+
+
+	static void gauss_inner_left(gray::view_t const& src, gray::view_t const& dst)
+	{
+		u32 const y_begin = 2;
+		u32 const y_end = src.height - 2;
+		u32 const x = 1;
+
+		u32_range_t y_ids(y_begin, y_end);
+
+		auto const gauss = [&](u32 y)
 		{
-			pixel_range_t r = {};
-			r.x_begin = 0;
-			r.x_end = 1;
-			r.y_begin = 1;
-			r.y_end = height - 1;
-
-			auto src_left = sub_view(src, r);
-			auto dst_left = sub_view(dst, r);
-
-			copy(src_left, dst_left);
+			auto dst_row = dst.row_begin(y);
+			dst_row[x] = gauss3(src, x, y);
 		};
 
-		auto const copy_right = [&]()
+		std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), gauss);
+	}
+
+
+	static void gauss_inner_right(gray::view_t const& src, gray::view_t const& dst)
+	{
+		u32 const y_begin = 2;
+		u32 const y_end = src.height - 2;
+		u32 const x = src.width - 2;
+
+		u32_range_t y_ids(y_begin, y_end);
+
+		auto const gauss = [&](u32 y)
 		{
-			pixel_range_t r = {};
-			r.x_begin = width - 1;
-			r.x_end = width;
-			r.y_begin = 1;
-			r.y_end = height - 1;
-
-			auto src_right = sub_view(src, r);
-			auto dst_right = sub_view(dst, r);
-
-			copy(src_right, dst_right);
+			auto dst_row = dst.row_begin(y);
+			dst_row[x] = gauss3(src, x, y);
 		};
 
-		auto const gauss_inner_top = [&]()
-		{
-			u32 const x_begin = 1;
-			u32 const x_end = width - 1;
-			u32 const y = 1;
+		std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), gauss);
+	}
 
-			auto dst_top = dst.row_begin(y);
 
-			u32_range_t x_ids(x_begin, x_end);
-
-			auto const gauss = [&](u32 x)
-			{
-				dst_top[x] = gauss3(src, x, y);
-			};
-
-			std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), gauss);
-		};
-
-		auto const gauss_inner_bottom = [&]()
-		{
-			u32 const x_begin = 1;
-			u32 const x_end = width - 1;
-			u32 const y = height - 2;
-
-			auto dst_bottom = dst.row_begin(y);
-
-			u32_range_t x_ids(x_begin, x_end);
-
-			auto const gauss = [&](u32 x)
-			{
-				dst_bottom[x] = gauss3(src, x, y);
-			};
-
-			std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), gauss);
-		};
-
-		auto const gauss_inner_left = [&]()
-		{
-			u32 const y_begin = 2;
-			u32 const y_end = height - 2;
-			u32 const x = 1;
-
-			u32_range_t y_ids(y_begin, y_end);
-
-			auto const gauss = [&](u32 y)
-			{
-				auto dst_row = dst.row_begin(y);
-				dst_row[x] = gauss3(src, x, y);
-			};
-
-			std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), gauss);
-		};
-
-		auto const gauss_inner_right = [&]()
-		{
-			u32 const y_begin = 2;
-			u32 const y_end = height - 2;
-			u32 const x = width - 2;
-
-			u32_range_t y_ids(y_begin, y_end);
-
-			auto const gauss = [&](u32 y)
-			{
-				auto dst_row = dst.row_begin(y);
-				dst_row[x] = gauss3(src, x, y);
-			};
-
-			std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), gauss);
-		};
-
-		// inner pixels use 5 x 5 gaussian kernel
-
+	static void inner_gauss(gray::view_t const& src, gray::view_t const& dst)
+	{
 		u32 const x_begin = 2;
-		u32 const x_end = width - 2;
+		u32 const x_end = src.width - 2;
 		u32_range_t x_ids(x_begin, x_end);
 
 		auto const gauss_row = [&](u32 y)
@@ -848,31 +847,42 @@ namespace libimage
 			std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), gauss_x);
 		};
 
-		auto const inner_gauss = [&]()
-		{
-			u32 const y_begin = 2;
-			u32 const y_end = height - 2;
 
-			u32_range_t y_ids(y_begin, y_end);
+		u32 const y_begin = 2;
+		u32 const y_end = src.height - 2;
 
-			std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), gauss_row);
-		};
+		u32_range_t y_ids(y_begin, y_end);
 
-		// put the lambdas in an array
+		std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), gauss_row);
+	}
+		
+
+
+
+	void blur(gray::view_t const& src, gray::view_t const& dst)
+	{
+		assert(verify(src, dst));
+		auto const width = src.width;
+		auto const height = src.height;
+
+		assert(width >= VIEW_MIN_DIM);
+		assert(height >= VIEW_MIN_DIM);
+
+		// lambdas in an array
 		std::array<std::function<void()>, 9> f_list =
 		{
-			copy_top,
-			copy_bottom,
-			copy_left,
-			copy_right,
-			gauss_inner_top,
-			gauss_inner_bottom,
-			gauss_inner_left,
-			gauss_inner_right,
-			inner_gauss
+			[&]() { copy_top(src, dst); },
+			[&]() { copy_bottom(src, dst); } ,
+			[&]() { copy_left(src, dst); } ,
+			[&]() { copy_right(src, dst); },
+			[&]() { gauss_inner_top(src, dst); },
+			[&]() { gauss_inner_bottom(src, dst); },
+			[&]() { gauss_inner_left(src, dst); },
+			[&]() { gauss_inner_right(src, dst); },
+			[&]() { inner_gauss(src, dst); }
 		};
 
-		// finally execute everything
+		// execute everything
 		std::for_each(std::execution::par, f_list.begin(), f_list.end(), [](auto const& f) { f(); });
 	}
 

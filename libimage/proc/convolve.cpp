@@ -11,22 +11,6 @@ Copyright (c) 2021 Adam Lafontaine
 
 namespace libimage
 {
-	template<size_t N>
-	static r32 apply_weights(gray::view_t const& view, std::array<r32, N> weights)
-	{
-		assert(view.width * view.height == weights.size());
-
-		u32 w = 0;
-		r32 total = 0.0f;
-
-		auto const add_weight = [&](u8 p) { total += weights[w++] * p; };
-
-		std::for_each(view.begin(), view.end(), add_weight);
-
-		return total;
-	}
-
-
 	static void left_2_wide(pixel_range_t& range, u32 x, u32 width)
 	{
 		// left (2 wide)
@@ -105,6 +89,23 @@ namespace libimage
 	}
 
 
+	template<class GRAY_IMG_T, size_t N>
+	static r32 apply_weights(GRAY_IMG_T const& img, std::array<r32, N> weights)
+	{
+		assert(static_cast<size_t>(img.width) * img.height == weights.size());
+
+		u32 w = 0;
+		r32 total = 0.0f;
+
+		auto const add_weight = [&](u8 p) { total += weights[w++] * p; };
+
+		std::for_each(img.begin(), img.end(), add_weight);
+
+		return total;
+	}
+
+
+	
 	static r32 weighted_center(gray::view_t const& view, u32 x, u32 y, std::array<r32, 9> const& weights)
 	{
 		pixel_range_t range = {};
