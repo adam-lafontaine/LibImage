@@ -89,8 +89,8 @@ namespace libimage
 	}
 
 
-	template<class GRAY_IMG_T, size_t N>
-	static r32 apply_weights(GRAY_IMG_T const& img, std::array<r32, N> weights)
+	template<size_t N>
+	static r32 apply_weights(gray::view_t const& img, std::array<r32, N> weights)
 	{
 		assert(static_cast<size_t>(img.width) * img.height == weights.size());
 
@@ -105,16 +105,16 @@ namespace libimage
 	}
 
 
-	
-	static r32 weighted_center(gray::view_t const& view, u32 x, u32 y, std::array<r32, 9> const& weights)
+	template<class GRAY_IMAGE_T>
+	static r32 weighted_center(GRAY_IMAGE_T const& img, u32 x, u32 y, std::array<r32, 9> const& weights)
 	{
 		pixel_range_t range = {};
 
-		top_or_bottom_3_high(range, y, view.height);
+		top_or_bottom_3_high(range, y, img.height);
 
-		left_or_right_3_wide(range, x, view.width);
+		left_or_right_3_wide(range, x, img.width);
 
-		return apply_weights(sub_view(view, range), weights);
+		return apply_weights(sub_view(img, range), weights);
 	}
 
 

@@ -176,12 +176,7 @@ namespace libimage
 					return *this;
 				}
 
-				iterator& operator ++ ()
-				{
-					next();
-
-					return *this;
-				}				
+				iterator& operator ++ () { next(); return *this; }				
 
 				iterator operator ++ (int) { iterator result = *this; ++(*this); return result; }
 
@@ -218,13 +213,13 @@ namespace libimage
 
 			u32 width = 0;
 
-			pixel_t* begin() { return image_data + static_cast<u64>(y_begin * image_width + x_begin); }
+			pixel_t* begin() { return image_data + static_cast<u64>(y_begin) * image_width + x_begin; }
 
-			pixel_t* end() { return image_data + static_cast<u64>(y_begin * image_width + x_end); }
+			pixel_t* end() { return image_data + static_cast<u64>(y_begin) * image_width + x_end; }
 
-			pixel_t* begin() const { return image_data + static_cast<u64>(y_begin * image_width + x_begin); }
+			pixel_t* begin() const { return image_data + static_cast<u64>(y_begin) * image_width + x_begin; }
 
-			pixel_t* end() const { return image_data + static_cast<u64>(y_begin * image_width + x_end); }
+			pixel_t* end() const { return image_data + static_cast<u64>(y_begin) * image_width + x_end; }
 		};
 
 
@@ -303,12 +298,7 @@ namespace libimage
 					return *this;
 				}
 
-				iterator& operator ++ ()
-				{
-					next();
-
-					return *this;
-				}
+				iterator& operator ++ () { next(); return *this; }
 
 				iterator operator ++ (int) { iterator result = *this; ++(*this); return result; }
 
