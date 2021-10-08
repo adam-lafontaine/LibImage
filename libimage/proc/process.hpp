@@ -219,7 +219,6 @@ namespace libimage
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
 
-
 #ifndef LIBIMAGE_NO_COLOR
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
