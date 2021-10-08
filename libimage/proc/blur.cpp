@@ -16,7 +16,8 @@ Copyright (c) 2021 Adam Lafontaine
 
 namespace libimage
 {
-	static void copy_top(gray::view_t const& src, gray::view_t const& dst)
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void copy_top(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
 		auto src_top = row_view(src, 0);
 		auto dst_top = row_view(dst, 0);
@@ -25,7 +26,8 @@ namespace libimage
 	}
 
 
-	static void copy_bottom(gray::view_t const& src, gray::view_t const& dst)
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void copy_bottom(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
 		auto src_bottom = row_view(src, src.height - 1);
 		auto dst_bottom = row_view(dst, src.height - 1);
@@ -34,7 +36,8 @@ namespace libimage
 	}
 
 
-	static void copy_left(gray::view_t const& src, gray::view_t const& dst)
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void copy_left(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
 		pixel_range_t r = {};
 		r.x_begin = 0;
@@ -49,7 +52,8 @@ namespace libimage
 	}
 
 
-	static void copy_right(gray::view_t const& src, gray::view_t const& dst)
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void copy_right(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
 		pixel_range_t r = {};
 		r.x_begin = src.width - 1;
@@ -64,7 +68,8 @@ namespace libimage
 	}
 
 
-	static void gauss_inner_top(gray::view_t const& src, gray::view_t const& dst)
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void gauss_inner_top(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
 		u32 const x_begin = 1;
 		u32 const x_end = src.width - 1;
@@ -83,7 +88,8 @@ namespace libimage
 	}
 
 
-	static void gauss_inner_bottom(gray::view_t const& src, gray::view_t const& dst)
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void gauss_inner_bottom(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
 		u32 const x_begin = 1;
 		u32 const x_end = src.width - 1;
@@ -102,7 +108,8 @@ namespace libimage
 	}
 
 
-	static void gauss_inner_left(gray::view_t const& src, gray::view_t const& dst)
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void gauss_inner_left(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
 		u32 const y_begin = 2;
 		u32 const y_end = src.height - 2;
@@ -120,7 +127,8 @@ namespace libimage
 	}
 
 
-	static void gauss_inner_right(gray::view_t const& src, gray::view_t const& dst)
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void gauss_inner_right(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
 		u32 const y_begin = 2;
 		u32 const y_end = src.height - 2;
@@ -138,7 +146,8 @@ namespace libimage
 	}
 
 
-	static void inner_gauss(gray::view_t const& src, gray::view_t const& dst)
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void inner_gauss(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
 		u32 const x_begin = 2;
 		u32 const x_end = src.width - 2;
@@ -156,7 +165,6 @@ namespace libimage
 			std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), gauss_x);
 		};
 
-
 		u32 const y_begin = 2;
 		u32 const y_end = src.height - 2;
 
@@ -166,17 +174,9 @@ namespace libimage
 	}
 
 
-
-
-	void blur(gray::view_t const& src, gray::view_t const& dst)
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void do_blur(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
-		assert(verify(src, dst));
-		auto const width = src.width;
-		auto const height = src.height;
-
-		assert(width >= VIEW_MIN_DIM);
-		assert(height >= VIEW_MIN_DIM);
-
 		// lambdas in an array
 		std::array<std::function<void()>, 9> f_list =
 		{
@@ -193,6 +193,58 @@ namespace libimage
 
 		// execute everything
 		std::for_each(std::execution::par, f_list.begin(), f_list.end(), [](auto const& f) { f(); });
+	}
+
+
+	void blur(gray::image_t const& src, gray::image_t const& dst)
+	{
+		assert(verify(src, dst));
+		auto const width = src.width;
+		auto const height = src.height;
+
+		assert(width >= VIEW_MIN_DIM);
+		assert(height >= VIEW_MIN_DIM);
+
+		do_blur(src, dst);
+	}
+
+
+	void blur(gray::image_t const& src, gray::view_t const& dst)
+	{
+		assert(verify(src, dst));
+		auto const width = src.width;
+		auto const height = src.height;
+
+		assert(width >= VIEW_MIN_DIM);
+		assert(height >= VIEW_MIN_DIM);
+
+		do_blur(src, dst);
+	}
+
+
+	void blur(gray::view_t const& src, gray::image_t const& dst)
+	{
+		assert(verify(src, dst));
+		auto const width = src.width;
+		auto const height = src.height;
+
+		assert(width >= VIEW_MIN_DIM);
+		assert(height >= VIEW_MIN_DIM);
+
+		do_blur(src, dst);
+	}
+
+
+	void blur(gray::view_t const& src, gray::view_t const& dst)
+	{
+		assert(verify(src, dst));
+		auto const width = src.width;
+		auto const height = src.height;
+
+		assert(width >= VIEW_MIN_DIM);
+		assert(height >= VIEW_MIN_DIM);
+
+		do_blur(src, dst);
 	}
 
 

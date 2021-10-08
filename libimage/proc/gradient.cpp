@@ -16,65 +16,68 @@ Copyright (c) 2021 Adam Lafontaine
 
 namespace libimage
 {
-	void edges(gray::view_t const& src, gray::view_t const& dst, u8 threshold)
+	template<class GRAY_IMG_T>
+	static void fill_zero(GRAY_IMG_T const& view)
 	{
-		assert(verify(src, dst));
+		std::fill(std::execution::par, view.begin(), view.end(), 0);
+	}
 
-		auto const width = src.width;
-		auto const height = src.height;
 
-		// blur the image first
-		gray::image_t temp;
-		auto temp_view = make_view(temp, width, height);
-		blur(src, temp_view);
+	template<class GRAY_IMG_T>
+	static void zero_top(GRAY_IMG_T const& dst)
+	{
+		auto dst_top = row_view(dst, 0);
 
-		auto const zero = [](u8 p) { return static_cast<u8>(0); };
+		fill_zero(dst_top);
+	}
 
-		auto const zero_top = [&]()
-		{
-			auto dst_top = row_view(dst, 0);
 
-			transform_self(dst_top, zero);
-		};
+	template<class GRAY_IMG_T>
+	static void zero_bottom(GRAY_IMG_T const& dst)
+	{
+		auto dst_bottom = row_view(dst, dst.height - 1);
 
-		auto const zero_bottom = [&]()
-		{
-			auto dst_bottom = row_view(dst, height - 1);
+		fill_zero(dst_bottom);
+	}
 
-			transform_self(dst_bottom, zero);
-		};
 
-		auto const zero_left = [&]()
-		{
-			pixel_range_t r = {};
-			r.x_begin = 0;
-			r.x_end = 1;
-			r.y_begin = 1;
-			r.y_end = height - 1;
-			auto dst_left = sub_view(dst, r);
+	template<class GRAY_IMG_T>
+	static void zero_left(GRAY_IMG_T const& dst)
+	{
+		pixel_range_t r = {};
+		r.x_begin = 0;
+		r.x_end = 1;
+		r.y_begin = 1;
+		r.y_end = dst.height - 1;
+		auto dst_left = sub_view(dst, r);
 
-			transform_self(dst_left, zero);
-		};
+		fill_zero(dst_left);
+	}
 
-		auto const zero_right = [&]()
-		{
-			pixel_range_t r = {};
-			r.x_begin = width - 1;
-			r.x_end = width;
-			r.y_begin = 1;
-			r.y_end = height - 1;
-			auto dst_right = sub_view(dst, r);
 
-			transform_self(dst_right, zero);
-		};
+	template<class GRAY_IMG_T>
+	static void zero_right(GRAY_IMG_T const& dst)
+	{
+		pixel_range_t r = {};
+		r.x_begin = dst.width - 1;
+		r.x_end = dst.width;
+		r.y_begin = 1;
+		r.y_end = dst.height - 1;
+		auto dst_right = sub_view(dst, r);
 
-		// get gradient magnitude of inner pixels
+		fill_zero(dst_right);
+	}
+
+
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void edges_inner(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst, u8 threshold)
+	{
 		u32 const x_begin = 1;
-		u32 const x_end = width - 1;
+		u32 const x_end = src.width - 1;
 		u32_range_t x_ids(x_begin, x_end);
 
 		u32 const y_begin = 1;
-		u32 const y_end = height - 1;
+		u32 const y_end = src.height - 1;
 		u32_range_t y_ids(y_begin, y_end);
 
 		auto const grad_row = [&](u32 y)
@@ -83,8 +86,8 @@ namespace libimage
 
 			auto const grad_x = [&](u32 x)
 			{
-				auto gx = x_gradient(temp_view, x, y);
-				auto gy = y_gradient(temp_view, x, y);
+				auto gx = x_gradient(src, x, y);
+				auto gy = y_gradient(src, x, y);
 				auto g = std::hypot(gx, gy);
 				dst_row[x] = g < threshold ? 0 : 255;
 			};
@@ -92,85 +95,35 @@ namespace libimage
 			std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), grad_x);
 		};
 
-		auto const gradients_inner = [&]()
-		{
-			std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), grad_row);
-		};
+		std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), grad_row);
+	}
 
-		// put the lambdas in an array
+
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void do_edges(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst, u8 threshold)
+	{
 		std::array<std::function<void()>, 5> f_list
 		{
-			zero_top,
-			zero_bottom,
-			zero_left,
-			zero_right,
-			gradients_inner
+			[&]() { zero_top(dst); },
+			[&]() { zero_bottom(dst); },
+			[&]() { zero_left(dst); },
+			[&]() { zero_right(dst); },
+			[&]() { edges_inner(src, dst, threshold); }
 		};
 
-		// finally execute everything
 		std::for_each(std::execution::par, f_list.begin(), f_list.end(), [](auto const& f) { f(); });
 	}
 
 
-	void gradient(gray::view_t const& src, gray::view_t const& dst)
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void gradients_inner(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
-		assert(verify(src, dst));
-
-		auto const width = src.width;
-		auto const height = src.height;
-
-		// blur the image first
-		gray::image_t temp;
-		auto temp_view = make_view(temp, width, height);
-		blur(src, temp_view);
-
-		auto const zero = [](u8 p) { return static_cast<u8>(0); };
-
-		auto const zero_top = [&]()
-		{
-			auto dst_top = row_view(dst, 0);
-
-			transform_self(dst_top, zero);
-		};
-
-		auto const zero_bottom = [&]()
-		{
-			auto dst_bottom = row_view(dst, height - 1);
-
-			transform_self(dst_bottom, zero);
-		};
-
-		auto const zero_left = [&]()
-		{
-			pixel_range_t r = {};
-			r.x_begin = 0;
-			r.x_end = 1;
-			r.y_begin = 1;
-			r.y_end = height - 1;
-			auto dst_left = sub_view(dst, r);
-
-			transform_self(dst_left, zero);
-		};
-
-		auto const zero_right = [&]()
-		{
-			pixel_range_t r = {};
-			r.x_begin = width - 1;
-			r.x_end = width;
-			r.y_begin = 1;
-			r.y_end = height - 1;
-			auto dst_right = sub_view(dst, r);
-
-			transform_self(dst_right, zero);
-		};
-
-		// get gradient magnitude of inner pixels
 		u32 const x_begin = 1;
-		u32 const x_end = width - 1;
+		u32 const x_end = src.width - 1;
 		u32_range_t x_ids(x_begin, x_end);
 
 		u32 const y_begin = 1;
-		u32 const y_end = height - 1;
+		u32 const y_end = src.height - 1;
 		u32_range_t y_ids(y_begin, y_end);
 
 		auto const grad_row = [&](u32 y)
@@ -179,8 +132,8 @@ namespace libimage
 
 			auto const grad_x = [&](u32 x)
 			{
-				auto gx = x_gradient(temp_view, x, y);
-				auto gy = y_gradient(temp_view, x, y);
+				auto gx = x_gradient(src, x, y);
+				auto gy = y_gradient(src, x, y);
 				auto g = std::hypot(gx, gy);
 				dst_row[x] = static_cast<u8>(g);
 			};
@@ -188,23 +141,215 @@ namespace libimage
 			std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), grad_x);
 		};
 
-		auto const gradients_inner = [&]()
-		{
-			std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), grad_row);
-		};
+		std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), grad_row);
+	}
 
-		// put the lambdas in an array
+
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void do_gradients(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	{
 		std::array<std::function<void()>, 5> f_list
 		{
-			zero_top,
-			zero_bottom,
-			zero_left,
-			zero_right,
-			gradients_inner
+			[&]() { zero_top(dst); },
+			[&]() { zero_bottom(dst); },
+			[&]() { zero_left(dst); },
+			[&]() { zero_right(dst); },
+			[&]() { gradients_inner(src, dst); }
 		};
 
-		// finally execute everything
 		std::for_each(std::execution::par, f_list.begin(), f_list.end(), [](auto const& f) { f(); });
+	}
+
+
+	void edges(gray::image_t const& src, gray::image_t const& dst, u8 threshold)
+	{
+		assert(verify(src, dst));
+
+		// blur the image first
+		gray::image_t temp;
+		make_image(temp, src.width, src.height);
+		blur(src, temp);
+
+		do_edges(temp, dst, threshold);
+	}
+
+
+	void edges(gray::image_t const& src, gray::view_t const& dst, u8 threshold)
+	{
+		assert(verify(src, dst));
+
+		// blur the image first
+		gray::image_t temp;
+		make_image(temp, src.width, src.height);
+		blur(src, temp);
+
+		do_edges(temp, dst, threshold);
+	}
+
+
+	void edges(gray::view_t const& src, gray::image_t const& dst, u8 threshold)
+	{
+		assert(verify(src, dst));
+
+		// blur the image first
+		gray::image_t temp;
+		make_image(temp, src.width, src.height);
+		blur(src, temp);
+
+		do_edges(temp, dst, threshold);
+	}
+
+
+	void edges(gray::view_t const& src, gray::view_t const& dst, u8 threshold)
+	{
+		assert(verify(src, dst));
+
+		// blur the image first
+		gray::image_t temp;
+		make_image(temp, src.width, src.height);
+		blur(src, temp);
+
+		do_edges(temp, dst, threshold);
+	}
+
+
+	void edges(gray::image_t const& src, gray::image_t const& dst, u8 threshold, gray::image_t const& temp)
+	{
+		assert(verify(src, dst));
+		assert(verify(src, temp));
+
+		blur(src, temp);
+
+		do_edges(temp, dst, threshold);
+	}
+
+
+	void edges(gray::image_t const& src, gray::view_t const& dst, u8 threshold, gray::image_t const& temp)
+	{
+		assert(verify(src, dst));
+		assert(verify(src, temp));
+
+		blur(src, temp);
+
+		do_edges(temp, dst, threshold);
+	}
+
+
+	void edges(gray::view_t const& src, gray::image_t const& dst, u8 threshold, gray::image_t const& temp)
+	{
+		assert(verify(src, dst));
+		assert(verify(src, temp));
+
+		blur(src, temp);
+
+		do_edges(temp, dst, threshold);
+	}
+
+
+	void edges(gray::view_t const& src, gray::view_t const& dst, u8 threshold, gray::image_t const& temp)
+	{
+		assert(verify(src, dst));
+		assert(verify(src, temp));
+
+		blur(src, temp);
+
+		do_edges(temp, dst, threshold);
+	}
+
+
+	void gradient(gray::image_t const& src, gray::image_t const& dst)
+	{
+		assert(verify(src, dst));
+
+		// blur the image first
+		gray::image_t temp;
+		make_image(temp, src.width, src.height);
+		blur(src, temp);
+
+		do_gradients(temp, dst);
+	}
+
+
+	void gradient(gray::image_t const& src, gray::view_t const& dst)
+	{
+		assert(verify(src, dst));
+
+		// blur the image first
+		gray::image_t temp;
+		make_image(temp, src.width, src.height);
+		blur(src, temp);
+
+		do_gradients(temp, dst);
+	}
+
+
+	void gradient(gray::view_t const& src, gray::image_t const& dst)
+	{
+		assert(verify(src, dst));
+
+		// blur the image first
+		gray::image_t temp;
+		make_image(temp, src.width, src.height);
+		blur(src, temp);
+
+		do_gradients(temp, dst);
+	}
+
+
+	void gradient(gray::view_t const& src, gray::view_t const& dst)
+	{
+		assert(verify(src, dst));
+
+		// blur the image first
+		gray::image_t temp;
+		make_image(temp, src.width, src.height);
+		blur(src, temp);
+
+		do_gradients(temp, dst);
+	}
+
+
+	void gradient(gray::image_t const& src, gray::image_t const& dst, gray::image_t const& temp)
+	{
+		assert(verify(src, dst));
+		assert(verify(src, temp));
+
+		blur(src, temp);
+
+		do_gradients(temp, dst);
+	}
+
+
+	void gradient(gray::image_t const& src, gray::view_t const& dst, gray::image_t const& temp)
+	{
+		assert(verify(src, dst));
+		assert(verify(src, temp));
+
+		blur(src, temp);
+
+		do_gradients(temp, dst);
+	}
+
+
+	void gradient(gray::view_t const& src, gray::image_t const& dst, gray::image_t const& temp)
+	{
+		assert(verify(src, dst));
+		assert(verify(src, temp));
+
+		blur(src, temp);
+
+		do_gradients(temp, dst);
+	}
+
+
+	void gradient(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp)
+	{
+		assert(verify(src, dst));
+		assert(verify(src, temp));
+
+		blur(src, temp);
+
+		do_gradients(temp, dst);
 	}
 
 
