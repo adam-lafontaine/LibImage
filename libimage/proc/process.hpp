@@ -200,21 +200,21 @@ namespace libimage
 	void edges(gray::view_t const& src, gray::view_t const& dst, u8 threshold, gray::image_t const& temp);
 
 
-	void gradient(gray::image_t const& src, gray::image_t const& dst);
+	void gradients(gray::image_t const& src, gray::image_t const& dst);
 
-	void gradient(gray::image_t const& src, gray::view_t const& dst);
+	void gradients(gray::image_t const& src, gray::view_t const& dst);
 
-	void gradient(gray::view_t const& src, gray::image_t const& dst);
+	void gradients(gray::view_t const& src, gray::image_t const& dst);
 
-	void gradient(gray::view_t const& src, gray::view_t const& dst);
+	void gradients(gray::view_t const& src, gray::view_t const& dst);
 
-	void gradient(gray::image_t const& src, gray::image_t const& dst, gray::image_t const& temp);
+	void gradients(gray::image_t const& src, gray::image_t const& dst, gray::image_t const& temp);
 
-	void gradient(gray::image_t const& src, gray::view_t const& dst, gray::image_t const& temp);
+	void gradients(gray::image_t const& src, gray::view_t const& dst, gray::image_t const& temp);
 
-	void gradient(gray::view_t const& src, gray::image_t const& dst, gray::image_t const& temp);
+	void gradients(gray::view_t const& src, gray::image_t const& dst, gray::image_t const& temp);
 
-	void gradient(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp);
+	void gradients(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp);
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 

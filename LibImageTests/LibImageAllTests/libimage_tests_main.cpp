@@ -519,7 +519,7 @@ void process_tests(fs::path const& out_dir)
 	img::write_image(dst_gray_image, out_dir / "edges.png");
 
 	// gradient
-	img::gradient(src_gray_image, dst_gray_image);
+	img::gradients(src_gray_image, dst_gray_image);
 	img::write_image(dst_gray_image, out_dir / "gradient.png");
 
 	// combine transformations in the same image
@@ -553,7 +553,7 @@ void process_tests(fs::path const& out_dir)
 	range.x_end = width;
 	src_sub = img::sub_view(src_gray_image, range);
 	dst_sub = img::sub_view(dst_gray_image, range);
-	img::gradient(src_sub, dst_sub);
+	img::gradients(src_sub, dst_sub);
 
 	img::write_image(dst_gray_image, out_dir / "combo.png");
 
