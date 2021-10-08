@@ -340,8 +340,8 @@ namespace libimage
 		void blur(gray::image_t const& src, gray::image_t const& dst)
 		{
 			assert(verify(src, dst));
-			assert(width >= VIEW_MIN_DIM);
-			assert(height >= VIEW_MIN_DIM);
+			assert(src.width >= VIEW_MIN_DIM);
+			assert(src.height >= VIEW_MIN_DIM);
 
 			seq::copy_top_bottom(src, dst);
 			seq::copy_left_right(src, dst);
@@ -354,8 +354,8 @@ namespace libimage
 		void blur(gray::image_t const& src, gray::view_t const& dst)
 		{
 			assert(verify(src, dst));
-			assert(width >= VIEW_MIN_DIM);
-			assert(height >= VIEW_MIN_DIM);
+			assert(src.width >= VIEW_MIN_DIM);
+			assert(src.height >= VIEW_MIN_DIM);
 
 			seq::copy_top_bottom(src, dst);
 			seq::copy_left_right(src, dst);
@@ -368,8 +368,8 @@ namespace libimage
 		void blur(gray::view_t const& src, gray::image_t const& dst)
 		{
 			assert(verify(src, dst));
-			assert(width >= VIEW_MIN_DIM);
-			assert(height >= VIEW_MIN_DIM);
+			assert(src.width >= VIEW_MIN_DIM);
+			assert(src.height >= VIEW_MIN_DIM);
 
 			seq::copy_top_bottom(src, dst);
 			seq::copy_left_right(src, dst);
@@ -382,8 +382,8 @@ namespace libimage
 		void blur(gray::view_t const& src, gray::view_t const& dst)
 		{
 			assert(verify(src, dst));
-			assert(width >= VIEW_MIN_DIM);
-			assert(height >= VIEW_MIN_DIM);
+			assert(src.width >= VIEW_MIN_DIM);
+			assert(src.height >= VIEW_MIN_DIM);
 
 			seq::copy_top_bottom(src, dst);
 			seq::copy_left_right(src, dst);

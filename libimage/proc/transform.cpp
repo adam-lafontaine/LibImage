@@ -440,7 +440,7 @@ namespace libimage
 
 		void transform_alpha(image_t const& src_dst, pixel_to_u8_f const& func)
 		{
-			assert(verify(view));
+			assert(verify(src_dst));
 			auto const conv = [&](pixel_t& p) { p.alpha = func(p); };
 			std::for_each(src_dst.begin(), src_dst.end(), conv);
 		}
@@ -448,7 +448,7 @@ namespace libimage
 
 		void transform_alpha(view_t const& src_dst, pixel_to_u8_f const& func)
 		{
-			assert(verify(view));
+			assert(verify(src_dst));
 			auto const conv = [&](pixel_t& p) { p.alpha = func(p); };
 			std::for_each(src_dst.begin(), src_dst.end(), conv);
 		}

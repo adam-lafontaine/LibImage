@@ -65,11 +65,11 @@ int main()
 
 	auto dst_root = fs::path(DST_IMAGE_ROOT);	
 
-	//basic_tests(dst_root / "basic");
-	//math_tests(dst_root / "math");
+	basic_tests(dst_root / "basic");
+	math_tests(dst_root / "math");
 
-	//for_each_tests(dst_root / "for_each");
-	//transform_tests(dst_root / "transform");
+	for_each_tests(dst_root / "for_each");
+	transform_tests(dst_root / "transform");
 
 	process_tests(dst_root / "process");
 
