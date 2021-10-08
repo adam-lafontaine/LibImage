@@ -76,14 +76,14 @@ namespace libimage
 		{
 			auto dst_top = row_view(dst, 0);
 
-			transform(dst_top, zero);
+			transform_self(dst_top, zero);
 		};
 
 		auto const zero_bottom = [&]()
 		{
 			auto dst_bottom = row_view(dst, height - 1);
 
-			transform(dst_bottom, zero);
+			transform_self(dst_bottom, zero);
 		};
 
 		auto const zero_left = [&]()
@@ -95,7 +95,7 @@ namespace libimage
 			r.y_end = height - 1;
 			auto dst_left = sub_view(dst, r);
 
-			transform(dst_left, zero);
+			transform_self(dst_left, zero);
 		};
 
 		auto const zero_right = [&]()
@@ -107,7 +107,7 @@ namespace libimage
 			r.y_end = height - 1;
 			auto dst_right = sub_view(dst, r);
 
-			transform(dst_right, zero);
+			transform_self(dst_right, zero);
 		};
 
 		// get gradient magnitude of inner pixels

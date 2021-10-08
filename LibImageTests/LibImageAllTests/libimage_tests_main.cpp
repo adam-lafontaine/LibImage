@@ -451,10 +451,10 @@ void process_tests(fs::path const& out_dir)
 	auto corvette_view = img::make_view(corvette_image);
 
 	Image dst_image;
-	auto dst_view = img::make_view(dst_image, width, height);
+	img::make_image(dst_image, width, height);
 
 	GrayImage dst_gray_image;
-	auto dst_gray_view = img::make_view(dst_gray_image, width, height);
+	img::make_image(dst_gray_image, width, height);
 
 	// get another image for blending
 	// make sure it is the same size
@@ -468,15 +468,15 @@ void process_tests(fs::path const& out_dir)
 
 	// alpha blending
 	img::transform_alpha(caddy_view, [](auto const& p) { return 128; });
-	img::alpha_blend(caddy_view, corvette_view, dst_view);
+	img::alpha_blend(caddy_view, corvette_view, dst_image);
 	img::write_image(dst_image, out_dir / "alpha_blend.png");
 
-	img::copy(corvette_view, dst_view);
-	img::alpha_blend(caddy_view, dst_view);
+	img::copy(corvette_view, dst_image);
+	img::alpha_blend(caddy_view, dst_image);
 	img::write_image(dst_image, out_dir / "alpha_blend_src_dst.png");
 
 	// grayscale
-	img::transform_grayscale(corvette_view, dst_gray_view);
+	img::transform_grayscale(corvette_view, dst_gray_image);
 	img::write_image(dst_gray_image, out_dir / "convert_grayscale.png");
 	
 	// stats
@@ -496,69 +496,64 @@ void process_tests(fs::path const& out_dir)
 
 	// create a new grayscale source
 	GrayImage src_gray_image;
-	auto src_gray_view = img::make_view(src_gray_image, width, height);
-	img::copy(dst_gray_view, src_gray_view);
+	img::make_image(src_gray_image, width, height);
+	img::copy(dst_gray_image, src_gray_image);
 
 	// contrast
 	auto shade_min = static_cast<u8>(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
 	auto shade_max = static_cast<u8>(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
-	img::transform_contrast(src_gray_view, dst_gray_view, shade_min, shade_max);
+	img::transform_contrast(src_gray_image, dst_gray_image, shade_min, shade_max);
 	img::write_image(dst_gray_image, out_dir / "contrast.png");
 
 	// binarize
 	auto const is_white = [&](u8 p) { return static_cast<r32>(p) > gray_stats.mean; };
-	//img::binarize(src_gray_view, dst_gray_view, is_white);
-	img::binarize(src_gray_view, dst_gray_view, is_white);
+	img::binarize(src_gray_image, dst_gray_image, is_white);
 	img::write_image(dst_gray_image, out_dir / "binarize.png");
 
 	//blur
-	img::blur(src_gray_view, dst_gray_view);
+	img::blur(src_gray_image, dst_gray_image);
 	img::write_image(dst_gray_image, out_dir / "blur.png");	
 
 	// edge detection
-	/*GrayImage contrast_gray;
-	auto contrast_gray_view = img::make_view(contrast_gray, width, height);
-	img::transform_contrast(src_gray_view, contrast_gray_view, shade_min, shade_max);
-	img::edges(contrast_gray_view, dst_gray_view, 100);*/
-	img::edges(src_gray_view, dst_gray_view, 150);
+	img::edges(src_gray_image, dst_gray_image, 150);
 	img::write_image(dst_gray_image, out_dir / "edges.png");
 
 	// gradient
-	img::gradient(src_gray_view, dst_gray_view);
+	img::gradients(src_gray_image, dst_gray_image);
 	img::write_image(dst_gray_image, out_dir / "gradient.png");
 
 	// combine transformations in the same image
 	// regular grayscale to start
-	img::copy(src_gray_view, dst_gray_view);
+	img::copy(src_gray_image, dst_gray_image);
 
 	img::pixel_range_t range;
 	range.x_begin = 0;
 	range.x_end = width / 2;
 	range.y_begin = 0;
 	range.y_end = height / 2;
-	auto src_sub = img::sub_view(src_gray_view, range);
-	auto dst_sub = img::sub_view(dst_gray_view, range);
-	img::transform_contrast(src_sub, dst_sub, shade_min, shade_max);
+	auto src_sub = img::sub_view(src_gray_image, range);
+	auto dst_sub = img::sub_view(dst_gray_image, range);
+	img::binarize(src_sub, dst_sub, is_white);	
 
 	range.x_begin = width / 2;
 	range.x_end = width;
-	src_sub = img::sub_view(src_gray_view, range);
-	dst_sub = img::sub_view(dst_gray_view, range);
-	img::binarize(src_sub, dst_sub, is_white);
+	src_sub = img::sub_view(src_gray_image, range);
+	dst_sub = img::sub_view(dst_gray_image, range);
+	img::transform_contrast(src_sub, dst_sub, shade_min, shade_max);
 
 	range.x_begin = 0;
 	range.x_end = width / 2;
 	range.y_begin = height / 2;
 	range.y_end = height;
-	src_sub = img::sub_view(src_gray_view, range);
-	dst_sub = img::sub_view(dst_gray_view, range);
+	src_sub = img::sub_view(src_gray_image, range);
+	dst_sub = img::sub_view(dst_gray_image, range);
 	img::blur(src_sub, dst_sub);	
 
 	range.x_begin = width / 2;
 	range.x_end = width;
-	src_sub = img::sub_view(src_gray_view, range);
-	dst_sub = img::sub_view(dst_gray_view, range);
-	img::gradient(src_sub, dst_sub);
+	src_sub = img::sub_view(src_gray_image, range);
+	dst_sub = img::sub_view(dst_gray_image, range);
+	img::gradients(src_sub, dst_sub);
 
 	img::write_image(dst_gray_image, out_dir / "combo.png");
 
