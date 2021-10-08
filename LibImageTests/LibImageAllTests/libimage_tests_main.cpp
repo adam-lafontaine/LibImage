@@ -533,13 +533,13 @@ void process_tests(fs::path const& out_dir)
 	range.y_end = height / 2;
 	auto src_sub = img::sub_view(src_gray_image, range);
 	auto dst_sub = img::sub_view(dst_gray_image, range);
-	img::transform_contrast(src_sub, dst_sub, shade_min, shade_max);
+	img::binarize(src_sub, dst_sub, is_white);	
 
 	range.x_begin = width / 2;
 	range.x_end = width;
 	src_sub = img::sub_view(src_gray_image, range);
 	dst_sub = img::sub_view(dst_gray_image, range);
-	img::binarize(src_sub, dst_sub, is_white);
+	img::transform_contrast(src_sub, dst_sub, shade_min, shade_max);
 
 	range.x_begin = 0;
 	range.x_end = width / 2;
