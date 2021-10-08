@@ -79,12 +79,33 @@ namespace libimage
 
 	namespace seq
 	{
+
 #ifndef LIBIMAGE_NO_COLOR
+
+		void copy(image_t const& src, image_t const& dst)
+		{
+			assert(verify(src, dst));
+			std::copy(src.begin(), src.end(), dst.begin());
+		}
+
+
+		void copy(image_t const& src, view_t const& dst)
+		{
+			assert(verify(src, dst));
+			std::copy(src.begin(), src.end(), dst.begin());
+		}
+
+
+		void copy(view_t const& src, image_t const& dst)
+		{
+			assert(verify(src, dst));
+			std::copy(src.begin(), src.end(), dst.begin());
+		}
+
 
 		void copy(view_t const& src, view_t const& dst)
 		{
 			assert(verify(src, dst));
-
 			std::copy(src.begin(), src.end(), dst.begin());
 		}
 
@@ -94,10 +115,30 @@ namespace libimage
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
 
+		void copy(gray::image_t const& src, gray::image_t const& dst)
+		{
+			assert(verify(src, dst));
+			std::copy(src.begin(), src.end(), dst.begin());
+		}
+
+
+		void copy(gray::image_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+			std::copy(src.begin(), src.end(), dst.begin());
+		}
+
+
+		void copy(gray::view_t const& src, gray::image_t const& dst)
+		{
+			assert(verify(src, dst));
+			std::copy(src.begin(), src.end(), dst.begin());
+		}
+
+
 		void copy(gray::view_t const& src, gray::view_t const& dst)
 		{
 			assert(verify(src, dst));
-
 			std::copy(src.begin(), src.end(), dst.begin());
 		}
 

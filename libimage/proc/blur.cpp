@@ -250,22 +250,13 @@ namespace libimage
 
 	namespace seq
 	{
-		void blur(gray::view_t const& src, gray::view_t const& dst)
+		template<class SRC_GRAY_IMG_T, class DST_GRAY_IMG_T>
+		static void copy_top_bottom(SRC_GRAY_IMG_T const& src, DST_GRAY_IMG_T const& dst)
 		{
-			assert(verify(src, dst));
-
-			u32 const width = src.width;
-			u32 const height = src.height;
-
-			assert(width >= VIEW_MIN_DIM);
-			assert(height >= VIEW_MIN_DIM);
-
-
-			// top and bottom rows equal to src
 			u32 x_first = 0;
 			u32 y_first = 0;
-			u32 x_last = width - 1;
-			u32 y_last = height - 1;
+			u32 x_last = src.width - 1;
+			u32 y_last = src.height - 1;
 			auto src_top = src.row_begin(y_first);
 			auto src_bottom = src.row_begin(y_last);
 			auto dst_top = dst.row_begin(y_first);
@@ -275,12 +266,16 @@ namespace libimage
 				dst_top[x] = src_top[x];
 				dst_bottom[x] = src_bottom[x];
 			}
+		}
 
-			// left and right columns equal to src
-			x_first = 0;
-			y_first = 1;
-			x_last = width - 1;
-			y_last = height - 2;
+
+		template<class SRC_GRAY_IMG_T, class DST_GRAY_IMG_T>
+		static void copy_left_right(SRC_GRAY_IMG_T const& src, DST_GRAY_IMG_T const& dst)
+		{
+			u32 x_first = 0;
+			u32 y_first = 1;
+			u32 x_last = src.width - 1;
+			u32 y_last = src.height - 2;
 			for (u32 y = y_first; y <= y_last; ++y)
 			{
 				auto src_row = src.row_begin(y);
@@ -288,37 +283,49 @@ namespace libimage
 				dst_row[x_first] = src_row[x_first];
 				dst_row[x_last] = src_row[x_last];
 			}
+		}
 
-			// first inner top and bottom rows use 3 x 3 gaussian kernel
-			x_first = 1;
-			y_first = 1;
-			x_last = width - 2;
-			y_last = height - 2;
-			dst_top = dst.row_begin(y_first);
-			dst_bottom = dst.row_begin(y_last);
+
+		template<class SRC_GRAY_IMG_T, class DST_GRAY_IMG_T>
+		static void gauss_inner_top_bottom(SRC_GRAY_IMG_T const& src, DST_GRAY_IMG_T const& dst)
+		{
+			u32 x_first = 1;
+			u32 y_first = 1;
+			u32 x_last = src.width - 2;
+			u32 y_last = src.height - 2;
+			auto dst_top = dst.row_begin(y_first);
+			auto dst_bottom = dst.row_begin(y_last);
 			for (u32 x = x_first; x <= x_last; ++x)
 			{
 				dst_top[x] = gauss3(src, x, y_first);
 				dst_bottom[x] = gauss3(src, x, y_last);
 			}
+		}
 
-			// first inner left and right columns use 3 x 3 gaussian kernel
-			x_first = 1;
-			y_first = 2;
-			x_last = width - 2;
-			y_last = height - 3;
+
+		template<class SRC_GRAY_IMG_T, class DST_GRAY_IMG_T>
+		static void gauss_inner_left_right(SRC_GRAY_IMG_T const& src, DST_GRAY_IMG_T const& dst)
+		{
+			u32 x_first = 1;
+			u32 y_first = 2;
+			u32 x_last = src.width - 2;
+			u32 y_last = src.height - 3;
 			for (u32 y = y_first; y <= y_last; ++y)
 			{
 				auto dst_row = dst.row_begin(y);
 				dst_row[x_first] = gauss3(src, x_first, y);
 				dst_row[x_last] = gauss3(src, x_last, y);
 			}
+		}
 
-			// inner pixels use 5 x 5 gaussian kernel
-			x_first = 2;
-			y_first = 2;
-			x_last = width - 3;
-			y_last = height - 3;
+
+		template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+		static void inner_gauss(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+		{
+			u32 x_first = 2;
+			u32 y_first = 2;
+			u32 x_last = src.width - 3;
+			u32 y_last = src.height - 3;
 			for (u32 y = y_first; y <= y_last; ++y)
 			{
 				auto dst_row = dst.row_begin(y);
@@ -327,6 +334,62 @@ namespace libimage
 					dst_row[x] = gauss5(src, x, y);
 				}
 			}
+		}
+
+
+		void blur(gray::image_t const& src, gray::image_t const& dst)
+		{
+			assert(verify(src, dst));
+			assert(width >= VIEW_MIN_DIM);
+			assert(height >= VIEW_MIN_DIM);
+
+			seq::copy_top_bottom(src, dst);
+			seq::copy_left_right(src, dst);
+			seq::gauss_inner_top_bottom(src, dst);
+			seq::gauss_inner_left_right(src, dst);
+			seq::inner_gauss(src, dst);
+		}
+
+
+		void blur(gray::image_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+			assert(width >= VIEW_MIN_DIM);
+			assert(height >= VIEW_MIN_DIM);
+
+			seq::copy_top_bottom(src, dst);
+			seq::copy_left_right(src, dst);
+			seq::gauss_inner_top_bottom(src, dst);
+			seq::gauss_inner_left_right(src, dst);
+			seq::inner_gauss(src, dst);
+		}
+
+
+		void blur(gray::view_t const& src, gray::image_t const& dst)
+		{
+			assert(verify(src, dst));
+			assert(width >= VIEW_MIN_DIM);
+			assert(height >= VIEW_MIN_DIM);
+
+			seq::copy_top_bottom(src, dst);
+			seq::copy_left_right(src, dst);
+			seq::gauss_inner_top_bottom(src, dst);
+			seq::gauss_inner_left_right(src, dst);
+			seq::inner_gauss(src, dst);
+		}
+
+
+		void blur(gray::view_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+			assert(width >= VIEW_MIN_DIM);
+			assert(height >= VIEW_MIN_DIM);
+
+			seq::copy_top_bottom(src, dst);
+			seq::copy_left_right(src, dst);
+			seq::gauss_inner_top_bottom(src, dst);
+			seq::gauss_inner_left_right(src, dst);
+			seq::inner_gauss(src, dst);
 		}
 	}
 }

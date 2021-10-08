@@ -93,7 +93,7 @@ namespace libimage
 	{
 		assert(verify(src_dst));
 		auto const update = [&](pixel_t& p) { p = func(p); };
-		std::for_each(src_dst.begin(), src_dst.end(), update);
+		std::for_each(std::execution::par, src_dst.begin(), src_dst.end(), update);
 	}
 
 
@@ -101,7 +101,7 @@ namespace libimage
 	{
 		assert(verify(src_dst));
 		auto const update = [&](pixel_t& p) { p = func(p); };
-		std::for_each(src_dst.begin(), src_dst.end(), update);
+		std::for_each(std::execution::par, src_dst.begin(), src_dst.end(), update);
 	}
 
 
@@ -109,7 +109,7 @@ namespace libimage
 	{
 		assert(verify(src_dst));
 		auto const update = [&](pixel_t& p) { p.alpha = func(p); };
-		std::for_each(src_dst.begin(), src_dst.end(), update);
+		std::for_each(std::execution::par, src_dst.begin(), src_dst.end(), update);
 	}
 
 
@@ -117,7 +117,7 @@ namespace libimage
 	{
 		assert(verify(src_dst));
 		auto const update = [&](pixel_t& p) { p.alpha = func(p); };
-		std::for_each(src_dst.begin(), src_dst.end(), update);
+		std::for_each(std::execution::par, src_dst.begin(), src_dst.end(), update);
 	}
 
 
@@ -393,25 +393,83 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR
 
-		void transform_alpha(view_t const& view, pixel_to_u8_f const& func)
-		{
-			assert(verify(view));
 
-			auto const conv = [&](pixel_t& p) { p.alpha = func(p); };
-			std::for_each(view.begin(), view.end(), conv);
+		void transform(image_t const& src, image_t const& dst, pixel_to_pixel_f const& func)
+		{
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), dst.begin(), func);
 		}
 
 
-		void transform_alpha_grayscale(view_t const& view)
+		void transform(image_t const& src, view_t const& dst, pixel_to_pixel_f const& func)
 		{
-			seq::transform_alpha(view, pixel_grayscale_standard);
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), dst.begin(), func);
+		}
+
+
+		void transform(view_t const& src, image_t const& dst, pixel_to_pixel_f const& func)
+		{
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), dst.begin(), func);
+		}
+
+
+		void transform(view_t const& src, view_t const& dst, pixel_to_pixel_f const& func)
+		{
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), dst.begin(), func);
+		}
+
+
+		void transform_self(image_t const& src_dst, pixel_to_pixel_f const& func)
+		{
+			assert(verify(src_dst));
+			auto const update = [&](pixel_t& p) { p = func(p); };
+			std::for_each(src_dst.begin(), src_dst.end(), update);
+		}
+
+
+		void transform_self(view_t const& src_dst, pixel_to_pixel_f const& func)
+		{
+			assert(verify(src_dst));
+			auto const update = [&](pixel_t& p) { p = func(p); };
+			std::for_each(src_dst.begin(), src_dst.end(), update);
+		}
+
+
+		void transform_alpha(image_t const& src_dst, pixel_to_u8_f const& func)
+		{
+			assert(verify(view));
+			auto const conv = [&](pixel_t& p) { p.alpha = func(p); };
+			std::for_each(src_dst.begin(), src_dst.end(), conv);
+		}
+
+
+		void transform_alpha(view_t const& src_dst, pixel_to_u8_f const& func)
+		{
+			assert(verify(view));
+			auto const conv = [&](pixel_t& p) { p.alpha = func(p); };
+			std::for_each(src_dst.begin(), src_dst.end(), conv);
+		}
+
+
+		void transform_alpha_grayscale(image_t const& src_dst)
+		{
+			seq::transform_alpha(src_dst, pixel_grayscale_standard);
+		}
+
+
+		void transform_alpha_grayscale(view_t const& src_dst)
+		{
+			seq::transform_alpha(src_dst, pixel_grayscale_standard);
 		}
 
 #endif // !LIBIMAGE_NO_COLOR
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-		static std::array<u8, 256> to_lookup_table(u8_to_u8_f const& func)
+		lookup_table_t to_lookup_table(u8_to_u8_f const& func)
 		{
 			std::array<u8, 256> lut = { 0 };
 
@@ -423,49 +481,162 @@ namespace libimage
 		}
 
 
-		void transform(gray::view_t const& src, gray::view_t const& dst, u8_to_u8_f const& func)
+		void transform(gray::image_t const& src, gray::image_t const& dst, lookup_table_t const& lut)
 		{
 			assert(verify(src, dst));
-
-			auto const lut = to_lookup_table(func);
 			auto const conv = [&lut](u8 p) { return lut[p]; };
-
 			std::transform(src.begin(), src.end(), dst.begin(), conv);
 		}
 
 
-		void transform(gray::view_t const& src, u8_to_u8_f const& func)
+		void transform(gray::image_t const& src, gray::view_t const& dst, lookup_table_t const& lut)
 		{
-			assert(verify(src));
+			assert(verify(src, dst));
+			auto const conv = [&lut](u8 p) { return lut[p]; };
+			std::transform(src.begin(), src.end(), dst.begin(), conv);
+		}
 
-			auto const lut = to_lookup_table(func);
+
+		void transform(gray::view_t const& src, gray::image_t const& dst, lookup_table_t const& lut)
+		{
+			assert(verify(src, dst));
+			auto const conv = [&lut](u8 p) { return lut[p]; };
+			std::transform(src.begin(), src.end(), dst.begin(), conv);
+		}
+
+
+		void transform(gray::view_t const& src, gray::view_t const& dst, lookup_table_t const& lut)
+		{
+			assert(verify(src, dst));
+			auto const conv = [&lut](u8 p) { return lut[p]; };
+			std::transform(src.begin(), src.end(), dst.begin(), conv);
+		}
+
+
+		void transform(gray::image_t const& src, gray::image_t const& dst, u8_to_u8_f const& func)
+		{
+			assert(verify(src, dst));
+			auto const lut = seq::to_lookup_table(func);
+			auto const conv = [&lut](u8 p) { return lut[p]; };
+			std::transform(src.begin(), src.end(), dst.begin(), conv);
+		}
+
+
+		void transform(gray::image_t const& src, gray::view_t const& dst, u8_to_u8_f const& func)
+		{
+			assert(verify(src, dst));
+			auto const lut = seq::to_lookup_table(func);
+			auto const conv = [&lut](u8 p) { return lut[p]; };
+			std::transform(src.begin(), src.end(), dst.begin(), conv);
+		}
+
+
+		void transform(gray::view_t const& src, gray::image_t const& dst, u8_to_u8_f const& func)
+		{
+			assert(verify(src, dst));
+			auto const lut = seq::to_lookup_table(func);
+			auto const conv = [&lut](u8 p) { return lut[p]; };
+			std::transform(src.begin(), src.end(), dst.begin(), conv);
+		}
+
+
+		void transform(gray::view_t const& src, gray::view_t const& dst, u8_to_u8_f const& func)
+		{
+			assert(verify(src, dst));
+			auto const lut = seq::to_lookup_table(func);
+			auto const conv = [&lut](u8 p) { return lut[p]; };
+			std::transform(src.begin(), src.end(), dst.begin(), conv);
+		}
+
+
+		void transform_self(gray::image_t const& src_dst, lookup_table_t const& lut)
+		{
+			assert(verify(src_dst));
 			auto const conv = [&lut](u8& p) { p = lut[p]; };
+			std::for_each(src_dst.begin(), src_dst.end(), conv);
+		}
 
-			std::for_each(src.begin(), src.end(), conv);
+		void transform_self(gray::view_t const& src_dst, lookup_table_t const& lut)
+		{
+			assert(verify(src_dst));
+			auto const conv = [&lut](u8& p) { p = lut[p]; };
+			std::for_each(src_dst.begin(), src_dst.end(), conv);
+		}
+
+
+		void transform_self(gray::image_t const& src_dst, u8_to_u8_f const& func)
+		{
+			assert(verify(src_dst));
+			auto const lut = to_lookup_table(func);
+			seq::transform_self(src_dst, lut);
+		}
+
+
+		void transform_self(gray::view_t const& src_dst, u8_to_u8_f const& func)
+		{
+			assert(verify(src_dst));
+			auto const lut = to_lookup_table(func);
+			seq::transform_self(src_dst, lut);
+		}
+
+
+		void transform_contrast(gray::image_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high)
+		{
+			assert(src_low < src_high);
+			u8 dst_low = 0;
+			u8 dst_high = 255;
+			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
+			seq::transform(src, dst, conv);
+		}
+
+
+		void transform_contrast(gray::image_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high)
+		{
+			assert(src_low < src_high);
+			u8 dst_low = 0;
+			u8 dst_high = 255;
+			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
+			seq::transform(src, dst, conv);
+		}
+
+
+		void transform_contrast(gray::view_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high)
+		{
+			assert(src_low < src_high);
+			u8 dst_low = 0;
+			u8 dst_high = 255;
+			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
+			seq::transform(src, dst, conv);
 		}
 
 
 		void transform_contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high)
 		{
 			assert(src_low < src_high);
-
 			u8 dst_low = 0;
 			u8 dst_high = 255;
-
 			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
 			seq::transform(src, dst, conv);
 		}
 
 
-		void transform_contrast(gray::view_t const& src, u8 src_low, u8 src_high)
+		void transform_contrast_self(gray::image_t const& src_dst, u8 src_low, u8 src_high)
 		{
 			assert(src_low < src_high);
-
 			u8 dst_low = 0;
 			u8 dst_high = 255;
-
 			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
-			seq::transform(src, conv);
+			seq::transform_self(src_dst, conv);
+		}
+
+
+		void transform_contrast_self(gray::view_t const& src_dst, u8 src_low, u8 src_high)
+		{
+			assert(src_low < src_high);
+			u8 dst_low = 0;
+			u8 dst_high = 255;
+			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
+			seq::transform_self(src_dst, conv);
 		}
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
@@ -475,11 +646,49 @@ namespace libimage
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
 
+		void transform(image_t const& src, gray::image_t const& dst, pixel_to_u8_f const& func)
+		{
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), dst.begin(), func);
+		}
+
+
+		void transform(image_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
+		{
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), dst.begin(), func);
+		}
+
+
+		void transform(view_t const& src, gray::image_t const& dst, pixel_to_u8_f const& func)
+		{
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), dst.begin(), func);
+		}
+
+
 		void transform(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
 		{
 			assert(verify(src, dst));
-
 			std::transform(src.begin(), src.end(), dst.begin(), func);
+		}
+
+
+		void transform_grayscale(image_t const& src, gray::image_t const& dst)
+		{
+			seq::transform(src, dst, pixel_grayscale_standard);
+		}
+
+
+		void transform_grayscale(image_t const& src, gray::view_t const& dst)
+		{
+			seq::transform(src, dst, pixel_grayscale_standard);
+		}
+
+
+		void transform_grayscale(view_t const& src, gray::image_t const& dst)
+		{
+			seq::transform(src, dst, pixel_grayscale_standard);
 		}
 
 

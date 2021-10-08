@@ -132,19 +132,94 @@ namespace libimage
 
 	namespace seq
 	{
+		void alpha_blend(image_t const& src, image_t const& current, image_t const& dst)
+		{
+			assert(verify(src, current));
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+		}
+
+
+		void alpha_blend(image_t const& src, image_t const& current, view_t const& dst)
+		{
+			assert(verify(src, current));
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+		}
+
+
+		void alpha_blend(image_t const& src, view_t const& current, image_t const& dst)
+		{
+			assert(verify(src, current));
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+		}
+
+
+		void alpha_blend(image_t const& src, view_t const& current, view_t const& dst)
+		{
+			assert(verify(src, current));
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+		}
+
+
+		void alpha_blend(view_t const& src, image_t const& current, image_t const& dst)
+		{
+			assert(verify(src, current));
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+		}
+
+
+		void alpha_blend(view_t const& src, image_t const& current, view_t const& dst)
+		{
+			assert(verify(src, current));
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+		}
+
+
+		void alpha_blend(view_t const& src, view_t const& current, image_t const& dst)
+		{
+			assert(verify(src, current));
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+		}
+
+
 		void alpha_blend(view_t const& src, view_t const& current, view_t const& dst)
 		{
 			assert(verify(src, current));
 			assert(verify(src, dst));
-
 			std::transform(src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+		}
+
+
+		void alpha_blend(image_t const& src, image_t const& current_dst)
+		{
+			assert(verify(src, current_dst));
+			std::transform(src.begin(), src.end(), current_dst.begin(), current_dst.begin(), alpha_blend_linear);
+		}
+
+
+		void alpha_blend(image_t const& src, view_t const& current_dst)
+		{
+			assert(verify(src, current_dst));
+			std::transform(src.begin(), src.end(), current_dst.begin(), current_dst.begin(), alpha_blend_linear);
+		}
+
+
+		void alpha_blend(view_t const& src, image_t const& current_dst)
+		{
+			assert(verify(src, current_dst));
+			std::transform(src.begin(), src.end(), current_dst.begin(), current_dst.begin(), alpha_blend_linear);
 		}
 
 
 		void alpha_blend(view_t const& src, view_t const& current_dst)
 		{
 			assert(verify(src, current_dst));
-
 			std::transform(src.begin(), src.end(), current_dst.begin(), current_dst.begin(), alpha_blend_linear);
 		}
 	}

@@ -450,15 +450,131 @@ namespace libimage
 		}
 
 
+		void edges(gray::image_t const& src, gray::image_t const& dst, u8 threshold)
+		{
+			assert(verify(src, dst));
+
+			gray::image_t temp;
+			make_image(temp, src.width, src.height);
+			seq::blur(src, temp);
+
+			seq::do_edges(temp, dst, threshold);
+		}
+
+
+		void edges(gray::image_t const& src, gray::view_t const& dst, u8 threshold)
+		{
+			assert(verify(src, dst));
+
+			gray::image_t temp;
+			make_image(temp, src.width, src.height);
+			seq::blur(src, temp);
+
+			seq::do_edges(temp, dst, threshold);
+		}
+
+
+		void edges(gray::view_t const& src, gray::image_t const& dst, u8 threshold)
+		{
+			assert(verify(src, dst));
+
+			gray::image_t temp;
+			make_image(temp, src.width, src.height);
+			seq::blur(src, temp);
+
+			seq::do_edges(temp, dst, threshold);
+		}
+
+
 		void edges(gray::view_t const& src, gray::view_t const& dst, u8 threshold)
 		{
 			assert(verify(src, dst));
 
 			gray::image_t temp;
-			auto temp_view = make_view(temp, src.width, src.height);
-			seq::blur(src, temp_view);
+			make_image(temp, src.width, src.height);
+			seq::blur(src, temp);
 
-			seq::do_edges(temp_view, dst, threshold);
+			seq::do_edges(temp, dst, threshold);
+		}
+
+
+		void edges(gray::image_t const& src, gray::image_t const& dst, u8 threshold, gray::image_t const& temp)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			seq::blur(src, temp);
+
+			seq::do_edges(temp, dst, threshold);
+		}
+
+
+		void edges(gray::image_t const& src, gray::view_t const& dst, u8 threshold, gray::image_t const& temp)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			seq::blur(src, temp);
+
+			seq::do_edges(temp, dst, threshold);
+		}
+
+
+		void edges(gray::view_t const& src, gray::image_t const& dst, u8 threshold, gray::image_t const& temp)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			seq::blur(src, temp);
+
+			seq::do_edges(temp, dst, threshold);
+		}
+
+
+		void edges(gray::view_t const& src, gray::view_t const& dst, u8 threshold, gray::image_t const& temp)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			seq::blur(src, temp);
+
+			seq::do_edges(temp, dst, threshold);
+		}
+
+
+		void gradients(gray::image_t const& src, gray::image_t const& dst)
+		{
+			assert(verify(src, dst));
+
+			gray::image_t temp;
+			make_image(temp, src.width, src.height);
+			seq::blur(src, temp);
+
+			seq::do_gradients(temp, dst);
+		}
+
+
+		void gradients(gray::image_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+
+			gray::image_t temp;
+			make_image(temp, src.width, src.height);
+			seq::blur(src, temp);
+
+			seq::do_gradients(temp, dst);
+		}
+
+
+		void gradients(gray::view_t const& src, gray::image_t const& dst)
+		{
+			assert(verify(src, dst));
+
+			gray::image_t temp;
+			make_image(temp, src.width, src.height);
+			seq::blur(src, temp);
+
+			seq::do_gradients(temp, dst);
 		}
 
 
@@ -467,10 +583,54 @@ namespace libimage
 			assert(verify(src, dst));
 
 			gray::image_t temp;
-			auto temp_view = make_view(temp, src.width, src.height);
-			seq::blur(src, temp_view);
+			make_image(temp, src.width, src.height);
+			seq::blur(src, temp);
 
-			seq::do_gradients(temp_view, dst);
+			seq::do_gradients(temp, dst);
+		}
+
+
+		void gradients(gray::image_t const& src, gray::image_t const& dst, gray::image_t const& temp)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			seq::blur(src, temp);
+
+			seq::do_gradients(temp, dst);
+		}
+
+
+		void gradients(gray::image_t const& src, gray::view_t const& dst, gray::image_t const& temp)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			seq::blur(src, temp);
+
+			seq::do_gradients(temp, dst);
+		}
+
+
+		void gradients(gray::view_t const& src, gray::image_t const& dst, gray::image_t const& temp)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			seq::blur(src, temp);
+
+			seq::do_gradients(temp, dst);
+		}
+
+
+		void gradients(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			seq::blur(src, temp);
+
+			seq::do_gradients(temp, dst);
 		}
 	}
 }
