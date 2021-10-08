@@ -1,6 +1,8 @@
 #pragma once
 
-#include "../libimage.hpp"
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+#include "../gray.hpp"
 
 namespace libimage
 {
@@ -23,3 +25,5 @@ namespace libimage
 
 	r32 y_gradient(gray::view_t const& view, u32 x, u32 y);
 }
+
+#endif

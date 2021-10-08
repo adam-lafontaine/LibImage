@@ -146,8 +146,13 @@
     <ClCompile Include="..\..\libimage\libimage.cpp" />
     <ClCompile Include="..\..\libimage\locate\locate.cpp" />
     <ClCompile Include="..\..\libimage\math\libimage_math.cpp" />
+    <ClCompile Include="..\..\libimage\proc\alpha_blend.cpp" />
+    <ClCompile Include="..\..\libimage\proc\binarize.cpp" />
+    <ClCompile Include="..\..\libimage\proc\blur.cpp" />
     <ClCompile Include="..\..\libimage\proc\convolve.cpp" />
-    <ClCompile Include="..\..\libimage\proc\process.cpp" />
+    <ClCompile Include="..\..\libimage\proc\copy.cpp" />
+    <ClCompile Include="..\..\libimage\proc\gradient.cpp" />
+    <ClCompile Include="..\..\libimage\proc\transform.cpp" />
     <ClCompile Include="..\..\libimage\stb_wrapper\stb_libimage.cpp" />
     <ClCompile Include="libimage_tests_main.cpp" />
   </ItemGroup>
@@ -156,6 +161,7 @@
     <ClInclude Include="..\..\libimage\libimage.hpp" />
     <ClInclude Include="..\..\libimage\locate\locate.hpp" />
     <ClInclude Include="..\..\libimage\math\libimage_math.hpp" />
+    <ClInclude Include="..\..\libimage\proc\verify.hpp" />
     <ClInclude Include="..\..\libimage\rgba.hpp" />
     <ClInclude Include="..\..\libimage\types.hpp" />
     <ClInclude Include="..\..\libimage\proc\convolve.hpp" />

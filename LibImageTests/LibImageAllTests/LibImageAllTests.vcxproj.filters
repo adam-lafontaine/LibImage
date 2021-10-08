@@ -60,14 +60,29 @@
     <ClCompile Include="..\..\libimage\proc\convolve.cpp">
       <Filter>Source Files\libimage\proc</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\libimage\proc\process.cpp">
-      <Filter>Source Files\libimage\proc</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\libimage\libimage.cpp">
       <Filter>Source Files\libimage</Filter>
     </ClCompile>
     <ClCompile Include="..\..\libimage\locate\locate.cpp">
       <Filter>Source Files\libimage\locate</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libimage\proc\copy.cpp">
+      <Filter>Source Files\libimage\proc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libimage\proc\transform.cpp">
+      <Filter>Source Files\libimage\proc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libimage\proc\alpha_blend.cpp">
+      <Filter>Source Files\libimage\proc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libimage\proc\binarize.cpp">
+      <Filter>Source Files\libimage\proc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libimage\proc\blur.cpp">
+      <Filter>Source Files\libimage\proc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libimage\proc\gradient.cpp">
+      <Filter>Source Files\libimage\proc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -106,6 +121,9 @@
     </ClInclude>
     <ClInclude Include="..\..\libimage\gray.hpp">
       <Filter>Header Files\libimage</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage\proc\verify.hpp">
+      <Filter>Header Files\libimage\proc</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

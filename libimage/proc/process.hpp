@@ -13,6 +13,8 @@ Copyright (c) 2021 Adam Lafontaine
 
 namespace libimage
 {
+	constexpr u32 VIEW_MIN_DIM = 5;
+
 #ifndef LIBIMAGE_NO_COLOR
 
 	using pixel_to_pixel_f = std::function<pixel_t(pixel_t const&)>;

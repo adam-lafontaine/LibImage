@@ -4,9 +4,12 @@ Copyright (c) 2021 Adam Lafontaine
 
 */
 
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
 #include "convolve.hpp"
+#include "../libimage.hpp"
 
-
+#include <algorithm>
 #include <array>
 
 namespace libimage
@@ -366,3 +369,5 @@ namespace libimage
 		return weighted_center(view, x, y, kernel);
 	}
 }
+
+#endif
