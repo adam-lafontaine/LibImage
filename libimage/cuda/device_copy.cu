@@ -26,9 +26,6 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-
-
-#endif // !LIBIMAGE_NO_GRAYSCALE
         bool copy_to_device(gray::image_t const& src, DeviceArray<gray::pixel_t> const& dst)
         {
             u32 bytes = src.width * src.height * sizeof(gray::pixel_t);
@@ -42,10 +39,6 @@ namespace libimage
             return copy_to_host(src, dst.data, bytes);
         }
 
-
-        
-
-
-        
+#endif // !LIBIMAGE_NO_GRAYSCALE        
     }
 }

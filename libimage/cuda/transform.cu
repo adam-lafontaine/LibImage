@@ -2,6 +2,10 @@
 #include "cuda_def.cuh"
 
 
+#ifndef LIBIMAGE_NO_COLOR
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+
 GPU_FUNCTION
 u8 rgb_grayscale_standard(u8 red, u8 green, u8 blue)
 {
@@ -95,3 +99,6 @@ namespace libimage
         }
     }
 }
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+#endif // !LIBIMAGE_NO_COLOR	
