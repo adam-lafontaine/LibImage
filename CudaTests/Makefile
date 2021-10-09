@@ -273,26 +273,20 @@ else
 	@echo "Sample is ready - all dependencies have been met"
 endif
 
-#img_proc_main.o: img_proc_main.cpp img_proc.hpp
-#	g++ -o $@ -c img_proc_main.cpp
+cuda_test_main.o: cuda_test_main.cpp
+	g++-10 -std=c++17 -lstdc++fs -o $@ -c $<
 
-#img_proc.o: img_proc.cu img_proc.hpp img_lib.hpp device.hpp types.hpp
-#	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c img_proc.cu
+libimage.o: ../libimage/libimage.cpp ../libimage/stb_wrapper/stb_libimage.cpp
+	g++-10 -std=c++17 -lstdc++fs -o $@ -c $<
 
-#img_lib.o: img_lib.cpp img_lib.hpp types.hpp
-#	g++ -o $@ -c img_lib.cpp
+#process.o: ../libimage/cuda/device.cu ../libimage/cuda/device_copy.cu ../libimage/cuda/transform.cu
+#	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
-#device.o: device.cu device.hpp types.hpp
-#	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c device.cu
-
-#exe: device.o img_lib.o img_proc.o img_proc_main.o
+#exe: libimage.o cuda_test_main.o
 #	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
 
-cuda_test_main.o: cuda_test_main.cpp
-	g++ -o $@ -std=c++17 -c cuda_test_main.cpp
-
-exe: cuda_test_main.o
-	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
+exe: libimage.o cuda_test_main.o
+	g++-10 -std=c++17 -lstdc++fs -o $@ $+
 
 build: exe
 
@@ -300,4 +294,4 @@ run: build
 	$(EXEC) ./exe
 
 clean:
-	rm -f exe exe.o cuda_test_main.o
+	rm -f exe cuda_test_main.o libimage.o process.o
