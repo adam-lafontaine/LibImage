@@ -12,10 +12,16 @@ Copyright (c) 2021 Adam Lafontaine
 #include "convolve.hpp"
 
 #include <algorithm>
+
+#ifndef LIBIMAGE_NO_PARALLEL
 #include <execution>
+#endif // !LIBIMAGE_NO_PARALLEL
 
 namespace libimage
 {
+#ifndef LIBIMAGE_NO_PARALLEL
+
+
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
 	static void copy_top(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
@@ -248,6 +254,7 @@ namespace libimage
 	}
 
 
+#endif // !LIBIMAGE_NO_PARALLEL
 	namespace seq
 	{
 		template<class SRC_GRAY_IMG_T, class DST_GRAY_IMG_T>

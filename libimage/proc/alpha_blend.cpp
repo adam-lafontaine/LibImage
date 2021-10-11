@@ -10,12 +10,13 @@ Copyright (c) 2021 Adam Lafontaine
 #include "verify.hpp"
 
 #include <algorithm>
+
+#ifndef LIBIMAGE_NO_PARALLEL
 #include <execution>
+#endif // !LIBIMAGE_NO_PARALLEL
 
 namespace libimage
 {
-
-
 	static constexpr pixel_t alpha_blend_linear(pixel_t const& src, pixel_t const& current)
 	{
 		auto const a = static_cast<r32>(src.alpha) / 255.0f;
@@ -37,6 +38,8 @@ namespace libimage
 		return to_pixel(red, green, blue);
 	}
 
+
+#ifndef LIBIMAGE_NO_PARALLEL
 
 	void alpha_blend(image_t const& src, image_t const& current, image_t const& dst)
 	{
@@ -129,7 +132,7 @@ namespace libimage
 		std::transform(std::execution::par, src.begin(), src.end(), current_dst.begin(), current_dst.begin(), alpha_blend_linear);
 	}
 
-
+#endif // !LIBIMAGE_NO_PARALLEL
 	namespace seq
 	{
 		void alpha_blend(image_t const& src, image_t const& current, image_t const& dst)
