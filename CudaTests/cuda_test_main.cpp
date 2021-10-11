@@ -1,5 +1,5 @@
 #include "../libimage/libimage.hpp"
-//#include "../libimage/proc/process.hpp"
+#include "../libimage/proc/process.hpp"
 #include "../libimage/math/libimage_math.hpp"
 #include "./utils/stopwatch.hpp"
 
@@ -63,19 +63,19 @@ void process_tests(fs::path const& out_dir)
 	img::write_image(caddy_img, out_dir / "caddy.png");
 
 
-	Image dst_image;
-	img::make_image(dst_image, width, height);
+	Image dst_img;
+	img::make_image(dst_img, width, height);
 
-	GrayImage dst_gray_image;
-	img::make_image(dst_gray_image, width, height);
+	GrayImage dst_gray_img;
+	img::make_image(dst_gray_img, width, height);
 
 
 
-/*
+
 	// alpha blending
-	img::seq::transform_alpha(caddy_view, [](auto const& p) { return 128; });
-	img::seq::alpha_blend(caddy_view, corvette_view, dst_image);
-	img::write_image(dst_image, out_dir / "alpha_blend.png");
+	img::seq::transform_alpha(caddy_img, [](auto const& p) { return 128; });
+	img::seq::alpha_blend(caddy_img, corvette_img, dst_img);
+	img::write_image(dst_img, out_dir / "alpha_blend.png");
 /*
 	img::copy(corvette_view, dst_image);
 	img::alpha_blend(caddy_view, dst_image);

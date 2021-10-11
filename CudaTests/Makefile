@@ -272,13 +272,17 @@ main := cuda_test_main.cpp
 libimage := ../libimage/libimage.cpp
 stb_libimage := ../libimage/stb_wrapper/stb_libimage.cpp
 libimage_math := ../libimage/math/libimage_math.cpp
-libimage_proc := ../libimage/proc/
+transform := ../libimage/proc/transform.cpp
+alpha_blend := ../libimage/proc/alpha_blend.cpp
 
 object_files :=
 object_files += $(build)/cuda_test_main.o
 object_files += $(build)/libimage.o
 object_files += $(build)/stb_libimage.o
 object_files += $(build)/libimage_math.o
+object_files += $(build)/transform.o
+object_files += $(build)/alpha_blend.o
+
 
 
 check.deps: 
@@ -288,7 +292,7 @@ else
 	@echo "Sample is ready - all dependencies have been met"
 endif
 
-cuda_test_main.o: $(main) libimage.o stb_libimage.o libimage_math.o
+cuda_test_main.o: $(main) libimage.o stb_libimage.o libimage_math.o transform.o alpha_blend.o
 	@echo "\ncuda_test_main.o"
 	$(GPP) -o $(build)/$@ -c $<
 
@@ -304,7 +308,13 @@ libimage_math.o: $(libimage_math)
 	@echo "\nlibimage_math"
 	$(GPP) -o $(build)/$@ -c $<
 
-#libimage_proc.o: 
+alpha_blend.o: $(alpha_blend) transform.o
+	@echo "\nalpha_blend"
+	$(GPP) -o $(build)/$@ -c $<
+
+transform.o: $(transform)
+	@echo "\ntransform"
+	$(GPP) -o $(build)/$@ -c $<
 
 
 #process.o: ../libimage/cuda/device.cu ../libimage/cuda/device_copy.cu ../libimage/cuda/transform.cu
@@ -324,4 +334,4 @@ run: build
 
 clean:
 	rm -rfv $(build)/*
-	rm-rfv ./out_files/*
+	rm -rfv ./out_files/*
