@@ -9,7 +9,11 @@ Copyright (c) 2021 Adam Lafontaine
 #include "index_range.hpp"
 
 #include <algorithm>
+
+#ifndef LIBIMAGE_NO_PARALLEL
 #include <execution>
+#endif // !LIBIMAGE_NO_PARALLEL
+
 
 namespace libimage
 {
@@ -54,11 +58,47 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR
 
-
 	static constexpr u8 pixel_grayscale_standard(pixel_t const& p)
 	{
 		return rgb_grayscale_standard(p.red, p.green, p.blue);
 	}
+
+#endif // !LIBIMAGE_NO_COLOR
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	static constexpr u8 lerp_clamp(u8 src_low, u8 src_high, u8 dst_low, u8 dst_high, u8 val)
+	{
+		if (val < src_low)
+		{
+			return dst_low;
+		}
+		else if (val > src_high)
+		{
+			return dst_high;
+		}
+
+		auto const ratio = (static_cast<r64>(val) - src_low) / (src_high - src_low);
+
+		assert(ratio >= 0.0);
+		assert(ratio <= 1.0);
+
+		auto const diff = ratio * (dst_high - dst_low);
+
+		return dst_low + static_cast<u8>(diff);
+	}
+
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+
+}
+
+
+namespace libimage
+{
+#ifndef LIBIMAGE_NO_PARALLEL
+
+#ifndef LIBIMAGE_NO_COLOR
 
 
 	void transform(image_t const& src, image_t const& dst, pixel_to_pixel_f const& func)
@@ -136,28 +176,6 @@ namespace libimage
 
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
-
-	static constexpr u8 lerp_clamp(u8 src_low, u8 src_high, u8 dst_low, u8 dst_high, u8 val)
-	{
-		if (val < src_low)
-		{
-			return dst_low;
-		}
-		else if (val > src_high)
-		{
-			return dst_high;
-		}
-
-		auto const ratio = (static_cast<r64>(val) - src_low) / (src_high - src_low);
-
-		assert(ratio >= 0.0);
-		assert(ratio <= 1.0);
-
-		auto const diff = ratio * (dst_high - dst_low);
-
-		return dst_low + static_cast<u8>(diff);
-	}
-
 
 	lookup_table_t to_lookup_table(u8_to_u8_f const& func)
 	{
@@ -388,6 +406,7 @@ namespace libimage
 #endif // !LIBIMAGE_NO_COLOR
 
 
+#endif // !LIBIMAGE_NO_PARALLEL
 	namespace seq
 	{
 
