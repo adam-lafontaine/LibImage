@@ -266,6 +266,13 @@ endif
 
 ################################################################################
 
+GPP := g++-10 -std=c++17 -lstdc++fs
+build := ./build_files
+main := cuda_test_main.cpp
+libimage := ../libimage/libimage.cpp
+stb_libimage := ../libimage/stb_wrapper/stb_libimage.cpp
+
+
 check.deps: 
 ifeq ($(SAMPLE_ENABLED),0)
 	@echo "Sample will be waived due to the above missing dependencies"
@@ -273,17 +280,17 @@ else
 	@echo "Sample is ready - all dependencies have been met"
 endif
 
-cuda_test_main.o: cuda_test_main.cpp libimage.o
+cuda_test_main.o: $(main) libimage.o stb_libimage.o
 	@echo "\ncuda_test_main.o"
-	g++-10 -std=c++17 -lstdc++fs -o $@ -c $<
+	$(GPP) -o $(build)/$@ -c $<
 
-libimage.o: ../libimage/libimage.cpp stb_libimage.o
+libimage.o: $(libimage)
 	@echo "\nlibimage.o"
-	g++-10 -std=c++17 -lstdc++fs -o $@ -c ../libimage/libimage.cpp
+	$(GPP) -o $(build)/$@ -c $<
 
-stb_libimage.o: ../libimage/stb_wrapper/stb_libimage.cpp
+stb_libimage.o: $(stb_libimage)
 	@echo "\nstb_libimage"
-	g++-10 -std=c++17 -lstdc++fs -o $@ -c ../libimage/stb_wrapper/stb_libimage.cpp
+	$(GPP) -o $(build)/$@ -c $<
 
 
 #process.o: ../libimage/cuda/device.cu ../libimage/cuda/device_copy.cu ../libimage/cuda/transform.cu
@@ -294,12 +301,12 @@ stb_libimage.o: ../libimage/stb_wrapper/stb_libimage.cpp
 
 exe: cuda_test_main.o libimage.o stb_libimage.o
 	@echo "\nexe"
-	g++-10 -std=c++17 -lstdc++fs -o $@ $+
+	g++-10 -std=c++17 -lstdc++fs -o $(build)/$@ $(build)/cuda_test_main.o $(build)/libimage.o $(build)/stb_libimage.o
 
 build: exe
 
 run: build
-	$(EXEC) ./exe
+	$(EXEC) $(build)/exe
 
 clean:
-	rm -f exe cuda_test_main.o libimage.o stb_libimage.o process.o
+	rm -rfv $(build)

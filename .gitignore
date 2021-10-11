@@ -1,5 +1,6 @@
 .vscode/
 out_files/
+build_files/
 
 
 ## Ignore Visual Studio temporary files, build results, and
