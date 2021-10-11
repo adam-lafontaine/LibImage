@@ -272,7 +272,6 @@ namespace libimage
 		pixel_t white = to_pixel(255, 255, 255);
 
 		make_image(image_dst, image_width, image_height);
-		std::fill(std::execution::par, image_dst.begin(), image_dst.end(), white);
 		img_fill(image_dst, white);
 
 		u32 max_count = 0;
@@ -311,7 +310,7 @@ namespace libimage
 					pixel_t color = to_pixel(0, 0, 0, 255);
 					color.channels[c] = shade;
 					auto bar_view = sub_view(image_dst, bar_range);
-					std::fill(bar_view.begin(), bar_view.end(), color);
+					img_fill(bar_view, color);
 				}
 
 				bar_range.x_begin += (bucket_spacing + bucket_width);
@@ -351,7 +350,7 @@ namespace libimage
 		pixel_t white = to_pixel(255, 255, 255);
 
 		make_image(image_dst, image_width, image_height);
-		std::fill(image_dst.begin(), image_dst.end(), white);
+		img_fill(image_dst, white);
 
 		r32 max_count = 0.0f;
 		for (auto const& item : data)
@@ -387,7 +386,7 @@ namespace libimage
 				if (bar_range.y_end > bar_range.y_begin)
 				{
 					auto bar_view = sub_view(image_dst, bar_range);
-					std::fill(bar_view.begin(), bar_view.end(), d.color);
+					img_fill(bar_view, d.color);
 				}
 			}
 		}
@@ -483,8 +482,10 @@ namespace libimage
 		u32 const bucket_spacing = 1;
 		u32 const image_width = n_buckets * (bucket_spacing + bucket_width) + bucket_spacing;
 
+		u8 const white = 255;
+
 		make_image(image_dst, image_width, image_height);
-		std::fill(image_dst.begin(), image_dst.end(), 255);
+		img_fill(image_dst, white);
 
 		auto max_count = *std::max_element(hist.begin(), hist.end());
 
@@ -507,7 +508,7 @@ namespace libimage
 			{
 				u8 shade = 50;// n_buckets* (bucket + 1) - 1;
 				auto bar_view = sub_view(image_dst, bar_range);
-				std::fill(bar_view.begin(), bar_view.end(), shade);
+				img_fill(bar_view, shade);
 			}
 
 			bar_range.x_begin += (bucket_spacing + bucket_width);
