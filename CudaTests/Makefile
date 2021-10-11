@@ -268,12 +268,21 @@ endif
 
 GPP := g++-10 -std=c++17 -lstdc++fs
 build := ./build_files
-main := cuda_test_main.cpp
+main_cpp := cuda_test_main.cpp
 libimage := ../libimage/libimage.cpp
 stb_libimage := ../libimage/stb_wrapper/stb_libimage.cpp
 libimage_math := ../libimage/math/libimage_math.cpp
 transform := ../libimage/proc/transform.cpp
 alpha_blend := ../libimage/proc/alpha_blend.cpp
+copy := ../libimage/proc/copy.cpp
+
+main_dep :=
+main_dep += libimage.o
+main_dep += stb_libimage.o
+main_dep += libimage_math.o
+main_dep += transform.o
+main_dep += alpha_blend.o
+main_dep += copy.o
 
 object_files :=
 object_files += $(build)/cuda_test_main.o
@@ -282,6 +291,7 @@ object_files += $(build)/stb_libimage.o
 object_files += $(build)/libimage_math.o
 object_files += $(build)/transform.o
 object_files += $(build)/alpha_blend.o
+object_files += $(build)/copy.o
 
 
 
@@ -292,7 +302,7 @@ else
 	@echo "Sample is ready - all dependencies have been met"
 endif
 
-cuda_test_main.o: $(main) libimage.o stb_libimage.o libimage_math.o transform.o alpha_blend.o
+cuda_test_main.o: $(main_cpp) $(main_dep)
 	@echo "\ncuda_test_main.o"
 	$(GPP) -o $(build)/$@ -c $<
 
@@ -301,19 +311,23 @@ libimage.o: $(libimage)
 	$(GPP) -o $(build)/$@ -c $<
 
 stb_libimage.o: $(stb_libimage)
-	@echo "\nstb_libimage"
+	@echo "\nstb_libimage.o"
 	$(GPP) -o $(build)/$@ -c $<
 
 libimage_math.o: $(libimage_math)
-	@echo "\nlibimage_math"
+	@echo "\nlibimage_math.o"
 	$(GPP) -o $(build)/$@ -c $<
 
 alpha_blend.o: $(alpha_blend) transform.o
-	@echo "\nalpha_blend"
+	@echo "\nalpha_blend.o"
 	$(GPP) -o $(build)/$@ -c $<
 
 transform.o: $(transform)
-	@echo "\ntransform"
+	@echo "\ntransform.o"
+	$(GPP) -o $(build)/$@ -c $<
+
+copy.o: $(copy)
+	@echo "\ncopy.o"
 	$(GPP) -o $(build)/$@ -c $<
 
 

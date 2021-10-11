@@ -76,10 +76,10 @@ void process_tests(fs::path const& out_dir)
 	img::seq::transform_alpha(caddy_img, [](auto const& p) { return 128; });
 	img::seq::alpha_blend(caddy_img, corvette_img, dst_img);
 	img::write_image(dst_img, out_dir / "alpha_blend.png");
-/*
-	img::copy(corvette_view, dst_image);
-	img::alpha_blend(caddy_view, dst_image);
-	img::write_image(dst_image, out_dir / "alpha_blend_src_dst.png");
+
+	img::seq::copy(corvette_img, dst_img);
+	img::seq::alpha_blend(caddy_img, dst_img);
+	img::write_image(dst_img, out_dir / "alpha_blend_src_dst.png");
 /*
 	// grayscale
 	img::transform_grayscale(corvette_view, dst_gray_image);
