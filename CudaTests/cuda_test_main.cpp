@@ -1,5 +1,6 @@
 #include "../libimage/libimage.hpp"
 //#include "../libimage/proc/process.hpp"
+#include "../libimage/math/libimage_math.hpp"
 #include "./utils/stopwatch.hpp"
 
 #include <cstdio>
@@ -44,11 +45,23 @@ void process_tests(fs::path const& out_dir)
 	empty_dir(out_dir);
 
 	// get image
-	Image corvette_image;
-	img::read_image_from_file(CORVETTE_PATH, corvette_image);
-	auto const width = corvette_image.width;
-	auto const height = corvette_image.height;
-	auto corvette_view = img::make_view(corvette_image);
+	Image corvette_img;
+	img::read_image_from_file(CORVETTE_PATH, corvette_img);
+	img::write_image(corvette_img, out_dir / "vette.png");
+
+	auto const width = corvette_img.width;
+	auto const height = corvette_img.height;	
+
+	// get another image for blending
+	// make sure it is the same size
+	Image caddy_read;
+	img::read_image_from_file(CADILLAC_PATH, caddy_read);
+	Image caddy_img;
+	caddy_img.width = width;
+	caddy_img.height = height;
+	img::resize_image(caddy_read, caddy_img);
+	img::write_image(caddy_img, out_dir / "caddy.png");
+
 
 	Image dst_image;
 	img::make_image(dst_image, width, height);
@@ -56,38 +69,29 @@ void process_tests(fs::path const& out_dir)
 	GrayImage dst_gray_image;
 	img::make_image(dst_gray_image, width, height);
 
-	// get another image for blending
-	// make sure it is the same size
-	Image caddy_read;
-	img::read_image_from_file(CADILLAC_PATH, caddy_read);
-	Image caddy;
-	caddy.width = width;
-	caddy.height = height;
-	img::resize_image(caddy_read, caddy);
-	auto caddy_view = make_view(caddy);
 
-	/*
 
+/*
 	// alpha blending
-	img::transform_alpha(caddy_view, [](auto const& p) { return 128; });
-	img::alpha_blend(caddy_view, corvette_view, dst_image);
+	img::seq::transform_alpha(caddy_view, [](auto const& p) { return 128; });
+	img::seq::alpha_blend(caddy_view, corvette_view, dst_image);
 	img::write_image(dst_image, out_dir / "alpha_blend.png");
-
+/*
 	img::copy(corvette_view, dst_image);
 	img::alpha_blend(caddy_view, dst_image);
 	img::write_image(dst_image, out_dir / "alpha_blend_src_dst.png");
-
+/*
 	// grayscale
 	img::transform_grayscale(corvette_view, dst_gray_image);
 	img::write_image(dst_gray_image, out_dir / "convert_grayscale.png");
-	
+/*	
 	// stats
 	auto gray_stats = img::calc_stats(dst_gray_image);
 	GrayImage gray_stats_image;
 	img::draw_histogram(gray_stats.hist, gray_stats_image);
 	img::write_image(gray_stats_image, out_dir / "gray_stats.png");
 	print(gray_stats);
-
+/*
 	// alpha grayscale
 	img::transform_alpha_grayscale(corvette_view);
 	auto alpha_stats = img::calc_stats(corvette_image, img::Channel::Alpha);
@@ -95,35 +99,35 @@ void process_tests(fs::path const& out_dir)
 	img::draw_histogram(alpha_stats.hist, alpha_stats_image);
 	img::write_image(alpha_stats_image, out_dir / "alpha_stats.png");
 	print(alpha_stats);
-
+/*
 	// create a new grayscale source
 	GrayImage src_gray_image;
 	img::make_image(src_gray_image, width, height);
 	img::copy(dst_gray_image, src_gray_image);
-
+/*
 	// contrast
 	auto shade_min = static_cast<u8>(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
 	auto shade_max = static_cast<u8>(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
 	img::transform_contrast(src_gray_image, dst_gray_image, shade_min, shade_max);
 	img::write_image(dst_gray_image, out_dir / "contrast.png");
-
+/*
 	// binarize
 	auto const is_white = [&](u8 p) { return static_cast<r32>(p) > gray_stats.mean; };
 	img::binarize(src_gray_image, dst_gray_image, is_white);
 	img::write_image(dst_gray_image, out_dir / "binarize.png");
-
+/*
 	//blur
 	img::blur(src_gray_image, dst_gray_image);
 	img::write_image(dst_gray_image, out_dir / "blur.png");	
-
+/*
 	// edge detection
 	img::edges(src_gray_image, dst_gray_image, 150);
 	img::write_image(dst_gray_image, out_dir / "edges.png");
-
+/*
 	// gradient
 	img::gradients(src_gray_image, dst_gray_image);
 	img::write_image(dst_gray_image, out_dir / "gradient.png");
-
+/*
 	// combine transformations in the same image
 	// regular grayscale to start
 	img::copy(src_gray_image, dst_gray_image);
@@ -159,7 +163,7 @@ void process_tests(fs::path const& out_dir)
 
 	img::write_image(dst_gray_image, out_dir / "combo.png");
 
-
+/*
 	// compare edge detection speeds
 	auto green = img::to_pixel(88, 100, 29);
 	auto blue = img::to_pixel(0, 119, 182);

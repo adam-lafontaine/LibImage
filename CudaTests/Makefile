@@ -272,6 +272,13 @@ main := cuda_test_main.cpp
 libimage := ../libimage/libimage.cpp
 stb_libimage := ../libimage/stb_wrapper/stb_libimage.cpp
 libimage_math := ../libimage/math/libimage_math.cpp
+libimage_proc := ../libimage/proc/
+
+object_files :=
+object_files += $(build)/cuda_test_main.o
+object_files += $(build)/libimage.o
+object_files += $(build)/stb_libimage.o
+object_files += $(build)/libimage_math.o
 
 
 check.deps: 
@@ -297,6 +304,8 @@ libimage_math.o: $(libimage_math)
 	@echo "\nlibimage_math"
 	$(GPP) -o $(build)/$@ -c $<
 
+#libimage_proc.o: 
+
 
 #process.o: ../libimage/cuda/device.cu ../libimage/cuda/device_copy.cu ../libimage/cuda/transform.cu
 #	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
@@ -306,7 +315,7 @@ libimage_math.o: $(libimage_math)
 
 cuda_test: cuda_test_main.o
 	@echo "\ncuda_test"
-	g++-10 -std=c++17 -lstdc++fs -o $(build)/$@ $(build)/cuda_test_main.o $(build)/libimage.o $(build)/stb_libimage.o $(build)/libimage_math.o
+	g++-10 -std=c++17 -lstdc++fs -o $(build)/$@ $(object_files)
 
 build: cuda_test
 
@@ -315,3 +324,4 @@ run: build
 
 clean:
 	rm -rfv $(build)/*
+	rm-rfv ./out_files/*
