@@ -70,8 +70,6 @@ void process_tests(fs::path const& out_dir)
 	img::make_image(dst_gray_img, width, height);
 
 
-
-
 	// alpha blending
 	img::seq::transform_alpha(caddy_img, [](auto const& p) { return 128; });
 	img::seq::alpha_blend(caddy_img, corvette_img, dst_img);
@@ -80,10 +78,10 @@ void process_tests(fs::path const& out_dir)
 	img::seq::copy(corvette_img, dst_img);
 	img::seq::alpha_blend(caddy_img, dst_img);
 	img::write_image(dst_img, out_dir / "alpha_blend_src_dst.png");
-/*
+
 	// grayscale
-	img::transform_grayscale(corvette_view, dst_gray_image);
-	img::write_image(dst_gray_image, out_dir / "convert_grayscale.png");
+	img::seq::transform_grayscale(corvette_img, dst_gray_img);
+	img::write_image(dst_gray_img, out_dir / "convert_grayscale.png");
 /*	
 	// stats
 	auto gray_stats = img::calc_stats(dst_gray_image);
