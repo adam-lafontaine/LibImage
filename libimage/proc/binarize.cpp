@@ -10,10 +10,16 @@ Copyright (c) 2021 Adam Lafontaine
 #include "verify.hpp"
 
 #include <algorithm>
+
+#ifndef LIBIMAGE_NO_PARALLEL
 #include <execution>
+#endif // !LIBIMAGE_NO_PARALLEL
 
 namespace libimage
 {
+#ifndef LIBIMAGE_NO_PARALLEL
+
+
 	void binarize(gray::image_t const& src, gray::image_t const& dst, u8 min_threashold)
 	{
 		auto const conv = [&](u8 p) { return p >= min_threashold ? 255 : 0; };
@@ -98,7 +104,7 @@ namespace libimage
 	}
 
 
-
+#endif // !LIBIMAGE_NO_PARALLEL
 	namespace seq
 	{
 

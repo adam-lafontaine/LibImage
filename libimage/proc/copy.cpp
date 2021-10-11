@@ -8,10 +8,16 @@ Copyright (c) 2021 Adam Lafontaine
 #include "verify.hpp"
 
 #include <algorithm>
+
+#ifndef LIBIMAGE_NO_PARALLEL
 #include <execution>
+#endif // !LIBIMAGE_NO_PARALLEL
 
 namespace libimage
 {
+#ifndef LIBIMAGE_NO_PARALLEL
+
+
 #ifndef LIBIMAGE_NO_COLOR
 
 	void copy(image_t const& src, image_t const& dst)
@@ -77,6 +83,7 @@ namespace libimage
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
 
+#endif // !LIBIMAGE_NO_PARALLEL
 	namespace seq
 	{
 

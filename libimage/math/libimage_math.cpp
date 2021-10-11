@@ -15,13 +15,13 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR
 
-	void img_fill(image_t const& img, pixel_t const& p)
+	static void img_fill(image_t const& img, pixel_t const& p)
 	{
 		std::fill(std::execution::par, img.begin(), img.end(), p);
 	}
 
 
-	void img_fill(view_t const& img, pixel_t const& p)
+	static void img_fill(view_t const& img, pixel_t const& p)
 	{
 		std::fill(std::execution::par, img.begin(), img.end(), p);
 	}
@@ -29,16 +29,16 @@ namespace libimage
 #endif // !LIBIMAGE_NO_COLOR
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-	void img_fill(gray::image_t const& img, gray::pixel_t const& p)
+	static void img_fill(gray::image_t const& img, gray::pixel_t const& p)
 	{
 		std::fill(std::execution::par, img.begin(), img.end(), p);
 	}
 
 
-	void img_fill(gray::view_t const& img, gray::pixel_t const& p)
+	static void img_fill(gray::view_t const& img, gray::pixel_t const& p)
 	{
 		std::fill(std::execution::par, img.begin(), img.end(), p);
-}
+	}
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
@@ -46,13 +46,13 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR
 
-	void img_fill(image_t const& img, pixel_t const& p)
+	static void img_fill(image_t const& img, pixel_t const& p)
 	{
 		std::fill(img.begin(), img.end(), p);
 	}
 
 
-	void img_fill(view_t const& img, pixel_t const& p)
+	static void img_fill(view_t const& img, pixel_t const& p)
 	{
 		std::fill(img.begin(), img.end(), p);
 	}
@@ -60,13 +60,13 @@ namespace libimage
 #endif // !LIBIMAGE_NO_COLOR
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-	void img_fill(gray::image_t const& img, gray::pixel_t const& p)
+	static void img_fill(gray::image_t const& img, gray::pixel_t const& p)
 	{
 		std::fill(img.begin(), img.end(), p);
 	}
 
 
-	void img_fill(gray::view_t const& img, gray::pixel_t const& p)
+	static void img_fill(gray::view_t const& img, gray::pixel_t const& p)
 	{
 		std::fill(img.begin(), img.end(), p);
 	}

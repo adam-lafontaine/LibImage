@@ -15,12 +15,33 @@ namespace libimage
 {
 	constexpr u32 VIEW_MIN_DIM = 5;
 
+
 #ifndef LIBIMAGE_NO_COLOR
 
 	using pixel_to_pixel_f = std::function<pixel_t(pixel_t const&)>;
-	
+
 	using pixel_to_u8_f = std::function<u8(pixel_t const& p)>;
-	
+
+#endif // !LIBIMAGE_NO_COLOR
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	using u8_to_bool_f = std::function<bool(u8)>;
+
+	using u8_to_u8_f = std::function<u8(u8)>;
+
+	using lookup_table_t = std::array<u8, 256>;
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+}
+
+
+namespace libimage
+{	
+
+#ifndef LIBIMAGE_NO_PARALLEL
+
+#ifndef LIBIMAGE_NO_COLOR	
 
 	void copy(image_t const& src, image_t const& dst);
 
@@ -84,13 +105,6 @@ namespace libimage
 
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
-
-	using u8_to_bool_f = std::function<bool(u8)>;
-
-	using u8_to_u8_f = std::function<u8(u8)>;
-
-	using lookup_table_t = std::array<u8, 256>;
-
 
 	lookup_table_t to_lookup_table(u8_to_u8_f const& func);
 
@@ -242,8 +256,9 @@ namespace libimage
 	void transform_grayscale(view_t const& src, gray::view_t const& dst);
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
-#endif // !LIBIMAGE_NO_COLOR	
+#endif // !LIBIMAGE_NO_COLOR
 
+#endif // !LIBIMAGE_NO_PARALLEL
 
 	namespace seq
 	{

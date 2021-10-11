@@ -2,10 +2,13 @@
 // Experimental.
 // To be used in a separate machine learning libray
 
+
 #include "locate.hpp"
 #include "../proc/process.hpp"
 #include "../proc/index_range.hpp"
 #include "../proc/convolve.hpp"
+
+#ifndef LIBIMAGE_NO_PARALLEL
 
 #include <cassert>
 #include <algorithm>
@@ -459,3 +462,5 @@ namespace libimage
 		std::for_each(std::execution::par, destroy.begin(), destroy.end(), execute);
 	}
 }
+
+#endif // !LIBIMAGE_NO_PARALLEL

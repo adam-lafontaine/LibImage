@@ -12,10 +12,16 @@ Copyright (c) 2021 Adam Lafontaine
 #include "convolve.hpp"
 
 #include <algorithm>
+
+#ifndef LIBIMAGE_NO_PARALLEL
 #include <execution>
+#endif // !LIBIMAGE_NO_PARALLEL
 
 namespace libimage
 {
+#ifndef LIBIMAGE_NO_PARALLEL
+
+
 	template<class GRAY_IMG_T>
 	static void fill_zero(GRAY_IMG_T const& view)
 	{
@@ -353,6 +359,7 @@ namespace libimage
 	}
 
 
+#endif // !LIBIMAGE_NO_PARALLEL
 	namespace seq
 	{
 		template<class GRAY_IMG_T>
