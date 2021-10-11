@@ -126,44 +126,46 @@ void process_tests(fs::path const& out_dir)
 	// gradient
 	img::seq::gradients(src_gray_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir / "gradient.png");
-/*
+
 	// combine transformations in the same image
 	// regular grayscale to start
-	img::copy(src_gray_image, dst_gray_image);
+	img::seq::copy(src_gray_img, dst_gray_img);
 
 	img::pixel_range_t range;
 	range.x_begin = 0;
 	range.x_end = width / 2;
 	range.y_begin = 0;
 	range.y_end = height / 2;
-	auto src_sub = img::sub_view(src_gray_image, range);
-	auto dst_sub = img::sub_view(dst_gray_image, range);
-	img::binarize(src_sub, dst_sub, is_white);	
+	auto src_sub = img::sub_view(src_gray_img, range);
+	auto dst_sub = img::sub_view(dst_gray_img, range);
+	img::seq::binarize(src_sub, dst_sub, is_white);	
 
 	range.x_begin = width / 2;
 	range.x_end = width;
-	src_sub = img::sub_view(src_gray_image, range);
-	dst_sub = img::sub_view(dst_gray_image, range);
-	img::transform_contrast(src_sub, dst_sub, shade_min, shade_max);
+	src_sub = img::sub_view(src_gray_img, range);
+	dst_sub = img::sub_view(dst_gray_img, range);
+	img::seq::transform_contrast(src_sub, dst_sub, shade_min, shade_max);
 
 	range.x_begin = 0;
 	range.x_end = width / 2;
 	range.y_begin = height / 2;
 	range.y_end = height;
-	src_sub = img::sub_view(src_gray_image, range);
-	dst_sub = img::sub_view(dst_gray_image, range);
-	img::blur(src_sub, dst_sub);	
+	src_sub = img::sub_view(src_gray_img, range);
+	dst_sub = img::sub_view(dst_gray_img, range);
+	img::seq::blur(src_sub, dst_sub);	
 
 	range.x_begin = width / 2;
 	range.x_end = width;
-	src_sub = img::sub_view(src_gray_image, range);
-	dst_sub = img::sub_view(dst_gray_image, range);
-	img::gradients(src_sub, dst_sub);
+	src_sub = img::sub_view(src_gray_img, range);
+	dst_sub = img::sub_view(dst_gray_img, range);
+	img::seq::gradients(src_sub, dst_sub);
 
-	img::write_image(dst_gray_image, out_dir / "combo.png");
+	img::write_image(dst_gray_img, out_dir / "combo.png");
 
 /*
 	// compare edge detection speeds
+	// TODO: with cuda
+
 	auto green = img::to_pixel(88, 100, 29);
 	auto blue = img::to_pixel(0, 119, 182);
 
