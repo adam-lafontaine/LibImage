@@ -274,6 +274,9 @@ libimage_hpp += ../libimage/types.hpp
 libimage_hpp += ../libimage/rgba.hpp
 libimage_hpp += ../libimage/gray.hpp
 
+math_hpp := ../libimage/math/libimage_math.hpp
+proc_hpp := ../libimage/proc/process.hpp
+
 main_cpp := cuda_test_main.cpp
 libimage_cpp := ../libimage/libimage.cpp
 stb_libimage_cpp := ../libimage/stb_wrapper/stb_libimage.cpp
@@ -281,6 +284,7 @@ libimage_math_cpp := ../libimage/math/libimage_math.cpp
 transform_cpp := ../libimage/proc/transform.cpp
 alpha_blend_cpp := ../libimage/proc/alpha_blend.cpp
 copy_cpp := ../libimage/proc/copy.cpp
+binarize_cpp := ../libimage/proc/binarize.cpp
 
 main_o := $(build)/cuda_test_main.o
 libimage_o := $(build)/libimage.o
@@ -289,6 +293,7 @@ libimage_math_o := $(build)/libimage_math.o
 copy_o := $(build)/copy.o
 transform_o := $(build)/transform.o
 alpha_blend_o := $(build)/alpha_blend.o
+binarize_o := $(build)/binarize.o
 
 object_files := $(main_o)
 object_files += $(libimage_o)
@@ -297,6 +302,7 @@ object_files += $(libimage_math_o)
 object_files += $(copy_o)
 object_files += $(alpha_blend_o)
 object_files += $(transform_o)
+object_files += $(binarize_o)
 
 cuda_test_exe := $(build)/cuda_test
 
@@ -309,32 +315,36 @@ else
 	@echo "Sample is ready - all dependencies have been met"
 endif
 
-$(main_o): $(main_cpp)
+$(main_o): $(main_cpp) $(libimage_hpp)
 	@echo "\n cuda_test_main.o"
 	$(GPP) -o $@ -c $<
 
-$(libimage_o): $(libimage_cpp)
+$(libimage_o): $(libimage_cpp) $(libimage_hpp)
 	@echo "\n libimage.o"
 	$(GPP) -o $@ -c $<
 
-$(stb_libimage_o): $(stb_libimage_cpp)
+$(stb_libimage_o): $(stb_libimage_cpp) $(libimage_hpp)
 	@echo "\n stb_libimage.o"
 	$(GPP) -o $@ -c $<
 
-$(libimage_math_o): $(libimage_math_cpp)
+$(libimage_math_o): $(libimage_math_cpp) $(libimage_hpp) $(math_hpp)
 	@echo "\n libimage_math.o"
 	$(GPP) -o $@ -c $<
 
-$(copy_o): $(copy_cpp)
+$(copy_o): $(copy_cpp) $(libimage_hpp) $(proc_hpp)
 	@echo "\n copy.o"
 	$(GPP) -o $@ -c $<
 
-$(alpha_blend_o): $(alpha_blend_cpp)
+$(transform_o): $(transform_cpp) $(libimage_hpp) $(proc_hpp)
+	@echo "\n transform.o"
+	$(GPP) -o $@ -c $<
+
+$(alpha_blend_o): $(alpha_blend_cpp) $(libimage_hpp) $(proc_hpp)
 	@echo "\n alpha_blend.o"
 	$(GPP) -o $@ -c $<
 
-$(transform_o): $(transform_cpp)
-	@echo "\n transform.o"
+$(binarize_o): $(binarize_cpp) $(libimage_hpp) $(proc_hpp)
+	@echo "\n binarize.o"
 	$(GPP) -o $@ -c $<
 
 
@@ -353,7 +363,7 @@ $(cuda_test_exe): $(object_files)
 build: $(cuda_test_exe)
 
 run: build
-	$(EXEC) $(build)/cuda_test
+	$(EXEC) $(cuda_test_exe)
 
 clean:
 	rm -rfv $(build)/*

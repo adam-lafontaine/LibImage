@@ -28,6 +28,7 @@ const auto DST_IMAGE_ROOT = ROOT_PATH / "out_files";
 
 void empty_dir(fs::path const& dir);
 void process_tests(fs::path const& out_dir);
+void print(img::stats_t const& stats);
 
 int main()
 {
@@ -82,37 +83,37 @@ void process_tests(fs::path const& out_dir)
 	// grayscale
 	img::seq::transform_grayscale(corvette_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir / "convert_grayscale.png");
-/*	
+
 	// stats
-	auto gray_stats = img::calc_stats(dst_gray_image);
-	GrayImage gray_stats_image;
-	img::draw_histogram(gray_stats.hist, gray_stats_image);
-	img::write_image(gray_stats_image, out_dir / "gray_stats.png");
+	auto gray_stats = img::calc_stats(dst_gray_img);
+	GrayImage gray_stats_img;
+	img::draw_histogram(gray_stats.hist, gray_stats_img);
+	img::write_image(gray_stats_img, out_dir / "gray_stats.png");
 	print(gray_stats);
-/*
+
 	// alpha grayscale
-	img::transform_alpha_grayscale(corvette_view);
-	auto alpha_stats = img::calc_stats(corvette_image, img::Channel::Alpha);
-	GrayImage alpha_stats_image;
-	img::draw_histogram(alpha_stats.hist, alpha_stats_image);
-	img::write_image(alpha_stats_image, out_dir / "alpha_stats.png");
+	img::seq::transform_alpha_grayscale(corvette_img);
+	auto alpha_stats = img::calc_stats(corvette_img, img::Channel::Alpha);
+	GrayImage alpha_stats_img;
+	img::draw_histogram(alpha_stats.hist, alpha_stats_img);
+	img::write_image(alpha_stats_img, out_dir / "alpha_stats.png");
 	print(alpha_stats);
-/*
+
 	// create a new grayscale source
-	GrayImage src_gray_image;
-	img::make_image(src_gray_image, width, height);
-	img::copy(dst_gray_image, src_gray_image);
-/*
+	GrayImage src_gray_img;
+	img::make_image(src_gray_img, width, height);
+	img::seq::copy(dst_gray_img, src_gray_img);
+
 	// contrast
 	auto shade_min = static_cast<u8>(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
 	auto shade_max = static_cast<u8>(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
-	img::transform_contrast(src_gray_image, dst_gray_image, shade_min, shade_max);
-	img::write_image(dst_gray_image, out_dir / "contrast.png");
-/*
+	img::seq::transform_contrast(src_gray_img, dst_gray_img, shade_min, shade_max);
+	img::write_image(dst_gray_img, out_dir / "contrast.png");
+
 	// binarize
 	auto const is_white = [&](u8 p) { return static_cast<r32>(p) > gray_stats.mean; };
-	img::binarize(src_gray_image, dst_gray_image, is_white);
-	img::write_image(dst_gray_image, out_dir / "binarize.png");
+	img::seq::binarize(src_gray_img, dst_gray_img, is_white);
+	img::write_image(dst_gray_img, out_dir / "binarize.png");
 /*
 	//blur
 	img::blur(src_gray_image, dst_gray_image);
@@ -219,4 +220,10 @@ void empty_dir(fs::path const& dir)
 	{
 		fs::remove_all(entry);
 	}
+}
+
+
+void print(img::stats_t const& stats)
+{
+	std::cout << "mean = " << (double)stats.mean << " sigma = " << (double)stats.std_dev << '\n';
 }
