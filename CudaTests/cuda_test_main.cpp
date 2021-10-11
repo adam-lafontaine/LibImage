@@ -114,10 +114,10 @@ void process_tests(fs::path const& out_dir)
 	auto const is_white = [&](u8 p) { return static_cast<r32>(p) > gray_stats.mean; };
 	img::seq::binarize(src_gray_img, dst_gray_img, is_white);
 	img::write_image(dst_gray_img, out_dir / "binarize.png");
-/*
+
 	//blur
-	img::blur(src_gray_image, dst_gray_image);
-	img::write_image(dst_gray_image, out_dir / "blur.png");	
+	img::seq::blur(src_gray_img, dst_gray_img);
+	img::write_image(dst_gray_img, out_dir / "blur.png");	
 /*
 	// edge detection
 	img::edges(src_gray_image, dst_gray_image, 150);

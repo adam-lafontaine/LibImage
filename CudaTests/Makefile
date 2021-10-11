@@ -275,7 +275,11 @@ libimage_hpp += ../libimage/rgba.hpp
 libimage_hpp += ../libimage/gray.hpp
 
 math_hpp := ../libimage/math/libimage_math.hpp
+
 proc_hpp := ../libimage/proc/process.hpp
+proc_hpp += ../libimage/proc/verify.hpp
+proc_hpp += ../libimage/proc/index_range.hpp
+proc_hpp += ../libimage/proc/convolve.hpp
 
 main_cpp := cuda_test_main.cpp
 libimage_cpp := ../libimage/libimage.cpp
@@ -285,6 +289,8 @@ transform_cpp := ../libimage/proc/transform.cpp
 alpha_blend_cpp := ../libimage/proc/alpha_blend.cpp
 copy_cpp := ../libimage/proc/copy.cpp
 binarize_cpp := ../libimage/proc/binarize.cpp
+blur_cpp := ../libimage/proc/blur.cpp
+convolve_cpp := ../libimage/proc/convolve.cpp
 
 main_o := $(build)/cuda_test_main.o
 libimage_o := $(build)/libimage.o
@@ -294,6 +300,8 @@ copy_o := $(build)/copy.o
 transform_o := $(build)/transform.o
 alpha_blend_o := $(build)/alpha_blend.o
 binarize_o := $(build)/binarize.o
+blur_o := $(build)/blur.o
+convolve_o := $(build)/convolve.o
 
 object_files := $(main_o)
 object_files += $(libimage_o)
@@ -303,6 +311,8 @@ object_files += $(copy_o)
 object_files += $(alpha_blend_o)
 object_files += $(transform_o)
 object_files += $(binarize_o)
+object_files += $(blur_o)
+object_files += $(convolve_o)
 
 cuda_test_exe := $(build)/cuda_test
 
@@ -345,6 +355,14 @@ $(alpha_blend_o): $(alpha_blend_cpp) $(libimage_hpp) $(proc_hpp)
 
 $(binarize_o): $(binarize_cpp) $(libimage_hpp) $(proc_hpp)
 	@echo "\n binarize.o"
+	$(GPP) -o $@ -c $<
+
+$(convolve_o): $(convolve_cpp) $(libimage_hpp) $(proc_hpp)
+	@echo "\n convolve.o"
+	$(GPP) -o $@ -c $<
+
+$(blur_o): $(blur_cpp) $(libimage_hpp) $(proc_hpp)
+	@echo "\n blur.o"
 	$(GPP) -o $@ -c $<
 
 
