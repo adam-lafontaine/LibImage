@@ -271,6 +271,7 @@ build := ./build_files
 main := cuda_test_main.cpp
 libimage := ../libimage/libimage.cpp
 stb_libimage := ../libimage/stb_wrapper/stb_libimage.cpp
+libimage_math := ../libimage/math/libimage_math.cpp
 
 
 check.deps: 
@@ -280,7 +281,7 @@ else
 	@echo "Sample is ready - all dependencies have been met"
 endif
 
-cuda_test_main.o: $(main) libimage.o stb_libimage.o
+cuda_test_main.o: $(main) libimage.o stb_libimage.o libimage_math.o
 	@echo "\ncuda_test_main.o"
 	$(GPP) -o $(build)/$@ -c $<
 
@@ -292,6 +293,10 @@ stb_libimage.o: $(stb_libimage)
 	@echo "\nstb_libimage"
 	$(GPP) -o $(build)/$@ -c $<
 
+libimage_math.o: $(libimage_math)
+	@echo "\nlibimage_math"
+	$(GPP) -o $(build)/$@ -c $<
+
 
 #process.o: ../libimage/cuda/device.cu ../libimage/cuda/device_copy.cu ../libimage/cuda/transform.cu
 #	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
@@ -299,14 +304,14 @@ stb_libimage.o: $(stb_libimage)
 #exe: libimage.o cuda_test_main.o
 #	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
 
-exe: cuda_test_main.o libimage.o stb_libimage.o
-	@echo "\nexe"
-	g++-10 -std=c++17 -lstdc++fs -o $(build)/$@ $(build)/cuda_test_main.o $(build)/libimage.o $(build)/stb_libimage.o
+cuda_test: cuda_test_main.o
+	@echo "\ncuda_test"
+	g++-10 -std=c++17 -lstdc++fs -o $(build)/$@ $(build)/cuda_test_main.o $(build)/libimage.o $(build)/stb_libimage.o $(build)/libimage_math.o
 
-build: exe
+build: cuda_test
 
 run: build
-	$(EXEC) $(build)/exe
+	$(EXEC) $(build)/cuda_test
 
 clean:
-	rm -rfv $(build)
+	rm -rfv $(build)/*
