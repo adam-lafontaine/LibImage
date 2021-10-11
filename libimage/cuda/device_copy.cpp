@@ -1,7 +1,5 @@
 #include "process.hpp"
 
-#include <cuda_runtime.h>
-
 
 namespace libimage
 {

@@ -269,29 +269,43 @@ endif
 GPP := g++-10 -std=c++17 -lstdc++fs
 build := ./build_files
 
-libimage_hpp := ../libimage/libimage.hpp
-libimage_hpp += ../libimage/types.hpp
-libimage_hpp += ../libimage/rgba.hpp
-libimage_hpp += ../libimage/gray.hpp
+types_h := ../libimage/types.hpp
 
-math_hpp := ../libimage/math/libimage_math.hpp
+libimage_h := $(types_h)
+libimage_h += ../libimage/libimage.hpp
+libimage_h += ../libimage/rgba.hpp
+libimage_h += ../libimage/gray.hpp
 
-proc_hpp := ../libimage/proc/process.hpp
-proc_hpp += ../libimage/proc/verify.hpp
-proc_hpp += ../libimage/proc/index_range.hpp
-proc_hpp += ../libimage/proc/convolve.hpp
+math_h := ../libimage/math/libimage_math.hpp
 
-main_cpp := cuda_test_main.cpp
-libimage_cpp := ../libimage/libimage.cpp
-stb_libimage_cpp := ../libimage/stb_wrapper/stb_libimage.cpp
-libimage_math_cpp := ../libimage/math/libimage_math.cpp
-transform_cpp := ../libimage/proc/transform.cpp
-alpha_blend_cpp := ../libimage/proc/alpha_blend.cpp
-copy_cpp := ../libimage/proc/copy.cpp
-binarize_cpp := ../libimage/proc/binarize.cpp
-blur_cpp := ../libimage/proc/blur.cpp
-convolve_cpp := ../libimage/proc/convolve.cpp
-gradient_cpp := ../libimage/proc/gradient.cpp
+proc_h := ../libimage/proc/process.hpp
+proc_h += ../libimage/proc/verify.hpp
+proc_h += ../libimage/proc/index_range.hpp
+proc_h += ../libimage/proc/convolve.hpp
+
+main_c := cuda_test_main.cpp
+libimage_c := ../libimage/libimage.cpp
+stb_libimage_c := ../libimage/stb_wrapper/stb_libimage.cpp
+libimage_math_c := ../libimage/math/libimage_math.cpp
+transform_c := ../libimage/proc/transform.cpp
+alpha_blend_c := ../libimage/proc/alpha_blend.cpp
+copy_c := ../libimage/proc/copy.cpp
+binarize_c := ../libimage/proc/binarize.cpp
+blur_c := ../libimage/proc/blur.cpp
+convolve_c := ../libimage/proc/convolve.cpp
+gradient_c := ../libimage/proc/gradient.cpp
+
+gpu_h := $(types_h)
+gpu_h += ../libimage/cuda/cuda_def.cuh
+gpu_h += ../libimage/rgba.hpp
+gpu_h += ../libimage/gray.hpp
+gpu_h += ../libimage/cuda/device.hpp
+gpu_h += ../libimage/cuda/process.hpp
+
+
+gpu_device_c := ../libimage/cuda/device.cu
+gpu_device_copy_c := ../libimage/cuda/device_copy.cpp
+gpu_transform_c := ../libimage/cuda/transform.cu
 
 main_o := $(build)/cuda_test_main.o
 libimage_o := $(build)/libimage.o
@@ -305,6 +319,10 @@ blur_o := $(build)/blur.o
 convolve_o := $(build)/convolve.o
 gradient_o := $(build)/gradient.o
 
+gpu_device_o := $(build)/gpu_device.o
+gpu_device_copy_o := $(build)/gpu_device_copy.o
+gpu_transform_o := $(build)/gpu_transform.o
+
 object_files := $(main_o)
 object_files += $(libimage_o)
 object_files += $(stb_libimage_o)
@@ -316,6 +334,10 @@ object_files += $(binarize_o)
 object_files += $(blur_o)
 object_files += $(convolve_o)
 object_files += $(gradient_o)
+#object_files += $(gpu_device_o)
+#object_files += $(gpu_device_copy_o)
+#object_files += $(gpu_transform_o)
+
 
 cuda_test_exe := $(build)/cuda_test
 
@@ -328,62 +350,72 @@ else
 	@echo "Sample is ready - all dependencies have been met"
 endif
 
-$(main_o): $(main_cpp) $(libimage_hpp)
+$(main_o): $(main_c) $(libimage_h)
 	@echo "\n cuda_test_main.o"
 	$(GPP) -o $@ -c $<
+#	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
+#	$(GPP) -o $@ -c $<
 
-$(libimage_o): $(libimage_cpp) $(libimage_hpp)
+$(libimage_o): $(libimage_c) $(libimage_h)
 	@echo "\n libimage.o"
 	$(GPP) -o $@ -c $<
 
-$(stb_libimage_o): $(stb_libimage_cpp) $(libimage_hpp)
+$(stb_libimage_o): $(stb_libimage_c) $(libimage_h)
 	@echo "\n stb_libimage.o"
 	$(GPP) -o $@ -c $<
 
-$(libimage_math_o): $(libimage_math_cpp) $(libimage_hpp) $(math_hpp)
+$(libimage_math_o): $(libimage_math_c) $(libimage_h) $(math_h)
 	@echo "\n libimage_math.o"
 	$(GPP) -o $@ -c $<
 
-$(copy_o): $(copy_cpp) $(libimage_hpp) $(proc_hpp)
+$(copy_o): $(copy_c) $(libimage_h) $(proc_h)
 	@echo "\n copy.o"
 	$(GPP) -o $@ -c $<
 
-$(transform_o): $(transform_cpp) $(libimage_hpp) $(proc_hpp)
+$(transform_o): $(transform_c) $(libimage_h) $(proc_h)
 	@echo "\n transform.o"
 	$(GPP) -o $@ -c $<
 
-$(alpha_blend_o): $(alpha_blend_cpp) $(libimage_hpp) $(proc_hpp)
+$(alpha_blend_o): $(alpha_blend_c) $(libimage_h) $(proc_h)
 	@echo "\n alpha_blend.o"
 	$(GPP) -o $@ -c $<
 
-$(binarize_o): $(binarize_cpp) $(libimage_hpp) $(proc_hpp)
+$(binarize_o): $(binarize_c) $(libimage_h) $(proc_h)
 	@echo "\n binarize.o"
 	$(GPP) -o $@ -c $<
 
-$(convolve_o): $(convolve_cpp) $(libimage_hpp) $(proc_hpp)
+$(convolve_o): $(convolve_c) $(libimage_h) $(proc_h)
 	@echo "\n convolve.o"
 	$(GPP) -o $@ -c $<
 
-$(blur_o): $(blur_cpp) $(libimage_hpp) $(proc_hpp)
+$(blur_o): $(blur_c) $(libimage_h) $(proc_h)
 	@echo "\n blur.o"
 	$(GPP) -o $@ -c $<
 
-$(gradient_o): $(gradient_cpp) $(libimage_hpp) $(proc_hpp)
+$(gradient_o): $(gradient_c) $(libimage_h) $(proc_h)
 	@echo "\n gradient.o"
 	$(GPP) -o $@ -c $<
 
+$(gpu_device_o): $(gpu_device_c) $(gpu_h)
+	@echo "\n gpu_device.o"
+	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
+$(gpu_device_copy_o): $(gpu_device_copy_c) $(gpu_h)
+	@echo "\n gpu_device_copy.o"
+	$(GPP) -o $@ -c $<
 
-
-#process.o: ../libimage/cuda/device.cu ../libimage/cuda/device_copy.cu ../libimage/cuda/transform.cu
-#	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
+$(gpu_transform_o): $(gpu_transform_c) $(gpu_h)
+	@echo "\n gpu_transform.o"
+	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
 #exe: libimage.o cuda_test_main.o
 #	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
 
 $(cuda_test_exe): $(object_files)
 	@echo "\n cuda_test"
-	g++-10 -std=c++17 -lstdc++fs -o $@ $(object_files)
+	g++-10 -std=c++17 -lstdc++fs -o $@ $+
+#	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
+#	g++-10 -std=c++17 -lstdc++fs -o $@ $(object_files)
 
 build: $(cuda_test_exe)
 

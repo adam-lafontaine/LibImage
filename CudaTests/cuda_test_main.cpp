@@ -1,13 +1,15 @@
 #include "../libimage/libimage.hpp"
 #include "../libimage/proc/process.hpp"
 #include "../libimage/math/libimage_math.hpp"
+#include "../libimage/cuda/process.hpp"
 #include "./utils/stopwatch.hpp"
 
 #include <cstdio>
 #include <iostream>
+#include <string>
 
-namespace fs = std::filesystem;
 namespace img = libimage;
+using path_t = std::string;
 
 using Image = img::image_t;
 using ImageView = img::view_t;
@@ -16,23 +18,23 @@ using GrayView = img::gray::view_t;
 using Pixel = img::pixel_t;
 
 //constexpr auto ROOT_DIR = "~/Repos/LibImage/CudaTests";
-constexpr auto ROOT_DIR = "/home/adam/Repos/LibImage/CudaTests";
+constexpr auto ROOT_DIR = "/home/adam/Repos/LibImage/CudaTests/";
 
-const auto ROOT_PATH = fs::path(ROOT_DIR);
+const auto ROOT_PATH = std::string(ROOT_DIR);
 
 // make sure these files exist
-const auto CORVETTE_PATH = ROOT_PATH / "in_files/corvette.png";
-const auto CADILLAC_PATH = ROOT_PATH / "in_files/cadillac.png";
+const auto CORVETTE_PATH = ROOT_PATH + "in_files/corvette.png";
+const auto CADILLAC_PATH = ROOT_PATH + "in_files/cadillac.png";
 
-const auto DST_IMAGE_ROOT = ROOT_PATH / "out_files";
+const auto DST_IMAGE_ROOT = ROOT_PATH + "out_files/";
 
-void empty_dir(fs::path const& dir);
-void process_tests(fs::path const& out_dir);
+void empty_dir(path_t& dir);
+void process_tests(path_t& out_dir);
 void print(img::stats_t const& stats);
 
 int main()
 {
-	auto dst_root = fs::path(DST_IMAGE_ROOT);
+	auto dst_root = DST_IMAGE_ROOT;
 
     process_tests(dst_root);
 
@@ -40,7 +42,7 @@ int main()
 }
 
 
-void process_tests(fs::path const& out_dir)
+void process_tests(path_t& out_dir)
 {
 	std::cout << "process:\n";
 	empty_dir(out_dir);
@@ -48,7 +50,7 @@ void process_tests(fs::path const& out_dir)
 	// get image
 	Image corvette_img;
 	img::read_image_from_file(CORVETTE_PATH, corvette_img);
-	img::write_image(corvette_img, out_dir / "vette.png");
+	img::write_image(corvette_img, out_dir + "vette.png");
 
 	auto const width = corvette_img.width;
 	auto const height = corvette_img.height;	
@@ -61,7 +63,7 @@ void process_tests(fs::path const& out_dir)
 	caddy_img.width = width;
 	caddy_img.height = height;
 	img::resize_image(caddy_read, caddy_img);
-	img::write_image(caddy_img, out_dir / "caddy.png");
+	img::write_image(caddy_img, out_dir + "caddy.png");
 
 
 	Image dst_img;
@@ -74,21 +76,21 @@ void process_tests(fs::path const& out_dir)
 	// alpha blending
 	img::seq::transform_alpha(caddy_img, [](auto const& p) { return 128; });
 	img::seq::alpha_blend(caddy_img, corvette_img, dst_img);
-	img::write_image(dst_img, out_dir / "alpha_blend.png");
+	img::write_image(dst_img, out_dir + "alpha_blend.png");
 
 	img::seq::copy(corvette_img, dst_img);
 	img::seq::alpha_blend(caddy_img, dst_img);
-	img::write_image(dst_img, out_dir / "alpha_blend_src_dst.png");
+	img::write_image(dst_img, out_dir + "alpha_blend_src_dst.png");
 
 	// grayscale
 	img::seq::transform_grayscale(corvette_img, dst_gray_img);
-	img::write_image(dst_gray_img, out_dir / "convert_grayscale.png");
+	img::write_image(dst_gray_img, out_dir + "convert_grayscale.png");
 
 	// stats
 	auto gray_stats = img::calc_stats(dst_gray_img);
 	GrayImage gray_stats_img;
 	img::draw_histogram(gray_stats.hist, gray_stats_img);
-	img::write_image(gray_stats_img, out_dir / "gray_stats.png");
+	img::write_image(gray_stats_img, out_dir + "gray_stats.png");
 	print(gray_stats);
 
 	// alpha grayscale
@@ -96,7 +98,7 @@ void process_tests(fs::path const& out_dir)
 	auto alpha_stats = img::calc_stats(corvette_img, img::Channel::Alpha);
 	GrayImage alpha_stats_img;
 	img::draw_histogram(alpha_stats.hist, alpha_stats_img);
-	img::write_image(alpha_stats_img, out_dir / "alpha_stats.png");
+	img::write_image(alpha_stats_img, out_dir + "alpha_stats.png");
 	print(alpha_stats);
 
 	// create a new grayscale source
@@ -108,24 +110,24 @@ void process_tests(fs::path const& out_dir)
 	auto shade_min = static_cast<u8>(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
 	auto shade_max = static_cast<u8>(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
 	img::seq::transform_contrast(src_gray_img, dst_gray_img, shade_min, shade_max);
-	img::write_image(dst_gray_img, out_dir / "contrast.png");
+	img::write_image(dst_gray_img, out_dir + "contrast.png");
 
 	// binarize
 	auto const is_white = [&](u8 p) { return static_cast<r32>(p) > gray_stats.mean; };
 	img::seq::binarize(src_gray_img, dst_gray_img, is_white);
-	img::write_image(dst_gray_img, out_dir / "binarize.png");
+	img::write_image(dst_gray_img, out_dir + "binarize.png");
 
 	//blur
 	img::seq::blur(src_gray_img, dst_gray_img);
-	img::write_image(dst_gray_img, out_dir / "blur.png");	
+	img::write_image(dst_gray_img, out_dir + "blur.png");	
 
 	// edge detection
 	img::seq::edges(src_gray_img, dst_gray_img, 150);
-	img::write_image(dst_gray_img, out_dir / "edges.png");
+	img::write_image(dst_gray_img, out_dir + "edges.png");
 
 	// gradient
 	img::seq::gradients(src_gray_img, dst_gray_img);
-	img::write_image(dst_gray_img, out_dir / "gradient.png");
+	img::write_image(dst_gray_img, out_dir + "gradient.png");
 
 	// combine transformations in the same image
 	// regular grayscale to start
@@ -160,7 +162,7 @@ void process_tests(fs::path const& out_dir)
 	dst_sub = img::sub_view(dst_gray_img, range);
 	img::seq::gradients(src_sub, dst_sub);
 
-	img::write_image(dst_gray_img, out_dir / "combo.png");
+	img::write_image(dst_gray_img, out_dir + "combo.png");
 
 /*
 	// compare edge detection speeds
@@ -214,14 +216,19 @@ void process_tests(fs::path const& out_dir)
 }
 
 
-void empty_dir(fs::path const& dir)
+void empty_dir(path_t& dir)
 {
-	fs::create_directories(dir);
-
-	for (auto const& entry : fs::directory_iterator(dir))
+	auto last = dir[dir.length() - 1];
+	if(last != '/')
 	{
-		fs::remove_all(entry);
+		dir += '/';
 	}
+
+	std::string command = std::string("mkdir -p ") + dir;
+	system(command.c_str());
+
+	command = std::string("rm -rfv ") + dir + '*';
+	system(command.c_str());	
 }
 
 
