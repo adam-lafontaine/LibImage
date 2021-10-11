@@ -1,8 +1,80 @@
 #include "libimage_math.hpp"
 
 #include <numeric>
-#include <execution>
+#include <algorithm>
 #include <cmath>
+
+#ifndef LIBIMAGE_NO_PARALLEL
+#include <execution>
+#endif // !LIBIMAGE_NO_PARALLEL
+
+
+namespace libimage
+{
+#ifndef LIBIMAGE_NO_PARALLEL
+
+#ifndef LIBIMAGE_NO_COLOR
+
+	void img_fill(image_t const& img, pixel_t const& p)
+	{
+		std::fill(std::execution::par, img.begin(), img.end(), p);
+	}
+
+
+	void img_fill(view_t const& img, pixel_t const& p)
+	{
+		std::fill(std::execution::par, img.begin(), img.end(), p);
+	}
+
+#endif // !LIBIMAGE_NO_COLOR
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	void img_fill(gray::image_t const& img, gray::pixel_t const& p)
+	{
+		std::fill(std::execution::par, img.begin(), img.end(), p);
+	}
+
+
+	void img_fill(gray::view_t const& img, gray::pixel_t const& p)
+	{
+		std::fill(std::execution::par, img.begin(), img.end(), p);
+}
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+
+#else
+
+#ifndef LIBIMAGE_NO_COLOR
+
+	void img_fill(image_t const& img, pixel_t const& p)
+	{
+		std::fill(img.begin(), img.end(), p);
+	}
+
+
+	void img_fill(view_t const& img, pixel_t const& p)
+	{
+		std::fill(img.begin(), img.end(), p);
+	}
+
+#endif // !LIBIMAGE_NO_COLOR
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	void img_fill(gray::image_t const& img, gray::pixel_t const& p)
+	{
+		std::fill(img.begin(), img.end(), p);
+	}
+
+
+	void img_fill(gray::view_t const& img, gray::pixel_t const& p)
+	{
+		std::fill(img.begin(), img.end(), p);
+	}
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+#endif // !LIBIMAGE_NO_PARALLEL
+}
+
 
 
 
@@ -200,7 +272,8 @@ namespace libimage
 		pixel_t white = to_pixel(255, 255, 255);
 
 		make_image(image_dst, image_width, image_height);
-		std::fill(image_dst.begin(), image_dst.end(), white);
+		std::fill(std::execution::par, image_dst.begin(), image_dst.end(), white);
+		img_fill(image_dst, white);
 
 		u32 max_count = 0;
 		for_each_channel_rgb([&](u32 c) 

@@ -9,6 +9,7 @@ Copyright (c) 2021 Adam Lafontaine
 //#define LIBIMAGE_NO_GRAYSCALE
 //#define LIBIMAGE_NO_WRITE
 //#define LIBIMAGE_NO_RESIZE
+//#define LIBIMAGE_NO_PARALLEL
 
 #ifndef LIBIMAGE_NO_COLOR
 #include "rgba.hpp"
