@@ -273,11 +273,18 @@ else
 	@echo "Sample is ready - all dependencies have been met"
 endif
 
-cuda_test_main.o: cuda_test_main.cpp
+cuda_test_main.o: cuda_test_main.cpp libimage.o
+	@echo "\ncuda_test_main.o"
 	g++-10 -std=c++17 -lstdc++fs -o $@ -c $<
 
-libimage.o: ../libimage/libimage.cpp ../libimage/stb_wrapper/stb_libimage.cpp
-	g++-10 -std=c++17 -lstdc++fs -o $@ -c $<
+libimage.o: ../libimage/libimage.cpp stb_libimage.o
+	@echo "\nlibimage.o"
+	g++-10 -std=c++17 -lstdc++fs -o $@ -c ../libimage/libimage.cpp
+
+stb_libimage.o: ../libimage/stb_wrapper/stb_libimage.cpp
+	@echo "\nstb_libimage"
+	g++-10 -std=c++17 -lstdc++fs -o $@ -c ../libimage/stb_wrapper/stb_libimage.cpp
+
 
 #process.o: ../libimage/cuda/device.cu ../libimage/cuda/device_copy.cu ../libimage/cuda/transform.cu
 #	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
@@ -285,7 +292,8 @@ libimage.o: ../libimage/libimage.cpp ../libimage/stb_wrapper/stb_libimage.cpp
 #exe: libimage.o cuda_test_main.o
 #	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
 
-exe: libimage.o cuda_test_main.o
+exe: cuda_test_main.o libimage.o stb_libimage.o
+	@echo "\nexe"
 	g++-10 -std=c++17 -lstdc++fs -o $@ $+
 
 build: exe
@@ -294,4 +302,4 @@ run: build
 	$(EXEC) ./exe
 
 clean:
-	rm -f exe cuda_test_main.o libimage.o process.o
+	rm -f exe cuda_test_main.o libimage.o stb_libimage.o process.o
