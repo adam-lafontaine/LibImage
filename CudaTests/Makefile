@@ -291,6 +291,7 @@ copy_cpp := ../libimage/proc/copy.cpp
 binarize_cpp := ../libimage/proc/binarize.cpp
 blur_cpp := ../libimage/proc/blur.cpp
 convolve_cpp := ../libimage/proc/convolve.cpp
+gradient_cpp := ../libimage/proc/gradient.cpp
 
 main_o := $(build)/cuda_test_main.o
 libimage_o := $(build)/libimage.o
@@ -302,6 +303,7 @@ alpha_blend_o := $(build)/alpha_blend.o
 binarize_o := $(build)/binarize.o
 blur_o := $(build)/blur.o
 convolve_o := $(build)/convolve.o
+gradient_o := $(build)/gradient.o
 
 object_files := $(main_o)
 object_files += $(libimage_o)
@@ -313,6 +315,7 @@ object_files += $(transform_o)
 object_files += $(binarize_o)
 object_files += $(blur_o)
 object_files += $(convolve_o)
+object_files += $(gradient_o)
 
 cuda_test_exe := $(build)/cuda_test
 
@@ -363,6 +366,10 @@ $(convolve_o): $(convolve_cpp) $(libimage_hpp) $(proc_hpp)
 
 $(blur_o): $(blur_cpp) $(libimage_hpp) $(proc_hpp)
 	@echo "\n blur.o"
+	$(GPP) -o $@ -c $<
+
+$(gradient_o): $(gradient_cpp) $(libimage_hpp) $(proc_hpp)
+	@echo "\n gradient.o"
 	$(GPP) -o $@ -c $<
 
 

@@ -12,6 +12,7 @@ Copyright (c) 2021 Adam Lafontaine
 #include "convolve.hpp"
 
 #include <algorithm>
+#include <cmath>
 
 #ifndef LIBIMAGE_NO_PARALLEL
 #include <execution>

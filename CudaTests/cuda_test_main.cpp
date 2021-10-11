@@ -118,14 +118,14 @@ void process_tests(fs::path const& out_dir)
 	//blur
 	img::seq::blur(src_gray_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir / "blur.png");	
-/*
+
 	// edge detection
-	img::edges(src_gray_image, dst_gray_image, 150);
-	img::write_image(dst_gray_image, out_dir / "edges.png");
-/*
+	img::seq::edges(src_gray_img, dst_gray_img, 150);
+	img::write_image(dst_gray_img, out_dir / "edges.png");
+
 	// gradient
-	img::gradients(src_gray_image, dst_gray_image);
-	img::write_image(dst_gray_image, out_dir / "gradient.png");
+	img::seq::gradients(src_gray_img, dst_gray_img);
+	img::write_image(dst_gray_img, out_dir / "gradient.png");
 /*
 	// combine transformations in the same image
 	// regular grayscale to start
