@@ -232,7 +232,8 @@ ALL_LDFLAGS += $(addprefix -Xlinker ,$(EXTRA_LDFLAGS))
 
 # Common includes and paths for CUDA
 #INCLUDES  := -I../../common/inc
-INCLUDES  := -I../samples/common/inc
+#INCLUDES  := -I../samples/common/inc
+INCLUDES   :=
 LIBRARIES :=
 
 ################################################################################
@@ -287,17 +288,17 @@ proc_h += ../libimage/proc/verify.hpp
 proc_h += ../libimage/proc/index_range.hpp
 proc_h += ../libimage/proc/convolve.hpp
 
-main_c := cuda_test_main.cpp
-libimage_c := ../libimage/libimage.cpp
-stb_libimage_c := ../libimage/stb_wrapper/stb_libimage.cpp
+main_c          := cuda_test_main.cpp
+libimage_c      := ../libimage/libimage.cpp
+stb_libimage_c  := ../libimage/stb_wrapper/stb_libimage.cpp
 libimage_math_c := ../libimage/math/libimage_math.cpp
-transform_c := ../libimage/proc/transform.cpp
-alpha_blend_c := ../libimage/proc/alpha_blend.cpp
-copy_c := ../libimage/proc/copy.cpp
-binarize_c := ../libimage/proc/binarize.cpp
-blur_c := ../libimage/proc/blur.cpp
-convolve_c := ../libimage/proc/convolve.cpp
-gradient_c := ../libimage/proc/gradient.cpp
+transform_c     := ../libimage/proc/transform.cpp
+alpha_blend_c   := ../libimage/proc/alpha_blend.cpp
+copy_c          := ../libimage/proc/copy.cpp
+binarize_c      := ../libimage/proc/binarize.cpp
+blur_c          := ../libimage/proc/blur.cpp
+convolve_c      := ../libimage/proc/convolve.cpp
+gradient_c      := ../libimage/proc/gradient.cpp
 
 gpu_h := $(types_h)
 gpu_h += ../libimage/cuda/cuda_def.cuh
@@ -307,25 +308,25 @@ gpu_h += ../libimage/cuda/device.hpp
 gpu_h += ../libimage/cuda/process.hpp
 
 
-gpu_device_c := ../libimage/cuda/device.cu
+gpu_device_c      := ../libimage/cuda/device.cu
 gpu_device_copy_c := ../libimage/cuda/device_copy.cpp
-gpu_transform_c := ../libimage/cuda/transform.cu
+gpu_transform_c   := ../libimage/cuda/transform.cu
 
-main_o := $(build)/cuda_test_main.o
-libimage_o := $(build)/libimage.o
-stb_libimage_o := $(build)/stb_libimage.o
+main_o          := $(build)/cuda_test_main.o
+libimage_o      := $(build)/libimage.o
+stb_libimage_o  := $(build)/stb_libimage.o
 libimage_math_o := $(build)/libimage_math.o
-copy_o := $(build)/copy.o
-transform_o := $(build)/transform.o
-alpha_blend_o := $(build)/alpha_blend.o
-binarize_o := $(build)/binarize.o
-blur_o := $(build)/blur.o
-convolve_o := $(build)/convolve.o
-gradient_o := $(build)/gradient.o
+copy_o          := $(build)/copy.o
+transform_o     := $(build)/transform.o
+alpha_blend_o   := $(build)/alpha_blend.o
+binarize_o      := $(build)/binarize.o
+blur_o          := $(build)/blur.o
+convolve_o      := $(build)/convolve.o
+gradient_o      := $(build)/gradient.o
 
-gpu_device_o := $(build)/gpu_device.o
+gpu_device_o      := $(build)/gpu_device.o
 gpu_device_copy_o := $(build)/gpu_device_copy.o
-gpu_transform_o := $(build)/gpu_transform.o
+gpu_transform_o   := $(build)/gpu_transform.o
 
 object_files := $(main_o)
 object_files += $(libimage_o)

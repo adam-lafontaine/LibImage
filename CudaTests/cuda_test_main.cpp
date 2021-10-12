@@ -191,6 +191,22 @@ void cuda_tests(path_t& out_dir)
 	img::cuda::transform_grayscale(caddy_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "cuda_grayscale.png");
 
+	// grayscale with pre-allocated device memory
+	u32 pixels_per_image = width * height;
+	u32 n_src_images = 1;
+	u32 src_bytes = n_src_images * pixels_per_image * sizeof(img::pixel_t);
+	u32 n_dst_images = 1;
+	u32 dst_bytes = n_dst_images * pixels_per_image * sizeof(img::gray::pixel_t);
+	u32 total_bytes = src_bytes + dst_bytes;
+
+	DeviceBuffer d_buffer;
+	device_malloc(d_buffer, total_bytes);
+
+	img::cuda::transform_grayscale(caddy_img, dst_gray_img, d_buffer);
+	img::write_image(dst_gray_img, out_dir + "cuda_grayscale_buffer.png");
+
+	device_free(d_buffer);
+
 	/*
 	// compare edge detection speeds
 	// TODO: with cuda
