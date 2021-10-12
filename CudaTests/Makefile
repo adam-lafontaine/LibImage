@@ -306,7 +306,7 @@ gpu_h += ../libimage/rgba.hpp
 gpu_h += ../libimage/gray.hpp
 gpu_h += ../libimage/cuda/device.hpp
 gpu_h += ../libimage/cuda/process.hpp
-
+gpu_h += ../libimage/cuda/verify.hpp
 
 gpu_device_c      := ../libimage/cuda/device.cu
 gpu_device_copy_c := ../libimage/cuda/device_copy.cpp

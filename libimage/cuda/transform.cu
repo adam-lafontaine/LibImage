@@ -1,5 +1,5 @@
-#include "process.hpp"
 #include "cuda_def.cuh"
+#include "verify.hpp"
 #include "../proc/verify.hpp"
 
 #ifndef LIBIMAGE_NO_COLOR
@@ -34,18 +34,6 @@ namespace libimage
         }
     }
 
-/*
-    bool verify(image_t const& src, DeviceBuffer const& d_buffer)
-    {
-        u32 n_elements = src.width * src.height;
-        u32 src_bytes = n_elements * sizeof(pixel_t);
-        u32 dst_bytes = n_elements * sizeof(gray::pixel_t);
-        u32 total_bytes = src_bytes + dst_bytes;
-
-        return total_bytes >= d_buffer.total_bytes - d_buffer.offset;
-    }
-    */
-
 
 
     namespace cuda
@@ -55,12 +43,9 @@ namespace libimage
             assert(verify(src, dst));
 
             u32 n_elements = src.width * src.height;
-            u32 src_bytes = n_elements * sizeof(pixel_t);
-            u32 dst_bytes = n_elements * sizeof(gray::pixel_t);
-            u32 total_bytes = src_bytes + dst_bytes;
 
             DeviceBuffer d_buffer;
-            device_malloc(d_buffer, total_bytes);
+            device_malloc(d_buffer, bytes(src) + bytes(dst));
 
             DeviceArray<pixel_t> d_src;
             DeviceArray<u8> d_dst;
@@ -86,12 +71,9 @@ namespace libimage
             assert(verify(src, dst));
 
             u32 n_elements = src.width * src.height;
-            u32 src_bytes = n_elements * sizeof(pixel_t);
-            u32 dst_bytes = n_elements * sizeof(gray::pixel_t);
-            u32 total_bytes = src_bytes + dst_bytes;
 
             DeviceBuffer d_buffer;
-            device_malloc(d_buffer, total_bytes);
+            device_malloc(d_buffer, bytes(src) + bytes(dst));
 
             DeviceArray<pixel_t> d_src;
             DeviceArray<u8> d_dst;
@@ -117,12 +99,9 @@ namespace libimage
             assert(verify(src, dst));
 
             u32 n_elements = src.width * src.height;
-            u32 src_bytes = n_elements * sizeof(pixel_t);
-            u32 dst_bytes = n_elements * sizeof(gray::pixel_t);
-            u32 total_bytes = src_bytes + dst_bytes;
 
             DeviceBuffer d_buffer;
-            device_malloc(d_buffer, total_bytes);
+            device_malloc(d_buffer, bytes(src) + bytes(dst));
 
             DeviceArray<pixel_t> d_src;
             DeviceArray<u8> d_dst;
@@ -148,12 +127,9 @@ namespace libimage
             assert(verify(src, dst));
 
             u32 n_elements = src.width * src.height;
-            u32 src_bytes = n_elements * sizeof(pixel_t);
-            u32 dst_bytes = n_elements * sizeof(gray::pixel_t);
-            u32 total_bytes = src_bytes + dst_bytes;
 
             DeviceBuffer d_buffer;
-            device_malloc(d_buffer, total_bytes);
+            device_malloc(d_buffer, bytes(src) + bytes(dst));
 
             DeviceArray<pixel_t> d_src;
             DeviceArray<u8> d_dst;
@@ -179,13 +155,9 @@ namespace libimage
         {
             assert(verify(src, dst));
             assert(verify(d_buffer));
+            assert(verify(src, dst, d_buffer));
 
             u32 n_elements = src.width * src.height;
-            u32 src_bytes = n_elements * sizeof(pixel_t);
-            u32 dst_bytes = n_elements * sizeof(gray::pixel_t);
-            u32 total_bytes = src_bytes + dst_bytes;
-
-            assert(total_bytes <= d_buffer.total_bytes - d_buffer.offset);
 
             DeviceArray<pixel_t> d_src;
             DeviceArray<u8> d_dst;
@@ -211,13 +183,9 @@ namespace libimage
         {
             assert(verify(src, dst));
             assert(verify(d_buffer));
+            assert(verify(src, dst, d_buffer));
 
             u32 n_elements = src.width * src.height;
-            u32 src_bytes = n_elements * sizeof(pixel_t);
-            u32 dst_bytes = n_elements * sizeof(gray::pixel_t);
-            u32 total_bytes = src_bytes + dst_bytes;
-
-            assert(total_bytes <= d_buffer.total_bytes - d_buffer.offset);
 
             DeviceArray<pixel_t> d_src;
             DeviceArray<u8> d_dst;
@@ -243,13 +211,9 @@ namespace libimage
         {
             assert(verify(src, dst));
             assert(verify(d_buffer));
+            assert(verify(src, dst, d_buffer));
 
             u32 n_elements = src.width * src.height;
-            u32 src_bytes = n_elements * sizeof(pixel_t);
-            u32 dst_bytes = n_elements * sizeof(gray::pixel_t);
-            u32 total_bytes = src_bytes + dst_bytes;
-
-            assert(total_bytes <= d_buffer.total_bytes - d_buffer.offset);
 
             DeviceArray<pixel_t> d_src;
             DeviceArray<u8> d_dst;
@@ -275,13 +239,9 @@ namespace libimage
         {
             assert(verify(src, dst));
             assert(verify(d_buffer));
+            assert(verify(src, dst, d_buffer));
 
             u32 n_elements = src.width * src.height;
-            u32 src_bytes = n_elements * sizeof(pixel_t);
-            u32 dst_bytes = n_elements * sizeof(gray::pixel_t);
-            u32 total_bytes = src_bytes + dst_bytes;
-
-            assert(total_bytes <= d_buffer.total_bytes - d_buffer.offset);
 
             DeviceArray<pixel_t> d_src;
             DeviceArray<u8> d_dst;
