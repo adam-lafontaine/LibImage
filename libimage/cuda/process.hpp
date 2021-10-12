@@ -44,6 +44,27 @@ namespace libimage
 {
     namespace cuda
     {
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+        void binarize(gray::image_t const& src, gray::image_t const& dst, u8 min_threshold);
+
+		void binarize(gray::image_t const& src, gray::view_t const& dst, u8 min_threshold);
+
+		void binarize(gray::view_t const& src, gray::image_t const& dst, u8 min_threshold);
+
+		void binarize(gray::view_t const& src, gray::view_t const& dst, u8 min_threshold);
+
+
+        void binarize(gray::image_t const& src, gray::image_t const& dst, u8 min_threshold, DeviceBuffer& d_buffer);
+
+		void binarize(gray::image_t const& src, gray::view_t const& dst, u8 min_threshold, DeviceBuffer& d_buffer);
+
+		void binarize(gray::view_t const& src, gray::image_t const& dst, u8 min_threshold, DeviceBuffer& d_buffer);
+
+		void binarize(gray::view_t const& src, gray::view_t const& dst, u8 min_threshold, DeviceBuffer& d_buffer);
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+
 
 #ifndef LIBIMAGE_NO_COLOR
 #ifndef LIBIMAGE_NO_GRAYSCALE
@@ -64,6 +85,9 @@ namespace libimage
         void transform_grayscale(view_t const& src, gray::image_t const& dst, DeviceBuffer& d_buffer);
 
         void transform_grayscale(view_t const& src, gray::view_t const& dst, DeviceBuffer& d_buffer);
+
+
+        
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 #endif // !LIBIMAGE_NO_COLOR	

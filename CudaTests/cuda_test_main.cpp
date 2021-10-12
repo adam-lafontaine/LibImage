@@ -206,6 +206,7 @@ void cuda_tests(path_t& out_dir)
 	img::write_image(dst_gray_img, out_dir + "grayscale_buffer.png");
 
 	// grayscale a sub view
+	/*
 	img::pixel_range_t range = {};
 	range.x_begin = width / 4;
 	range.x_end = width * 3 / 4;
@@ -214,9 +215,20 @@ void cuda_tests(path_t& out_dir)
 
 	auto src_view = img::sub_view(caddy_img, range);
 	dst_gray_img.dispose();
-	auto dst_view = img::make_view(dst_gray_img, src_view.width, src_view.height);
+	img::make_image(dst_gray_img, src_view.width, src_view.height);
 	img::cuda::transform_grayscale(src_view, dst_gray_img, d_buffer);
 	img::write_image(dst_gray_img, out_dir + "grayscale_view.png");
+	*/
+
+	// binarize
+	img::gray::image_t src_gray_img;
+	img::make_image(src_gray_img, width, height);
+	img::seq::copy(dst_gray_img, src_gray_img);
+	img::cuda::binarize(src_gray_img, dst_gray_img, 100);
+	img::write_image(dst_gray_img, out_dir + "binarize.png");
+
+	img::cuda::binarize(src_gray_img, dst_gray_img, 100, d_buffer);
+	img::write_image(dst_gray_img, out_dir + "binarize_buffer.png");
 
 	device_free(d_buffer);
 
