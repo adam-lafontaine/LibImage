@@ -77,3 +77,9 @@ bool copy_to_host(DeviceArray<T> const& src, void* dst, size_t n_bytes)
 {
     return memcpy_to_host(src.data, dst, n_bytes);
 }
+
+
+bool verify(DeviceBuffer const& buffer)
+{
+    return buffer.data && buffer.total_bytes;
+}

@@ -5,6 +5,8 @@
 #ifndef LIBIMAGE_NO_COLOR
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
+#include <cassert>
+
 constexpr int THREADS_PER_BLOCK = 1024;
 
 
@@ -33,13 +35,23 @@ namespace libimage
     }
 
 
+    bool verify(image_t const& src, DeviceBuffer const& d_buffer)
+    {
+        u32 n_elements = src.width * src.height;
+        u32 src_bytes = n_elements * sizeof(pixel_t);
+        u32 dst_bytes = n_elements * sizeof(gray::pixel_t);
+        u32 total_bytes = src_bytes + dst_bytes;
+
+        return total_bytes >= d_buffer.total_bytes - d_buffer.offset;
+    }
+
+
 
     namespace cuda
     {
         void transform_grayscale(image_t const& src, gray::image_t const& dst)
         {
-            assert(src.width == dst.width);
-            assert(src.height == dst.height);
+            assert(verify(src, dst));
 
             u32 n_elements = src.width * src.height;
             u32 src_bytes = n_elements * sizeof(pixel_t);
@@ -70,8 +82,7 @@ namespace libimage
 
         void transform_grayscale(image_t const& src, gray::view_t const& dst)
         {
-            assert(src.width == dst.width);
-            assert(src.height == dst.height);
+            assert(verify(src, dst));
 
             u32 n_elements = src.width * src.height;
             u32 src_bytes = n_elements * sizeof(pixel_t);
@@ -102,8 +113,7 @@ namespace libimage
 
         void transform_grayscale(view_t const& src, gray::image_t const& dst)
         {
-            assert(src.width == dst.width);
-            assert(src.height == dst.height);
+            assert(verify(src, dst));
 
             u32 n_elements = src.width * src.height;
             u32 src_bytes = n_elements * sizeof(pixel_t);
@@ -134,8 +144,7 @@ namespace libimage
 
         void transform_grayscale(view_t const& src, gray::view_t const& dst)
         {
-            assert(src.width == dst.width);
-            assert(src.height == dst.height);
+            assert(verify(src, dst));
 
             u32 n_elements = src.width * src.height;
             u32 src_bytes = n_elements * sizeof(pixel_t);
@@ -167,9 +176,8 @@ namespace libimage
 
         void transform_grayscale(image_t const& src, gray::image_t const& dst, DeviceBuffer& d_buffer)
         {
-            assert(src.width == dst.width);
-            assert(src.height == dst.height);
-            assert(d_buffer.data);    
+            assert(verify(src, dst));
+            assert(verify(d_buffer));
 
             u32 n_elements = src.width * src.height;
             u32 src_bytes = n_elements * sizeof(pixel_t);
@@ -200,9 +208,8 @@ namespace libimage
 
         void transform_grayscale(image_t const& src, gray::view_t const& dst, DeviceBuffer& d_buffer)
         {
-            assert(src.width == dst.width);
-            assert(src.height == dst.height);
-            assert(d_buffer.data);    
+            assert(verify(src, dst));
+            assert(verify(d_buffer));
 
             u32 n_elements = src.width * src.height;
             u32 src_bytes = n_elements * sizeof(pixel_t);
@@ -233,9 +240,8 @@ namespace libimage
 
         void transform_grayscale(view_t const& src, gray::image_t const& dst, DeviceBuffer& d_buffer)
         {
-            assert(src.width == dst.width);
-            assert(src.height == dst.height);
-            assert(d_buffer.data);    
+            assert(verify(src, dst));
+            assert(verify(d_buffer));
 
             u32 n_elements = src.width * src.height;
             u32 src_bytes = n_elements * sizeof(pixel_t);
@@ -266,9 +272,8 @@ namespace libimage
 
         void transform_grayscale(view_t const& src, gray::view_t const& dst, DeviceBuffer& d_buffer)
         {
-            assert(src.width == dst.width);
-            assert(src.height == dst.height);
-            assert(d_buffer.data);    
+            assert(verify(src, dst));
+            assert(verify(d_buffer));
 
             u32 n_elements = src.width * src.height;
             u32 src_bytes = n_elements * sizeof(pixel_t);
