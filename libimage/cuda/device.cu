@@ -36,14 +36,14 @@ bool device_free(DeviceBuffer& buffer)
 }
 
 
-bool copy_to_device(const void* host_src, void* device_dst, size_t n_bytes)
+bool memcpy_to_device(const void* host_src, void* device_dst, size_t n_bytes)
 {
     cudaError_t err = cudaMemcpy(device_dst, host_src, n_bytes, cudaMemcpyHostToDevice);
     return err == cudaSuccess;
 }
 
 
-bool copy_to_host(const void* device_src, void* host_dst, size_t n_bytes)
+bool memcpy_to_host(const void* device_src, void* host_dst, size_t n_bytes)
 {
     cudaError_t err = cudaMemcpy(host_dst, device_src, n_bytes, cudaMemcpyDeviceToHost);
     return err == cudaSuccess;

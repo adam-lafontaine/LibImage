@@ -1,3 +1,10 @@
+#pragma once
+/*
+
+Copyright (c) 2021 Adam Lafontaine
+
+*/
+
 #include <cuda_runtime.h>
 
 #define GPU_KERNAL __global__

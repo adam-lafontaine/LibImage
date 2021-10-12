@@ -1,3 +1,10 @@
+#pragma once
+/*
+
+Copyright (c) 2021 Adam Lafontaine
+
+*/
+
 #include "../types.hpp"
 
 #include <cstddef>
@@ -53,20 +60,20 @@ bool device_malloc(DeviceBuffer& buffer, size_t n_bytes);
 bool device_free(DeviceBuffer& buffer);
 
 
-bool copy_to_device(const void* host_src, void* device_dst, size_t n_bytes);
+bool memcpy_to_device(const void* host_src, void* device_dst, size_t n_bytes);
 
-bool copy_to_host(const void* device_src, void* host_dst, size_t n_bytes);
+bool memcpy_to_host(const void* device_src, void* host_dst, size_t n_bytes);
 
 
 template <typename T>
 bool copy_to_device(const void* src, DeviceArray<T> const& dst, size_t n_bytes)
 {
-    return copy_to_device(src, dst.data, n_bytes);
+    return memcpy_to_device(src, dst.data, n_bytes);
 }
 
 
 template <typename T>
 bool copy_to_host(DeviceArray<T> const& src, void* dst, size_t n_bytes)
 {
-    return copy_to_host(src.data, dst, n_bytes);
+    return memcpy_to_host(src.data, dst, n_bytes);
 }
