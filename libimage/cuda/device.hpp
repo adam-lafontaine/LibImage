@@ -79,7 +79,7 @@ bool copy_to_host(DeviceArray<T> const& src, void* dst, size_t n_bytes)
 }
 
 
-bool verify(DeviceBuffer const& buffer)
+inline bool verify(DeviceBuffer const& buffer)
 {
     return buffer.data && buffer.total_bytes;
 }

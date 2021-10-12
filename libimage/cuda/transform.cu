@@ -34,7 +34,7 @@ namespace libimage
         }
     }
 
-
+/*
     bool verify(image_t const& src, DeviceBuffer const& d_buffer)
     {
         u32 n_elements = src.width * src.height;
@@ -44,6 +44,7 @@ namespace libimage
 
         return total_bytes >= d_buffer.total_bytes - d_buffer.offset;
     }
+    */
 
 
 
@@ -184,7 +185,7 @@ namespace libimage
             u32 dst_bytes = n_elements * sizeof(gray::pixel_t);
             u32 total_bytes = src_bytes + dst_bytes;
 
-            assert(total_bytes >= d_buffer.total_bytes - d_buffer.offset);
+            assert(total_bytes <= d_buffer.total_bytes - d_buffer.offset);
 
             DeviceArray<pixel_t> d_src;
             DeviceArray<u8> d_dst;
@@ -216,7 +217,7 @@ namespace libimage
             u32 dst_bytes = n_elements * sizeof(gray::pixel_t);
             u32 total_bytes = src_bytes + dst_bytes;
 
-            assert(total_bytes >= d_buffer.total_bytes - d_buffer.offset);
+            assert(total_bytes <= d_buffer.total_bytes - d_buffer.offset);
 
             DeviceArray<pixel_t> d_src;
             DeviceArray<u8> d_dst;
@@ -248,7 +249,7 @@ namespace libimage
             u32 dst_bytes = n_elements * sizeof(gray::pixel_t);
             u32 total_bytes = src_bytes + dst_bytes;
 
-            assert(total_bytes >= d_buffer.total_bytes - d_buffer.offset);
+            assert(total_bytes <= d_buffer.total_bytes - d_buffer.offset);
 
             DeviceArray<pixel_t> d_src;
             DeviceArray<u8> d_dst;
@@ -280,7 +281,7 @@ namespace libimage
             u32 dst_bytes = n_elements * sizeof(gray::pixel_t);
             u32 total_bytes = src_bytes + dst_bytes;
 
-            assert(total_bytes >= d_buffer.total_bytes - d_buffer.offset);
+            assert(total_bytes <= d_buffer.total_bytes - d_buffer.offset);
 
             DeviceArray<pixel_t> d_src;
             DeviceArray<u8> d_dst;

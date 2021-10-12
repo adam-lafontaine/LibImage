@@ -189,7 +189,7 @@ void cuda_tests(path_t& out_dir)
 
 	// grayscale
 	img::cuda::transform_grayscale(caddy_img, dst_gray_img);
-	img::write_image(dst_gray_img, out_dir + "cuda_grayscale.png");
+	img::write_image(dst_gray_img, out_dir + "grayscale.png");
 
 	// grayscale with pre-allocated device memory
 	u32 pixels_per_image = width * height;
@@ -203,7 +203,20 @@ void cuda_tests(path_t& out_dir)
 	device_malloc(d_buffer, total_bytes);
 
 	img::cuda::transform_grayscale(caddy_img, dst_gray_img, d_buffer);
-	img::write_image(dst_gray_img, out_dir + "cuda_grayscale_buffer.png");
+	img::write_image(dst_gray_img, out_dir + "grayscale_buffer.png");
+
+	// grayscale a sub view
+	img::pixel_range_t range = {};
+	range.x_begin = width / 4;
+	range.x_end = width * 3 / 4;
+	range.y_begin = height / 4;
+	range.y_end = height * 3 / 4;
+
+	auto src_view = img::sub_view(caddy_img, range);
+	dst_gray_img.dispose();
+	auto dst_view = img::make_view(dst_gray_img, src_view.width, src_view.height);
+	img::cuda::transform_grayscale(src_view, dst_gray_img, d_buffer);
+	img::write_image(dst_gray_img, out_dir + "grayscale_view.png");
 
 	device_free(d_buffer);
 
