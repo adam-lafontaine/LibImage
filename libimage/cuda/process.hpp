@@ -5,8 +5,8 @@
 
 namespace libimage
 {
-    namespace cuda
-    {
+        namespace cuda
+        {
 #ifndef LIBIMAGE_NO_COLOR
 
         bool copy_to_device(image_t const& src, DeviceArray<pixel_t> const& dst);
@@ -22,7 +22,14 @@ namespace libimage
         bool copy_to_host(DeviceArray<gray::pixel_t> const& src, gray::image_t const& dst);
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
+        }
+}
 
+
+namespace libimage
+{
+    namespace cuda
+    {
 
 #ifndef LIBIMAGE_NO_COLOR
 #ifndef LIBIMAGE_NO_GRAYSCALE

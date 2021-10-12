@@ -266,7 +266,7 @@ endif
 
 ################################################################################
 
-GPP := g++-10 -std=c++17 -lstdc++fs
+GPP := g++-10 -std=c++17
 build := ./build_files
 
 types_h := ../libimage/types.hpp
@@ -275,6 +275,10 @@ libimage_h := $(types_h)
 libimage_h += ../libimage/libimage.hpp
 libimage_h += ../libimage/rgba.hpp
 libimage_h += ../libimage/gray.hpp
+
+stb_h := ../libimage/stb_wrapper/stb_image.h
+stb_h += ../libimage/stb_wrapper/stb_write.h
+stb_h += ../libimage/stb_wrapper/stb_resize.h
 
 math_h := ../libimage/math/libimage_math.hpp
 
@@ -334,9 +338,9 @@ object_files += $(binarize_o)
 object_files += $(blur_o)
 object_files += $(convolve_o)
 object_files += $(gradient_o)
-#object_files += $(gpu_device_o)
-#object_files += $(gpu_device_copy_o)
-#object_files += $(gpu_transform_o)
+object_files += $(gpu_device_o)
+object_files += $(gpu_device_copy_o)
+object_files += $(gpu_transform_o)
 
 
 cuda_test_exe := $(build)/cuda_test
@@ -352,9 +356,7 @@ endif
 
 $(main_o): $(main_c) $(libimage_h)
 	@echo "\n cuda_test_main.o"
-	$(GPP) -o $@ -c $<
-#	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
-#	$(GPP) -o $@ -c $<
+	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
 $(libimage_o): $(libimage_c) $(libimage_h)
 	@echo "\n libimage.o"
@@ -408,14 +410,9 @@ $(gpu_transform_o): $(gpu_transform_c) $(gpu_h)
 	@echo "\n gpu_transform.o"
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
-#exe: libimage.o cuda_test_main.o
-#	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
-
 $(cuda_test_exe): $(object_files)
 	@echo "\n cuda_test"
-	g++-10 -std=c++17 -lstdc++fs -o $@ $+
-#	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
-#	g++-10 -std=c++17 -lstdc++fs -o $@ $(object_files)
+	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
 
 build: $(cuda_test_exe)
 

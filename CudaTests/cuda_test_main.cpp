@@ -30,13 +30,18 @@ const auto DST_IMAGE_ROOT = ROOT_PATH + "out_files/";
 
 void empty_dir(path_t& dir);
 void process_tests(path_t& out_dir);
+void cuda_tests(path_t& out_dir);
 void print(img::stats_t const& stats);
 
 int main()
 {
 	auto dst_root = DST_IMAGE_ROOT;
 
-    process_tests(dst_root);
+	//auto dst_proc = dst_root + "proc/";
+    //process_tests(dst_proc);
+
+	auto dst_cuda = dst_root + "cuda/";
+	cuda_tests(dst_cuda);
 
     printf("\nDone.\n");
 }
@@ -164,7 +169,29 @@ void process_tests(path_t& out_dir)
 
 	img::write_image(dst_gray_img, out_dir + "combo.png");
 
-/*
+
+}
+
+
+void cuda_tests(path_t& out_dir)
+{
+	std::cout << "cuda:\n";
+	empty_dir(out_dir);
+
+	Image caddy_img;
+	img::read_image_from_file(CADILLAC_PATH, caddy_img);
+	auto width = caddy_img.width;
+	auto height = caddy_img.height;
+
+	GrayImage dst_gray_img;
+	img::make_image(dst_gray_img, width, height);
+
+
+	// grayscale
+	img::cuda::transform_grayscale(caddy_img, dst_gray_img);
+	img::write_image(dst_gray_img, out_dir + "cuda_grayscale.png");
+
+	/*
 	// compare edge detection speeds
 	// TODO: with cuda
 
