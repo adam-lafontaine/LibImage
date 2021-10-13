@@ -214,9 +214,7 @@ void cuda_tests(path_t& out_dir)
 
 	// grayscale
 	img::cuda::transform_grayscale(caddy_img, dst_gray_img);
-	img::write_image(dst_gray_img, out_dir + "grayscale.png");
-
-	
+	img::write_image(dst_gray_img, out_dir + "grayscale.png");	
 
 	img::cuda::transform_grayscale(caddy_img, dst_gray_img, d_buffer);
 	img::write_image(dst_gray_img, out_dir + "grayscale_buffer.png");
@@ -245,6 +243,7 @@ void cuda_tests(path_t& out_dir)
 	img::cuda::binarize(src_gray_img, dst_gray_img, 100, d_buffer);
 	img::write_image(dst_gray_img, out_dir + "binarize_buffer.png");
 
+
 	// alpha blend
 	img::seq::copy(caddy_img, src_img);
 	img::seq::transform_alpha(src_img, [](auto& p){ return 128; });
@@ -262,6 +261,11 @@ void cuda_tests(path_t& out_dir)
 	img::seq::copy(corvette_img, dst_img);
 	img::cuda::alpha_blend(src_img, dst_img, d_buffer);
 	img::write_image(dst_img, out_dir + "alpha_blend_src_dst_buffer.png");
+
+
+	// blur
+	img::cuda::blur(src_gray_img, dst_gray_img, d_buffer);
+	img::write_image(dst_gray_img, out_dir + "blur_buffer.png");
 
 
 	device_free(d_buffer);

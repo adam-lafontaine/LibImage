@@ -325,12 +325,14 @@ gpu_device_copy_c := ../libimage/cuda/device_copy.cpp
 gpu_transform_c   := ../libimage/cuda/transform.cu
 gpu_binarize_c    := ../libimage/cuda/binarize.cu
 gpu_alpha_blend_c := ../libimage/cuda/alpha_blend.cu
+gpu_blur_c        := ../libimage/cuda/blur.cu
 
 gpu_device_o      := $(build)/gpu_device.o
 gpu_device_copy_o := $(build)/gpu_device_copy.o
 gpu_transform_o   := $(build)/gpu_transform.o
 gpu_binarize_o    := $(build)/gpu_binarize.o
 gpu_alpha_blend_o := $(build)/gpu_alpha_blend.o
+gpu_blur_o        := $(build)/gpu_blur.o
 
 object_files := $(main_o)
 object_files += $(libimage_o)
@@ -348,6 +350,7 @@ object_files += $(gpu_device_copy_o)
 object_files += $(gpu_transform_o)
 object_files += $(gpu_binarize_o)
 object_files += $(gpu_alpha_blend_o)
+object_files += $(gpu_blur_o)
 
 
 cuda_test_exe := $(build)/cuda_test
@@ -425,6 +428,10 @@ $(gpu_alpha_blend_o): $(gpu_alpha_blend_c) $(gpu_h)
 	@echo "\n gpu_alpha_blend.o"
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
+$(gpu_blur_o): $(gpu_blur_c) $(gpu_h)
+	@echo "\n gpu_blur.o"
+	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
+
 
 $(cuda_test_exe): $(object_files)
 	@echo "\n cuda_test"
@@ -438,3 +445,7 @@ run: build
 clean:
 	rm -rfv $(build)/*
 	rm -rfv ./out_files/*
+
+
+
+gpu_blur: $(gpu_blur_o)
