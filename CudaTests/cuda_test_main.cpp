@@ -183,24 +183,40 @@ void cuda_tests(path_t& out_dir)
 	auto width = caddy_img.width;
 	auto height = caddy_img.height;
 
+	Image img_read;
+	img::read_image_from_file(CORVETTE_PATH, img_read);
+	Image corvette_img;
+	corvette_img.width = width;
+	corvette_img.height = height;
+	img::resize_image(img_read, corvette_img);
+
+	Image src_img;
+	img::make_image(src_img, width, height);
+
+	Image dst_img;
+	img::make_image(dst_img, width, height);
+
+	GrayImage src_gray_img;
+	img::make_image(src_gray_img, width, height);
+
 	GrayImage dst_gray_img;
 	img::make_image(dst_gray_img, width, height);
+
+
+	// pre-allocate device memory
+	u32 pixels_per_image = width * height;
+	u32 max_color_images = 3;
+	u32 color_bytes = max_color_images * pixels_per_image * sizeof(img::pixel_t);
+
+	DeviceBuffer d_buffer;
+	device_malloc(d_buffer, color_bytes);
 
 
 	// grayscale
 	img::cuda::transform_grayscale(caddy_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "grayscale.png");
 
-	// grayscale with pre-allocated device memory
-	u32 pixels_per_image = width * height;
-	u32 n_src_images = 1;
-	u32 src_bytes = n_src_images * pixels_per_image * sizeof(img::pixel_t);
-	u32 n_dst_images = 1;
-	u32 dst_bytes = n_dst_images * pixels_per_image * sizeof(img::gray::pixel_t);
-	u32 total_bytes = src_bytes + dst_bytes;
-
-	DeviceBuffer d_buffer;
-	device_malloc(d_buffer, total_bytes);
+	
 
 	img::cuda::transform_grayscale(caddy_img, dst_gray_img, d_buffer);
 	img::write_image(dst_gray_img, out_dir + "grayscale_buffer.png");
@@ -220,15 +236,33 @@ void cuda_tests(path_t& out_dir)
 	img::write_image(dst_gray_img, out_dir + "grayscale_view.png");
 	*/
 
-	// binarize
-	img::gray::image_t src_gray_img;
-	img::make_image(src_gray_img, width, height);
+	// binarize	
 	img::seq::copy(dst_gray_img, src_gray_img);
+
 	img::cuda::binarize(src_gray_img, dst_gray_img, 100);
 	img::write_image(dst_gray_img, out_dir + "binarize.png");
 
 	img::cuda::binarize(src_gray_img, dst_gray_img, 100, d_buffer);
 	img::write_image(dst_gray_img, out_dir + "binarize_buffer.png");
+
+	// alpha blend
+	img::seq::copy(caddy_img, src_img);
+	img::seq::transform_alpha(src_img, [](auto& p){ return 128; });
+
+	img::cuda::alpha_blend(src_img, corvette_img, dst_img);
+	img::write_image(dst_img, out_dir + "alpha_blend.png");
+
+	img::cuda::alpha_blend(src_img, corvette_img, dst_img, d_buffer);
+	img::write_image(dst_img, out_dir + "alpha_blend_buffer.png");
+
+	img::seq::copy(corvette_img, dst_img);
+	img::cuda::alpha_blend(src_img, dst_img);
+	img::write_image(dst_img, out_dir + "alpha_blend_src_dst.png");
+
+	img::seq::copy(corvette_img, dst_img);
+	img::cuda::alpha_blend(src_img, dst_img, d_buffer);
+	img::write_image(dst_img, out_dir + "alpha_blend_src_dst_buffer.png");
+
 
 	device_free(d_buffer);
 

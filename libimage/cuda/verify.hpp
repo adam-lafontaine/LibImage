@@ -34,13 +34,17 @@ namespace libimage
     }
 
 
-    template <class SRC_IMG_T, class DST_IMG_T>
-    bool verify(SRC_IMG_T const& src, DST_IMG_T const& dst, DeviceBuffer const& buffer)
+    template <class IMG_A_T, class IMG_B_T>
+    bool verify(IMG_A_T const& a, IMG_B_T const& b, DeviceBuffer const& buffer)
     {
-        u32 src_bytes = bytes(src);
-        u32 dst_bytes = bytes(dst);
+        return (bytes(a) + bytes(b)) <= buffer.total_bytes;
+    }
 
-        return (src_bytes + dst_bytes) <= buffer.total_bytes;
+
+    template <class IMG_A_T, class IMG_B_T, class IMG_C_T>
+    bool verify(IMG_A_T const& a, IMG_B_T const& b, IMG_C_T const& c, DeviceBuffer const& buffer)
+    {
+        return (bytes(a) + bytes(b) + bytes(c)) <= buffer.total_bytes;
     }
     
 }

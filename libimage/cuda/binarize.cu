@@ -20,123 +20,16 @@ namespace libimage
     void gpu_binarize(u8* src, u8* dst, u8 threshold, int n_elements)
     {
         int i = blockDim.x * blockIdx.x + threadIdx.x;
-
-        if (i < n_elements)
+        if (i >= n_elements)
         {
-            dst[i] = src[i] >= threshold ? 255 : 0;
+            return;
         }
+
+        dst[i] = src[i] >= threshold ? 255 : 0;
     }
 
     namespace cuda
     {
-        void binarize(gray::image_t const& src, gray::image_t const& dst, u8 min_threshold)
-        {
-            assert(verify(src, dst));
-
-            u32 n_elements = src.width * src.height;
-
-            DeviceBuffer d_buffer;
-            device_malloc(d_buffer, bytes(src) + bytes(dst));
-
-            DeviceArray<gray::pixel_t> d_src;
-            DeviceArray<u8> d_dst;
-
-            push_array(d_src, d_buffer, n_elements);
-            push_array(d_dst, d_buffer, n_elements);
-
-            copy_to_device(src, d_src);
-
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
-
-            gpu_binarize<<<blocks, threads_per_block>>>(d_src.data, d_dst.data, min_threshold, n_elements);
-
-            copy_to_host(d_dst, dst);
-            device_free(d_buffer);
-        }
-
-
-		void binarize(gray::image_t const& src, gray::view_t const& dst, u8 min_threshold)
-        {
-            assert(verify(src, dst));
-
-            u32 n_elements = src.width * src.height;
-
-            DeviceBuffer d_buffer;
-            device_malloc(d_buffer, bytes(src) + bytes(dst));
-
-            DeviceArray<gray::pixel_t> d_src;
-            DeviceArray<u8> d_dst;
-
-            push_array(d_src, d_buffer, n_elements);
-            push_array(d_dst, d_buffer, n_elements);
-
-            copy_to_device(src, d_src);
-
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
-
-            gpu_binarize<<<blocks, threads_per_block>>>(d_src.data, d_dst.data, min_threshold, n_elements);
-
-            copy_to_host(d_dst, dst);
-            device_free(d_buffer);
-        }
-
-
-		void binarize(gray::view_t const& src, gray::image_t const& dst, u8 min_threshold)
-        {
-            assert(verify(src, dst));
-
-            u32 n_elements = src.width * src.height;
-
-            DeviceBuffer d_buffer;
-            device_malloc(d_buffer, bytes(src) + bytes(dst));
-
-            DeviceArray<gray::pixel_t> d_src;
-            DeviceArray<u8> d_dst;
-
-            push_array(d_src, d_buffer, n_elements);
-            push_array(d_dst, d_buffer, n_elements);
-
-            copy_to_device(src, d_src);
-
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
-
-            gpu_binarize<<<blocks, threads_per_block>>>(d_src.data, d_dst.data, min_threshold, n_elements);
-
-            copy_to_host(d_dst, dst);
-            device_free(d_buffer);
-        }
-
-
-		void binarize(gray::view_t const& src, gray::view_t const& dst, u8 min_threshold)
-        {
-            assert(verify(src, dst));
-
-            u32 n_elements = src.width * src.height;
-
-            DeviceBuffer d_buffer;
-            device_malloc(d_buffer, bytes(src) + bytes(dst));
-
-            DeviceArray<gray::pixel_t> d_src;
-            DeviceArray<u8> d_dst;
-
-            push_array(d_src, d_buffer, n_elements);
-            push_array(d_dst, d_buffer, n_elements);
-
-            copy_to_device(src, d_src);
-
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
-
-            gpu_binarize<<<blocks, threads_per_block>>>(d_src.data, d_dst.data, min_threshold, n_elements);
-
-            copy_to_host(d_dst, dst);
-            device_free(d_buffer);
-        }
-
-
         void binarize(gray::image_t const& src, gray::image_t const& dst, u8 min_threshold, DeviceBuffer& d_buffer)
         {
             assert(verify(src, dst));
@@ -247,7 +140,59 @@ namespace libimage
             pop_array(d_src, d_buffer);
             pop_array(d_dst, d_buffer);
         }
-        
+
+
+        void binarize(gray::image_t const& src, gray::image_t const& dst, u8 min_threshold)
+        {
+            assert(verify(src, dst));
+
+            DeviceBuffer d_buffer;
+            device_malloc(d_buffer, bytes(src) + bytes(dst));
+
+            binarize(src, dst, min_threshold, d_buffer);
+            
+            device_free(d_buffer);
+        }
+
+
+		void binarize(gray::image_t const& src, gray::view_t const& dst, u8 min_threshold)
+        {
+            assert(verify(src, dst));
+
+            DeviceBuffer d_buffer;
+            device_malloc(d_buffer, bytes(src) + bytes(dst));
+
+            binarize(src, dst, min_threshold, d_buffer);
+            
+            device_free(d_buffer);
+        }
+
+
+		void binarize(gray::view_t const& src, gray::image_t const& dst, u8 min_threshold)
+        {
+            assert(verify(src, dst));
+
+            DeviceBuffer d_buffer;
+            device_malloc(d_buffer, bytes(src) + bytes(dst));
+
+            binarize(src, dst, min_threshold, d_buffer);
+            
+            device_free(d_buffer);
+        }
+
+
+		void binarize(gray::view_t const& src, gray::view_t const& dst, u8 min_threshold)
+        {
+            assert(verify(src, dst));
+
+            DeviceBuffer d_buffer;
+            device_malloc(d_buffer, bytes(src) + bytes(dst));
+
+            binarize(src, dst, min_threshold, d_buffer);
+            
+            device_free(d_buffer);
+        }
+
     }
 }
 

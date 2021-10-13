@@ -17,7 +17,7 @@ Copyright (c) 2021 Adam Lafontaine
 
 namespace libimage
 {
-	static constexpr pixel_t alpha_blend_linear(pixel_t const& src, pixel_t const& current)
+	static pixel_t alpha_blend_linear(pixel_t const& src, pixel_t const& current)
 	{
 		auto const a = static_cast<r32>(src.alpha) / 255.0f;
 

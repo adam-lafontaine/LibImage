@@ -28,133 +28,22 @@ namespace libimage
     void gpu_transform_grayscale(pixel_t* src, u8* dst, int n_elements)
     {
         int i = blockDim.x * blockIdx.x + threadIdx.x;
-
-        if (i < n_elements)
+        if (i >= n_elements)
         {
-            u8 r = src[i].red;
-            u8 g = src[i].green;
-            u8 b = src[i].blue;
-
-            dst[i] = rgb_grayscale_standard(r, g, b);
+            return;
         }
+
+        u8 r = src[i].red;
+        u8 g = src[i].green;
+        u8 b = src[i].blue;
+
+        dst[i] = rgb_grayscale_standard(r, g, b);
     }
 
 
 
     namespace cuda
     {
-        void transform_grayscale(image_t const& src, gray::image_t const& dst)
-        {
-            assert(verify(src, dst));
-
-            u32 n_elements = src.width * src.height;
-
-            DeviceBuffer d_buffer;
-            device_malloc(d_buffer, bytes(src) + bytes(dst));
-
-            DeviceArray<pixel_t> d_src;
-            DeviceArray<u8> d_dst;
-
-            push_array(d_src, d_buffer, n_elements);
-            push_array(d_dst, d_buffer, n_elements);
-
-            copy_to_device(src, d_src);
-
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
-
-            gpu_transform_grayscale<<<blocks, threads_per_block>>>(d_src.data, d_dst.data, n_elements);
-
-            copy_to_host(d_dst, dst);
-
-            device_free(d_buffer);
-        }
-
-
-        void transform_grayscale(image_t const& src, gray::view_t const& dst)
-        {
-            assert(verify(src, dst));
-
-            u32 n_elements = src.width * src.height;
-
-            DeviceBuffer d_buffer;
-            device_malloc(d_buffer, bytes(src) + bytes(dst));
-
-            DeviceArray<pixel_t> d_src;
-            DeviceArray<u8> d_dst;
-
-            push_array(d_src, d_buffer, n_elements);
-            push_array(d_dst, d_buffer, n_elements);
-
-            copy_to_device(src, d_src);
-
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
-
-            gpu_transform_grayscale<<<blocks, threads_per_block>>>(d_src.data, d_dst.data, n_elements);
-
-            copy_to_host(d_dst, dst);
-
-            device_free(d_buffer);
-        }
-
-
-        void transform_grayscale(view_t const& src, gray::image_t const& dst)
-        {
-            assert(verify(src, dst));
-
-            u32 n_elements = src.width * src.height;
-
-            DeviceBuffer d_buffer;
-            device_malloc(d_buffer, bytes(src) + bytes(dst));
-
-            DeviceArray<pixel_t> d_src;
-            DeviceArray<u8> d_dst;
-
-            push_array(d_src, d_buffer, n_elements);
-            push_array(d_dst, d_buffer, n_elements);
-
-            copy_to_device(src, d_src);
-
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
-
-            gpu_transform_grayscale<<<blocks, threads_per_block>>>(d_src.data, d_dst.data, n_elements);
-
-            copy_to_host(d_dst, dst);
-
-            device_free(d_buffer);
-        }
-
-
-        void transform_grayscale(view_t const& src, gray::view_t const& dst)
-        {
-            assert(verify(src, dst));
-
-            u32 n_elements = src.width * src.height;
-
-            DeviceBuffer d_buffer;
-            device_malloc(d_buffer, bytes(src) + bytes(dst));
-
-            DeviceArray<pixel_t> d_src;
-            DeviceArray<u8> d_dst;
-
-            push_array(d_src, d_buffer, n_elements);
-            push_array(d_dst, d_buffer, n_elements);
-
-            copy_to_device(src, d_src);
-
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
-
-            gpu_transform_grayscale<<<blocks, threads_per_block>>>(d_src.data, d_dst.data, n_elements);
-
-            copy_to_host(d_dst, dst);
-
-            device_free(d_buffer);
-        }
-
-
 
         void transform_grayscale(image_t const& src, gray::image_t const& dst, DeviceBuffer& d_buffer)
         {
@@ -267,6 +156,57 @@ namespace libimage
             pop_array(d_dst, d_buffer);
         }
 
+
+        void transform_grayscale(image_t const& src, gray::image_t const& dst)
+        {
+            assert(verify(src, dst));
+
+            DeviceBuffer d_buffer;
+            device_malloc(d_buffer, bytes(src) + bytes(dst));
+
+            transform_grayscale(src, dst, d_buffer);
+
+            device_free(d_buffer);
+        }
+
+
+        void transform_grayscale(image_t const& src, gray::view_t const& dst)
+        {
+            assert(verify(src, dst));
+
+            DeviceBuffer d_buffer;
+            device_malloc(d_buffer, bytes(src) + bytes(dst));
+
+            transform_grayscale(src, dst, d_buffer);
+
+            device_free(d_buffer);
+        }
+
+
+        void transform_grayscale(view_t const& src, gray::image_t const& dst)
+        {
+            assert(verify(src, dst));
+
+            DeviceBuffer d_buffer;
+            device_malloc(d_buffer, bytes(src) + bytes(dst));
+
+            transform_grayscale(src, dst, d_buffer);
+
+            device_free(d_buffer);
+        }
+
+
+        void transform_grayscale(view_t const& src, gray::view_t const& dst)
+        {
+            assert(verify(src, dst));
+
+            DeviceBuffer d_buffer;
+            device_malloc(d_buffer, bytes(src) + bytes(dst));
+
+            transform_grayscale(src, dst, d_buffer);
+
+            device_free(d_buffer);
+        }
     }
 }
 
