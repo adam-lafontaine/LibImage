@@ -16,7 +16,7 @@ constexpr int THREADS_PER_BLOCK = 1024;
 
 
 GPU_FUNCTION
-u8 rgb_grayscale_standard(u8 red, u8 green, u8 blue)
+static u8 rgb_grayscale_standard(u8 red, u8 green, u8 blue)
 {
     return static_cast<u8>(0.299f * red + 0.587f * green + 0.114f * blue);
 }
@@ -25,7 +25,7 @@ u8 rgb_grayscale_standard(u8 red, u8 green, u8 blue)
 namespace libimage
 {
     GPU_KERNAL
-    void gpu_transform_grayscale(pixel_t* src, u8* dst, int n_elements)
+    static void gpu_transform_grayscale(pixel_t* src, u8* dst, int n_elements)
     {
         int i = blockDim.x * blockIdx.x + threadIdx.x;
         if (i >= n_elements)

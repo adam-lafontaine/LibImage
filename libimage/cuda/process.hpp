@@ -156,6 +156,24 @@ namespace libimage
 		void edges(gray::view_t const& src, gray::image_t const& dst, u8 threshold);
 
 		void edges(gray::view_t const& src, gray::view_t const& dst, u8 threshold);
+
+		
+		void gradients(gray::image_t const& src, gray::image_t const& dst, DeviceBuffer& d_buffer);
+
+		void gradients(gray::image_t const& src, gray::view_t const& dst, DeviceBuffer& d_buffer);
+
+		void gradients(gray::view_t const& src, gray::image_t const& dst, DeviceBuffer& d_buffer);
+
+		void gradients(gray::view_t const& src, gray::view_t const& dst, DeviceBuffer& d_buffer);
+
+
+		void gradients(gray::image_t const& src, gray::image_t const& dst);
+
+		void gradients(gray::image_t const& src, gray::view_t const& dst);
+
+		void gradients(gray::view_t const& src, gray::image_t const& dst);
+
+		void gradients(gray::view_t const& src, gray::view_t const& dst);
         
 
 #endif // !LIBIMAGE_NO_GRAYSCALE

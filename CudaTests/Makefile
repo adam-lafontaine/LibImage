@@ -328,6 +328,7 @@ gpu_transform_c   := ../libimage/cuda/transform.cu
 gpu_binarize_c    := ../libimage/cuda/binarize.cu
 gpu_alpha_blend_c := ../libimage/cuda/alpha_blend.cu
 gpu_blur_c        := ../libimage/cuda/blur.cu
+gpu_gradient_c    := ../libimage/cuda/gradient.cu
 
 gpu_device_o      := $(build)/gpu_device.o
 gpu_device_copy_o := $(build)/gpu_device_copy.o
@@ -335,6 +336,7 @@ gpu_transform_o   := $(build)/gpu_transform.o
 gpu_binarize_o    := $(build)/gpu_binarize.o
 gpu_alpha_blend_o := $(build)/gpu_alpha_blend.o
 gpu_blur_o        := $(build)/gpu_blur.o
+gpu_gradient_o    := $(build)/gpu_gradient.o
 
 object_files := $(main_o)
 object_files += $(libimage_o)
@@ -353,6 +355,7 @@ object_files += $(gpu_transform_o)
 object_files += $(gpu_binarize_o)
 object_files += $(gpu_alpha_blend_o)
 object_files += $(gpu_blur_o)
+object_files += $(gpu_gradient_o)
 
 
 cuda_test_exe := $(build)/cuda_test
@@ -434,10 +437,15 @@ $(gpu_blur_o): $(gpu_blur_c) $(gpu_h) $(gpu_convolve_h)
 	@echo "\n gpu_blur.o"
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
+$(gpu_gradient_o): $(gpu_gradient_c) $(gpu_h) $(gpu_convolve_h)
+	@echo "\n gpu_gradient.o"
+	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
+
 
 $(cuda_test_exe): $(object_files)
 	@echo "\n cuda_test"
 	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
+    
 
 build: $(cuda_test_exe)
 

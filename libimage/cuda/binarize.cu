@@ -17,7 +17,7 @@ constexpr int THREADS_PER_BLOCK = 1024;
 namespace libimage
 {
     GPU_KERNAL
-    void gpu_binarize(u8* src, u8* dst, u8 threshold, int n_elements)
+    static void gpu_binarize(u8* src, u8* dst, u8 threshold, int n_elements)
     {
         int i = blockDim.x * blockIdx.x + threadIdx.x;
         if (i >= n_elements)

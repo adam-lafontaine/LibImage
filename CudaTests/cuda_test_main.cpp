@@ -271,7 +271,15 @@ void cuda_tests(path_t& out_dir)
 	img::write_image(dst_gray_img, out_dir + "blur.png");
 
 
-	
+	// edge detection
+	u8 threshold = 100;
+	img::cuda::edges(src_gray_img, dst_gray_img, threshold, d_buffer);
+	img::write_image(dst_gray_img, out_dir + "edges_buffer.png");
+
+
+	// gradients
+	img::cuda::gradients(src_gray_img, dst_gray_img, d_buffer);
+	img::write_image(dst_gray_img, out_dir + "gradients_buffer.png");
 
 
 	device_free(d_buffer);

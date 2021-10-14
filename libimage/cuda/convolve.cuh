@@ -143,6 +143,34 @@ namespace libimage
 
         return total;
     }
+
+
+    GPU_FUNCTION
+    inline r32 convolve_3x3(u8* data, u32 width, u32 height, u32 data_index, r32* weights_3x3)
+    {
+        pixel_range_t range = {};
+        u32 y = data_index / width;
+        u32 x = data_index - y * width;
+
+        top_or_bottom_3_high(range, y, height);
+		left_or_right_3_wide(range, x, width);
+
+        return apply_weights(data, width, range, weights_3x3);
+    }
+
+
+    GPU_FUNCTION
+    inline r32 convolve_5x5(u8* data, u32 width, u32 height, u32 data_index, r32* weights_5x5)
+    {
+        pixel_range_t range = {};
+        u32 y = data_index / width;
+        u32 x = data_index - y * width;
+
+        top_or_bottom_5_high(range, y, height);
+		left_or_right_5_wide(range, x, width);
+
+        return apply_weights(data, width, range, weights_5x5);
+    }
     
 
     

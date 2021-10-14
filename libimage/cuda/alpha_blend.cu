@@ -15,7 +15,7 @@ constexpr int THREADS_PER_BLOCK = 1024;
 
 
 GPU_FUNCTION
-u8 blend_linear(u8 s, u8 c, r32 a)
+static u8 blend_linear(u8 s, u8 c, r32 a)
 {
     
     auto const sf = static_cast<r32>(s);
@@ -29,7 +29,7 @@ u8 blend_linear(u8 s, u8 c, r32 a)
 namespace libimage
 {
     GPU_KERNAL
-    void gpu_alpha_blend_linear(pixel_t* src, pixel_t* current, pixel_t* dst, int n_elements)
+    static void gpu_alpha_blend_linear(pixel_t* src, pixel_t* current, pixel_t* dst, int n_elements)
     {
         int i = blockDim.x * blockIdx.x + threadIdx.x;
         if (i >= n_elements)
