@@ -10,6 +10,7 @@ Copyright (c) 2021 Adam Lafontaine
 #include "../proc/verify.hpp"
 
 #include <cassert>
+#include <array>
 
 constexpr int THREADS_PER_BLOCK = 1024;
 
@@ -100,11 +101,64 @@ bool is_inner_edge(u32 width, u32 height, u32 i)
 }
 
 
+namespace libimage
+{
+    GPU_FUNCTION
+    void top_or_bottom_3_high(pixel_range_t& range, u32 y, u32 height)
+	{
+		range.y_begin = y - 1;
+		range.y_end = y + 2;
+	}
+
+
+    GPU_FUNCTION
+    void left_or_right_3_wide(pixel_range_t& range, u32 x, u32 width)
+	{
+		range.x_begin = x - 1;
+		range.x_end = x + 2;
+	}
+
+
+    GPU_FUNCTION
+    r32 apply_weights(u8* data, u32 width, pixel_range_t const& range, r32* weights)
+    {
+        u32 w = 0;
+        r32 total = 0.0f;
+        for(u32 y = range.y_begin; y < range.y_end; ++y)
+        {
+            u8* p = data + y * width;
+            for(u32 x = range.x_begin; x < range.x_end; ++x)
+            {
+                total += p[x] * weights[w++];
+            }
+        }
+
+        return total;
+    }
+    
+
+    GPU_FUNCTION
+    u8 gauss3(u8* data, u32 width, u32 height, u32 data_index, r32* g3x3_weights)
+    {
+        pixel_range_t range = {};
+        u32 y = data_index / width;
+        u32 x = data_index - y * width;
+
+        top_or_bottom_3_high(range, y, height);
+		left_or_right_3_wide(range, x, width);
+
+        auto p = apply_weights(data, width, range, g3x3_weights);
+
+        return static_cast<u8>(p);
+    }
+}
+
+
 
 namespace libimage
 {
     GPU_KERNAL
-    void gpu_blur(u8* src, u8* dst, u32 width, u32 height)
+    void gpu_blur(u8* src, u8* dst, u32 width, u32 height, r32* g3x3_weights)
     {
         u32 n_elements = width * height;
         u32 i = u32(blockDim.x * blockIdx.x + threadIdx.x);
@@ -115,11 +169,11 @@ namespace libimage
 
         if(is_outer_edge(width, height, i))
         {
-            dst[i] = 0; // src[i];
+            dst[i] = src[i];
         }
         else if(is_inner_edge(width, height, i))
         {
-            dst[i] = 75;
+            dst[i] = gauss3(src, width, height, i, g3x3_weights);
         }
         else
         {
@@ -138,18 +192,30 @@ namespace libimage
 
             u32 n_elements = src.width * src.height;
 
+            constexpr r32 d = 16.0f;
+            constexpr u32 gauss3x3_size = 9;
+            std::array<r32, gauss3x3_size> gauss3x3
+            {
+                (1/d), (2/d), (1/d),
+                (2/d), (4/d), (2/d),
+                (1/d), (2/d), (1/d),
+            };
+
             DeviceArray<u8> d_src;
             DeviceArray<u8> d_dst;
+            DeviceArray<r32> d_gauss3x3;
 
             push_array(d_src, d_buffer, n_elements);
             push_array(d_dst, d_buffer, n_elements);
+            push_array(d_gauss3x3, d_buffer, gauss3x3_size);
 
             copy_to_device(src, d_src);
+            copy_to_device(gauss3x3.data(), d_gauss3x3, gauss3x3_size * sizeof(r32));
 
             int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
+            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;            
 
-            gpu_blur<<<blocks, threads_per_block>>>(d_src.data, d_dst.data, src.width, src.height);
+            gpu_blur<<<blocks, threads_per_block>>>(d_src.data, d_dst.data, src.width, src.height, d_gauss3x3.data);
 
             copy_to_host(d_dst, dst);
 
