@@ -267,6 +267,12 @@ void cuda_tests(path_t& out_dir)
 	img::cuda::blur(src_gray_img, dst_gray_img, d_buffer);
 	img::write_image(dst_gray_img, out_dir + "blur_buffer.png");
 
+	img::cuda::blur(src_gray_img, dst_gray_img);
+	img::write_image(dst_gray_img, out_dir + "blur.png");
+
+
+	
+
 
 	device_free(d_buffer);
 

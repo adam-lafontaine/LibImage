@@ -320,6 +320,8 @@ gpu_h += ../libimage/cuda/device.hpp
 gpu_h += ../libimage/cuda/process.hpp
 gpu_h += ../libimage/cuda/verify.hpp
 
+gpu_convolve_h := ../libimage/cuda/convolve.cuh
+
 gpu_device_c      := ../libimage/cuda/device.cu
 gpu_device_copy_c := ../libimage/cuda/device_copy.cpp
 gpu_transform_c   := ../libimage/cuda/transform.cu
@@ -428,7 +430,7 @@ $(gpu_alpha_blend_o): $(gpu_alpha_blend_c) $(gpu_h)
 	@echo "\n gpu_alpha_blend.o"
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
-$(gpu_blur_o): $(gpu_blur_c) $(gpu_h)
+$(gpu_blur_o): $(gpu_blur_c) $(gpu_h) $(gpu_convolve_h)
 	@echo "\n gpu_blur.o"
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 

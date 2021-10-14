@@ -138,6 +138,24 @@ namespace libimage
 		void blur(gray::view_t const& src, gray::image_t const& dst);
 
 		void blur(gray::view_t const& src, gray::view_t const& dst);
+
+
+		void edges(gray::image_t const& src, gray::image_t const& dst, u8 threshold, DeviceBuffer& d_buffer);
+
+		void edges(gray::image_t const& src, gray::view_t const& dst, u8 threshold, DeviceBuffer& d_buffer);
+
+		void edges(gray::view_t const& src, gray::image_t const& dst, u8 threshold, DeviceBuffer& d_buffer);
+
+		void edges(gray::view_t const& src, gray::view_t const& dst, u8 threshold, DeviceBuffer& d_buffer);
+
+
+		void edges(gray::image_t const& src, gray::image_t const& dst, u8 threshold);
+
+		void edges(gray::image_t const& src, gray::view_t const& dst, u8 threshold);
+
+		void edges(gray::view_t const& src, gray::image_t const& dst, u8 threshold);
+
+		void edges(gray::view_t const& src, gray::view_t const& dst, u8 threshold);
         
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
