@@ -45,7 +45,7 @@ constexpr std::array<r32, GRAD_3X3_SIZE> GRAD_X_3X3
     2.0f, 0.0f, -2.0f,
     1.0f, 0.0f, -1.0f,
 };
-constexpr std::array<r32, 9> GRAD_Y_3X3
+constexpr std::array<r32, GRAD_3X3_SIZE> GRAD_Y_3X3
 {
     1.0f,  2.0f,  1.0f,
     0.0f,  0.0f,  0.0f,
@@ -128,12 +128,26 @@ namespace libimage
     }
 
 
+    GPU_KERNAL
+    static void gpu_white(u8* dst, u32 width, u32 height)
+    {
+        u32 n_elements = width * height;
+        u32 i = u32(blockDim.x * blockIdx.x + threadIdx.x);
+        if (i >= n_elements)
+        {
+            return;
+        }
+
+        dst[i] = 255;
+    }
+
+
     
 
 
     namespace cuda
     {
-        static void blur(gray::image_t const& src, DeviceArray<u8>& d_dst, DeviceBuffer& d_buffer)
+        static bool push_array_blur(gray::image_t const& src, DeviceArray<u8>& d_dst, DeviceBuffer& d_buffer)
         {
             assert(verify(d_buffer));
 
@@ -145,19 +159,36 @@ namespace libimage
             DeviceArray<r32> d_gauss3x3;
             DeviceArray<r32> d_gauss5x5;
 
-            assert(has_bytes(d_buffer, n_elements * sizeof(u8) * 2));
+            bool push;
+            bool copy;
 
-            push_array(d_dst, d_buffer, n_elements);
-            push_array(d_src, d_buffer, n_elements);
+            push = push_array(d_dst, d_buffer, n_elements);
+            assert(push);
+            if(!push) { return false; }
 
-            assert(has_bytes(d_buffer, GAUSS_3X3_SIZE + GAUSS_5X5_SIZE));
+            push = push_array(d_src, d_buffer, n_elements);
+            assert(push);
+            if(!push) { return false; }
 
-            push_array(d_gauss3x3, d_buffer, GAUSS_3X3_SIZE);
-            push_array(d_gauss5x5, d_buffer, GAUSS_5X5_SIZE);
+            push = push_array(d_gauss3x3, d_buffer, GAUSS_3X3_SIZE);
+            assert(push);
+            if(!push) { return false; }
 
-            copy_to_device(src, d_src);
-            copy_to_device(GAUSS_3X3.data(), d_gauss3x3, GAUSS_3X3_BYTES);
-            copy_to_device(GAUSS_5X5.data(), d_gauss5x5, GAUSS_5X5_BYTES);
+            push = push_array(d_gauss5x5, d_buffer, GAUSS_5X5_SIZE);
+            assert(push);
+            if(!push) { return false; }
+
+            copy = copy_to_device(src, d_src);
+            assert(copy);
+            if(!copy) { return false; }
+
+            copy = copy_to_device(GAUSS_3X3.data(), d_gauss3x3, GAUSS_3X3_BYTES);
+            assert(copy);
+            if(!copy) { return false; }
+
+            copy = copy_to_device(GAUSS_5X5.data(), d_gauss5x5, GAUSS_5X5_BYTES);
+            assert(copy);
+            if(!copy) { return false; }
 
             gpu_blur<<<blocks, threads_per_block>>>(
                 d_src.data, 
@@ -170,50 +201,60 @@ namespace libimage
             pop_array(d_gauss5x5, d_buffer);
             pop_array(d_gauss3x3, d_buffer);
             pop_array(d_src, d_buffer);
+
+            return true;
         }
 
 
         void edges(gray::image_t const& src, gray::image_t const& dst, u8 threshold, DeviceBuffer& d_buffer)
-        {
+        {            
             assert(verify(src, dst));
             assert(verify(d_buffer));
-            assert(verify(src, dst, d_buffer)); 
-
-            DeviceArray<u8> d_blur;
-                     
-            blur(src, d_blur, d_buffer);            
-
-            DeviceArray<u8> d_dst;
-            DeviceArray<r32> d_grad_x;
-            DeviceArray<r32> d_grad_y;
+            assert(verify(src, dst, d_buffer));
 
             u32 n_elements = src.width * src.height;
             int threads_per_block = THREADS_PER_BLOCK;
             int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
 
-            assert(has_bytes(d_buffer, n_elements * sizeof(u8) + 2 * GRAD_3X3_BYTES));
+            DeviceArray<u8> d_blur;
+            DeviceArray<u8> d_edges;
+            DeviceArray<r32> d_grad_x;
+            DeviceArray<r32> d_grad_y;
 
-            push_array(d_dst, d_buffer, n_elements);
-            push_array(d_grad_x, d_buffer, GRAD_3X3_SIZE);
-            push_array(d_grad_y, d_buffer, GRAD_3X3_SIZE);
+            bool push;
+            bool copy;
 
-            copy_to_device(GRAD_X_3X3.data(), d_grad_x, GRAD_3X3_BYTES);
-            copy_to_device(GRAD_Y_3X3.data(), d_grad_y, GRAD_3X3_BYTES);
+            push = push_array_blur(src, d_blur, d_buffer);
+            assert(push);
+
+            push = push_array(d_edges, d_buffer, n_elements);
+            assert(push);
+
+            push = push_array(d_grad_x, d_buffer, GRAD_3X3_SIZE);
+            assert(push);
+            push = push_array(d_grad_y, d_buffer, GRAD_3X3_SIZE);
+            assert(push);
+
+            copy = copy_to_device(GRAD_X_3X3.data(), d_grad_x, GRAD_3X3_BYTES);
+            assert(copy);
+            copy = copy_to_device(GRAD_Y_3X3.data(), d_grad_y, GRAD_3X3_BYTES);
+            assert(copy);
 
             gpu_edges<<<blocks, threads_per_block>>>(
                 d_blur.data,
-                d_dst.data,
+                d_edges.data,
                 src.width,
                 src.height,
                 threshold,
                 d_grad_x.data,
                 d_grad_y.data);
 
-            copy_to_host(d_dst, dst);            
+            copy = copy_to_host(d_edges, dst);
+            assert(copy);
             
             pop_array(d_grad_y, d_buffer);
             pop_array(d_grad_x, d_buffer);
-            pop_array(d_dst, d_buffer);
+            pop_array(d_edges, d_buffer);
             pop_array(d_blur, d_buffer);
         }
 
@@ -238,42 +279,49 @@ namespace libimage
         {
             assert(verify(src, dst));
             assert(verify(d_buffer));
-            assert(verify(src, dst, d_buffer)); 
-
-            DeviceArray<u8> d_blur;
-                     
-            blur(src, d_blur, d_buffer);            
-
-            DeviceArray<u8> d_dst;
-            DeviceArray<r32> d_grad_x;
-            DeviceArray<r32> d_grad_y;
+            assert(verify(src, dst, d_buffer));
 
             u32 n_elements = src.width * src.height;
             int threads_per_block = THREADS_PER_BLOCK;
             int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
 
-            assert(has_bytes(d_buffer, n_elements * sizeof(u8) + 2 * GRAD_3X3_BYTES));
+            DeviceArray<u8> d_blur;
+            DeviceArray<u8> d_grad;
+            DeviceArray<r32> d_grad_x;
+            DeviceArray<r32> d_grad_y;
 
-            push_array(d_dst, d_buffer, n_elements);
-            push_array(d_grad_x, d_buffer, GRAD_3X3_SIZE);
-            push_array(d_grad_y, d_buffer, GRAD_3X3_SIZE);
+            bool push;
+            bool copy;
 
-            copy_to_device(GRAD_X_3X3.data(), d_grad_x, GRAD_3X3_BYTES);
-            copy_to_device(GRAD_Y_3X3.data(), d_grad_y, GRAD_3X3_BYTES);
+            push = push_array_blur(src, d_blur, d_buffer);
+            assert(push);
+
+            push = push_array(d_grad, d_buffer, n_elements);
+            assert(push);
+
+            push = push_array(d_grad_x, d_buffer, GRAD_3X3_SIZE);
+            assert(push);
+            push = push_array(d_grad_y, d_buffer, GRAD_3X3_SIZE);
+            assert(push);
+
+            copy = copy_to_device(GRAD_X_3X3.data(), d_grad_x, GRAD_3X3_BYTES);
+            assert(copy);
+            copy = copy_to_device(GRAD_Y_3X3.data(), d_grad_y, GRAD_3X3_BYTES);
+            assert(copy);
 
             gpu_gradients<<<blocks, threads_per_block>>>(
                 d_blur.data,
-                d_dst.data,
+                d_grad.data,
                 src.width,
                 src.height,
                 d_grad_x.data,
                 d_grad_y.data);
 
-            copy_to_host(d_dst, dst);            
+            copy_to_host(d_grad, dst);            
             
             pop_array(d_grad_y, d_buffer);
             pop_array(d_grad_x, d_buffer);
-            pop_array(d_dst, d_buffer);
+            pop_array(d_grad, d_buffer);
             pop_array(d_blur, d_buffer);
         }
 

@@ -205,11 +205,14 @@ void cuda_tests(path_t& out_dir)
 
 	// pre-allocate device memory
 	u32 pixels_per_image = width * height;
-	u32 max_color_images = 3;
+	u32 max_color_images = 4;
 	u32 color_bytes = max_color_images * pixels_per_image * sizeof(img::pixel_t);
 
 	DeviceBuffer d_buffer;
 	device_malloc(d_buffer, color_bytes);
+
+
+	
 
 
 	// grayscale
@@ -218,6 +221,14 @@ void cuda_tests(path_t& out_dir)
 
 	img::cuda::transform_grayscale(caddy_img, dst_gray_img, d_buffer);
 	img::write_image(dst_gray_img, out_dir + "grayscale_buffer.png");
+
+	img::seq::copy(dst_gray_img, src_gray_img);
+
+	// edge detection
+	img::seq::transform_self(dst_gray_img, [](auto p){ return 255;});
+	u8 threshold = 100;
+	img::cuda::edges(src_gray_img, dst_gray_img, threshold, d_buffer);
+	img::write_image(dst_gray_img, out_dir + "edges_buffer.png");
 
 	// grayscale a sub view
 	/*
@@ -234,9 +245,7 @@ void cuda_tests(path_t& out_dir)
 	img::write_image(dst_gray_img, out_dir + "grayscale_view.png");
 	*/
 
-	// binarize	
-	img::seq::copy(dst_gray_img, src_gray_img);
-
+	// binarize
 	img::cuda::binarize(src_gray_img, dst_gray_img, 100);
 	img::write_image(dst_gray_img, out_dir + "binarize.png");
 
@@ -271,13 +280,11 @@ void cuda_tests(path_t& out_dir)
 	img::write_image(dst_gray_img, out_dir + "blur.png");
 
 
-	// edge detection
-	u8 threshold = 100;
-	img::cuda::edges(src_gray_img, dst_gray_img, threshold, d_buffer);
-	img::write_image(dst_gray_img, out_dir + "edges_buffer.png");
+	
 
 
 	// gradients
+	img::seq::transform_self(dst_gray_img, [](auto p){ return 75;});
 	img::cuda::gradients(src_gray_img, dst_gray_img, d_buffer);
 	img::write_image(dst_gray_img, out_dir + "gradients_buffer.png");
 
