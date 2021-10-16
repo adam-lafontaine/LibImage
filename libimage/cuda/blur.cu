@@ -37,6 +37,13 @@ constexpr std::array<r32, GAUSS_5X5_SIZE> GAUSS_5X5
 };
 constexpr u32 GAUSS_5X5_BYTES = GAUSS_5X5_SIZE * sizeof(r32);
 
+template<class T, size_t N>
+static bool copy_to_device(std::array<T, N> const& src, DeviceArray<T>& dst)
+{
+    assert(verify(dst));
+    return memcpy_to_device(src.data(), dst);
+}
+
 
 namespace libimage
 {
@@ -89,8 +96,8 @@ namespace libimage
             push_array(d_gauss5x5, d_buffer, GAUSS_5X5_SIZE);
 
             copy_to_device(src, d_src);
-            copy_to_device(GAUSS_3X3.data(), d_gauss3x3, GAUSS_3X3_BYTES);
-            copy_to_device(GAUSS_5X5.data(), d_gauss5x5, GAUSS_5X5_BYTES);
+            copy_to_device(GAUSS_3X3, d_gauss3x3);
+            copy_to_device(GAUSS_5X5, d_gauss5x5);
 
             int threads_per_block = THREADS_PER_BLOCK;
             int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
@@ -128,8 +135,8 @@ namespace libimage
             push_array(d_gauss5x5, d_buffer, GAUSS_5X5_SIZE);
 
             copy_to_device(src, d_src);
-            copy_to_device(GAUSS_3X3.data(), d_gauss3x3, GAUSS_3X3_BYTES);
-            copy_to_device(GAUSS_5X5.data(), d_gauss5x5, GAUSS_5X5_BYTES);
+            copy_to_device(GAUSS_3X3, d_gauss3x3);
+            copy_to_device(GAUSS_5X5, d_gauss5x5);
 
             int threads_per_block = THREADS_PER_BLOCK;
             int blocks = (n_elements + threads_per_block - 1) / threads_per_block;            
@@ -167,8 +174,8 @@ namespace libimage
             push_array(d_gauss5x5, d_buffer, GAUSS_5X5_SIZE);
 
             copy_to_device(src, d_src);
-            copy_to_device(GAUSS_3X3.data(), d_gauss3x3, GAUSS_3X3_BYTES);
-            copy_to_device(GAUSS_5X5.data(), d_gauss5x5, GAUSS_5X5_BYTES);
+            copy_to_device(GAUSS_3X3, d_gauss3x3);
+            copy_to_device(GAUSS_5X5, d_gauss5x5);
 
             int threads_per_block = THREADS_PER_BLOCK;
             int blocks = (n_elements + threads_per_block - 1) / threads_per_block;            
@@ -206,8 +213,8 @@ namespace libimage
             push_array(d_gauss5x5, d_buffer, GAUSS_5X5_SIZE);
 
             copy_to_device(src, d_src);
-            copy_to_device(GAUSS_3X3.data(), d_gauss3x3, GAUSS_3X3_BYTES);
-            copy_to_device(GAUSS_5X5.data(), d_gauss5x5, GAUSS_5X5_BYTES);
+            copy_to_device(GAUSS_3X3, d_gauss3x3);
+            copy_to_device(GAUSS_5X5, d_gauss5x5);
 
             int threads_per_block = THREADS_PER_BLOCK;
             int blocks = (n_elements + threads_per_block - 1) / threads_per_block;            

@@ -7,6 +7,8 @@ Copyright (c) 2021 Adam Lafontaine
 
 #include "process.hpp"
 
+#include "../proc/verify.hpp"
+
 
 namespace libimage
 {
@@ -59,5 +61,8 @@ namespace libimage
     {
         return has_bytes(buffer, bytes(a) + bytes(b) + bytes(c));
     }
+
+
+    
     
 }

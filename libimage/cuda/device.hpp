@@ -8,6 +8,8 @@ Copyright (c) 2021 Adam Lafontaine
 #include "../types.hpp"
 
 #include <cstddef>
+#include <cassert>
+
 
 class DeviceBuffer
 {
@@ -25,6 +27,19 @@ public:
     T* data = nullptr;
     u32 n_elements = 0;
 };
+
+
+inline bool verify(DeviceBuffer const& buffer)
+{
+    return buffer.data && buffer.total_bytes;
+}
+
+
+template <class T>
+bool verify(DeviceArray<T> arr)
+{
+    return arr.data && arr.n_elements;
+}
 
 
 template <typename T>
@@ -66,20 +81,24 @@ bool memcpy_to_host(const void* device_src, void* host_dst, size_t n_bytes);
 
 
 template <typename T>
-bool copy_to_device(const void* src, DeviceArray<T> const& dst, size_t n_bytes)
+bool memcpy_to_device(const void* src, DeviceArray<T> const& dst)
 {
-    return memcpy_to_device(src, dst.data, n_bytes);
+    assert(src);
+    assert(verify(dst));
+
+    auto bytes = dst.n_elements * sizeof(T);
+    return memcpy_to_device(src, dst.data, bytes);
 }
 
 
 template <typename T>
-bool copy_to_host(DeviceArray<T> const& src, void* dst, size_t n_bytes)
+bool memcpy_to_host(DeviceArray<T> const& src, void* dst)
 {
-    return memcpy_to_host(src.data, dst, n_bytes);
+    assert(verify(src));
+    assert(dst);
+
+    auto bytes = src.n_elements * sizeof(T);
+    return memcpy_to_host(src.data, dst, bytes);
 }
 
 
-inline bool verify(DeviceBuffer const& buffer)
-{
-    return buffer.data && buffer.total_bytes;
-}

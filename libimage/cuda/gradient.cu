@@ -23,7 +23,7 @@ constexpr std::array<r32, GAUSS_3X3_SIZE> GAUSS_3X3
     (2/d3), (4/d3), (2/d3),
     (1/d3), (2/d3), (1/d3),
 };
-constexpr u32 GAUSS_3X3_BYTES = GAUSS_3X3_SIZE * sizeof(r32);
+//constexpr u32 GAUSS_3X3_BYTES = GAUSS_3X3_SIZE * sizeof(r32);
 
 constexpr r32 d5 = 256.0f;
 constexpr u32 GAUSS_5X5_SIZE = 25;
@@ -35,7 +35,7 @@ constexpr std::array<r32, GAUSS_5X5_SIZE> GAUSS_5X5
     (4/d5), (16/d5), (24/d5), (16/d5), (4/d5),
     (1/d5), (4/d5),  (6/d5),  (4/d5),  (1/d5),
 };
-constexpr u32 GAUSS_5X5_BYTES = GAUSS_5X5_SIZE * sizeof(r32);
+//constexpr u32 GAUSS_5X5_BYTES = GAUSS_5X5_SIZE * sizeof(r32);
 
 
 constexpr u32 GRAD_3X3_SIZE = 9;
@@ -51,7 +51,15 @@ constexpr std::array<r32, GRAD_3X3_SIZE> GRAD_Y_3X3
     0.0f,  0.0f,  0.0f,
     -1.0f, -2.0f, -1.0f,
 };
-constexpr u32 GRAD_3X3_BYTES = GRAD_3X3_SIZE * sizeof(r32);
+//constexpr u32 GRAD_3X3_BYTES = GRAD_3X3_SIZE * sizeof(r32);
+
+
+template<class T, size_t N>
+static bool copy_to_device(std::array<T, N> const& src, DeviceArray<T>& dst)
+{
+    assert(verify(dst));
+    return memcpy_to_device(src.data(), dst);
+}
 
 
 namespace libimage
@@ -127,7 +135,7 @@ namespace libimage
         }
     }
 
-
+/*
     GPU_KERNAL
     static void gpu_white(u8* dst, u32 width, u32 height)
     {
@@ -139,7 +147,7 @@ namespace libimage
         }
 
         dst[i] = 255;
-    }
+    }*/
 
 
     
@@ -182,11 +190,11 @@ namespace libimage
             assert(copy);
             if(!copy) { return false; }
 
-            copy = copy_to_device(GAUSS_3X3.data(), d_gauss3x3, GAUSS_3X3_BYTES);
+            copy = copy_to_device(GAUSS_3X3, d_gauss3x3);
             assert(copy);
             if(!copy) { return false; }
 
-            copy = copy_to_device(GAUSS_5X5.data(), d_gauss5x5, GAUSS_5X5_BYTES);
+            copy = copy_to_device(GAUSS_5X5, d_gauss5x5);
             assert(copy);
             if(!copy) { return false; }
 
@@ -222,22 +230,78 @@ namespace libimage
             DeviceArray<r32> d_grad_y;
 
             bool push;
-            bool copy;
+            bool copy;            
 
-            push = push_array_blur(src, d_blur, d_buffer);
+            
+
+            //push = push_array_blur(src, d_blur, d_buffer);
+            //assert(push);
+
+            DeviceArray<u8> d_src;
+            DeviceArray<r32> d_gauss3x3;
+            DeviceArray<r32> d_gauss5x5;
+
+
+            
+
+
+            push = push_array(d_blur, d_buffer, n_elements);
             assert(push);
+            //if(!push) { return false; }            
+
+            push = push_array(d_src, d_buffer, n_elements);
+            assert(push);
+            //if(!push) { return false; }
+
+            copy = copy_to_device(src, d_src);
+            assert(copy);
+            //if(!copy) { return false; }
+
+            push = push_array(d_gauss3x3, d_buffer, GAUSS_3X3_SIZE);
+            assert(push);
+            //if(!push) { return false; }
+
+            copy = copy_to_device(GAUSS_3X3, d_gauss3x3);
+            assert(copy);
+            //if(!copy) { return false; }
+
+            push = push_array(d_gauss5x5, d_buffer, GAUSS_5X5_SIZE);
+            assert(push);
+            //if(!push) { return false; }            
+
+            copy = copy_to_device(GAUSS_5X5, d_gauss5x5);
+            assert(copy);
+            //if(!copy) { return false; }           
+
+
+            gpu_blur<<<blocks, threads_per_block>>>(
+                d_src.data, 
+                d_blur.data, 
+                src.width, 
+                src.height, 
+                d_gauss3x3.data, 
+                d_gauss5x5.data);
+
+            pop_array(d_gauss5x5, d_buffer);
+            pop_array(d_gauss3x3, d_buffer);
+            pop_array(d_src, d_buffer);
+
+
 
             push = push_array(d_edges, d_buffer, n_elements);
             assert(push);
 
+
             push = push_array(d_grad_x, d_buffer, GRAD_3X3_SIZE);
             assert(push);
+
+            copy = copy_to_device(GRAD_X_3X3, d_grad_x);
+            assert(copy);
+
             push = push_array(d_grad_y, d_buffer, GRAD_3X3_SIZE);
             assert(push);
 
-            copy = copy_to_device(GRAD_X_3X3.data(), d_grad_x, GRAD_3X3_BYTES);
-            assert(copy);
-            copy = copy_to_device(GRAD_Y_3X3.data(), d_grad_y, GRAD_3X3_BYTES);
+            copy = copy_to_device(GRAD_Y_3X3, d_grad_y);
             assert(copy);
 
             gpu_edges<<<blocks, threads_per_block>>>(
@@ -251,6 +315,10 @@ namespace libimage
 
             copy = copy_to_host(d_edges, dst);
             assert(copy);
+
+            //pop_array(d_gauss5x5, d_buffer);
+            //pop_array(d_gauss3x3, d_buffer);
+            //pop_array(d_src, d_buffer);
             
             pop_array(d_grad_y, d_buffer);
             pop_array(d_grad_x, d_buffer);
@@ -304,9 +372,9 @@ namespace libimage
             push = push_array(d_grad_y, d_buffer, GRAD_3X3_SIZE);
             assert(push);
 
-            copy = copy_to_device(GRAD_X_3X3.data(), d_grad_x, GRAD_3X3_BYTES);
+            copy = copy_to_device(GRAD_X_3X3, d_grad_x);
             assert(copy);
-            copy = copy_to_device(GRAD_Y_3X3.data(), d_grad_y, GRAD_3X3_BYTES);
+            copy = copy_to_device(GRAD_Y_3X3, d_grad_y);
             assert(copy);
 
             gpu_gradients<<<blocks, threads_per_block>>>(

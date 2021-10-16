@@ -4,10 +4,30 @@ Copyright (c) 2021 Adam Lafontaine
 
 */
 #include "process.hpp"
+#include "verify.hpp"
+
+#include <cassert>
 
 
 namespace libimage
 {
+    static bool verify(image_t const& src, DeviceArray<pixel_t> const& dst)
+    {
+        return verify(src) &&
+            verify(dst) && 
+            src.width * src.height == dst.n_elements;
+    }
+
+
+    static bool verify(gray::image_t const& src, DeviceArray<gray::pixel_t> const& dst)
+    {
+        return verify(src) &&
+            verify(dst) && 
+            src.width * src.height == dst.n_elements;
+    }
+
+
+
     namespace cuda
     {
 
@@ -15,15 +35,15 @@ namespace libimage
 
         bool copy_to_device(image_t const& src, DeviceArray<pixel_t> const& dst)
         {
-            u32 bytes = src.width * src.height * sizeof(pixel_t);
-            return copy_to_device(src.data, dst, bytes);
+            assert(verify(src, dst));
+            return memcpy_to_device(src.data, dst);
         }
 
 
         bool copy_to_host(DeviceArray<pixel_t> const& src, image_t const& dst)
         {
-            u32 bytes = dst.width * dst.height * sizeof(pixel_t);
-            return copy_to_host(src, dst.data, bytes);
+            assert(verify(dst, src));
+            return memcpy_to_host(src, dst.data);
         }
 
 
@@ -68,15 +88,15 @@ namespace libimage
 
         bool copy_to_device(gray::image_t const& src, DeviceArray<gray::pixel_t> const& dst)
         {
-            u32 bytes = src.width * src.height * sizeof(gray::pixel_t);
-            return copy_to_device(src.data, dst, bytes);
+            assert(verify(src, dst));
+            return memcpy_to_device(src.data, dst);
         }
 
 
         bool copy_to_host(DeviceArray<gray::pixel_t> const& src, gray::image_t const& dst)
         {
             u32 bytes = dst.width * dst.height * sizeof(gray::pixel_t);
-            return copy_to_host(src, dst.data, bytes);
+            return memcpy_to_host(src, dst.data);
         }
 
 
