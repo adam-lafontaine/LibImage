@@ -6,7 +6,7 @@ Copyright (c) 2021 Adam Lafontaine
 #include "device.hpp"
 #include "cuda_def.cuh"
 
-#include <cstdio>
+#include <iostream>
 
 
 static void check_error(cudaError_t err)
@@ -16,15 +16,16 @@ static void check_error(cudaError_t err)
         return;
     }
 
-    printf("\n*** CUDA ERROR ***\n\n");
-    printf(cudaGetErrorString(err));
-    printf("\n\n******************\n\n");
+    std::cout 
+        << "\n*** CUDA ERROR ***\n\n" 
+        << cudaGetErrorString(err)
+        << "\n\n******************\n\n";
 }
 
 
 
 
-static bool device_malloc(void** ptr, u32 n_bytes)
+static bool cuda_device_malloc(void** ptr, u32 n_bytes)
 {
     cudaError_t err = cudaMalloc(ptr, n_bytes);
     check_error(err);
@@ -33,7 +34,7 @@ static bool device_malloc(void** ptr, u32 n_bytes)
 }
 
 
-static bool device_free(void* ptr)
+static bool cuda_device_free(void* ptr)
 {
     cudaError_t err = cudaFree(ptr);
     check_error(err);
@@ -44,7 +45,7 @@ static bool device_free(void* ptr)
 
 bool device_malloc(DeviceBuffer& buffer, size_t n_bytes)
 {
-    bool result = device_malloc((void**)&(buffer.data), n_bytes);
+    bool result = cuda_device_malloc((void**)&(buffer.data), n_bytes);
     if(result)
     {
         buffer.total_bytes = n_bytes;
@@ -58,11 +59,11 @@ bool device_free(DeviceBuffer& buffer)
 {
     buffer.total_bytes = 0;
     buffer.offset = 0;
-    return device_free(buffer.data);
+    return cuda_device_free(buffer.data);
 }
 
 
-bool memcpy_to_device(const void* host_src, void* device_dst, size_t n_bytes)
+bool cuda_memcpy_to_device(const void* host_src, void* device_dst, size_t n_bytes)
 {
     cudaError_t err = cudaMemcpy(device_dst, host_src, n_bytes, cudaMemcpyHostToDevice);
     check_error(err);
@@ -71,7 +72,7 @@ bool memcpy_to_device(const void* host_src, void* device_dst, size_t n_bytes)
 }
 
 
-bool memcpy_to_host(const void* device_src, void* host_dst, size_t n_bytes)
+bool cuda_memcpy_to_host(const void* device_src, void* host_dst, size_t n_bytes)
 {
     cudaError_t err = cudaMemcpy(host_dst, device_src, n_bytes, cudaMemcpyDeviceToHost);
     check_error(err);

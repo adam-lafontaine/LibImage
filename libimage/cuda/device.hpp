@@ -75,9 +75,9 @@ bool device_malloc(DeviceBuffer& buffer, size_t n_bytes);
 bool device_free(DeviceBuffer& buffer);
 
 
-bool memcpy_to_device(const void* host_src, void* device_dst, size_t n_bytes);
+bool cuda_memcpy_to_device(const void* host_src, void* device_dst, size_t n_bytes);
 
-bool memcpy_to_host(const void* device_src, void* host_dst, size_t n_bytes);
+bool cuda_memcpy_to_host(const void* device_src, void* host_dst, size_t n_bytes);
 
 
 template <typename T>
@@ -87,7 +87,7 @@ bool memcpy_to_device(const void* src, DeviceArray<T> const& dst)
     assert(verify(dst));
 
     auto bytes = dst.n_elements * sizeof(T);
-    return memcpy_to_device(src, dst.data, bytes);
+    return cuda_memcpy_to_device(src, dst.data, bytes);
 }
 
 
@@ -98,7 +98,7 @@ bool memcpy_to_host(DeviceArray<T> const& src, void* dst)
     assert(dst);
 
     auto bytes = src.n_elements * sizeof(T);
-    return memcpy_to_host(src.data, dst, bytes);
+    return cuda_memcpy_to_host(src.data, dst, bytes);
 }
 
 

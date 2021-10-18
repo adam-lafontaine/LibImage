@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <iostream>
 #include <string>
+#include <array>
 
 namespace img = libimage;
 using path_t = std::string;
@@ -31,6 +32,7 @@ const auto DST_IMAGE_ROOT = ROOT_PATH + "out_files/";
 void empty_dir(path_t& dir);
 void process_tests(path_t& out_dir);
 void cuda_tests(path_t& out_dir);
+void device_buffer_tests(path_t& dir);
 void print(img::stats_t const& stats);
 
 int main()
@@ -42,6 +44,9 @@ int main()
 
 	auto dst_cuda = dst_root + "cuda/";
 	cuda_tests(dst_cuda);
+
+	//auto dst_buffer = dst_root + "cuda/";
+	//device_buffer_tests(dst_root);
 
     printf("\nDone.\n");
 }
@@ -230,20 +235,6 @@ void cuda_tests(path_t& out_dir)
 	img::cuda::edges(src_gray_img, dst_gray_img, threshold, d_buffer);
 	img::write_image(dst_gray_img, out_dir + "edges_buffer.png");
 
-	// grayscale a sub view
-	/*
-	img::pixel_range_t range = {};
-	range.x_begin = width / 4;
-	range.x_end = width * 3 / 4;
-	range.y_begin = height / 4;
-	range.y_end = height * 3 / 4;
-
-	auto src_view = img::sub_view(caddy_img, range);
-	dst_gray_img.dispose();
-	img::make_image(dst_gray_img, src_view.width, src_view.height);
-	img::cuda::transform_grayscale(src_view, dst_gray_img, d_buffer);
-	img::write_image(dst_gray_img, out_dir + "grayscale_view.png");
-	*/
 
 	// binarize
 	img::cuda::binarize(src_gray_img, dst_gray_img, 100);
@@ -340,6 +331,41 @@ void cuda_tests(path_t& out_dir)
 	img::write_image(view_chart, out_dir / "edges_times.png");
 
 	*/
+}
+
+
+void device_buffer_tests(path_t& out_dir)
+{
+	std::cout << "device buffer:\n";
+	empty_dir(out_dir);
+
+	DeviceBuffer buffer;
+	device_malloc(buffer, 10'000);
+
+	std::array<u32, 10> u32array { 1, 2, 100, 69, 98, 33, 55, 44, 88, 63 };
+	DeviceArray<u32> d_u32array;
+	push_array(d_u32array, buffer, 10);
+	memcpy_to_device(u32array.data(), d_u32array);
+	pop_array(d_u32array, buffer);
+
+	std::array<r32, 10> r32array { 1.0f, 2.5f, 100.2f, 69.3f, 98.7f, 33.3f, 55.5f, 44.2f, 88.2f, 63.1f };
+	DeviceArray<r32> d_r32array;
+	push_array(d_r32array, buffer, 10);
+	memcpy_to_device(r32array.data(), d_r32array);
+	pop_array(d_r32array, buffer);
+
+	std::array<u8, 10> u8array { 1, 2, 100, 69, 98, 33, 55, 44, 88, 63 };
+	DeviceArray<u8> d_u8array;
+	push_array(d_u8array, buffer, 10);
+	memcpy_to_device(u8array.data(), d_u8array);
+	pop_array(d_u8array, buffer);
+
+	
+
+	
+
+
+	device_free(buffer);
 }
 
 

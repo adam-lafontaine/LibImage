@@ -55,7 +55,7 @@ namespace libimage
                 auto src_p = src.row_begin(y);
                 auto dst_p = (u8*)dst.data + y * row_bytes;
 
-                if(!memcpy_to_device(src_p, dst_p, row_bytes))
+                if(!cuda_memcpy_to_device(src_p, dst_p, row_bytes))
                 {
                     return false;
                 }
@@ -73,7 +73,7 @@ namespace libimage
                 auto src_p = (u8*)src.data + y * row_bytes;
                 auto dst_p = dst.row_begin(y);
 
-                if(!memcpy_to_host(src_p, dst_p, row_bytes))
+                if(!cuda_memcpy_to_host(src_p, dst_p, row_bytes))
                 {
                     return false;
                 }
@@ -108,7 +108,7 @@ namespace libimage
                 auto src_p = src.row_begin(y);
                 auto dst_p = (u8*)dst.data + y * row_bytes;
 
-                if(!memcpy_to_device(src_p, dst_p, row_bytes))
+                if(!cuda_memcpy_to_device(src_p, dst_p, row_bytes))
                 {
                     return false;
                 }
@@ -126,7 +126,7 @@ namespace libimage
                 auto src_p = (u8*)src.data + y * row_bytes;
                 auto dst_p = dst.row_begin(y);
 
-                if(!memcpy_to_host(src_p, dst_p, row_bytes))
+                if(!cuda_memcpy_to_host(src_p, dst_p, row_bytes))
                 {
                     return false;
                 }
