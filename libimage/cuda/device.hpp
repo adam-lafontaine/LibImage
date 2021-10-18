@@ -70,6 +70,9 @@ void pop_array(DeviceArray<T>& arr, DeviceBuffer& buffer)
 }
 
 
+
+
+
 bool device_malloc(DeviceBuffer& buffer, size_t n_bytes);
 
 bool device_free(DeviceBuffer& buffer);
@@ -78,6 +81,11 @@ bool device_free(DeviceBuffer& buffer);
 bool cuda_memcpy_to_device(const void* host_src, void* device_dst, size_t n_bytes);
 
 bool cuda_memcpy_to_host(const void* device_src, void* host_dst, size_t n_bytes);
+
+
+bool cuda_no_errors();
+
+bool cuda_launch_success();
 
 
 template <typename T>

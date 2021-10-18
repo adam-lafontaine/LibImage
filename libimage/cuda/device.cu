@@ -79,3 +79,21 @@ bool cuda_memcpy_to_host(const void* device_src, void* host_dst, size_t n_bytes)
 
     return err == cudaSuccess;
 }
+
+
+bool cuda_no_errors()
+{
+    cudaError_t err = cudaGetLastError();
+    check_error(err);
+
+    return err == cudaSuccess;
+}
+
+
+bool cuda_launch_success()
+{
+    cudaError_t err = cudaDeviceSynchronize();
+    check_error(err);
+
+    return err == cudaSuccess;
+}

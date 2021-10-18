@@ -150,6 +150,56 @@ namespace libimage
     }*/
 
 
+
+    static void gpu_blur(DeviceArray<gray::pixel_t> const& src, DeviceArray<gray::pixel_t> const& dst, u32 width, u32 height, DeviceBuffer& d_buffer)
+    {
+        assert(verify(d_buffer));
+
+        u32 n_elements = width * height;
+        int threads_per_block = THREADS_PER_BLOCK;
+        int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
+
+        DeviceArray<r32> d_gauss3x3;
+        DeviceArray<r32> d_gauss5x5;
+
+        bool proc;
+
+        
+
+        proc = push_array(d_gauss3x3, d_buffer, GAUSS_3X3_SIZE);
+        assert(proc);
+
+        proc = push_array(d_gauss5x5, d_buffer, GAUSS_5X5_SIZE);
+        assert(proc);
+
+        proc = cuda_no_errors();
+        assert(proc);
+
+        proc = copy_to_device(GAUSS_3X3, d_gauss3x3);
+        assert(proc);
+
+        proc = copy_to_device(GAUSS_5X5, d_gauss5x5);
+        assert(proc);
+
+        proc = cuda_no_errors();
+        assert(proc);
+
+        gpu_blur<<<blocks, threads_per_block>>>(
+            src.data, 
+            dst.data, 
+            width, 
+            height, 
+            d_gauss3x3.data, 
+            d_gauss5x5.data);
+
+        proc = cuda_launch_success();
+        assert(proc);
+
+        pop_array(d_gauss5x5, d_buffer);
+        pop_array(d_gauss3x3, d_buffer);
+    }
+
+
     
 
 
@@ -224,48 +274,58 @@ namespace libimage
             int threads_per_block = THREADS_PER_BLOCK;
             int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
 
-            bool push;
-            bool copy;
+            bool proc;
 
             DeviceArray<u8> d_blur;
+            DeviceArray<r32> d_gauss3x3;
+            DeviceArray<r32> d_gauss5x5;
+
             DeviceArray<u8> d_edges;
             DeviceArray<r32> d_grad_x;
             DeviceArray<r32> d_grad_y;
 
             DeviceArray<u8> d_src;
-            DeviceArray<r32> d_gauss3x3;
-            DeviceArray<r32> d_gauss5x5;
+
+            DeviceBuffer pixel_buffer;
+            DeviceBuffer r32_buffer;
+
+            auto image_bytes = src.width * src.height * sizeof(gray::pixel_t);
+
+            auto max_pixel_bytes = 2 * image_bytes + GAUSS_3X3_BYTES + GAUSS_5X5_BYTES;
+            proc = device_malloc(pixel_buffer, max_pixel_bytes);
+            assert(proc);
+
+            auto max_r32_bytes =  GAUSS_3X3_BYTES + GAUSS_5X5_BYTES;
+            proc = device_malloc(r32_buffer, max_r32_bytes);
+            assert(proc);
 
 
-            DeviceBuffer image_buffer;
-            auto max_image_bytes = 2 * src.width * src.height * sizeof(gray::pixel_t);
-            device_malloc(image_buffer, max_image_bytes);
+            proc = push_array(d_blur, pixel_buffer, n_elements);
+            assert(proc);            
 
-            DeviceBuffer array_buffer;
-            auto max_array_bytes = GAUSS_3X3_BYTES + GAUSS_5X5_BYTES;
-            device_malloc(array_buffer, max_array_bytes);
+            proc = push_array(d_src, pixel_buffer, n_elements);
+            assert(proc);
 
 
-            push = push_array(d_blur, image_buffer, n_elements);
-            assert(push);
+            proc = push_array(d_gauss3x3, r32_buffer, GAUSS_3X3_SIZE);
+            assert(proc);
 
-            push = push_array(d_src, image_buffer, n_elements);
-            assert(push);            
+            proc = push_array(d_gauss5x5, r32_buffer, GAUSS_5X5_SIZE);
+            assert(proc);
 
-            push = push_array(d_gauss3x3, array_buffer, GAUSS_3X3_SIZE);
-            assert(push);
 
-            push = push_array(d_gauss5x5, array_buffer, GAUSS_5X5_SIZE);
-            assert(push);
+            proc = copy_to_device(src, d_src);
+            assert(proc);
 
-            copy = copy_to_device(src, d_src);
-            assert(copy);            
+            proc = copy_to_device(GAUSS_3X3, d_gauss3x3);
+            assert(proc);
 
-            copy = copy_to_device(GAUSS_3X3, d_gauss3x3);
-            assert(copy);                     
+            proc = copy_to_device(GAUSS_5X5, d_gauss5x5);
+            assert(proc);
 
-            copy = copy_to_device(GAUSS_5X5, d_gauss5x5);
-            assert(copy);
+
+            proc = cuda_no_errors();
+            assert(proc);
 
             gpu_blur<<<blocks, threads_per_block>>>(
                 d_src.data, 
@@ -275,25 +335,30 @@ namespace libimage
                 d_gauss3x3.data, 
                 d_gauss5x5.data);
 
-            pop_array(d_src, image_buffer);
-            pop_array(d_gauss5x5, array_buffer);
-            pop_array(d_gauss3x3, array_buffer);
+            proc = cuda_launch_success();
+            assert(proc);
 
+            pop_array(d_gauss5x5, r32_buffer);
+            pop_array(d_gauss3x3, r32_buffer);
+            pop_array(d_src, pixel_buffer);
 
-            push = push_array(d_edges, image_buffer, n_elements);
-            assert(push);            
+            proc = push_array(d_edges, pixel_buffer, n_elements);
+            assert(proc);
 
-            push = push_array(d_grad_x, array_buffer, GRAD_3X3_SIZE);
-            assert(push);
+            proc = push_array(d_grad_x, r32_buffer, GRAD_3X3_SIZE);
+            assert(proc);
 
-            push = push_array(d_grad_y, array_buffer, GRAD_3X3_SIZE);
-            assert(push);
+            proc = push_array(d_grad_y, r32_buffer, GRAD_3X3_SIZE);
+            assert(proc);
 
-            copy = copy_to_device(GRAD_X_3X3, d_grad_x);
-            assert(copy);
+            proc = copy_to_device(GRAD_X_3X3, d_grad_x);
+            assert(proc);
 
-            copy = copy_to_device(GRAD_Y_3X3, d_grad_y);
-            assert(copy);
+            proc = copy_to_device(GRAD_Y_3X3, d_grad_y);
+            assert(proc);
+
+            proc = cuda_no_errors();
+            assert(proc);
 
             gpu_edges<<<blocks, threads_per_block>>>(
                 d_blur.data,
@@ -304,11 +369,14 @@ namespace libimage
                 d_grad_x.data,
                 d_grad_y.data);
 
-            copy = copy_to_host(d_edges, dst);
-            assert(copy);
+            proc = cuda_launch_success();
+            assert(proc);
 
-            device_free(image_buffer);
-            device_free(array_buffer);
+            proc = copy_to_host(d_edges, dst);
+            assert(proc);
+
+            device_free(r32_buffer);
+            device_free(pixel_buffer);
         }
 
 
