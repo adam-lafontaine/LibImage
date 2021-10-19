@@ -7,8 +7,7 @@ Copyright (c) 2021 Adam Lafontaine
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
 #include "cuda_def.cuh"
-#include "verify.hpp"
-#include "../proc/verify.hpp"
+#include "process.hpp"
 
 #include <cassert>
 

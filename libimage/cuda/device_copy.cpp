@@ -4,29 +4,12 @@ Copyright (c) 2021 Adam Lafontaine
 
 */
 #include "process.hpp"
-#include "verify.hpp"
 
 #include <cassert>
 
 
 namespace libimage
 {
-    static bool verify(image_t const& src, DeviceArray<pixel_t> const& dst)
-    {
-        return verify(src) &&
-            verify(dst) && 
-            src.width * src.height == dst.n_elements;
-    }
-
-
-    static bool verify(gray::image_t const& src, DeviceArray<gray::pixel_t> const& dst)
-    {
-        return verify(src) &&
-            verify(dst) && 
-            src.width * src.height == dst.n_elements;
-    }
-
-
 
     namespace cuda
     {
@@ -35,20 +18,36 @@ namespace libimage
 
         bool copy_to_device(image_t const& src, DeviceArray<pixel_t> const& dst)
         {
-            assert(verify(src, dst));
+            assert(src.data);
+            assert(src.width);
+            assert(src.height);
+            assert(dst.data);
+            assert(dst.n_elements >= src.width * src.height);
+
             return memcpy_to_device(src.data, dst);
         }
 
 
         bool copy_to_host(DeviceArray<pixel_t> const& src, image_t const& dst)
         {
-            assert(verify(dst, src));
+            assert(dst.data);
+            assert(dst.width);
+            assert(dst.height);
+            assert(src.data);
+            assert(src.n_elements >= dst.width * dst.height);
+
             return memcpy_to_host(src, dst.data);
         }
 
 
         bool copy_to_device(view_t const& src, DeviceArray<pixel_t> const& dst)
         {
+            assert(src.image_data);
+            assert(src.width);
+            assert(src.height);
+            assert(dst.data);
+            assert(dst.n_elements >= src.width * src.height);
+
             u32 row_bytes = src.width * sizeof(pixel_t);
             for(u32 y = 0; y < src.height; ++y)
             {
@@ -67,6 +66,12 @@ namespace libimage
 
         bool copy_to_host(DeviceArray<pixel_t> const& src, view_t const& dst)
         {
+            assert(dst.image_data);
+            assert(dst.width);
+            assert(dst.height);
+            assert(src.data);
+            assert(src.n_elements >= dst.width * dst.height);
+
             u32 row_bytes = dst.width * sizeof(pixel_t);
             for(u32 y = 0; y < dst.height; ++y)
             {
@@ -88,13 +93,24 @@ namespace libimage
 
         bool copy_to_device(gray::image_t const& src, DeviceArray<gray::pixel_t> const& dst)
         {
-            assert(verify(src, dst));
+            assert(src.data);
+            assert(src.width);
+            assert(src.height);
+            assert(dst.data);
+            assert(dst.n_elements >= src.width * src.height);
+
             return memcpy_to_device(src.data, dst);
         }
 
 
         bool copy_to_host(DeviceArray<gray::pixel_t> const& src, gray::image_t const& dst)
         {
+            assert(dst.data);
+            assert(dst.width);
+            assert(dst.height);
+            assert(src.data);
+            assert(src.n_elements >= dst.width * dst.height);
+
             u32 bytes = dst.width * dst.height * sizeof(gray::pixel_t);
             return memcpy_to_host(src, dst.data);
         }
@@ -102,6 +118,12 @@ namespace libimage
 
         bool copy_to_device(gray::view_t const& src, DeviceArray<gray::pixel_t> const& dst)
         {
+            assert(src.image_data);
+            assert(src.width);
+            assert(src.height);
+            assert(dst.data);
+            assert(dst.n_elements >= src.width * src.height);
+
             u32 row_bytes = src.width * sizeof(gray::pixel_t);
             for(u32 y = 0; y < src.height; ++y)
             {
@@ -120,6 +142,12 @@ namespace libimage
 
         bool copy_to_host(DeviceArray<gray::pixel_t> const& src, gray::view_t const& dst)
         {
+            assert(dst.image_data);
+            assert(dst.width);
+            assert(dst.height);
+            assert(src.data);
+            assert(src.n_elements >= dst.width * dst.height);
+
             u32 row_bytes = dst.width * sizeof(gray::pixel_t);
             for(u32 y = 0; y < dst.height; ++y)
             {

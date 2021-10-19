@@ -318,7 +318,6 @@ gpu_h += ../libimage/rgba.hpp
 gpu_h += ../libimage/gray.hpp
 gpu_h += ../libimage/cuda/device.hpp
 gpu_h += ../libimage/cuda/process.hpp
-gpu_h += ../libimage/cuda/verify.hpp
 
 gpu_convolve_h := ../libimage/cuda/convolve.cuh
 
