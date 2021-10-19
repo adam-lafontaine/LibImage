@@ -45,168 +45,69 @@ namespace libimage
     namespace cuda
     {
 
-        void transform_grayscale(image_t const& src, gray::image_t const& dst, DeviceBuffer& d_buffer)
-        {
-            assert(verify(src, dst));
-            assert(verify(d_buffer));
-            assert(verify(src, dst, d_buffer));
-
-            u32 n_elements = src.width * src.height;
-
-            DeviceArray<pixel_t> d_src;
-            DeviceArray<u8> d_dst;
-
-            push_array(d_src, d_buffer, n_elements);
-            push_array(d_dst, d_buffer, n_elements);
-
-            copy_to_device(src, d_src);
-
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
-
-            gpu_transform_grayscale<<<blocks, threads_per_block>>>(d_src.data, d_dst.data, n_elements);
-
-            copy_to_host(d_dst, dst);
-
-            pop_array(d_src, d_buffer);
-            pop_array(d_dst, d_buffer);
-        }
-
-
-        void transform_grayscale(image_t const& src, gray::view_t const& dst, DeviceBuffer& d_buffer)
-        {
-            assert(verify(src, dst));
-            assert(verify(d_buffer));
-            assert(verify(src, dst, d_buffer));
-
-            u32 n_elements = src.width * src.height;
-
-            DeviceArray<pixel_t> d_src;
-            DeviceArray<u8> d_dst;
-
-            push_array(d_src, d_buffer, n_elements);
-            push_array(d_dst, d_buffer, n_elements);
-
-            copy_to_device(src, d_src);
-
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
-
-            gpu_transform_grayscale<<<blocks, threads_per_block>>>(d_src.data, d_dst.data, n_elements);
-
-            copy_to_host(d_dst, dst);
-
-            pop_array(d_src, d_buffer);
-            pop_array(d_dst, d_buffer);
-        }
-
-
-        void transform_grayscale(view_t const& src, gray::image_t const& dst, DeviceBuffer& d_buffer)
-        {
-            assert(verify(src, dst));
-            assert(verify(d_buffer));
-            assert(verify(src, dst, d_buffer));
-
-            u32 n_elements = src.width * src.height;
-
-            DeviceArray<pixel_t> d_src;
-            DeviceArray<u8> d_dst;
-
-            push_array(d_src, d_buffer, n_elements);
-            push_array(d_dst, d_buffer, n_elements);
-
-            copy_to_device(src, d_src);
-
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
-
-            gpu_transform_grayscale<<<blocks, threads_per_block>>>(d_src.data, d_dst.data, n_elements);
-
-            copy_to_host(d_dst, dst);
-
-            pop_array(d_src, d_buffer);
-            pop_array(d_dst, d_buffer);
-        }
-
-
-        void transform_grayscale(view_t const& src, gray::view_t const& dst, DeviceBuffer& d_buffer)
-        {
-            assert(verify(src, dst));
-            assert(verify(d_buffer));
-            assert(verify(src, dst, d_buffer));
-
-            u32 n_elements = src.width * src.height;
-
-            DeviceArray<pixel_t> d_src;
-            DeviceArray<u8> d_dst;
-
-            push_array(d_src, d_buffer, n_elements);
-            push_array(d_dst, d_buffer, n_elements);
-
-            copy_to_device(src, d_src);
-
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
-
-            gpu_transform_grayscale<<<blocks, threads_per_block>>>(d_src.data, d_dst.data, n_elements);
-
-            copy_to_host(d_dst, dst);
-
-            pop_array(d_src, d_buffer);
-            pop_array(d_dst, d_buffer);
-        }
-
-
         void transform_grayscale(image_t const& src, gray::image_t const& dst)
         {
-            assert(verify(src, dst));
+            assert(src.data);
+            assert(src.width);
+            assert(src.height);
+            assert(dst.data);
+            assert(dst.width == src.width);
+            assert(dst.height == src.height);
 
-            DeviceBuffer d_buffer;
-            device_malloc(d_buffer, bytes(src) + bytes(dst));
+            u32 n_elements = src.width * src.height;
+            int threads_per_block = THREADS_PER_BLOCK;
+            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
 
-            transform_grayscale(src, dst, d_buffer);
+            bool proc;
 
-            device_free(d_buffer);
+            DeviceArray<pixel_t> d_src;
+            DeviceArray<gray::pixel_t> d_dst;
+
+            DeviceBuffer<pixel_t> pixel_buffer;
+            DeviceBuffer<gray::pixel_t> gray_buffer;
+
+            auto max_pixel_bytes = n_elements * sizeof(pixel_t);
+            proc = device_malloc(pixel_buffer, max_pixel_bytes);
+            assert(proc);
+
+            auto max_gray_bytes = n_elements * sizeof(gray::pixel_t);
+            proc = device_malloc(gray_buffer, max_gray_bytes);
+            assert(proc);
+
+            proc = push_array(d_src, pixel_buffer, n_elements);
+            assert(proc);
+            proc = push_array(d_dst, gray_buffer, n_elements);
+            assert(proc);
+
+            proc = copy_to_device(src, d_src);
+            assert(proc);
+
+            proc = cuda_no_errors();
+            assert(proc);
+
+            gpu_transform_grayscale<<<blocks, threads_per_block>>>(
+                d_src.data, 
+                d_dst.data, 
+                n_elements);
+
+            proc = cuda_launch_success();
+            assert(proc);
+
+            proc = copy_to_host(d_dst, dst);
+            assert(proc);
+
+            proc = device_free(pixel_buffer);
+            assert(proc);
+            proc = device_free(gray_buffer);
+            assert(proc);
         }
 
 
-        void transform_grayscale(image_t const& src, gray::view_t const& dst)
-        {
-            assert(verify(src, dst));
+        void transform_grayscale(image_t const& src, gray::view_t const& dst);
 
-            DeviceBuffer d_buffer;
-            device_malloc(d_buffer, bytes(src) + bytes(dst));
+        void transform_grayscale(view_t const& src, gray::image_t const& dst);
 
-            transform_grayscale(src, dst, d_buffer);
-
-            device_free(d_buffer);
-        }
-
-
-        void transform_grayscale(view_t const& src, gray::image_t const& dst)
-        {
-            assert(verify(src, dst));
-
-            DeviceBuffer d_buffer;
-            device_malloc(d_buffer, bytes(src) + bytes(dst));
-
-            transform_grayscale(src, dst, d_buffer);
-
-            device_free(d_buffer);
-        }
-
-
-        void transform_grayscale(view_t const& src, gray::view_t const& dst)
-        {
-            assert(verify(src, dst));
-
-            DeviceBuffer d_buffer;
-            device_malloc(d_buffer, bytes(src) + bytes(dst));
-
-            transform_grayscale(src, dst, d_buffer);
-
-            device_free(d_buffer);
-        }
+        void transform_grayscale(view_t const& src, gray::view_t const& dst);
     }
 }
 

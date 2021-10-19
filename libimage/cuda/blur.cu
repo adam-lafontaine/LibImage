@@ -6,9 +6,8 @@ Copyright (c) 2021 Adam Lafontaine
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
 
-#include "verify.hpp"
-#include "../proc/verify.hpp"
 #include "convolve.cuh"
+#include "process.hpp"
 
 #include <cassert>
 #include <array>
@@ -74,216 +73,83 @@ namespace libimage
 
     namespace cuda
     {
-        void blur(gray::image_t const& src, gray::image_t const& dst, DeviceBuffer& d_buffer)
+        void blur(gray::image_t const& src, gray::image_t const& dst)
         {
-            assert(verify(src, dst));
-            assert(verify(d_buffer));
-            assert(verify(src, dst, d_buffer));
+            assert(src.data);
+            assert(src.width);
+            assert(src.height);
+            assert(dst.data);
+            assert(dst.width == src.width);
+            assert(dst.height == src.height);   
 
             u32 n_elements = src.width * src.height;
-
-            DeviceArray<u8> d_src;
-            DeviceArray<u8> d_dst;
-            DeviceArray<r32> d_gauss3x3;
-            DeviceArray<r32> d_gauss5x5;
-
-            push_array(d_src, d_buffer, n_elements);
-            push_array(d_dst, d_buffer, n_elements);
-
-            assert(has_bytes(d_buffer, GAUSS_3X3_SIZE + GAUSS_5X5_SIZE));
-
-            push_array(d_gauss3x3, d_buffer, GAUSS_3X3_SIZE);
-            push_array(d_gauss5x5, d_buffer, GAUSS_5X5_SIZE);
-
-            copy_to_device(src, d_src);
-            copy_to_device(GAUSS_3X3, d_gauss3x3);
-            copy_to_device(GAUSS_5X5, d_gauss5x5);
-
             int threads_per_block = THREADS_PER_BLOCK;
             int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
 
-            gpu_blur<<<blocks, threads_per_block>>>(d_src.data, d_dst.data, src.width, src.height, d_gauss3x3.data, d_gauss5x5.data);
+            bool proc;
 
-            copy_to_host(d_dst, dst);
-
-            pop_array(d_gauss5x5, d_buffer);
-            pop_array(d_gauss3x3, d_buffer);
-            pop_array(d_src, d_buffer);
-            pop_array(d_dst, d_buffer);
-        }
-
-
-        void blur(gray::image_t const& src, gray::view_t const& dst, DeviceBuffer& d_buffer)
-        {
-            assert(verify(src, dst));
-            assert(verify(d_buffer));
-            assert(verify(src, dst, d_buffer));
-
-            u32 n_elements = src.width * src.height;
-
-            DeviceArray<u8> d_src;
-            DeviceArray<u8> d_dst;
+            DeviceArray<gray::pixel_t> d_src;
+            DeviceArray<gray::pixel_t> d_dst;
             DeviceArray<r32> d_gauss3x3;
             DeviceArray<r32> d_gauss5x5;
 
-            push_array(d_src, d_buffer, n_elements);
-            push_array(d_dst, d_buffer, n_elements);
+            DeviceBuffer<gray::pixel_t> pixel_buffer;
+            DeviceBuffer<r32> r32_buffer;
 
-            assert(d_buffer.total_bytes - d_buffer.offset >= GAUSS_3X3_SIZE + GAUSS_5X5_SIZE);
+            auto pixel_bytes = 2 * n_elements * sizeof(gray::pixel_t);
+            proc = device_malloc(pixel_buffer, pixel_bytes);
+            assert(proc);
 
-            push_array(d_gauss3x3, d_buffer, GAUSS_3X3_SIZE);
-            push_array(d_gauss5x5, d_buffer, GAUSS_5X5_SIZE);
+            auto r32_bytes = GAUSS_5X5_BYTES + GAUSS_3X3_BYTES;
+            proc = device_malloc(r32_buffer, r32_bytes);
+            assert(proc);
 
-            copy_to_device(src, d_src);
-            copy_to_device(GAUSS_3X3, d_gauss3x3);
-            copy_to_device(GAUSS_5X5, d_gauss5x5);
+            proc = push_array(d_src, pixel_buffer, n_elements);
+            assert(proc);
+            proc = push_array(d_dst, pixel_buffer, n_elements);
+            assert(proc);
 
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;            
+            proc = push_array(d_gauss3x3, r32_buffer, GAUSS_3X3_SIZE);
+            assert(proc);
+            proc = push_array(d_gauss5x5, r32_buffer, GAUSS_5X5_SIZE);
+            assert(proc);
 
-            gpu_blur<<<blocks, threads_per_block>>>(d_src.data, d_dst.data, src.width, src.height, d_gauss3x3.data, d_gauss5x5.data);
+            proc = copy_to_device(src, d_src);
+            assert(proc);
+            proc = copy_to_device(GAUSS_3X3, d_gauss3x3);
+            assert(proc);
+            proc = copy_to_device(GAUSS_5X5, d_gauss5x5);
+            assert(proc);
 
-            copy_to_host(d_dst, dst);
+            proc = cuda_no_errors();
+            assert(proc);
 
-            pop_array(d_gauss5x5, d_buffer);
-            pop_array(d_gauss3x3, d_buffer);
-            pop_array(d_src, d_buffer);
-            pop_array(d_dst, d_buffer);
+            gpu_blur<<<blocks, threads_per_block>>>(
+                d_src.data, 
+                d_dst.data, 
+                src.width, 
+                src.height, 
+                d_gauss3x3.data, 
+                d_gauss5x5.data);
+            
+            proc = cuda_launch_success();
+            assert(proc);
+
+            proc = copy_to_host(d_dst, dst);
+            assert(proc);
+
+            proc = device_free(pixel_buffer);
+            assert(proc);
+            proc = device_free(r32_buffer);
+            assert(proc);
         }
 
 
-		void blur(gray::view_t const& src, gray::image_t const& dst, DeviceBuffer& d_buffer)
-        {
-            assert(verify(src, dst));
-            assert(verify(d_buffer));
-            assert(verify(src, dst, d_buffer));
+        void blur(gray::image_t const& src, gray::view_t const& dst);
 
-            u32 n_elements = src.width * src.height;
+		void blur(gray::view_t const& src, gray::image_t const& dst);
 
-            DeviceArray<u8> d_src;
-            DeviceArray<u8> d_dst;
-            DeviceArray<r32> d_gauss3x3;
-            DeviceArray<r32> d_gauss5x5;
-
-            push_array(d_src, d_buffer, n_elements);
-            push_array(d_dst, d_buffer, n_elements);
-
-            assert(d_buffer.total_bytes - d_buffer.offset >= GAUSS_3X3_SIZE + GAUSS_5X5_SIZE);
-
-            push_array(d_gauss3x3, d_buffer, GAUSS_3X3_SIZE);
-            push_array(d_gauss5x5, d_buffer, GAUSS_5X5_SIZE);
-
-            copy_to_device(src, d_src);
-            copy_to_device(GAUSS_3X3, d_gauss3x3);
-            copy_to_device(GAUSS_5X5, d_gauss5x5);
-
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;            
-
-            gpu_blur<<<blocks, threads_per_block>>>(d_src.data, d_dst.data, src.width, src.height, d_gauss3x3.data, d_gauss5x5.data);
-
-            copy_to_host(d_dst, dst);
-
-            pop_array(d_gauss5x5, d_buffer);
-            pop_array(d_gauss3x3, d_buffer);
-            pop_array(d_src, d_buffer);
-            pop_array(d_dst, d_buffer);
-        }
-
-
-		void blur(gray::view_t const& src, gray::view_t const& dst, DeviceBuffer& d_buffer)
-        {
-            assert(verify(src, dst));
-            assert(verify(d_buffer));
-            assert(verify(src, dst, d_buffer));
-
-            u32 n_elements = src.width * src.height;
-
-            DeviceArray<u8> d_src;
-            DeviceArray<u8> d_dst;
-            DeviceArray<r32> d_gauss3x3;
-            DeviceArray<r32> d_gauss5x5;
-
-            push_array(d_src, d_buffer, n_elements);
-            push_array(d_dst, d_buffer, n_elements);
-
-            assert(d_buffer.total_bytes - d_buffer.offset >= GAUSS_3X3_SIZE + GAUSS_5X5_SIZE);
-
-            push_array(d_gauss3x3, d_buffer, GAUSS_3X3_SIZE);
-            push_array(d_gauss5x5, d_buffer, GAUSS_5X5_SIZE);
-
-            copy_to_device(src, d_src);
-            copy_to_device(GAUSS_3X3, d_gauss3x3);
-            copy_to_device(GAUSS_5X5, d_gauss5x5);
-
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;            
-
-            gpu_blur<<<blocks, threads_per_block>>>(d_src.data, d_dst.data, src.width, src.height, d_gauss3x3.data, d_gauss5x5.data);
-
-            copy_to_host(d_dst, dst);
-
-            pop_array(d_gauss5x5, d_buffer);
-            pop_array(d_gauss3x3, d_buffer);
-            pop_array(d_src, d_buffer);
-            pop_array(d_dst, d_buffer);
-        }
-
-
-        void blur(gray::image_t const& src, gray::image_t const& dst)
-        {
-            assert(verify(src, dst));
-
-            DeviceBuffer d_buffer;
-            u32 bytes_needed = bytes(src) + bytes(dst) + GAUSS_3X3_BYTES + GAUSS_5X5_BYTES;
-            device_malloc(d_buffer, bytes_needed);
-
-            blur(src, dst, d_buffer);
-
-            device_free(d_buffer);
-        }
-
-
-		void blur(gray::image_t const& src, gray::view_t const& dst)
-        {
-            assert(verify(src, dst));
-
-            DeviceBuffer d_buffer;
-            u32 bytes_needed = bytes(src) + bytes(dst) + GAUSS_3X3_BYTES + GAUSS_5X5_BYTES;
-            device_malloc(d_buffer, bytes_needed);
-
-            blur(src, dst, d_buffer);
-
-            device_free(d_buffer);
-        }
-
-
-		void blur(gray::view_t const& src, gray::image_t const& dst)
-        {
-            assert(verify(src, dst));
-
-            DeviceBuffer d_buffer;
-            u32 bytes_needed = bytes(src) + bytes(dst) + GAUSS_3X3_BYTES + GAUSS_5X5_BYTES;
-            device_malloc(d_buffer, bytes_needed);
-
-            blur(src, dst, d_buffer);
-
-            device_free(d_buffer);
-        }
-
-
-		void blur(gray::view_t const& src, gray::view_t const& dst)
-        {
-            assert(verify(src, dst));
-
-            DeviceBuffer d_buffer;
-            u32 bytes_needed = bytes(src) + bytes(dst) + GAUSS_3X3_BYTES + GAUSS_5X5_BYTES;
-            device_malloc(d_buffer, bytes_needed);
-
-            blur(src, dst, d_buffer);
-
-            device_free(d_buffer);
-        }
+		void blur(gray::view_t const& src, gray::view_t const& dst);
     }
 }
 

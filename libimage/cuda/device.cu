@@ -23,9 +23,7 @@ static void check_error(cudaError_t err)
 }
 
 
-
-
-static bool cuda_device_malloc(void** ptr, u32 n_bytes)
+bool cuda_device_malloc(void** ptr, u32 n_bytes)
 {
     cudaError_t err = cudaMalloc(ptr, n_bytes);
     check_error(err);
@@ -34,32 +32,12 @@ static bool cuda_device_malloc(void** ptr, u32 n_bytes)
 }
 
 
-static bool cuda_device_free(void* ptr)
+bool cuda_device_free(void* ptr)
 {
     cudaError_t err = cudaFree(ptr);
     check_error(err);
 
     return err == cudaSuccess;
-}
-
-
-bool device_malloc(DeviceBuffer& buffer, size_t n_bytes)
-{
-    bool result = cuda_device_malloc((void**)&(buffer.data), n_bytes);
-    if(result)
-    {
-        buffer.total_bytes = n_bytes;
-    }
-
-    return result;
-}
-
-
-bool device_free(DeviceBuffer& buffer)
-{
-    buffer.total_bytes = 0;
-    buffer.offset = 0;
-    return cuda_device_free(buffer.data);
 }
 
 

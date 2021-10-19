@@ -47,33 +47,6 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR
 
-
-        void alpha_blend(image_t const& src, image_t const& current, image_t const& dst, DeviceBuffer& d_buffer);
-
-		void alpha_blend(image_t const& src, image_t const& current, view_t const& dst, DeviceBuffer& d_buffer);
-
-		void alpha_blend(image_t const& src, view_t const& current, image_t const& dst, DeviceBuffer& d_buffer);
-
-		void alpha_blend(image_t const& src, view_t const& current, view_t const& dst, DeviceBuffer& d_buffer);
-
-		void alpha_blend(view_t const& src, image_t const& current, image_t const& dst, DeviceBuffer& d_buffer);
-
-		void alpha_blend(view_t const& src, image_t const& current, view_t const& dst, DeviceBuffer& d_buffer);
-
-		void alpha_blend(view_t const& src, view_t const& current, image_t const& dst, DeviceBuffer& d_buffer);
-
-		void alpha_blend(view_t const& src, view_t const& current, view_t const& dst, DeviceBuffer& d_buffer);
-
-
-		void alpha_blend(image_t const& src, image_t const& current_dst, DeviceBuffer& d_buffer);
-
-		void alpha_blend(image_t const& src, view_t const& current_dst, DeviceBuffer& d_buffer);
-
-		void alpha_blend(view_t const& src, image_t const& current_dst, DeviceBuffer& d_buffer);
-
-		void alpha_blend(view_t const& src, view_t const& current_dst, DeviceBuffer& d_buffer);
-
-
         void alpha_blend(image_t const& src, image_t const& current, image_t const& dst);
 
 		void alpha_blend(image_t const& src, image_t const& current, view_t const& dst);
@@ -104,15 +77,6 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-        void binarize(gray::image_t const& src, gray::image_t const& dst, u8 min_threshold, DeviceBuffer& d_buffer);
-
-		void binarize(gray::image_t const& src, gray::view_t const& dst, u8 min_threshold, DeviceBuffer& d_buffer);
-
-		void binarize(gray::view_t const& src, gray::image_t const& dst, u8 min_threshold, DeviceBuffer& d_buffer);
-
-		void binarize(gray::view_t const& src, gray::view_t const& dst, u8 min_threshold, DeviceBuffer& d_buffer);
-
-
         void binarize(gray::image_t const& src, gray::image_t const& dst, u8 min_threshold);
 
 		void binarize(gray::image_t const& src, gray::view_t const& dst, u8 min_threshold);
@@ -120,15 +84,6 @@ namespace libimage
 		void binarize(gray::view_t const& src, gray::image_t const& dst, u8 min_threshold);
 
 		void binarize(gray::view_t const& src, gray::view_t const& dst, u8 min_threshold);
-
-
-        void blur(gray::image_t const& src, gray::image_t const& dst, DeviceBuffer& d_buffer);
-
-		void blur(gray::image_t const& src, gray::view_t const& dst, DeviceBuffer& d_buffer);
-
-		void blur(gray::view_t const& src, gray::image_t const& dst, DeviceBuffer& d_buffer);
-
-		void blur(gray::view_t const& src, gray::view_t const& dst, DeviceBuffer& d_buffer);
 
 
         void blur(gray::image_t const& src, gray::image_t const& dst);
@@ -140,15 +95,6 @@ namespace libimage
 		void blur(gray::view_t const& src, gray::view_t const& dst);
 
 
-		void edges(gray::image_t const& src, gray::image_t const& dst, u8 threshold, DeviceBuffer& d_buffer);
-
-		void edges(gray::image_t const& src, gray::view_t const& dst, u8 threshold, DeviceBuffer& d_buffer);
-
-		void edges(gray::view_t const& src, gray::image_t const& dst, u8 threshold, DeviceBuffer& d_buffer);
-
-		void edges(gray::view_t const& src, gray::view_t const& dst, u8 threshold, DeviceBuffer& d_buffer);
-
-
 		void edges(gray::image_t const& src, gray::image_t const& dst, u8 threshold);
 
 		void edges(gray::image_t const& src, gray::view_t const& dst, u8 threshold);
@@ -156,15 +102,6 @@ namespace libimage
 		void edges(gray::view_t const& src, gray::image_t const& dst, u8 threshold);
 
 		void edges(gray::view_t const& src, gray::view_t const& dst, u8 threshold);
-
-		
-		void gradients(gray::image_t const& src, gray::image_t const& dst, DeviceBuffer& d_buffer);
-
-		void gradients(gray::image_t const& src, gray::view_t const& dst, DeviceBuffer& d_buffer);
-
-		void gradients(gray::view_t const& src, gray::image_t const& dst, DeviceBuffer& d_buffer);
-
-		void gradients(gray::view_t const& src, gray::view_t const& dst, DeviceBuffer& d_buffer);
 
 
 		void gradients(gray::image_t const& src, gray::image_t const& dst);
@@ -181,15 +118,6 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR
 #ifndef LIBIMAGE_NO_GRAYSCALE
-
-        void transform_grayscale(image_t const& src, gray::image_t const& dst, DeviceBuffer& d_buffer);
-
-        void transform_grayscale(image_t const& src, gray::view_t const& dst, DeviceBuffer& d_buffer);
-
-        void transform_grayscale(view_t const& src, gray::image_t const& dst, DeviceBuffer& d_buffer);
-
-        void transform_grayscale(view_t const& src, gray::view_t const& dst, DeviceBuffer& d_buffer);
-
 
         void transform_grayscale(image_t const& src, gray::image_t const& dst);
 

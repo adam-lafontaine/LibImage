@@ -32,7 +32,6 @@ const auto DST_IMAGE_ROOT = ROOT_PATH + "out_files/";
 void empty_dir(path_t& dir);
 void process_tests(path_t& out_dir);
 void cuda_tests(path_t& out_dir);
-void device_buffer_tests(path_t& dir);
 void print(img::stats_t const& stats);
 
 int main()
@@ -44,9 +43,6 @@ int main()
 
 	auto dst_cuda = dst_root + "cuda/";
 	cuda_tests(dst_cuda);
-
-	//auto dst_buffer = dst_root + "cuda/";
-	//device_buffer_tests(dst_root);
 
     printf("\nDone.\n");
 }
@@ -205,43 +201,18 @@ void cuda_tests(path_t& out_dir)
 	img::make_image(src_gray_img, width, height);
 
 	GrayImage dst_gray_img;
-	img::make_image(dst_gray_img, width, height);
-
-
-	// pre-allocate device memory
-	u32 pixels_per_image = width * height;
-	u32 max_color_images = 4;
-	u32 color_bytes = max_color_images * pixels_per_image * sizeof(img::pixel_t);
-
-	DeviceBuffer d_buffer;
-	device_malloc(d_buffer, color_bytes);
-
-
-	
+	img::make_image(dst_gray_img, width, height);	
 
 
 	// grayscale
 	img::cuda::transform_grayscale(caddy_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "grayscale.png");	
-
-	img::cuda::transform_grayscale(caddy_img, dst_gray_img, d_buffer);
-	img::write_image(dst_gray_img, out_dir + "grayscale_buffer.png");
-
-	img::seq::copy(dst_gray_img, src_gray_img);
-
-	// edge detection
-	img::seq::transform_self(dst_gray_img, [](auto p){ return 255;});
-	u8 threshold = 100;
-	img::cuda::edges(src_gray_img, dst_gray_img, threshold, d_buffer);
-	img::write_image(dst_gray_img, out_dir + "edges_buffer.png");
+	img::seq::copy(dst_gray_img, src_gray_img);	
 
 
 	// binarize
 	img::cuda::binarize(src_gray_img, dst_gray_img, 100);
 	img::write_image(dst_gray_img, out_dir + "binarize.png");
-
-	img::cuda::binarize(src_gray_img, dst_gray_img, 100, d_buffer);
-	img::write_image(dst_gray_img, out_dir + "binarize_buffer.png");
 
 
 	// alpha blend
@@ -251,36 +222,27 @@ void cuda_tests(path_t& out_dir)
 	img::cuda::alpha_blend(src_img, corvette_img, dst_img);
 	img::write_image(dst_img, out_dir + "alpha_blend.png");
 
-	img::cuda::alpha_blend(src_img, corvette_img, dst_img, d_buffer);
-	img::write_image(dst_img, out_dir + "alpha_blend_buffer.png");
-
 	img::seq::copy(corvette_img, dst_img);
 	img::cuda::alpha_blend(src_img, dst_img);
 	img::write_image(dst_img, out_dir + "alpha_blend_src_dst.png");
 
-	img::seq::copy(corvette_img, dst_img);
-	img::cuda::alpha_blend(src_img, dst_img, d_buffer);
-	img::write_image(dst_img, out_dir + "alpha_blend_src_dst_buffer.png");
-
 
 	// blur
-	img::cuda::blur(src_gray_img, dst_gray_img, d_buffer);
-	img::write_image(dst_gray_img, out_dir + "blur_buffer.png");
-
 	img::cuda::blur(src_gray_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "blur.png");
 
 
-	
+	// edge detection
+	img::seq::transform_self(dst_gray_img, [](auto p){ return 255;});
+	u8 threshold = 100;
+	img::cuda::edges(src_gray_img, dst_gray_img, threshold);
+	img::write_image(dst_gray_img, out_dir + "edges.png");
 
 
 	// gradients
 	img::seq::transform_self(dst_gray_img, [](auto p){ return 75;});
-	img::cuda::gradients(src_gray_img, dst_gray_img, d_buffer);
-	img::write_image(dst_gray_img, out_dir + "gradients_buffer.png");
-
-
-	device_free(d_buffer);
+	img::cuda::gradients(src_gray_img, dst_gray_img);
+	img::write_image(dst_gray_img, out_dir + "gradients.png");
 
 	/*
 	// compare edge detection speeds
@@ -331,41 +293,6 @@ void cuda_tests(path_t& out_dir)
 	img::write_image(view_chart, out_dir / "edges_times.png");
 
 	*/
-}
-
-
-void device_buffer_tests(path_t& out_dir)
-{
-	std::cout << "device buffer:\n";
-	empty_dir(out_dir);
-
-	DeviceBuffer buffer;
-	device_malloc(buffer, 10'000);
-
-	std::array<u32, 10> u32array { 1, 2, 100, 69, 98, 33, 55, 44, 88, 63 };
-	DeviceArray<u32> d_u32array;
-	push_array(d_u32array, buffer, 10);
-	memcpy_to_device(u32array.data(), d_u32array);
-	pop_array(d_u32array, buffer);
-
-	std::array<r32, 10> r32array { 1.0f, 2.5f, 100.2f, 69.3f, 98.7f, 33.3f, 55.5f, 44.2f, 88.2f, 63.1f };
-	DeviceArray<r32> d_r32array;
-	push_array(d_r32array, buffer, 10);
-	memcpy_to_device(r32array.data(), d_r32array);
-	pop_array(d_r32array, buffer);
-
-	std::array<u8, 10> u8array { 1, 2, 100, 69, 98, 33, 55, 44, 88, 63 };
-	DeviceArray<u8> d_u8array;
-	push_array(d_u8array, buffer, 10);
-	memcpy_to_device(u8array.data(), d_u8array);
-	pop_array(d_u8array, buffer);
-
-	
-
-	
-
-
-	device_free(buffer);
 }
 
 
