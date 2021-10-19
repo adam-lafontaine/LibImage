@@ -47,20 +47,6 @@ public:
 
 
 template <typename T>
-bool verify(DeviceBuffer<T> const& buffer)
-{
-    return buffer.data && buffer.total_bytes;
-}
-
-
-template <class T>
-bool verify(DeviceArray<T> arr)
-{
-    return arr.data && arr.n_elements;
-}
-
-
-template <typename T>
 bool push_array(DeviceArray<T>& arr, DeviceBuffer<T>& buffer, u32 n_elements)
 {
     auto bytes = n_elements * sizeof(T);
@@ -114,7 +100,8 @@ template <typename T>
 bool memcpy_to_device(const void* src, DeviceArray<T> const& dst)
 {
     assert(src);
-    assert(verify(dst));
+    assert(dst.data);
+    assert(dst.n_elements);
 
     auto bytes = dst.n_elements * sizeof(T);
     return cuda_memcpy_to_device(src, dst.data, bytes);
@@ -124,7 +111,8 @@ bool memcpy_to_device(const void* src, DeviceArray<T> const& dst)
 template <typename T>
 bool memcpy_to_host(DeviceArray<T> const& src, void* dst)
 {
-    assert(verify(src));
+    assert(src.data);
+    assert(src.n_elements);
     assert(dst);
 
     auto bytes = src.n_elements * sizeof(T);

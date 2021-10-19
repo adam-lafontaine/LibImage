@@ -56,7 +56,8 @@ constexpr u32 GRAD_3X3_BYTES = GRAD_3X3_SIZE * sizeof(r32);
 template<class T, size_t N>
 static bool copy_to_device(std::array<T, N> const& src, DeviceArray<T>& dst)
 {
-    assert(verify(dst));
+    assert(dst.data);
+    assert(dst.n_elements);
     return memcpy_to_device(src.data(), dst);
 }
 
