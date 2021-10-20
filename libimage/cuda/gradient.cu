@@ -53,13 +53,7 @@ constexpr std::array<r32, GRAD_3X3_SIZE> GRAD_Y_3X3
 constexpr u32 GRAD_3X3_BYTES = GRAD_3X3_SIZE * sizeof(r32);
 
 
-template<class T, size_t N>
-static bool copy_to_device(std::array<T, N> const& src, DeviceArray<T>& dst)
-{
-    assert(dst.data);
-    assert(dst.n_elements);
-    return memcpy_to_device(src.data(), dst);
-}
+
 
 
 namespace libimage
@@ -135,23 +129,98 @@ namespace libimage
         }
     }
 
-/*
-    GPU_KERNAL
-    static void gpu_white(u8* dst, u32 width, u32 height)
-    {
-        u32 n_elements = width * height;
-        u32 i = u32(blockDim.x * blockIdx.x + threadIdx.x);
-        if (i >= n_elements)
-        {
-            return;
-        }
 
-        dst[i] = 255;
-    }*/    
+    bool ablur(DeviceArray<gray::pixel_t> const& src, DeviceArray<gray::pixel_t> const& dst, u32 width, u32 height, DeviceArray<r32> const& gauss3, DeviceArray<r32> const& gauss5)
+    {
+        assert(src.data);
+        assert(dst.data);
+        assert(dst.n_elements == src.n_elements);
+        assert(width * height == src.n_elements);
+
+        u32 n_elements = width * height;
+        int threads_per_block = THREADS_PER_BLOCK;
+        int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
+
+        bool proc;
+
+        proc = cuda_no_errors();
+        assert(proc); if(!proc) { return false; }
+
+        gpu_blur<<<blocks, threads_per_block>>>(
+            src.data, 
+            dst.data, 
+            width, 
+            height, 
+            gauss3.data, 
+            gauss5.data);
+        
+        proc = cuda_launch_success();
+        assert(proc); if(!proc) { return false; }
+
+        return true;
+    }
 
 
     namespace cuda
     {
+
+        void blur(gray::image_t const& src, gray::image_t const& dst)
+        {
+            assert(src.data);
+            assert(src.width);
+            assert(src.height);
+            assert(dst.data);
+            assert(dst.width == src.width);
+            assert(dst.height == src.height);   
+
+            u32 n_elements = src.width * src.height;
+
+            bool proc;
+
+            DeviceArray<gray::pixel_t> d_src;
+            DeviceArray<gray::pixel_t> d_dst;
+            DeviceArray<r32> d_gauss3x3;
+            DeviceArray<r32> d_gauss5x5;
+
+            DeviceBuffer<gray::pixel_t> pixel_buffer;
+            DeviceBuffer<r32> r32_buffer;
+
+            auto pixel_bytes = 2 * n_elements * sizeof(gray::pixel_t);
+            proc = device_malloc(pixel_buffer, pixel_bytes);
+            assert(proc);
+
+            auto r32_bytes = GAUSS_5X5_BYTES + GAUSS_3X3_BYTES;
+            proc = device_malloc(r32_buffer, r32_bytes);
+            assert(proc);
+
+            proc = push_array(d_src, n_elements, pixel_buffer);
+            assert(proc);
+            proc = push_array(d_dst, n_elements, pixel_buffer);
+            assert(proc);
+
+            proc = push_array(d_gauss3x3, GAUSS_3X3_SIZE, r32_buffer);
+            assert(proc);
+            proc = push_array(d_gauss5x5, GAUSS_5X5_SIZE, r32_buffer);
+            assert(proc);
+
+            proc = copy_to_device(src, d_src);
+            assert(proc);
+            proc = copy_to_device(GAUSS_3X3, d_gauss3x3);
+            assert(proc);
+            proc = copy_to_device(GAUSS_5X5, d_gauss5x5);
+            assert(proc);
+
+            proc = ablur(d_src, d_dst, src.width, src.height, d_gauss3x3, d_gauss5x5);
+            assert(proc);
+
+            proc = copy_to_host(d_dst, dst);
+            assert(proc);
+
+            proc = device_free(pixel_buffer);
+            assert(proc);
+            proc = device_free(r32_buffer);
+            assert(proc);
+        }
         
 
 
@@ -193,14 +262,14 @@ namespace libimage
             proc = device_malloc(r32_buffer, max_r32_bytes);
             assert(proc);
 
-            proc = push_array(d_blur, pixel_buffer, n_elements);
+            proc = push_array(d_blur, n_elements, pixel_buffer);
             assert(proc);
-            proc = push_array(d_src, pixel_buffer, n_elements);
+            proc = push_array(d_src, n_elements, pixel_buffer);
             assert(proc);
 
-            proc = push_array(d_gauss3x3, r32_buffer, GAUSS_3X3_SIZE);
+            proc = push_array(d_gauss3x3, GAUSS_3X3_SIZE, r32_buffer);
             assert(proc);
-            proc = push_array(d_gauss5x5, r32_buffer, GAUSS_5X5_SIZE);
+            proc = push_array(d_gauss5x5, GAUSS_5X5_SIZE, r32_buffer);
             assert(proc);
 
             proc = copy_to_device(src, d_src);
@@ -210,32 +279,20 @@ namespace libimage
             proc = copy_to_device(GAUSS_5X5, d_gauss5x5);
             assert(proc);
 
-
-            proc = cuda_no_errors();
-            assert(proc);
-
-            gpu_blur<<<blocks, threads_per_block>>>(
-                d_src.data, 
-                d_blur.data, 
-                src.width, 
-                src.height, 
-                d_gauss3x3.data, 
-                d_gauss5x5.data);
-
-            proc = cuda_launch_success();
+            proc = ablur(d_src, d_blur, src.width, src.height, d_gauss3x3, d_gauss5x5);
             assert(proc);
 
             pop_array(d_gauss5x5, r32_buffer);
             pop_array(d_gauss3x3, r32_buffer);
             pop_array(d_src, pixel_buffer);
 
-            proc = push_array(d_edges, pixel_buffer, n_elements);
+            proc = push_array(d_edges, n_elements, pixel_buffer);
             assert(proc);
 
-            proc = push_array(d_grad_x, r32_buffer, GRAD_3X3_SIZE);
+            proc = push_array(d_grad_x, GRAD_3X3_SIZE, r32_buffer);
             assert(proc);
 
-            proc = push_array(d_grad_y, r32_buffer, GRAD_3X3_SIZE);
+            proc = push_array(d_grad_y, GRAD_3X3_SIZE, r32_buffer);
             assert(proc);
 
             proc = copy_to_device(GRAD_X_3X3, d_grad_x);
@@ -315,17 +372,17 @@ namespace libimage
             assert(proc);
 
 
-            proc = push_array(d_blur, pixel_buffer, n_elements);
+            proc = push_array(d_blur, n_elements, pixel_buffer);
             assert(proc);            
 
-            proc = push_array(d_src, pixel_buffer, n_elements);
+            proc = push_array(d_src, n_elements, pixel_buffer);
             assert(proc);
 
 
-            proc = push_array(d_gauss3x3, r32_buffer, GAUSS_3X3_SIZE);
+            proc = push_array(d_gauss3x3, GAUSS_3X3_SIZE, r32_buffer);
             assert(proc);
 
-            proc = push_array(d_gauss5x5, r32_buffer, GAUSS_5X5_SIZE);
+            proc = push_array(d_gauss5x5, GAUSS_5X5_SIZE, r32_buffer);
             assert(proc);
 
 
@@ -339,31 +396,20 @@ namespace libimage
             assert(proc);
 
 
-            proc = cuda_no_errors();
-            assert(proc);
-
-            gpu_blur<<<blocks, threads_per_block>>>(
-                d_src.data, 
-                d_blur.data, 
-                src.width, 
-                src.height, 
-                d_gauss3x3.data, 
-                d_gauss5x5.data);
-
-            proc = cuda_launch_success();
+            proc = ablur(d_src, d_blur, src.width, src.height, d_gauss3x3, d_gauss5x5);
             assert(proc);
 
             pop_array(d_gauss5x5, r32_buffer);
             pop_array(d_gauss3x3, r32_buffer);
             pop_array(d_src, pixel_buffer);
 
-            proc = push_array(d_gradients, pixel_buffer, n_elements);
+            proc = push_array(d_gradients, n_elements, pixel_buffer);
             assert(proc);
 
-            proc = push_array(d_grad_x, r32_buffer, GRAD_3X3_SIZE);
+            proc = push_array(d_grad_x, GRAD_3X3_SIZE, r32_buffer);
             assert(proc);
 
-            proc = push_array(d_grad_y, r32_buffer, GRAD_3X3_SIZE);
+            proc = push_array(d_grad_y, GRAD_3X3_SIZE, r32_buffer);
             assert(proc);
 
             proc = copy_to_device(GRAD_X_3X3, d_grad_x);

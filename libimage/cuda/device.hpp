@@ -9,6 +9,8 @@ Copyright (c) 2021 Adam Lafontaine
 
 #include <cstddef>
 #include <cassert>
+#include <array>
+#include <vector>
 
 
 bool cuda_device_malloc(void** ptr, u32 n_bytes);
@@ -47,7 +49,7 @@ public:
 
 
 template <typename T>
-bool push_array(DeviceArray<T>& arr, DeviceBuffer<T>& buffer, u32 n_elements)
+bool push_array(DeviceArray<T>& arr, u32 n_elements, DeviceBuffer<T>& buffer)
 {
     auto bytes = n_elements * sizeof(T);
     bool result = buffer.offset + bytes <= buffer.total_bytes;
@@ -117,4 +119,24 @@ bool memcpy_to_host(DeviceArray<T> const& src, void* dst)
 
     auto bytes = src.n_elements * sizeof(T);
     return cuda_memcpy_to_host(src.data, dst, bytes);
+}
+
+
+template <class T, size_t N>
+bool copy_to_device(std::array<T, N> const& src, DeviceArray<T>& dst)
+{
+    assert(dst.data);
+    assert(dst.n_elements);
+    assert(dst.n_elements == src.size());
+    return memcpy_to_device(src.data(), dst);
+}
+
+
+template <typename T>
+bool copy_to_device(std::vector<T> const& src, DeviceArray<T>& dst)
+{
+    assert(dst.data);
+    assert(dst.n_elements);
+    assert(dst.n_elements == src.size());
+    return memcpy_to_device(src.data(), dst);
 }

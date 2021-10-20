@@ -3,7 +3,8 @@
 Copyright (c) 2021 Adam Lafontaine
 
 */
-#include "process.hpp"
+#include "device_image.hpp"
+#include "device.hpp"
 
 #include <cassert>
 
@@ -16,7 +17,7 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR
 
-        bool copy_to_device(image_t const& src, DeviceArray<pixel_t> const& dst)
+        bool copy_to_device(image_t const& src, device_image_t const& dst)
         {
             assert(src.data);
             assert(src.width);
@@ -28,7 +29,7 @@ namespace libimage
         }
 
 
-        bool copy_to_host(DeviceArray<pixel_t> const& src, image_t const& dst)
+        bool copy_to_host(device_image_t const& src, image_t const& dst)
         {
             assert(dst.data);
             assert(dst.width);
@@ -40,7 +41,7 @@ namespace libimage
         }
 
 
-        bool copy_to_device(view_t const& src, DeviceArray<pixel_t> const& dst)
+        bool copy_to_device(view_t const& src, device_image_t const& dst)
         {
             assert(src.image_data);
             assert(src.width);
@@ -64,7 +65,7 @@ namespace libimage
         }
 
 
-        bool copy_to_host(DeviceArray<pixel_t> const& src, view_t const& dst)
+        bool copy_to_host(device_image_t const& src, view_t const& dst)
         {
             assert(dst.image_data);
             assert(dst.width);

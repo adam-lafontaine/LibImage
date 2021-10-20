@@ -40,34 +40,37 @@ namespace libimage
     }
 
 
+    bool transform_grayscale(DeviceArray<pixel_t> const& src, DeviceArray<gray::pixel_t> const& dst)
+    {
+        assert(src.data);
+        assert(dst.data);
+        assert(dst.n_elements == src.n_elements);
+
+        int threads_per_block = THREADS_PER_BLOCK;
+        int blocks = (src.n_elements + threads_per_block - 1) / threads_per_block;
+
+        bool proc;
+
+        proc = cuda_no_errors();
+        assert(proc); if(!proc) { return false; }
+
+        gpu_transform_grayscale<<<blocks, threads_per_block>>>(
+            src.data, 
+            dst.data, 
+            src.n_elements);
+
+        proc = cuda_launch_success();
+        assert(proc); if(!proc) { return false; }
+
+        return true;
+    }
+
+
 
     namespace cuda
     {
 
-        bool transform_grayscale(DeviceArray<pixel_t> const& src, DeviceArray<gray::pixel_t> const& dst)
-        {
-            assert(src.data);
-            assert(dst.data);
-            assert(dst.n_elements == src.n_elements);
-
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (src.n_elements + threads_per_block - 1) / threads_per_block;
-
-            bool proc;
-
-            proc = cuda_no_errors();
-            assert(proc); if(!proc) { return false; }
-
-            gpu_transform_grayscale<<<blocks, threads_per_block>>>(
-                src.data, 
-                dst.data, 
-                src.n_elements);
-
-            proc = cuda_launch_success();
-            assert(proc); if(!proc) { return false; }
-
-            return true;
-        }
+        
 
 
         bool transform_grayscale(image_t const& src, gray::image_t const& dst, DeviceBuffer<pixel_t>& c_buffer, DeviceBuffer<gray::pixel_t>& g_buffer)
@@ -90,10 +93,10 @@ namespace libimage
             DeviceArray<pixel_t> d_src;
             DeviceArray<gray::pixel_t> d_dst;
 
-            proc = push_array(d_src, c_buffer, n_elements);
+            proc = push_array(d_src, n_elements, c_buffer);
             assert(proc); if(!proc) { return false; }
-            
-            proc = push_array(d_dst, g_buffer, n_elements);
+
+            proc = push_array(d_dst, n_elements, g_buffer);
             assert(proc); if(!proc) { return false; }
 
             proc = copy_to_device(src, d_src);

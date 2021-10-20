@@ -326,7 +326,6 @@ gpu_device_copy_c := ../libimage/cuda/device_copy.cpp
 gpu_transform_c   := ../libimage/cuda/transform.cu
 gpu_binarize_c    := ../libimage/cuda/binarize.cu
 gpu_alpha_blend_c := ../libimage/cuda/alpha_blend.cu
-gpu_blur_c        := ../libimage/cuda/blur.cu
 gpu_gradient_c    := ../libimage/cuda/gradient.cu
 
 gpu_device_o      := $(build)/gpu_device.o
@@ -334,7 +333,6 @@ gpu_device_copy_o := $(build)/gpu_device_copy.o
 gpu_transform_o   := $(build)/gpu_transform.o
 gpu_binarize_o    := $(build)/gpu_binarize.o
 gpu_alpha_blend_o := $(build)/gpu_alpha_blend.o
-gpu_blur_o        := $(build)/gpu_blur.o
 gpu_gradient_o    := $(build)/gpu_gradient.o
 
 object_files := $(main_o)
@@ -353,7 +351,6 @@ object_files += $(gpu_device_copy_o)
 object_files += $(gpu_transform_o)
 object_files += $(gpu_binarize_o)
 object_files += $(gpu_alpha_blend_o)
-object_files += $(gpu_blur_o)
 object_files += $(gpu_gradient_o)
 
 
@@ -402,10 +399,6 @@ $(binarize_o): $(binarize_c) $(libimage_h) $(proc_h)
 
 $(convolve_o): $(convolve_c) $(libimage_h) $(proc_h)
 	@echo "\n convolve.o"
-	$(GPP) -o $@ -c $<
-
-$(blur_o): $(blur_c) $(libimage_h) $(proc_h)
-	@echo "\n blur.o"
 	$(GPP) -o $@ -c $<
 
 $(gradient_o): $(gradient_c) $(libimage_h) $(proc_h)
