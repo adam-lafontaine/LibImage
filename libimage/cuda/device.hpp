@@ -49,34 +49,6 @@ public:
 
 
 template <typename T>
-bool push_array(DeviceArray<T>& arr, u32 n_elements, DeviceBuffer<T>& buffer)
-{
-    auto bytes = n_elements * sizeof(T);
-    bool result = buffer.offset + bytes <= buffer.total_bytes;
-
-    if(result)
-    {
-        arr.data = (T*)((u8*)buffer.data + buffer.offset);
-        arr.n_elements = n_elements;
-        buffer.offset += bytes;
-    }
-
-    return result;
-}
-
-
-template <typename T>
-void pop_array(DeviceArray<T>& arr, DeviceBuffer<T>& buffer)
-{
-    auto bytes = arr.n_elements * sizeof(T);
-    buffer.offset -= bytes;
-
-    arr.data = NULL;
-    arr.n_elements = 0;
-}
-
-
-template <typename T>
 bool device_malloc(DeviceBuffer<T>& buffer, size_t n_bytes)
 {
     bool result = cuda_device_malloc((void**)&(buffer.data), n_bytes);
@@ -95,6 +67,35 @@ bool device_free(DeviceBuffer<T>& buffer)
     buffer.total_bytes = 0;
     buffer.offset = 0;
     return cuda_device_free(buffer.data);
+}
+
+
+template <typename T>
+bool make_array(DeviceArray<T>& arr, u32 n_elements, DeviceBuffer<T>& buffer)
+{
+    assert(buffer.data);
+
+    auto bytes = n_elements * sizeof(T);
+    bool result = buffer.offset + bytes <= buffer.total_bytes;
+
+    if(result)
+    {
+        arr.n_elements = n_elements;
+        arr.data = (T*)((u8*)buffer.data + buffer.offset);
+        buffer.offset += bytes;
+    }
+
+    return result;
+}
+
+
+template <typename T>
+void pop_array(DeviceArray<T>& arr, DeviceBuffer<T>& buffer)
+{
+    auto bytes = arr.n_elements * sizeof(T);
+    buffer.offset -= bytes;
+
+    arr.data = NULL;
 }
 
 

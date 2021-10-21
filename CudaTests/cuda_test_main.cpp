@@ -201,98 +201,98 @@ void cuda_tests(path_t& out_dir)
 	img::make_image(src_gray_img, width, height);
 
 	GrayImage dst_gray_img;
-	img::make_image(dst_gray_img, width, height);	
+	img::make_image(dst_gray_img, width, height);
+
+	
+	// setup device memory for color images
+	DeviceBuffer<img::pixel_t> color_buffer;
+	auto color_bytes = 3 * width * height * sizeof(img::pixel_t);
+	device_malloc(color_buffer, color_bytes);
+
+	img::device_image_t d_src_img;
+	img::make_image(d_src_img, width, height, color_buffer);
+	img::device_image_t d_src2_img;
+	img::make_image(d_src2_img, width, height, color_buffer);
+	img::device_image_t d_dst_img;
+	img::make_image(d_dst_img, width, height, color_buffer);
 
 
-	// grayscale
-	img::cuda::transform_grayscale(caddy_img, dst_gray_img);
-	img::write_image(dst_gray_img, out_dir + "grayscale.png");	
-	img::seq::copy(dst_gray_img, src_gray_img);	
+	// setup device memory for gray images
+	DeviceBuffer<img::gray::pixel_t> gray_buffer;
+	auto gray_bytes = 3 * width * height * sizeof(img::gray::pixel_t);
+	device_malloc(gray_buffer, gray_bytes);
 
-
-	// binarize
-	img::cuda::binarize(src_gray_img, dst_gray_img, 100);
-	img::write_image(dst_gray_img, out_dir + "binarize.png");
+	img::gray::device_image_t d_src_gray_img;
+	img::make_image(d_src_gray_img, width, height, gray_buffer);
+	img::gray::device_image_t d_dst_gray_img;
+	img::make_image(d_dst_gray_img, width, height, gray_buffer);
+	img::gray::device_image_t d_tmp_gray_img;
+	img::make_image(d_tmp_gray_img, width, height, gray_buffer);
 
 
 	// alpha blend
 	img::seq::copy(caddy_img, src_img);
 	img::seq::transform_alpha(src_img, [](auto& p){ return 128; });
 
-	img::cuda::alpha_blend(src_img, corvette_img, dst_img);
+	img::copy_to_device(src_img, d_src_img);
+	img::copy_to_device(corvette_img, d_src2_img);
+	img::alpha_blend(d_src_img, d_src2_img, d_dst_img);
+	img::copy_to_host(d_dst_img, dst_img);
 	img::write_image(dst_img, out_dir + "alpha_blend.png");
 
-	img::seq::copy(corvette_img, dst_img);
-	img::cuda::alpha_blend(src_img, dst_img);
+	img::copy_to_device(corvette_img, d_dst_img);
+	img::alpha_blend(d_src_img, d_dst_img);
 	img::write_image(dst_img, out_dir + "alpha_blend_src_dst.png");
 
 
+	// grayscale
+	img::copy_to_device(caddy_img, d_src_img);
+	img::transform_grayscale(d_src_img, d_dst_gray_img);
+	img::copy_to_host(d_dst_gray_img, dst_gray_img);
+	img::write_image(dst_gray_img, out_dir + "grayscale.png");
+
+
+	// set converted grayscale as device src image
+	img::copy_to_device(dst_gray_img, d_src_gray_img);
+
+
+	// binarize	
+	img::binarize(d_src_gray_img, d_dst_gray_img, 100);
+	img::copy_to_host(d_dst_gray_img, dst_gray_img);
+	img::write_image(dst_gray_img, out_dir + "binarize.png");
+
+
+	// convolution kernels
+	DeviceBuffer<r32> kernel_buffer;
+	auto kernel_bytes = 70 * sizeof(r32);
+	device_malloc(kernel_buffer, kernel_bytes);
+	img::BlurKernels blur_k;
+	img::make_blur_kernels(blur_k, kernel_buffer);
+	img::GradientKernels grad_k;
+	img::make_gradient_kernels(grad_k, kernel_buffer);
+
+
 	// blur
-	img::cuda::blur(src_gray_img, dst_gray_img);
+	img::blur(d_src_gray_img, d_dst_gray_img, blur_k);
+	img::copy_to_host(d_dst_gray_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "blur.png");
 
 
 	// edge detection
-	img::seq::transform_self(dst_gray_img, [](auto p){ return 255;});
 	u8 threshold = 100;
-	img::cuda::edges(src_gray_img, dst_gray_img, threshold);
+	img::edges(d_src_gray_img, d_dst_gray_img, threshold, d_tmp_gray_img, blur_k, grad_k);
+	img::copy_to_host(d_dst_gray_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "edges.png");
 
 
 	// gradients
-	img::seq::transform_self(dst_gray_img, [](auto p){ return 75;});
-	img::cuda::gradients(src_gray_img, dst_gray_img);
+	img::gradients(d_src_gray_img, d_dst_gray_img, d_tmp_gray_img, blur_k, grad_k);
+	img::copy_to_host(d_dst_gray_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "gradients.png");
 
-	/*
-	// compare edge detection speeds
-	// TODO: with cuda
 
-	auto green = img::to_pixel(88, 100, 29);
-	auto blue = img::to_pixel(0, 119, 182);
-
-	img::data_color_t seq_times;
-	seq_times.color = green;
-
-	img::data_color_t par_times;
-	par_times.color = blue;
-
-	Stopwatch sw;
-	u32 size_start = 10000;
-
-	u32 size = size_start;
-	auto const scale = [&](auto t) { return static_cast<r32>(10000 * t / size); };
-
-	for (u32 i = 0; i < 10; ++i, size *= 2)
-	{
-		GrayImage image;
-		make_image(image, size);
-		GrayImage dst;
-		make_image(dst, size);
-		auto view = img::make_view(image);
-		auto dst_view = img::make_view(dst);
-
-		sw.start();
-		img::seq::edges(view, dst_view, 150);
-		auto t = sw.get_time_milli();
-		seq_times.data.push_back(scale(t));
-
-		sw.start();
-		img::edges(view, dst_view, 150);
-		t = sw.get_time_milli();
-		par_times.data.push_back(scale(t));
-	}
-
-	Image view_chart;
-	std::vector<img::data_color_t> view_data =
-	{
-		seq_times, par_times
-	};
-
-	img::draw_bar_chart(view_data, view_chart);
-	img::write_image(view_chart, out_dir / "edges_times.png");
-
-	*/
+	device_free(color_buffer);
+	device_free(gray_buffer);
 }
 
 

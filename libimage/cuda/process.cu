@@ -7,7 +7,6 @@ Copyright (c) 2021 Adam Lafontaine
 
 #include "cuda_def.cuh"
 #include "process.hpp"
-#include "device.hpp"
 #include "convolve.cuh"
 
 #include <cassert>
@@ -217,341 +216,326 @@ static void gpu_transform_grayscale(pixel_t* src, u8* dst, int n_elements)
 
 namespace libimage
 {
-    namespace cuda
+
+#ifndef LIBIMAGE_NO_COLOR
+
+    void alpha_blend(device_image_t const& src, device_image_t const& current, device_image_t const& dst)
     {
-
-#ifndef LIBIMAGE_NO_COLOR
-
-        void alpha_blend(device_image_t const& src, device_image_t const& current, device_image_t const& dst)
-        {
-            assert(src.data);
-            assert(src.width);
-            assert(src.height);
-            assert(current.data);
-            assert(current.width == src.width);
-            assert(current.height == src.height);
-            assert(dst.data);
-            assert(dst.width == src.width);
-            assert(dst.height == src.height);
-
-            int n_elements = src.width * src.height;
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
-
-            bool proc;
-
-            proc = cuda_no_errors();
-            assert(proc);
-
-            gpu_alpha_blend_linear<<<blocks, threads_per_block>>>(
-                src.data, 
-                current.data, 
-                dst.data, 
-                n_elements);
-
-            proc = cuda_launch_success();
-        }
-
-
-		void alpha_blend(device_image_t const& src, device_image_t const& current_dst)
-        {
-            assert(src.data);
-            assert(src.width);
-            assert(src.height);
-            assert(current_dst.data);
-            assert(current_dst.width == src.width);
-            assert(current_dst.height == src.height);
-
-            int n_elements = src.width * src.height;
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
-
-            bool proc;
-
-            proc = cuda_no_errors();
-            assert(proc);
-
-            gpu_alpha_blend_linear<<<blocks, threads_per_block>>>(
-                src.data, 
-                current_dst.data, 
-                current_dst.data, 
-                n_elements);
-
-            proc = cuda_launch_success();
-        }
-
-
-#endif // !LIBIMAGE_NO_COLOR	
-
-#ifndef LIBIMAGE_NO_GRAYSCALE
-
-        void binarize(gray::device_image_t const& src, gray::device_image_t const& dst, u8 min_threshold)
-        {
-            assert(src.data);
-            assert(src.width);
-            assert(src.height);
-            assert(dst.data);
-            assert(dst.width == src.width);
-            assert(dst.height == src.height);
-
-            int n_elements = src.width * src.height;
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
-
-            bool proc;
-
-            proc = cuda_no_errors();
-            assert(proc);
-
-            gpu_binarize<<<blocks, threads_per_block>>>(
-                src.data, 
-                dst.data,
-                min_threshold, 
-                n_elements);
-
-            proc = cuda_launch_success();
-            assert(proc);
-        }
-
-
-        class BlurKernels
-        {
-        public:
-            DeviceArray<r32> kernel_3x3;
-            DeviceArray<r32> kernel_5x5;
-        };
-
-
-        void push_blur_kernels(BlurKernels& blur_k, DeviceBuffer<r32>& buffer)
-        {
-            assert(buffer.total_bytes - buffer.offset >= GAUSS_3X3_BYTES + GAUSS_5X5_BYTES);
-
-            bool proc;
-
-            proc = push_array(blur_k.kernel_3x3, GAUSS_3X3_SIZE, buffer);
-            assert(proc);
-            proc = push_array(blur_k.kernel_5x5, GAUSS_5X5_SIZE, buffer);
-            assert(proc);
-
-            proc = copy_to_device(GAUSS_3X3, blur_k.kernel_3x3);
-            assert(proc);
-            proc = copy_to_device(GAUSS_5X5, blur_k.kernel_5x5);
-            assert(proc);
-        }
-
-
-        void blur(gray::device_image_t const& src, gray::device_image_t const& dst, BlurKernels const& blur_k)
-        {
-            assert(src.data);
-            assert(src.width);
-            assert(src.height);
-            assert(dst.data);
-            assert(dst.width == src.width);
-            assert(dst.height == src.height);
-            assert(blur_k.kernel_3x3.data);
-            assert(blur_k.kernel_3x3.n_elements == GAUSS_3X3_SIZE);
-            assert(blur_k.kernel_5x5.data);
-            assert(blur_k.kernel_5x5.n_elements == GAUSS_5X5_SIZE);
-
-            int n_elements = src.width * src.height;
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
-
-            bool proc;
-
-            proc = cuda_no_errors();
-            assert(proc);
-
-            gpu_blur<<<blocks, threads_per_block>>>(
-                src.data, 
-                dst.data, 
-                src.width, 
-                src.height, 
-                blur_k.kernel_3x3.data, 
-                blur_k.kernel_5x5.data);
-            
-            proc = cuda_launch_success();
-            assert(proc);
-        }
-
-
-        class GradientKernels
-        {
-        public:
-            DeviceArray<r32> kernel_x_3x3;
-            DeviceArray<r32> kernel_y_3x3;
-        };
-
-
-        void push_gradient_kernels(GradientKernels& grad_k, DeviceBuffer<r32>& buffer)
-        {
-            assert(buffer.total_bytes - buffer.offset >= 2 * GRAD_3X3_BYTES);
-
-            bool proc;
-
-            proc = push_array(grad_k.kernel_x_3x3, GRAD_3X3_SIZE, buffer);
-            assert(proc);
-            proc = push_array(grad_k.kernel_y_3x3, GRAD_3X3_SIZE, buffer);
-            assert(proc);
-
-            proc = copy_to_device(GRAD_X_3X3, grad_k.kernel_x_3x3);
-            assert(proc);
-            proc = copy_to_device(GRAD_Y_3X3, grad_k.kernel_y_3x3);
-            assert(proc);
-        }
-
-
-        
-
-
-		void edges(gray::device_image_t const& src, gray::device_image_t const& dst, u8 threshold, gray::device_image_t const& temp, BlurKernels const& blur_k, GradientKernels const& grad_k)
-        {
-            assert(src.data);
-            assert(src.width);
-            assert(src.height);
-            assert(dst.data);
-            assert(dst.width == src.width);
-            assert(dst.height == src.height);
-            assert(temp.data);
-            assert(temp.width == src.width);
-            assert(temp.height == src.height);
-            assert(blur_k.kernel_3x3.data);
-            assert(blur_k.kernel_3x3.n_elements == GAUSS_3X3_SIZE);
-            assert(blur_k.kernel_5x5.data);
-            assert(blur_k.kernel_5x5.n_elements == GAUSS_5X5_SIZE);
-            assert(grad_k.kernel_x_3x3.data);
-            assert(grad_k.kernel_x_3x3.n_elements == GRAD_3X3_SIZE);
-            assert(grad_k.kernel_y_3x3.data);
-            assert(grad_k.kernel_y_3x3.n_elements == GRAD_3X3_SIZE);
-
-            int n_elements = src.width * src.height;
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
-
-            bool proc;
-
-            proc = cuda_no_errors();
-            assert(proc);
-
-            gpu_blur<<<blocks, threads_per_block>>>(
-                src.data, 
-                temp.data,
-                src.width, 
-                src.height, 
-                blur_k.kernel_3x3.data, 
-                blur_k.kernel_5x5.data);
-            
-            proc = cuda_launch_success();
-            assert(proc);
-
-            proc = cuda_no_errors();
-            assert(proc);
-
-            gpu_edges<<<blocks, threads_per_block>>>(
-                temp.data,
-                dst.data,
-                src.width,
-                src.height,
-                threshold,
-                grad_k.kernel_x_3x3.data,
-                grad_k.kernel_y_3x3.data);
-
-            proc = cuda_launch_success();
-            assert(proc);
-        }   
-
-
-		void gradients(gray::device_image_t const& src, gray::device_image_t const& dst, gray::device_image_t const& temp, BlurKernels const& blur_k, GradientKernels const& grad_k)
-        {
-            assert(src.data);
-            assert(src.width);
-            assert(src.height);
-            assert(dst.data);
-            assert(dst.width == src.width);
-            assert(dst.height == src.height);
-            assert(temp.data);
-            assert(temp.width == src.width);
-            assert(temp.height == src.height);
-            assert(blur_k.kernel_3x3.data);
-            assert(blur_k.kernel_3x3.n_elements == GAUSS_3X3_SIZE);
-            assert(blur_k.kernel_5x5.data);
-            assert(blur_k.kernel_5x5.n_elements == GAUSS_5X5_SIZE);
-            assert(grad_k.kernel_x_3x3.data);
-            assert(grad_k.kernel_x_3x3.n_elements == GRAD_3X3_SIZE);
-            assert(grad_k.kernel_y_3x3.data);
-            assert(grad_k.kernel_y_3x3.n_elements == GRAD_3X3_SIZE);
-
-            int n_elements = src.width * src.height;
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
-
-            bool proc;
-
-            proc = cuda_no_errors();
-            assert(proc);
-
-            gpu_blur<<<blocks, threads_per_block>>>(
-                src.data, 
-                temp.data,
-                src.width, 
-                src.height, 
-                blur_k.kernel_3x3.data, 
-                blur_k.kernel_5x5.data);
-            
-            proc = cuda_launch_success();
-            assert(proc);
-
-            proc = cuda_no_errors();
-            assert(proc);
-
-            gpu_gradients<<<blocks, threads_per_block>>>(
-                temp.data,
-                dst.data,
-                src.width,
-                src.height,
-                grad_k.kernel_x_3x3.data,
-                grad_k.kernel_y_3x3.data);
-
-            proc = cuda_launch_success();
-            assert(proc);
-        }
-        
-
-#endif // !LIBIMAGE_NO_GRAYSCALE
-
-
-#ifndef LIBIMAGE_NO_COLOR
-#ifndef LIBIMAGE_NO_GRAYSCALE
-        
-
-        void transform_grayscale(device_image_t const& src, gray::device_image_t const& dst)
-        {
-            assert(src.data);
-            assert(src.width);
-            assert(src.height);
-            assert(dst.data);
-            assert(dst.width == src.width);
-            assert(dst.height == src.height);
-
-            int n_elements = src.width * src.height;
-            int threads_per_block = THREADS_PER_BLOCK;
-            int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
-
-            bool proc;
-
-            proc = cuda_no_errors();
-            assert(proc);
-
-            gpu_transform_grayscale<<<blocks, threads_per_block>>>(
-                src.data, 
-                dst.data, 
-                n_elements);
-
-            proc = cuda_launch_success();
-            assert(proc);
-        }
-
-#endif // !LIBIMAGE_NO_GRAYSCALE
-#endif // !LIBIMAGE_NO_COLOR	
+        assert(src.data);
+        assert(src.width);
+        assert(src.height);
+        assert(current.data);
+        assert(current.width == src.width);
+        assert(current.height == src.height);
+        assert(dst.data);
+        assert(dst.width == src.width);
+        assert(dst.height == src.height);
+
+        int n_elements = src.width * src.height;
+        int threads_per_block = THREADS_PER_BLOCK;
+        int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
+
+        bool proc;
+
+        proc = cuda_no_errors();
+        assert(proc);
+
+        gpu_alpha_blend_linear<<<blocks, threads_per_block>>>(
+            src.data, 
+            current.data, 
+            dst.data, 
+            n_elements);
+
+        proc = cuda_launch_success();
     }
+
+
+    void alpha_blend(device_image_t const& src, device_image_t const& current_dst)
+    {
+        assert(src.data);
+        assert(src.width);
+        assert(src.height);
+        assert(current_dst.data);
+        assert(current_dst.width == src.width);
+        assert(current_dst.height == src.height);
+
+        int n_elements = src.width * src.height;
+        int threads_per_block = THREADS_PER_BLOCK;
+        int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
+
+        bool proc;
+
+        proc = cuda_no_errors();
+        assert(proc);
+
+        gpu_alpha_blend_linear<<<blocks, threads_per_block>>>(
+            src.data, 
+            current_dst.data, 
+            current_dst.data, 
+            n_elements);
+
+        proc = cuda_launch_success();
+    }
+
+
+#endif // !LIBIMAGE_NO_COLOR	
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+    void binarize(gray::device_image_t const& src, gray::device_image_t const& dst, u8 min_threshold)
+    {
+        assert(src.data);
+        assert(src.width);
+        assert(src.height);
+        assert(dst.data);
+        assert(dst.width == src.width);
+        assert(dst.height == src.height);
+
+        int n_elements = src.width * src.height;
+        int threads_per_block = THREADS_PER_BLOCK;
+        int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
+
+        bool proc;
+
+        proc = cuda_no_errors();
+        assert(proc);
+
+        gpu_binarize<<<blocks, threads_per_block>>>(
+            src.data, 
+            dst.data,
+            min_threshold, 
+            n_elements);
+
+        proc = cuda_launch_success();
+        assert(proc);
+    }
+
+
+    
+
+
+    void make_blur_kernels(BlurKernels& blur_k, DeviceBuffer<r32>& buffer)
+    {
+        assert(buffer.total_bytes - buffer.offset >= GAUSS_3X3_BYTES + GAUSS_5X5_BYTES);
+
+        bool proc;
+
+        blur_k.kernel_3x3.n_elements = GAUSS_3X3_SIZE;
+        blur_k.kernel_5x5.n_elements = GAUSS_5X5_SIZE;
+
+        proc = make_array(blur_k.kernel_3x3, GAUSS_3X3_SIZE, buffer);
+        assert(proc);
+        proc = make_array(blur_k.kernel_5x5, GAUSS_5X5_SIZE, buffer);
+        assert(proc);
+
+        proc = copy_to_device(GAUSS_3X3, blur_k.kernel_3x3);
+        assert(proc);
+        proc = copy_to_device(GAUSS_5X5, blur_k.kernel_5x5);
+        assert(proc);
+    }
+
+
+    void blur(gray::device_image_t const& src, gray::device_image_t const& dst, BlurKernels const& blur_k)
+    {
+        assert(src.data);
+        assert(src.width);
+        assert(src.height);
+        assert(dst.data);
+        assert(dst.width == src.width);
+        assert(dst.height == src.height);
+        assert(blur_k.kernel_3x3.data);
+        assert(blur_k.kernel_3x3.n_elements == GAUSS_3X3_SIZE);
+        assert(blur_k.kernel_5x5.data);
+        assert(blur_k.kernel_5x5.n_elements == GAUSS_5X5_SIZE);
+
+        int n_elements = src.width * src.height;
+        int threads_per_block = THREADS_PER_BLOCK;
+        int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
+
+        bool proc;
+
+        proc = cuda_no_errors();
+        assert(proc);
+
+        gpu_blur<<<blocks, threads_per_block>>>(
+            src.data, 
+            dst.data, 
+            src.width, 
+            src.height, 
+            blur_k.kernel_3x3.data, 
+            blur_k.kernel_5x5.data);
+        
+        proc = cuda_launch_success();
+        assert(proc);
+    }
+
+
+    void make_gradient_kernels(GradientKernels& grad_k, DeviceBuffer<r32>& buffer)
+    {
+        assert(buffer.total_bytes - buffer.offset >= 2 * GRAD_3X3_BYTES);
+
+        bool proc;
+
+        proc = make_array(grad_k.kernel_x_3x3, GRAD_3X3_SIZE, buffer);
+        assert(proc);
+        proc = make_array(grad_k.kernel_y_3x3, GRAD_3X3_SIZE, buffer);
+        assert(proc);
+
+        proc = copy_to_device(GRAD_X_3X3, grad_k.kernel_x_3x3);
+        assert(proc);
+        proc = copy_to_device(GRAD_Y_3X3, grad_k.kernel_y_3x3);
+        assert(proc);
+    }
+
+
+    void edges(gray::device_image_t const& src, gray::device_image_t const& dst, u8 threshold, gray::device_image_t const& temp, BlurKernels const& blur_k, GradientKernels const& grad_k)
+    {
+        assert(src.data);
+        assert(src.width);
+        assert(src.height);
+        assert(dst.data);
+        assert(dst.width == src.width);
+        assert(dst.height == src.height);
+        assert(temp.data);
+        assert(temp.width == src.width);
+        assert(temp.height == src.height);
+        assert(blur_k.kernel_3x3.data);
+        assert(blur_k.kernel_3x3.n_elements == GAUSS_3X3_SIZE);
+        assert(blur_k.kernel_5x5.data);
+        assert(blur_k.kernel_5x5.n_elements == GAUSS_5X5_SIZE);
+        assert(grad_k.kernel_x_3x3.data);
+        assert(grad_k.kernel_x_3x3.n_elements == GRAD_3X3_SIZE);
+        assert(grad_k.kernel_y_3x3.data);
+        assert(grad_k.kernel_y_3x3.n_elements == GRAD_3X3_SIZE);
+
+        int n_elements = src.width * src.height;
+        int threads_per_block = THREADS_PER_BLOCK;
+        int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
+
+        bool proc;
+
+        proc = cuda_no_errors();
+        assert(proc);
+
+        gpu_blur<<<blocks, threads_per_block>>>(
+            src.data, 
+            temp.data,
+            src.width, 
+            src.height, 
+            blur_k.kernel_3x3.data, 
+            blur_k.kernel_5x5.data);
+        
+        proc = cuda_launch_success();
+        assert(proc);
+
+        proc = cuda_no_errors();
+        assert(proc);
+
+        gpu_edges<<<blocks, threads_per_block>>>(
+            temp.data,
+            dst.data,
+            src.width,
+            src.height,
+            threshold,
+            grad_k.kernel_x_3x3.data,
+            grad_k.kernel_y_3x3.data);
+
+        proc = cuda_launch_success();
+        assert(proc);
+    }   
+
+
+    void gradients(gray::device_image_t const& src, gray::device_image_t const& dst, gray::device_image_t const& temp, BlurKernels const& blur_k, GradientKernels const& grad_k)
+    {
+        assert(src.data);
+        assert(src.width);
+        assert(src.height);
+        assert(dst.data);
+        assert(dst.width == src.width);
+        assert(dst.height == src.height);
+        assert(temp.data);
+        assert(temp.width == src.width);
+        assert(temp.height == src.height);
+        assert(blur_k.kernel_3x3.data);
+        assert(blur_k.kernel_3x3.n_elements == GAUSS_3X3_SIZE);
+        assert(blur_k.kernel_5x5.data);
+        assert(blur_k.kernel_5x5.n_elements == GAUSS_5X5_SIZE);
+        assert(grad_k.kernel_x_3x3.data);
+        assert(grad_k.kernel_x_3x3.n_elements == GRAD_3X3_SIZE);
+        assert(grad_k.kernel_y_3x3.data);
+        assert(grad_k.kernel_y_3x3.n_elements == GRAD_3X3_SIZE);
+
+        int n_elements = src.width * src.height;
+        int threads_per_block = THREADS_PER_BLOCK;
+        int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
+
+        bool proc;
+
+        proc = cuda_no_errors();
+        assert(proc);
+
+        gpu_blur<<<blocks, threads_per_block>>>(
+            src.data, 
+            temp.data,
+            src.width, 
+            src.height, 
+            blur_k.kernel_3x3.data, 
+            blur_k.kernel_5x5.data);
+        
+        proc = cuda_launch_success();
+        assert(proc);
+
+        proc = cuda_no_errors();
+        assert(proc);
+
+        gpu_gradients<<<blocks, threads_per_block>>>(
+            temp.data,
+            dst.data,
+            src.width,
+            src.height,
+            grad_k.kernel_x_3x3.data,
+            grad_k.kernel_y_3x3.data);
+
+        proc = cuda_launch_success();
+        assert(proc);
+    }
+        
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+
+
+#ifndef LIBIMAGE_NO_COLOR
+#ifndef LIBIMAGE_NO_GRAYSCALE
+        
+
+    void transform_grayscale(device_image_t const& src, gray::device_image_t const& dst)
+    {
+        assert(src.data);
+        assert(src.width);
+        assert(src.height);
+        assert(dst.data);
+        assert(dst.width == src.width);
+        assert(dst.height == src.height);
+
+        int n_elements = src.width * src.height;
+        int threads_per_block = THREADS_PER_BLOCK;
+        int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
+
+        bool proc;
+
+        proc = cuda_no_errors();
+        assert(proc);
+
+        gpu_transform_grayscale<<<blocks, threads_per_block>>>(
+            src.data, 
+            dst.data, 
+            n_elements);
+
+        proc = cuda_launch_success();
+        assert(proc);
+    }
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+#endif // !LIBIMAGE_NO_COLOR	
+    
 }
