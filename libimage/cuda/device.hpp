@@ -98,37 +98,16 @@ bool device_free(DeviceBuffer<T>& buffer)
 }
 
 
-template <typename T>
-bool memcpy_to_device(const void* src, DeviceArray<T> const& dst)
-{
-    assert(src);
-    assert(dst.data);
-    assert(dst.n_elements);
-
-    auto bytes = dst.n_elements * sizeof(T);
-    return cuda_memcpy_to_device(src, dst.data, bytes);
-}
-
-
-template <typename T>
-bool memcpy_to_host(DeviceArray<T> const& src, void* dst)
-{
-    assert(src.data);
-    assert(src.n_elements);
-    assert(dst);
-
-    auto bytes = src.n_elements * sizeof(T);
-    return cuda_memcpy_to_host(src.data, dst, bytes);
-}
-
-
 template <class T, size_t N>
 bool copy_to_device(std::array<T, N> const& src, DeviceArray<T>& dst)
 {
     assert(dst.data);
     assert(dst.n_elements);
     assert(dst.n_elements == src.size());
-    return memcpy_to_device(src.data(), dst);
+
+    auto bytes = N * sizeof(T);
+
+    return cuda_memcpy_to_device(src.data(), dst.data, bytes);
 }
 
 
@@ -138,5 +117,8 @@ bool copy_to_device(std::vector<T> const& src, DeviceArray<T>& dst)
     assert(dst.data);
     assert(dst.n_elements);
     assert(dst.n_elements == src.size());
-    return memcpy_to_device(src.data(), dst);
+
+    auto bytes = src.size() * sizeof(T);
+
+    return cuda_memcpy_to_device(src.data(), dst.data, bytes);
 }

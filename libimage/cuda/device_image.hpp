@@ -42,6 +42,7 @@ namespace libimage
     {
         class DeviceGrayImage
         {
+        public:
             u32 width;
             u32 height;
 

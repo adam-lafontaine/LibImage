@@ -4,19 +4,7 @@
 Copyright (c) 2021 Adam Lafontaine
 
 */
-#include "../rgba.hpp"
-#include "../gray.hpp"
-#include "device.hpp"
 #include "device_image.hpp"
-
-
-namespace libimage
-{
-    namespace cuda
-    {
-
-    }
-}
 
 
 namespace libimage

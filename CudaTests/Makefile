@@ -317,19 +317,20 @@ gpu_h += ../libimage/cuda/cuda_def.cuh
 gpu_h += ../libimage/rgba.hpp
 gpu_h += ../libimage/gray.hpp
 gpu_h += ../libimage/cuda/device.hpp
+gpu_h += ../libimage/cuda/device_image.hpp
 gpu_h += ../libimage/cuda/process.hpp
 
 gpu_convolve_h := ../libimage/cuda/convolve.cuh
 
 gpu_device_c      := ../libimage/cuda/device.cu
-gpu_device_copy_c := ../libimage/cuda/device_copy.cpp
+gpu_device_image_c := ../libimage/cuda/device_image.cpp
 gpu_transform_c   := ../libimage/cuda/transform.cu
 gpu_binarize_c    := ../libimage/cuda/binarize.cu
 gpu_alpha_blend_c := ../libimage/cuda/alpha_blend.cu
 gpu_gradient_c    := ../libimage/cuda/gradient.cu
 
 gpu_device_o      := $(build)/gpu_device.o
-gpu_device_copy_o := $(build)/gpu_device_copy.o
+gpu_device_image_o := $(build)/gpu_device_image.o
 gpu_transform_o   := $(build)/gpu_transform.o
 gpu_binarize_o    := $(build)/gpu_binarize.o
 gpu_alpha_blend_o := $(build)/gpu_alpha_blend.o
@@ -347,7 +348,7 @@ object_files += $(blur_o)
 object_files += $(convolve_o)
 object_files += $(gradient_o)
 object_files += $(gpu_device_o)
-object_files += $(gpu_device_copy_o)
+object_files += $(gpu_device_image_o)
 object_files += $(gpu_transform_o)
 object_files += $(gpu_binarize_o)
 object_files += $(gpu_alpha_blend_o)
@@ -409,8 +410,8 @@ $(gpu_device_o): $(gpu_device_c) $(gpu_h)
 	@echo "\n gpu_device.o"
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
-$(gpu_device_copy_o): $(gpu_device_copy_c) $(gpu_h)
-	@echo "\n gpu_device_copy.o"
+$(gpu_device_image_o): $(gpu_device_image_c) $(gpu_h)
+	@echo "\n gpu_device_image.o"
 	$(GPP) -o $@ -c $<
 
 $(gpu_transform_o): $(gpu_transform_c) $(gpu_h)
