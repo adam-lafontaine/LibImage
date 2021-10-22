@@ -211,8 +211,10 @@ void cuda_tests(path_t& out_dir)
 
 	img::device_image_t d_src_img;
 	img::make_image(d_src_img, width, height, color_buffer);
+
 	img::device_image_t d_src2_img;
 	img::make_image(d_src2_img, width, height, color_buffer);
+
 	img::device_image_t d_dst_img;
 	img::make_image(d_dst_img, width, height, color_buffer);
 
@@ -224,8 +226,10 @@ void cuda_tests(path_t& out_dir)
 
 	img::gray::device_image_t d_src_gray_img;
 	img::make_image(d_src_gray_img, width, height, gray_buffer);
+
 	img::gray::device_image_t d_dst_gray_img;
 	img::make_image(d_dst_gray_img, width, height, gray_buffer);
+
 	img::gray::device_image_t d_tmp_gray_img;
 	img::make_image(d_tmp_gray_img, width, height, gray_buffer);
 
@@ -291,6 +295,62 @@ void cuda_tests(path_t& out_dir)
 	img::gradients(d_src_gray_img, d_dst_gray_img, d_tmp_gray_img, blur_k, grad_k);
 	img::copy_to_host(d_dst_gray_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "gradients.png");
+
+
+	// recycle memory
+	DeviceBuffer<img::gray::pixel_t> sub_buffer;
+	sub_buffer.data = d_tmp_gray_img.data;
+	sub_buffer.total_bytes = width * height * sizeof(img::gray::pixel_t);
+	img::gray::device_image_t d_src_sub;
+	img::gray::device_image_t d_dst_sub;
+	img::gray::device_image_t d_tmp_sub;
+	img::make_image(d_src_sub, width / 2, height / 2, sub_buffer);
+	img::make_image(d_dst_sub, width / 2, height / 2, sub_buffer);
+	img::make_image(d_tmp_sub, width / 2, height / 2, sub_buffer);
+
+
+	img::copy_to_host(d_src_gray_img, src_gray_img);
+	img::for_each_pixel(dst_gray_img, [](auto& p){ p = 255; });
+	
+	img::pixel_range_t range;
+	range.x_begin = 0;
+	range.x_end = width / 2;
+	range.y_begin = 0;
+	range.y_end = height / 2;
+	auto src_sub = img::sub_view(src_gray_img, range);
+	auto dst_sub = img::sub_view(dst_gray_img, range);
+	img::copy_to_device(src_sub, d_src_sub);
+	img::binarize(d_src_sub, d_dst_sub, 100);
+	img::copy_to_host(d_dst_sub, dst_sub);
+
+	range.x_begin = width / 2;
+	range.x_end = width;
+	src_sub = img::sub_view(src_gray_img, range);
+	dst_sub = img::sub_view(dst_gray_img, range);
+	img::copy_to_device(src_sub, d_src_sub);
+	img::blur(d_src_sub, d_dst_sub, blur_k);
+	img::copy_to_host(d_dst_sub, dst_sub);
+
+	range.x_begin = 0;
+	range.x_end = width / 2;
+	range.y_begin = height / 2;
+	range.y_end = height;
+	src_sub = img::sub_view(src_gray_img, range);
+	dst_sub = img::sub_view(dst_gray_img, range);
+
+	img::copy_to_device(src_sub, d_src_sub);
+	img::edges(d_src_sub, d_dst_sub, threshold, d_tmp_sub, blur_k, grad_k);
+	img::copy_to_host(d_dst_sub, dst_sub);
+/*
+	range.x_begin = width / 2;
+	range.x_end = width;
+	src_sub = img::sub_view(src_gray_img, range);
+	dst_sub = img::sub_view(dst_gray_img, range);
+	img::copy_to_device(src_sub, d_src_sub);
+	img::gradients(d_src_sub, d_dst_sub, d_tmp_sub, blur_k, grad_k);
+	img::copy_to_host(d_dst_sub, dst_sub);*/
+
+	img::write_image(dst_gray_img, out_dir + "combo.png");
 
 
 	device_free(color_buffer);

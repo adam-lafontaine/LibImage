@@ -13,9 +13,9 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR
 
-	void alpha_blend(device_image_t const& src, device_image_t const& current, device_image_t const& dst);
+	bool alpha_blend(device_image_t const& src, device_image_t const& current, device_image_t const& dst);
 
-	void alpha_blend(device_image_t const& src, device_image_t const& current_dst);
+	bool alpha_blend(device_image_t const& src, device_image_t const& current_dst);
 
 
 #endif // !LIBIMAGE_NO_COLOR	
@@ -38,17 +38,17 @@ namespace libimage
 	};
 
 
-	void make_blur_kernels(BlurKernels& blur_k, DeviceBuffer<r32>& buffer);
+	bool make_blur_kernels(BlurKernels& blur_k, DeviceBuffer<r32>& buffer);
 
-	void make_gradient_kernels(GradientKernels& grad_k, DeviceBuffer<r32>& buffer);
+	bool make_gradient_kernels(GradientKernels& grad_k, DeviceBuffer<r32>& buffer);
 
-	void binarize(gray::device_image_t const& src, gray::device_image_t const& dst, u8 min_threshold);
+	bool binarize(gray::device_image_t const& src, gray::device_image_t const& dst, u8 min_threshold);
 
-	void blur(gray::device_image_t const& src, gray::device_image_t const& dst, BlurKernels const& blur_k);
+	bool blur(gray::device_image_t const& src, gray::device_image_t const& dst, BlurKernels const& blur_k);
 
-	void edges(gray::device_image_t const& src, gray::device_image_t const& dst, u8 threshold, gray::device_image_t const& temp, BlurKernels const& blur_k, GradientKernels const& grad_k);
+	bool edges(gray::device_image_t const& src, gray::device_image_t const& dst, u8 threshold, gray::device_image_t const& temp, BlurKernels const& blur_k, GradientKernels const& grad_k);
 
-	void gradients(gray::device_image_t const& src, gray::device_image_t const& dst, gray::device_image_t const& temp, BlurKernels const& blur_k, GradientKernels const& grad_k);
+	bool gradients(gray::device_image_t const& src, gray::device_image_t const& dst, gray::device_image_t const& temp, BlurKernels const& blur_k, GradientKernels const& grad_k);
 
 	        
 
@@ -58,7 +58,7 @@ namespace libimage
 #ifndef LIBIMAGE_NO_COLOR
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-    void transform_grayscale(device_image_t const& src, gray::device_image_t const& dst);
+    bool transform_grayscale(device_image_t const& src, gray::device_image_t const& dst);
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 #endif // !LIBIMAGE_NO_COLOR	

@@ -13,9 +13,6 @@ Copyright (c) 2021 Adam Lafontaine
 
 constexpr int THREADS_PER_BLOCK = 1024;
 
-
-
-
 namespace libimage
 {
     
@@ -219,7 +216,7 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR
 
-    void alpha_blend(device_image_t const& src, device_image_t const& current, device_image_t const& dst)
+    bool alpha_blend(device_image_t const& src, device_image_t const& current, device_image_t const& dst)
     {
         assert(src.data);
         assert(src.width);
@@ -246,11 +243,14 @@ namespace libimage
             dst.data, 
             n_elements);
 
-        proc = cuda_launch_success();
+        proc &= cuda_launch_success();
+        assert(proc);
+
+        return proc;
     }
 
 
-    void alpha_blend(device_image_t const& src, device_image_t const& current_dst)
+    bool alpha_blend(device_image_t const& src, device_image_t const& current_dst)
     {
         assert(src.data);
         assert(src.width);
@@ -274,7 +274,10 @@ namespace libimage
             current_dst.data, 
             n_elements);
 
-        proc = cuda_launch_success();
+        proc &= cuda_launch_success();
+        assert(proc);
+
+        return proc;
     }
 
 
@@ -282,7 +285,7 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-    void binarize(gray::device_image_t const& src, gray::device_image_t const& dst, u8 min_threshold)
+    bool binarize(gray::device_image_t const& src, gray::device_image_t const& dst, u8 min_threshold)
     {
         assert(src.data);
         assert(src.width);
@@ -306,36 +309,37 @@ namespace libimage
             min_threshold, 
             n_elements);
 
-        proc = cuda_launch_success();
+        proc &= cuda_launch_success();
         assert(proc);
+
+        return proc;
     }
 
 
-    
-
-
-    void make_blur_kernels(BlurKernels& blur_k, DeviceBuffer<r32>& buffer)
+    bool make_blur_kernels(BlurKernels& blur_k, DeviceBuffer<r32>& buffer)
     {
-        assert(buffer.total_bytes - buffer.offset >= GAUSS_3X3_BYTES + GAUSS_5X5_BYTES);
-
         bool proc;
+        proc = buffer.total_bytes - buffer.offset >= GAUSS_3X3_BYTES + GAUSS_5X5_BYTES;
+        assert(proc);
 
         blur_k.kernel_3x3.n_elements = GAUSS_3X3_SIZE;
         blur_k.kernel_5x5.n_elements = GAUSS_5X5_SIZE;
 
-        proc = make_array(blur_k.kernel_3x3, GAUSS_3X3_SIZE, buffer);
+        proc &= make_array(blur_k.kernel_3x3, GAUSS_3X3_SIZE, buffer);
         assert(proc);
-        proc = make_array(blur_k.kernel_5x5, GAUSS_5X5_SIZE, buffer);
+        proc &= make_array(blur_k.kernel_5x5, GAUSS_5X5_SIZE, buffer);
         assert(proc);
 
-        proc = copy_to_device(GAUSS_3X3, blur_k.kernel_3x3);
+        proc &= copy_to_device(GAUSS_3X3, blur_k.kernel_3x3);
         assert(proc);
-        proc = copy_to_device(GAUSS_5X5, blur_k.kernel_5x5);
+        proc &= copy_to_device(GAUSS_5X5, blur_k.kernel_5x5);
         assert(proc);
+
+        return proc;
     }
 
 
-    void blur(gray::device_image_t const& src, gray::device_image_t const& dst, BlurKernels const& blur_k)
+    bool blur(gray::device_image_t const& src, gray::device_image_t const& dst, BlurKernels const& blur_k)
     {
         assert(src.data);
         assert(src.width);
@@ -365,30 +369,35 @@ namespace libimage
             blur_k.kernel_3x3.data, 
             blur_k.kernel_5x5.data);
         
-        proc = cuda_launch_success();
+        proc &= cuda_launch_success();
         assert(proc);
+
+        return proc;
     }
 
 
-    void make_gradient_kernels(GradientKernels& grad_k, DeviceBuffer<r32>& buffer)
+    bool make_gradient_kernels(GradientKernels& grad_k, DeviceBuffer<r32>& buffer)
     {
-        assert(buffer.total_bytes - buffer.offset >= 2 * GRAD_3X3_BYTES);
-
         bool proc;
 
-        proc = make_array(grad_k.kernel_x_3x3, GRAD_3X3_SIZE, buffer);
-        assert(proc);
-        proc = make_array(grad_k.kernel_y_3x3, GRAD_3X3_SIZE, buffer);
+        proc = buffer.total_bytes - buffer.offset >= 2 * GRAD_3X3_BYTES;
         assert(proc);
 
-        proc = copy_to_device(GRAD_X_3X3, grad_k.kernel_x_3x3);
+        proc &= make_array(grad_k.kernel_x_3x3, GRAD_3X3_SIZE, buffer);
         assert(proc);
-        proc = copy_to_device(GRAD_Y_3X3, grad_k.kernel_y_3x3);
+        proc &= make_array(grad_k.kernel_y_3x3, GRAD_3X3_SIZE, buffer);
         assert(proc);
+
+        proc &= copy_to_device(GRAD_X_3X3, grad_k.kernel_x_3x3);
+        assert(proc);
+        proc &= copy_to_device(GRAD_Y_3X3, grad_k.kernel_y_3x3);
+        assert(proc);
+
+        return proc;
     }
 
 
-    void edges(gray::device_image_t const& src, gray::device_image_t const& dst, u8 threshold, gray::device_image_t const& temp, BlurKernels const& blur_k, GradientKernels const& grad_k)
+    bool edges(gray::device_image_t const& src, gray::device_image_t const& dst, u8 threshold, gray::device_image_t const& temp, BlurKernels const& blur_k, GradientKernels const& grad_k)
     {
         assert(src.data);
         assert(src.width);
@@ -425,10 +434,10 @@ namespace libimage
             blur_k.kernel_3x3.data, 
             blur_k.kernel_5x5.data);
         
-        proc = cuda_launch_success();
+        proc &= cuda_launch_success();
         assert(proc);
 
-        proc = cuda_no_errors();
+        proc &= cuda_no_errors();
         assert(proc);
 
         gpu_edges<<<blocks, threads_per_block>>>(
@@ -440,12 +449,14 @@ namespace libimage
             grad_k.kernel_x_3x3.data,
             grad_k.kernel_y_3x3.data);
 
-        proc = cuda_launch_success();
+        proc &= cuda_launch_success();
         assert(proc);
+
+        return proc;
     }   
 
 
-    void gradients(gray::device_image_t const& src, gray::device_image_t const& dst, gray::device_image_t const& temp, BlurKernels const& blur_k, GradientKernels const& grad_k)
+    bool gradients(gray::device_image_t const& src, gray::device_image_t const& dst, gray::device_image_t const& temp, BlurKernels const& blur_k, GradientKernels const& grad_k)
     {
         assert(src.data);
         assert(src.width);
@@ -482,10 +493,10 @@ namespace libimage
             blur_k.kernel_3x3.data, 
             blur_k.kernel_5x5.data);
         
-        proc = cuda_launch_success();
+        proc &= cuda_launch_success();
         assert(proc);
 
-        proc = cuda_no_errors();
+        proc &= cuda_no_errors();
         assert(proc);
 
         gpu_gradients<<<blocks, threads_per_block>>>(
@@ -496,8 +507,10 @@ namespace libimage
             grad_k.kernel_x_3x3.data,
             grad_k.kernel_y_3x3.data);
 
-        proc = cuda_launch_success();
+        proc &= cuda_launch_success();
         assert(proc);
+
+        return proc;
     }
         
 
@@ -508,7 +521,7 @@ namespace libimage
 #ifndef LIBIMAGE_NO_GRAYSCALE
         
 
-    void transform_grayscale(device_image_t const& src, gray::device_image_t const& dst)
+    bool transform_grayscale(device_image_t const& src, gray::device_image_t const& dst)
     {
         assert(src.data);
         assert(src.width);
@@ -531,8 +544,10 @@ namespace libimage
             dst.data, 
             n_elements);
 
-        proc = cuda_launch_success();
+        proc &= cuda_launch_success();
         assert(proc);
+
+        return proc;
     }
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
