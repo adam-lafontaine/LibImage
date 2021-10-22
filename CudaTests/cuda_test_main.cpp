@@ -179,17 +179,19 @@ void cuda_tests(path_t& out_dir)
 	std::cout << "cuda:\n";
 	empty_dir(out_dir);
 
-	Image caddy_img;
-	img::read_image_from_file(CADILLAC_PATH, caddy_img);
-	auto width = caddy_img.width;
-	auto height = caddy_img.height;
+	Image corvette_img;
+	img::read_image_from_file(CORVETTE_PATH, corvette_img);
+	auto width = corvette_img.width;
+	auto height = corvette_img.height;
 
 	Image img_read;
-	img::read_image_from_file(CORVETTE_PATH, img_read);
-	Image corvette_img;
-	corvette_img.width = width;
-	corvette_img.height = height;
-	img::resize_image(img_read, corvette_img);
+	img::read_image_from_file(CADILLAC_PATH, img_read);
+
+	Image caddy_img;
+	caddy_img.width = width;
+	caddy_img.height = height;
+	img::resize_image(img_read, caddy_img);
+	
 
 	Image src_img;
 	img::make_image(src_img, width, height);
@@ -337,18 +339,17 @@ void cuda_tests(path_t& out_dir)
 	range.y_end = height;
 	src_sub = img::sub_view(src_gray_img, range);
 	dst_sub = img::sub_view(dst_gray_img, range);
-
 	img::copy_to_device(src_sub, d_src_sub);
-	img::edges(d_src_sub, d_dst_sub, threshold, d_tmp_sub, blur_k, grad_k);
+	img::gradients(d_src_sub, d_dst_sub, d_tmp_sub, blur_k, grad_k);
 	img::copy_to_host(d_dst_sub, dst_sub);
-/*
+
 	range.x_begin = width / 2;
 	range.x_end = width;
 	src_sub = img::sub_view(src_gray_img, range);
 	dst_sub = img::sub_view(dst_gray_img, range);
 	img::copy_to_device(src_sub, d_src_sub);
-	img::gradients(d_src_sub, d_dst_sub, d_tmp_sub, blur_k, grad_k);
-	img::copy_to_host(d_dst_sub, dst_sub);*/
+	img::edges(d_src_sub, d_dst_sub, threshold, d_tmp_sub, blur_k, grad_k);	
+	img::copy_to_host(d_dst_sub, dst_sub);
 
 	img::write_image(dst_gray_img, out_dir + "combo.png");
 
