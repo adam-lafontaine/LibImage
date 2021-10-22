@@ -266,8 +266,10 @@ void cuda_tests(path_t& out_dir)
 	DeviceBuffer<r32> kernel_buffer;
 	auto kernel_bytes = 70 * sizeof(r32);
 	device_malloc(kernel_buffer, kernel_bytes);
+
 	img::BlurKernels blur_k;
 	img::make_blur_kernels(blur_k, kernel_buffer);
+
 	img::GradientKernels grad_k;
 	img::make_gradient_kernels(grad_k, kernel_buffer);
 
@@ -293,6 +295,7 @@ void cuda_tests(path_t& out_dir)
 
 	device_free(color_buffer);
 	device_free(gray_buffer);
+	device_free(kernel_buffer);
 }
 
 
