@@ -28,3 +28,6 @@ namespace libimage
 
 	} xy_loc_t;
 }
+
+
+//#define NDEBUG

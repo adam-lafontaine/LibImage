@@ -10,6 +10,19 @@ Copyright (c) 2021 Adam Lafontaine
 //#define LIBIMAGE_NO_WRITE
 //#define LIBIMAGE_NO_RESIZE
 //#define LIBIMAGE_NO_PARALLEL
+//#define LIBIMAGE_NO_FILESYSTEM
+
+
+// jetson nano
+#define LIBIMAGE_NO_CPP17
+
+
+#ifdef LIBIMAGE_NO_CPP17
+
+#define LIBIMAGE_NO_PARALLEL
+#define LIBIMAGE_NO_FILESYSTEM
+
+#endif // LIBIMAGE_NO_CPP17
 
 #ifndef LIBIMAGE_NO_COLOR
 #include "rgba.hpp"
@@ -20,20 +33,17 @@ Copyright (c) 2021 Adam Lafontaine
 #endif
 
 #include <functional>
-#include <filesystem>
-namespace fs = std::filesystem;
+#include <string>
+
+
+
 
 namespace libimage
 {
 
 #ifndef LIBIMAGE_NO_COLOR
 
-	void read_image_from_file(const char* img_path_src, image_t& image_dst);
-
-	inline void read_image_from_file(fs::path const& img_path_src, image_t& image_dst)
-	{
-		read_image_from_file(img_path_src.string().c_str(), image_dst);
-	}
+	void read_image_from_file(const char* img_path_src, image_t& image_dst);	
 
 	void make_image(image_t& image_dst, u32 width, u32 height);
 
@@ -76,15 +86,7 @@ namespace libimage
 
 	void write_view(view_t const& view_src, const char* file_path_dst);
 
-	inline void write_image(image_t const& image_src, fs::path const& file_path)
-	{
-		write_image(image_src, file_path.string().c_str());
-	}
-
-	inline void write_view(view_t const& view_src, fs::path const& file_path)
-	{
-		write_view(view_src, file_path.string().c_str());
-	}
+	
 
 #endif // !LIBIMAGE_NO_WRITE
 
@@ -102,12 +104,7 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-	void read_image_from_file(const char* file_path_src, gray::image_t& image_dst);
-
-	inline void read_image_from_file(fs::path const& img_path_src, gray::image_t& image_dst)
-	{
-		return read_image_from_file(img_path_src.string().c_str(), image_dst);
-	}
+	void read_image_from_file(const char* file_path_src, gray::image_t& image_dst);	
 
 	void make_image(gray::image_t& image_dst, u32 width, u32 height);
 
@@ -149,16 +146,7 @@ namespace libimage
 	void write_image(gray::image_t const& image_src, const char* file_path_dst);
 
 	void write_view(gray::view_t const& view_src, const char* file_path_dst);
-
-	inline void write_image(gray::image_t const& image_src, fs::path const& file_path_dst)
-	{
-		write_image(image_src, file_path_dst.string().c_str());
-	}
-
-	inline void write_view(gray::view_t const& view_src, fs::path const& file_path_dst)
-	{
-		write_view(view_src, file_path_dst.string().c_str());
-	}
+	
 
 #endif // !LIBIMAGE_NO_WRITE
 
@@ -173,3 +161,111 @@ namespace libimage
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
 }
+
+
+namespace libimage
+{
+#ifndef LIBIMAGE_NO_COLOR
+
+	inline void read_image_from_file(std::string const& img_path_src, image_t& image_dst)
+	{
+		read_image_from_file(img_path_src.c_str(), image_dst);
+	}
+
+#ifndef LIBIMAGE_NO_WRITE
+
+	inline void write_image(image_t const& image_src, std::string const& file_path)
+	{
+		write_image(image_src, file_path.c_str());
+	}
+
+	inline void write_view(view_t const& view_src, std::string const& file_path)
+	{
+		write_view(view_src, file_path.c_str());
+	}
+
+#endif // !LIBIMAGE_NO_WRITE
+
+#endif // !LIBIMAGE_NO_COLOR
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	inline void read_image_from_file(std::string const& img_path_src, gray::image_t& image_dst)
+	{
+		return read_image_from_file(img_path_src.c_str(), image_dst);
+	}
+
+#ifndef LIBIMAGE_NO_WRITE
+
+	inline void write_image(gray::image_t const& image_src, std::string const& file_path_dst)
+	{
+		write_image(image_src, file_path_dst.c_str());
+	}
+
+	inline void write_view(gray::view_t const& view_src, std::string const& file_path_dst)
+	{
+		write_view(view_src, file_path_dst.c_str());
+	}
+
+#endif // !LIBIMAGE_NO_WRITE
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+}
+
+
+#ifndef LIBIMAGE_NO_FILESYSTEM
+
+#include <filesystem>
+namespace fs = std::filesystem;
+
+
+namespace libimage
+{
+#ifndef LIBIMAGE_NO_COLOR
+
+	inline void read_image_from_file(fs::path const& img_path_src, image_t& image_dst)
+	{
+		read_image_from_file(img_path_src.string().c_str(), image_dst);
+	}
+
+#ifndef LIBIMAGE_NO_WRITE
+
+	inline void write_image(image_t const& image_src, fs::path const& file_path)
+	{
+		write_image(image_src, file_path.string().c_str());
+	}
+
+	inline void write_view(view_t const& view_src, fs::path const& file_path)
+	{
+		write_view(view_src, file_path.string().c_str());
+	}
+
+#endif // !LIBIMAGE_NO_WRITE
+
+#endif // !LIBIMAGE_NO_COLOR
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	inline void read_image_from_file(fs::path const& img_path_src, gray::image_t& image_dst)
+	{
+		return read_image_from_file(img_path_src.string().c_str(), image_dst);
+	}
+
+#ifndef LIBIMAGE_NO_WRITE
+
+	inline void write_image(gray::image_t const& image_src, fs::path const& file_path_dst)
+	{
+		write_image(image_src, file_path_dst.string().c_str());
+	}
+
+	inline void write_view(gray::view_t const& view_src, fs::path const& file_path_dst)
+	{
+		write_view(view_src, file_path_dst.string().c_str());
+	}
+
+#endif // !LIBIMAGE_NO_WRITE
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+}
+
+#endif // !LIBIMAGE_NO_FILESYSTEM

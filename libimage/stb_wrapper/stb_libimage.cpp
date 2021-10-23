@@ -8,6 +8,37 @@ Copyright (c) 2021 Adam Lafontaine
 #include "stb_include.hpp"
 
 #include <algorithm>
+#include <cstring>
+
+
+static bool has_extension(const char* filename, const char* ext)
+{
+	size_t file_length = std::strlen(filename);
+	size_t ext_length = std::strlen(ext);
+
+	return !std::strcmp(&filename[file_length - ext_length], ext);
+}
+
+
+static bool is_bmp(const char* filename)
+{
+	return has_extension(filename, ".bmp") || has_extension(filename, ".BMP");
+}
+
+
+static bool is_png(const char* filename)
+{
+	return has_extension(filename, ".png") || has_extension(filename, ".PNG");
+}
+
+
+static bool is_jpg(const char* filename)
+{
+	return has_extension(filename, ".jpg") || 
+		has_extension(filename, ".jpeg") || 
+		has_extension(filename, ".JPG") || 
+		has_extension(filename, ".JPEG");
+}
 
 
 namespace libimage
@@ -48,21 +79,17 @@ namespace libimage
 
 		int result = 0;
 
-		auto ext = fs::path(file_path_dst).extension();
-
-		assert(ext == ".bmp" || ext == ".png");
-
-		if (ext == ".bmp" || ext == ".BMP")
+		if(is_bmp(file_path_dst))
 		{
 			result = stbi_write_bmp(file_path_dst, width, height, channels, data);
 		}
-		else if (ext == ".png" || ext == ".PNG")
+		else if(is_png(file_path_dst))
 		{
 			int stride_in_bytes = width * channels;
 
 			result = stbi_write_png(file_path_dst, width, height, channels, data, stride_in_bytes);
 		}
-		else if (ext == ".jpg" || ext == ".jpeg" || ext == ".JPG" || ext == ".JPEG")
+		else if(is_jpg(file_path_dst))
 		{
 			// TODO: quality?
 			// stbi_write_jpg(char const *filename, int w, int h, int comp, const void *data, int quality);
@@ -169,22 +196,18 @@ namespace libimage
 		auto const data = image_src.data;
 
 		int result = 0;
-
-		auto ext = fs::path(file_path_dst).extension();
-
-		assert(ext == ".bmp" || ext == ".png");
-
-		if (ext == ".bmp" || ext == ".BMP")
+		
+		if(is_bmp(file_path_dst))
 		{
 			result = stbi_write_bmp(file_path_dst, width, height, channels, data);
 		}
-		else if (ext == ".png" || ext == ".PNG")
+		else if(is_png(file_path_dst))
 		{
 			int stride_in_bytes = width * channels;
 
 			result = stbi_write_png(file_path_dst, width, height, channels, data, stride_in_bytes);
 		}
-		else if (ext == ".jpg" || ext == ".jpeg" || ext == ".JPG" || ext == ".JPEG")
+		else if(is_jpg(file_path_dst))
 		{
 			// TODO: quality?
 			// stbi_write_jpg(char const *filename, int w, int h, int comp, const void *data, int quality);
