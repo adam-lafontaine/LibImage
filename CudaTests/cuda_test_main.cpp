@@ -14,9 +14,17 @@ using path_t = std::string;
 
 using Image = img::image_t;
 using ImageView = img::view_t;
+using Pixel = img::pixel_t;
+
 using GrayImage = img::gray::image_t;
 using GrayView = img::gray::view_t;
-using Pixel = img::pixel_t;
+using GrayPixel = img::gray::pixel_t;
+
+using CudaImage = img::device_image_t;
+using CudaGrayImage = img::gray::device_image_t;
+
+constexpr auto PIXEL_SZ = sizeof(Pixel);
+constexpr auto G_PIXEL_SZ = sizeof(GrayPixel);
 
 //constexpr auto ROOT_DIR = "~/Repos/LibImage/CudaTests";
 constexpr auto ROOT_DIR = "/home/adam/Repos/LibImage/CudaTests/";
@@ -38,8 +46,8 @@ int main()
 {
 	auto dst_root = DST_IMAGE_ROOT;
 
-	//auto dst_proc = dst_root + "proc/";
-    //process_tests(dst_proc);
+	auto dst_proc = dst_root + "proc/";
+    process_tests(dst_proc);
 
 	auto dst_cuda = dst_root + "cuda/";
 	cuda_tests(dst_cuda);
@@ -50,6 +58,9 @@ int main()
 
 void process_tests(path_t& out_dir)
 {
+	// C++17 not available on Jetson Nano.
+	// No stl parallel algorithms
+
 	std::cout << "process:\n";
 	empty_dir(out_dir);
 
@@ -207,32 +218,32 @@ void cuda_tests(path_t& out_dir)
 
 	
 	// setup device memory for color images
-	DeviceBuffer<img::pixel_t> color_buffer;
-	auto color_bytes = 3 * width * height * sizeof(img::pixel_t);
+	DeviceBuffer<Pixel> color_buffer;
+	auto color_bytes = 3 * width * height * PIXEL_SZ;
 	device_malloc(color_buffer, color_bytes);
 
-	img::device_image_t d_src_img;
+	CudaImage d_src_img;
 	img::make_image(d_src_img, width, height, color_buffer);
 
-	img::device_image_t d_src2_img;
+	CudaImage d_src2_img;
 	img::make_image(d_src2_img, width, height, color_buffer);
 
-	img::device_image_t d_dst_img;
+	CudaImage d_dst_img;
 	img::make_image(d_dst_img, width, height, color_buffer);
 
 
 	// setup device memory for gray images
-	DeviceBuffer<img::gray::pixel_t> gray_buffer;
-	auto gray_bytes = 3 * width * height * sizeof(img::gray::pixel_t);
+	DeviceBuffer<GrayPixel> gray_buffer;
+	auto gray_bytes = 3 * width * height * G_PIXEL_SZ;
 	device_malloc(gray_buffer, gray_bytes);
 
-	img::gray::device_image_t d_src_gray_img;
+	CudaGrayImage d_src_gray_img;
 	img::make_image(d_src_gray_img, width, height, gray_buffer);
 
-	img::gray::device_image_t d_dst_gray_img;
+	CudaGrayImage d_dst_gray_img;
 	img::make_image(d_dst_gray_img, width, height, gray_buffer);
 
-	img::gray::device_image_t d_tmp_gray_img;
+	CudaGrayImage d_tmp_gray_img;
 	img::make_image(d_tmp_gray_img, width, height, gray_buffer);
 
 
@@ -300,12 +311,12 @@ void cuda_tests(path_t& out_dir)
 
 
 	// recycle memory
-	DeviceBuffer<img::gray::pixel_t> sub_buffer;
+	DeviceBuffer<GrayPixel> sub_buffer;
 	sub_buffer.data = d_tmp_gray_img.data;
-	sub_buffer.total_bytes = width * height * sizeof(img::gray::pixel_t);
-	img::gray::device_image_t d_src_sub;
-	img::gray::device_image_t d_dst_sub;
-	img::gray::device_image_t d_tmp_sub;
+	sub_buffer.total_bytes = width * height * G_PIXEL_SZ;
+	CudaGrayImage d_src_sub;
+	CudaGrayImage d_dst_sub;
+	CudaGrayImage d_tmp_sub;
 	img::make_image(d_src_sub, width / 2, height / 2, sub_buffer);
 	img::make_image(d_dst_sub, width / 2, height / 2, sub_buffer);
 	img::make_image(d_tmp_sub, width / 2, height / 2, sub_buffer);
