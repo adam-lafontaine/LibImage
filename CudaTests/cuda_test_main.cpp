@@ -351,6 +351,16 @@ void cuda_tests(path_t& out_dir)
 	img::edges(d_src_sub, d_dst_sub, threshold, d_tmp_sub, blur_k, grad_k);	
 	img::copy_to_host(d_dst_sub, dst_sub);
 
+	range.x_begin = width / 4;
+	range.x_end = range.x_begin + width / 2;
+	range.y_begin = height / 4;
+	range.y_end = range.y_begin + height / 2;
+	src_sub = img::sub_view(src_gray_img, range);
+	dst_sub = img::sub_view(dst_gray_img, range);
+	img::copy_to_device(src_sub, d_src_sub);
+	img::transform_contrast(d_src_sub, d_dst_sub, 20, 100);
+	img::copy_to_host(d_dst_sub, dst_sub);
+
 	img::write_image(dst_gray_img, out_dir + "combo.png");
 
 

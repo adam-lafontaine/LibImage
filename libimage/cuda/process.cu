@@ -32,7 +32,7 @@ static u8 blend_linear(u8 s, u8 c, r32 a)
 
 
 GPU_KERNAL
-static void gpu_alpha_blend_linear(pixel_t* src, pixel_t* current, pixel_t* dst, int n_elements)
+static void gpu_alpha_blend_linear(pixel_t* src, pixel_t* current, pixel_t* dst, u32 n_elements)
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i >= n_elements)
@@ -53,6 +53,7 @@ static void gpu_alpha_blend_linear(pixel_t* src, pixel_t* current, pixel_t* dst,
 #endif // !LIBIMAGE_NO_COLOR
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
+
 
 constexpr r32 d3 = 16.0f;
 constexpr u32 GAUSS_3X3_SIZE = 9;
@@ -93,8 +94,11 @@ constexpr std::array<r32, GRAD_3X3_SIZE> GRAD_Y_3X3
 constexpr u32 GRAD_3X3_BYTES = GRAD_3X3_SIZE * sizeof(r32);
 
 
+
+
+
 GPU_KERNAL
-static void gpu_binarize(u8* src, u8* dst, u8 threshold, int n_elements)
+static void gpu_binarize(u8* src, u8* dst, u8 threshold, u32 n_elements)
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i >= n_elements)
@@ -107,75 +111,114 @@ static void gpu_binarize(u8* src, u8* dst, u8 threshold, int n_elements)
 
 
 GPU_KERNAL
-    static void gpu_blur(u8* src, u8* dst, u32 width, u32 height, r32* g3x3, r32* g5x5)
+static void gpu_blur(u8* src, u8* dst, u32 width, u32 height, r32* g3x3, r32* g5x5)
+{
+    u32 n_elements = width * height;
+    u32 i = u32(blockDim.x * blockIdx.x + threadIdx.x);
+    if (i >= n_elements)
     {
-        u32 n_elements = width * height;
-        u32 i = u32(blockDim.x * blockIdx.x + threadIdx.x);
-        if (i >= n_elements)
-        {
-            return;
-        }
-
-        if(is_outer_edge(width, height, i))
-        {
-            dst[i] = src[i];
-        }
-        else if(is_inner_edge(width, height, i))
-        {
-            dst[i] = convolve_3x3(src, width, height, i, g3x3);
-        }
-        else
-        {
-            dst[i] = convolve_5x5(src, width, height, i, g5x5);
-        }
+        return;
     }
 
-
-    GPU_KERNAL
-    static void gpu_edges(u8* src, u8* dst, u32 width, u32 height, u8 threshold, r32* grad_x, r32* grad_y)
+    if(is_outer_edge(width, height, i))
     {
-        u32 n_elements = width * height;
-        u32 i = u32(blockDim.x * blockIdx.x + threadIdx.x);
-        if (i >= n_elements)
-        {
-            return;
-        }
+        dst[i] = src[i];
+    }
+    else if(is_inner_edge(width, height, i))
+    {
+        dst[i] = convolve_3x3(src, width, height, i, g3x3);
+    }
+    else
+    {
+        dst[i] = convolve_5x5(src, width, height, i, g5x5);
+    }
+}
 
-        if(is_outer_edge(width, height, i))
-        {
-            dst[i] = 0;
-        }
-        else
-        {
-            auto gx = convolve_3x3(src, width, height, i, grad_x);
-            auto gy = convolve_3x3(src, width, height, i, grad_y);
-            auto g = static_cast<u8>(std::hypot(gx, gy));
-            dst[i] = g < threshold ? 0 : 255;
-        }
+
+GPU_KERNAL
+static void gpu_edges(u8* src, u8* dst, u32 width, u32 height, u8 threshold, r32* grad_x, r32* grad_y)
+{
+    u32 n_elements = width * height;
+    u32 i = u32(blockDim.x * blockIdx.x + threadIdx.x);
+    if (i >= n_elements)
+    {
+        return;
     }
 
-
-    GPU_KERNAL
-    static void gpu_gradients(u8* src, u8* dst, u32 width, u32 height, r32* grad_x, r32* grad_y)
+    if(is_outer_edge(width, height, i))
     {
-        u32 n_elements = width * height;
-        u32 i = u32(blockDim.x * blockIdx.x + threadIdx.x);
-        if (i >= n_elements)
-        {
-            return;
-        }
-
-        if(is_outer_edge(width, height, i))
-        {
-            dst[i] = 0;
-        }
-        else
-        {
-            auto gx = convolve_3x3(src, width, height, i, grad_x);
-            auto gy = convolve_3x3(src, width, height, i, grad_y);
-            dst[i] = static_cast<u8>(std::hypot(gx, gy));
-        }
+        dst[i] = 0;
     }
+    else
+    {
+        auto gx = convolve_3x3(src, width, height, i, grad_x);
+        auto gy = convolve_3x3(src, width, height, i, grad_y);
+        auto g = static_cast<u8>(std::hypot(gx, gy));
+        dst[i] = g < threshold ? 0 : 255;
+    }
+}
+
+
+GPU_KERNAL
+static void gpu_gradients(u8* src, u8* dst, u32 width, u32 height, r32* grad_x, r32* grad_y)
+{
+    u32 n_elements = width * height;
+    u32 i = u32(blockDim.x * blockIdx.x + threadIdx.x);
+    if (i >= n_elements)
+    {
+        return;
+    }
+
+    if(is_outer_edge(width, height, i))
+    {
+        dst[i] = 0;
+    }
+    else
+    {
+        auto gx = convolve_3x3(src, width, height, i, grad_x);
+        auto gy = convolve_3x3(src, width, height, i, grad_y);
+        dst[i] = static_cast<u8>(std::hypot(gx, gy));
+    }
+}
+
+
+GPU_FUNCTION
+static u8 lerp_clamp(u8 src_low, u8 src_high, u8 dst_low, u8 dst_high, u8 val)
+{
+    if (val < src_low)
+    {
+        return dst_low;
+    }
+    else if (val > src_high)
+    {
+        return dst_high;
+    }
+
+    auto const ratio = (static_cast<r64>(val) - src_low) / (src_high - src_low);
+
+    assert(ratio >= 0.0);
+    assert(ratio <= 1.0);
+
+    auto const diff = ratio * (dst_high - dst_low);
+
+    return dst_low + static_cast<u8>(diff);
+}
+
+
+GPU_KERNAL
+static void gpu_transform_contrast(u8* src, u8* dst, u8 src_low, u8 src_high, u32 n_elements)
+{
+    int i = blockDim.x * blockIdx.x + threadIdx.x;
+    if (i >= n_elements)
+    {
+        return;
+    }
+
+    u8 dst_low = 0;
+	u8 dst_high = 255;
+
+    dst[i] = lerp_clamp(src_low, src_high, dst_low, dst_high, src[i]);
+}
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
@@ -190,7 +233,7 @@ static u8 rgb_grayscale_standard(u8 red, u8 green, u8 blue)
 
 
 GPU_KERNAL
-static void gpu_transform_grayscale(pixel_t* src, u8* dst, int n_elements)
+static void gpu_transform_grayscale(pixel_t* src, u8* dst, u32 n_elements)
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i >= n_elements)
@@ -228,7 +271,7 @@ namespace libimage
         assert(dst.width == src.width);
         assert(dst.height == src.height);
 
-        int n_elements = src.width * src.height;
+        u32 n_elements = src.width * src.height;
         int threads_per_block = THREADS_PER_BLOCK;
         int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
 
@@ -259,7 +302,7 @@ namespace libimage
         assert(current_dst.width == src.width);
         assert(current_dst.height == src.height);
 
-        int n_elements = src.width * src.height;
+        u32 n_elements = src.width * src.height;
         int threads_per_block = THREADS_PER_BLOCK;
         int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
 
@@ -294,7 +337,7 @@ namespace libimage
         assert(dst.width == src.width);
         assert(dst.height == src.height);
 
-        int n_elements = src.width * src.height;
+        u32 n_elements = src.width * src.height;
         int threads_per_block = THREADS_PER_BLOCK;
         int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
 
@@ -352,7 +395,7 @@ namespace libimage
         assert(blur_k.kernel_5x5.data);
         assert(blur_k.kernel_5x5.n_elements == GAUSS_5X5_SIZE);
 
-        int n_elements = src.width * src.height;
+        u32 n_elements = src.width * src.height;
         int threads_per_block = THREADS_PER_BLOCK;
         int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
 
@@ -417,7 +460,7 @@ namespace libimage
         assert(grad_k.kernel_y_3x3.data);
         assert(grad_k.kernel_y_3x3.n_elements == GRAD_3X3_SIZE);
 
-        int n_elements = src.width * src.height;
+        u32 n_elements = src.width * src.height;
         int threads_per_block = THREADS_PER_BLOCK;
         int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
 
@@ -476,7 +519,7 @@ namespace libimage
         assert(grad_k.kernel_y_3x3.data);
         assert(grad_k.kernel_y_3x3.n_elements == GRAD_3X3_SIZE);
 
-        int n_elements = src.width * src.height;
+        u32 n_elements = src.width * src.height;
         int threads_per_block = THREADS_PER_BLOCK;
         int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
 
@@ -512,6 +555,38 @@ namespace libimage
 
         return proc;
     }
+
+
+    bool transform_contrast(gray::device_image_t const& src, gray::device_image_t const& dst, u8 src_low, u8 src_high)
+    {
+        assert(src.data);
+        assert(src.width);
+        assert(src.height);
+        assert(dst.data);
+        assert(dst.width == src.width);
+        assert(dst.height == src.height);
+
+        u32 n_elements = src.width * src.height;
+        int threads_per_block = THREADS_PER_BLOCK;
+        int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
+
+        bool proc;
+
+        proc = cuda_no_errors();
+        assert(proc);
+
+        gpu_transform_contrast<<<blocks, threads_per_block>>>(
+            src.data,
+            dst.data,
+            src_low,
+            src_high,
+            n_elements);
+
+        proc &= cuda_launch_success();
+        assert(proc);
+
+        return proc;
+    }
         
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
@@ -530,7 +605,7 @@ namespace libimage
         assert(dst.width == src.width);
         assert(dst.height == src.height);
 
-        int n_elements = src.width * src.height;
+        u32 n_elements = src.width * src.height;
         int threads_per_block = THREADS_PER_BLOCK;
         int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
 
