@@ -54,7 +54,7 @@
     <ClCompile Include="..\..\libimage\stb_wrapper\stb_libimage.cpp">
       <Filter>Source Files\libimage\stb_wrapper</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\libimage\math\libimage_math.cpp">
+    <ClCompile Include="..\..\libimage\math\math.cpp">
       <Filter>Source Files\libimage\math</Filter>
     </ClCompile>
     <ClCompile Include="..\..\libimage\proc\convolve.cpp">
@@ -84,6 +84,9 @@
     <ClCompile Include="..\..\libimage\proc\gradient.cpp">
       <Filter>Source Files\libimage\proc</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\libimage\math\charts.cpp">
+      <Filter>Source Files\libimage\math</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\libimage\libimage.hpp">
@@ -92,7 +95,7 @@
     <ClInclude Include="..\..\libimage\stb_wrapper\stb_include.hpp">
       <Filter>Header Files\libimage\stb_wrapper</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\libimage\math\libimage_math.hpp">
+    <ClInclude Include="..\..\libimage\math\math.hpp">
       <Filter>Header Files\libimage\math</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libimage\proc\convolve.hpp">
@@ -124,6 +127,9 @@
     </ClInclude>
     <ClInclude Include="..\..\libimage\proc\verify.hpp">
       <Filter>Header Files\libimage\proc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage\math\charts.hpp">
+      <Filter>Header Files\libimage\math</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

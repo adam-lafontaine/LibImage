@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <array>
 
 using u8 = uint8_t;
 using u32 = uint32_t;
@@ -27,6 +28,35 @@ namespace libimage
 		u32 y;
 
 	} xy_loc_t;
+
+
+	constexpr size_t CHANNEL_SIZE = 256; // 8 bit channel
+	constexpr size_t N_HIST_BUCKETS = 256;
+
+	using hist_t = std::array<u32, N_HIST_BUCKETS>;
+
+
+	typedef struct channel_stats_t
+	{
+		r32 mean;
+		r32 std_dev;
+		hist_t hist;
+
+	} stats_t;
+
+
+	typedef union rgb_channel_stats_t
+	{
+		struct
+		{
+			stats_t red;
+			stats_t green;
+			stats_t blue;
+		};
+
+		stats_t stats[3];
+
+	} rgb_stats_t;
 }
 
 

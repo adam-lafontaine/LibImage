@@ -1,5 +1,6 @@
 #include "../../libimage/libimage.hpp"
-#include "../../libimage/math/libimage_math.hpp"
+#include "../../libimage/math/math.hpp"
+#include "../../libimage/math/charts.hpp"
 #include "../../libimage/proc/process.hpp"
 
 #include "../utils/stopwatch.hpp"
@@ -15,6 +16,7 @@
 #include <algorithm>
 #include <execution>
 #include <functional>
+#include <filesystem>
 
 namespace fs = std::filesystem;
 namespace img = libimage;
@@ -341,7 +343,7 @@ void for_each_tests(fs::path const& out_dir)
 		view_loop_times, view_stl_times, view_par_times
 	};
 
-	img::draw_bar_chart(view_data, view_chart);
+	img::draw_bar_chart_grouped(view_data, view_chart);
 	img::write_image(view_chart, out_dir / "for_each_image_view_times.png");
 }
 
@@ -433,7 +435,7 @@ void transform_tests(fs::path const& out_dir)
 		view_stl_times, view_par_times
 	};
 
-	img::draw_bar_chart(view_data, view_chart);
+	img::draw_bar_chart_grouped(view_data, view_chart);
 	img::write_image(view_chart, out_dir / "transform_image_view_times.png");
 }
 
@@ -600,7 +602,7 @@ void process_tests(fs::path const& out_dir)
 		seq_times, par_times
 	};
 
-	img::draw_bar_chart(view_data, view_chart);
+	img::draw_bar_chart_grouped(view_data, view_chart);
 	img::write_image(view_chart, out_dir / "edges_times.png");
 }
 

@@ -145,7 +145,8 @@
   <ItemGroup>
     <ClCompile Include="..\..\libimage\libimage.cpp" />
     <ClCompile Include="..\..\libimage\locate\locate.cpp" />
-    <ClCompile Include="..\..\libimage\math\libimage_math.cpp" />
+    <ClCompile Include="..\..\libimage\math\charts.cpp" />
+    <ClCompile Include="..\..\libimage\math\math.cpp" />
     <ClCompile Include="..\..\libimage\proc\alpha_blend.cpp" />
     <ClCompile Include="..\..\libimage\proc\binarize.cpp" />
     <ClCompile Include="..\..\libimage\proc\blur.cpp" />
@@ -160,7 +161,8 @@
     <ClInclude Include="..\..\libimage\gray.hpp" />
     <ClInclude Include="..\..\libimage\libimage.hpp" />
     <ClInclude Include="..\..\libimage\locate\locate.hpp" />
-    <ClInclude Include="..\..\libimage\math\libimage_math.hpp" />
+    <ClInclude Include="..\..\libimage\math\charts.hpp" />
+    <ClInclude Include="..\..\libimage\math\math.hpp" />
     <ClInclude Include="..\..\libimage\proc\verify.hpp" />
     <ClInclude Include="..\..\libimage\rgba.hpp" />
     <ClInclude Include="..\..\libimage\types.hpp" />
