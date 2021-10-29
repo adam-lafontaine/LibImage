@@ -155,7 +155,7 @@ namespace libimage
 	}
 
 
-	void draw_bar_chart_grouped(std::vector<data_color_t> const& data, image_t& image_dst)
+	void draw_bar_chart_grouped(grouped_chart_data_t const& data, image_t& image_dst)
 	{
 		assert(!image_dst.width);
 		assert(!image_dst.height);
@@ -163,13 +163,11 @@ namespace libimage
 		assert(!data.empty());
 
 		u32 const n_buckets = static_cast<u32>(data[0].data.size());
-		for (auto const& item : data)
+		auto same_size =  std::all_of(data.begin(), data.end(), [&](auto const& v) { return v.data.size() == n_buckets; });
+		assert(same_size);
+		if (!same_size)
 		{
-			if (item.data.size() != n_buckets)
-			{
-				assert(false);
-				return;
-			}
+			return;
 		}
 
 		u32 const max_relative_qty = 200;
@@ -205,23 +203,113 @@ namespace libimage
 		};
 
 		pixel_range_t bar_range = {};
-		bar_range.y_begin = 0;
 		bar_range.y_end = image_height;
 
 		for (u32 bucket = 0; bucket < n_buckets; ++bucket)
 		{
 			for (u32 group = 0; group < n_groups; ++group)
 			{
-				auto& d = data[group];
-
 				bar_range.x_begin = bar_spacing + bucket * (group_width + group_spacing) + group * (bar_width + bar_spacing);
 				bar_range.x_end = bar_range.x_begin + bar_width;
+
+				auto& d = data[group];
 				bar_range.y_begin = bar_range.y_end - norm(d.data[bucket]);
 
 				if (bar_range.y_end > bar_range.y_begin)
 				{
 					auto bar_view = sub_view(image_dst, bar_range);
 					img_fill(bar_view, d.color);
+				}
+			}
+		}
+	}
+
+
+	void draw_bar_multi_chart_grouped(grouped_multi_chart_data_t const& data, image_t& image_dst)
+	{
+		assert(!image_dst.width);
+		assert(!image_dst.height);
+		assert(!image_dst.data);
+		assert(!data.empty());
+
+		u32 const n_charts = static_cast<u32>(data[0].data_list.size());
+		auto same_size = std::all_of(data.begin(), data.end(), [&](auto const& v) { return v.data_list.size() == n_charts; });
+		assert(same_size);
+		if (!same_size)
+		{
+			return;
+		}
+
+		u32 const n_buckets = static_cast<u32>(data[0].data_list[0].size());
+		same_size = std::all_of(data.begin(), data.end(), 
+			[&](auto const& v) 
+			{ 
+				return std::all_of(v.data_list.begin(), v.data_list.end(), [&](auto const& d) { return d.size() == n_buckets;  }); 
+			});
+		assert(same_size);
+		if (!same_size)
+		{
+			return;
+		}
+
+		u32 const max_relative_qty = 200;
+		u32 const chart_height = max_relative_qty + 1;
+		u32 chart_spacing = 10;
+		u32 const image_height = n_charts * (max_relative_qty + 1) + (n_charts - 1) * chart_spacing;
+
+		u32 const bar_width = 20;
+		u32 const bar_spacing = 2;
+		u32 const n_groups = static_cast<u32>(data.size());
+		u32 const group_spacing = 10;
+		u32 const group_width = n_groups * bar_width + (n_groups - 1) * bar_spacing;
+		u32 const image_width = n_buckets * group_width + (n_buckets - 1) * group_spacing + 2 * bar_spacing;
+
+		pixel_t white = to_pixel(255, 255, 255);
+
+		make_image(image_dst, image_width, image_height);
+		img_fill(image_dst, white);
+
+		r32 max_count = 0.0f;
+		for (auto const& mcd : data)
+		{
+			for (auto const& vec : mcd.data_list)
+			{
+				auto max = *std::max_element(vec.begin(), vec.end());
+
+				if (max > max_count)
+				{
+					max_count = max;
+				}
+			}
+		}
+
+		const auto norm = [&](r32 val)
+		{
+			return static_cast<u32>(val / max_count * max_relative_qty);
+		};
+
+		pixel_range_t bar_range = {};
+
+		for (u32 chart = 0; chart < n_charts; ++chart)
+		{
+			bar_range.y_end = (chart + 1) * chart_height + chart * chart_spacing;
+
+			for (u32 bucket = 0; bucket < n_buckets; ++bucket)
+			{
+				for (u32 group = 0; group < n_groups; ++group)
+				{
+					bar_range.x_begin = bar_spacing + bucket * (group_width + group_spacing) + group * (bar_width + bar_spacing);
+					bar_range.x_end = bar_range.x_begin + bar_width;
+
+					auto& mcd = data[group];
+					auto val = mcd.data_list[chart][bucket];
+
+					bar_range.y_begin = bar_range.y_end - norm(val);
+					if (bar_range.y_end > bar_range.y_begin)
+					{
+						auto bar_view = sub_view(image_dst, bar_range);
+						img_fill(bar_view, mcd.color);
+					}
 				}
 			}
 		}

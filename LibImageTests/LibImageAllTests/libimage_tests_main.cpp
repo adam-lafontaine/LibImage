@@ -271,22 +271,22 @@ void for_each_tests(fs::path const& out_dir)
 	auto green = img::to_pixel(88, 100, 29);
 	auto blue = img::to_pixel(0, 119, 182);
 
-	img::data_color_t image_loop_times;
+	img::chart_data_t image_loop_times;
 	image_loop_times.color = green;
 
-	img::data_color_t image_stl_times;
+	img::chart_data_t image_stl_times;
 	image_stl_times.color = green;
 
-	img::data_color_t image_par_times;
+	img::chart_data_t image_par_times;
 	image_par_times.color = green;
 
-	img::data_color_t view_loop_times;
+	img::chart_data_t view_loop_times;
 	view_loop_times.color = blue;
 
-	img::data_color_t view_stl_times;
+	img::chart_data_t view_stl_times;
 	view_stl_times.color = blue;
 
-	img::data_color_t view_par_times;
+	img::chart_data_t view_par_times;
 	view_par_times.color = blue;
 
 	Stopwatch sw;
@@ -337,7 +337,7 @@ void for_each_tests(fs::path const& out_dir)
 	}
 
 	Image view_chart;
-	std::vector<img::data_color_t> view_data = 
+	img::grouped_chart_data_t view_data = 
 	{ 
 		image_loop_times, image_stl_times, image_par_times,
 		view_loop_times, view_stl_times, view_par_times
@@ -379,16 +379,16 @@ void transform_tests(fs::path const& out_dir)
 	auto green = img::to_pixel(88, 100, 29);
 	auto blue = img::to_pixel(0, 119, 182);
 
-	img::data_color_t image_stl_times;
+	img::chart_data_t image_stl_times;
 	image_stl_times.color = green;
 
-	img::data_color_t image_par_times;
+	img::chart_data_t image_par_times;
 	image_par_times.color = green;
 
-	img::data_color_t view_stl_times;
+	img::chart_data_t view_stl_times;
 	view_stl_times.color = blue;
 
-	img::data_color_t view_par_times;
+	img::chart_data_t view_par_times;
 	view_par_times.color = blue;
 
 	Stopwatch sw;
@@ -429,7 +429,7 @@ void transform_tests(fs::path const& out_dir)
 	}
 
 	Image view_chart;
-	std::vector<img::data_color_t> view_data =
+	img::grouped_chart_data_t view_data =
 	{
 		image_stl_times, image_par_times,
 		view_stl_times, view_par_times
@@ -564,10 +564,10 @@ void process_tests(fs::path const& out_dir)
 	auto green = img::to_pixel(88, 100, 29);
 	auto blue = img::to_pixel(0, 119, 182);
 
-	img::data_color_t seq_times;
+	img::chart_data_t seq_times;
 	seq_times.color = green;
 
-	img::data_color_t par_times;
+	img::chart_data_t par_times;
 	par_times.color = blue;
 
 	Stopwatch sw;
@@ -597,7 +597,7 @@ void process_tests(fs::path const& out_dir)
 	}
 
 	Image view_chart;
-	std::vector<img::data_color_t> view_data =
+	img::grouped_chart_data_t view_data =
 	{
 		seq_times, par_times
 	};
