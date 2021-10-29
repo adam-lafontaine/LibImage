@@ -264,7 +264,7 @@ namespace libimage
 		u32 const group_width = n_groups * bar_width + (n_groups - 1) * bar_spacing;
 		u32 const image_width = n_buckets * group_width + (n_buckets - 1) * group_spacing + 2 * bar_spacing;
 
-		pixel_t white = to_pixel(255, 255, 255);
+		pixel_t white = to_pixel(240, 240, 240);
 
 		make_image(image_dst, image_width, image_height);
 		img_fill(image_dst, white);

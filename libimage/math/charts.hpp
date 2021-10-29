@@ -24,7 +24,7 @@ namespace libimage
 
 	using grouped_chart_data_t = std::vector<chart_data_t>;
 
-
+	
 	typedef struct MultiChartData
 	{
 		std::vector<std::vector<r32>> data_list;

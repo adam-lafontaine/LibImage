@@ -53,6 +53,7 @@ void math_tests(fs::path const& out_dir);
 void for_each_tests(fs::path const& out_dir);
 void transform_tests(fs::path const& out_dir);
 void process_tests(fs::path const& out_dir);
+void gradient_times(fs::path const& out_dir);
 
 
 int main()
@@ -67,13 +68,15 @@ int main()
 
 	auto dst_root = fs::path(DST_IMAGE_ROOT);	
 
-	basic_tests(dst_root / "basic");
-	math_tests(dst_root / "math");
+	//basic_tests(dst_root / "basic");
+	//math_tests(dst_root / "math");
 
-	for_each_tests(dst_root / "for_each");
-	transform_tests(dst_root / "transform");
+	//for_each_tests(dst_root / "for_each");
+	//transform_tests(dst_root / "transform");
 
-	process_tests(dst_root / "process");
+	//process_tests(dst_root / "process");
+
+	gradient_times(dst_root / "timing");
 
 	std::cout << "\nDone.\n";
 }
@@ -604,6 +607,82 @@ void process_tests(fs::path const& out_dir)
 
 	img::draw_bar_chart_grouped(view_data, view_chart);
 	img::write_image(view_chart, out_dir / "edges_times.png");
+}
+
+
+void gradient_times(fs::path const& out_dir)
+{
+	std::cout << "gradients:\n";
+	empty_dir(out_dir);
+
+	u32 n_image_sizes = 5;
+	u32 image_dim_factor = 2;
+
+	u32 n_image_counts = 10;
+	u32 image_count_factor = 2;
+
+	u32 image_count_start = 10;
+
+
+	auto green = img::to_pixel(88, 100, 29);
+	auto blue = img::to_pixel(0, 119, 182);
+
+	img::multi_chart_data_t seq_times;
+	seq_times.color = green;
+
+	img::multi_chart_data_t par_times;
+	par_times.color = blue;
+
+	Stopwatch sw;
+	u32 width = 400;
+	u32 height = 300;
+	u32 image_count = image_count_start;
+
+	auto const image_size = [&]() { return width * height; };
+	auto const scale = [&](auto t) { return static_cast<r32>(10000 * t / image_size()); };
+	auto const print_wh = [&]() { std::cout << "width: " << width << " height: " << height << '\n'; };
+	auto const print_count = [&]() { std::cout << "  image count: " << image_count << '\n'; };
+
+	for (u32 s = 0; s < n_image_sizes; ++s)
+	{
+		print_wh();
+		image_count = image_count_start;
+		std::vector<r32> seq;
+		std::vector<r32> par;
+		for (u32 c = 0; c < n_image_counts; ++c)
+		{
+			print_count();
+			GrayImage src;
+			GrayImage dst;
+			GrayImage tmp;
+			img::make_image(src, width, height);
+			img::make_image(dst, width, height);
+			img::make_image(tmp, width, height);
+
+			sw.start();
+			img::seq::gradients(src, dst, tmp);
+			auto t = sw.get_time_milli();
+			seq.push_back(scale(t));
+
+			sw.start();
+			img::gradients(src, dst, tmp);
+			t = sw.get_time_milli();
+			par.push_back(scale(t));
+
+			image_count *= image_count_factor;
+		}
+
+		seq_times.data_list.push_back(seq);
+		par_times.data_list.push_back(par);
+
+		width *= image_dim_factor;
+		height *= image_dim_factor;
+	}
+
+	img::grouped_multi_chart_data_t chart_data{ seq_times, par_times };
+	Image chart;
+	img::draw_bar_multi_chart_grouped(chart_data, chart);
+	img::write_image(chart, out_dir / "gradient_times.bmp");
 }
 
 
