@@ -415,7 +415,7 @@ void gradient_times(path_t& out_dir)
 	seq_times.color = green;
 
 	img::multi_chart_data_t gpu_times;
-	gpu_times.color = green;
+	gpu_times.color = blue;
 
 	Stopwatch sw;
 	u32 width = width_start;
@@ -492,7 +492,6 @@ void gradient_times(path_t& out_dir)
 			print_t("gpu");
 
 			image_count *= image_count_factor;
-
 		}
 
 		device_free(d_buffer);
@@ -562,9 +561,7 @@ void cuda_do_gradients(GrayImage const& src, GrayImage& dst, u32 qty)
 	for(u32 i = 0; i < qty; ++i)
 	{
 		img::copy_to_device(src, d_src);
-
 		img::gradients(d_src, d_dst, d_tmp, blur_k, grad_k);
-
 		img::copy_to_host(d_dst, dst);
 	}
 
