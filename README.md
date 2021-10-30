@@ -11,4 +11,10 @@ A Basic image processing libray for C++
 * Copy, conversion, binarization, alpha blending, edge detection
 * Sequential and parallel processing available
 * Widespread abuse of lambdas
-* See libimage_tests.cpp for demonstration
+* See /LibImageTests/LibImageAllTests/libimage_tests.cpp for demonstration
+
+Support for CUDA
+
+* Typesafe wrapper for preallocating memory on the GPU
+* Developed on the Jetson Nano.  C++14
+* See /CudaTests/cuda_test_main.cpp for demonstration

@@ -14,7 +14,7 @@ Copyright (c) 2021 Adam Lafontaine
 
 namespace libimage
 {
-	static void left_2_wide(pixel_range_t& range, u32 x, u32 width)
+	static inline void left_2_wide(pixel_range_t& range, u32 x, u32 width)
 	{
 		// left (2 wide)
 		assert(x <= width - 2);
@@ -23,7 +23,7 @@ namespace libimage
 	}
 
 
-	static void right_2_wide(pixel_range_t& range, u32 x, u32 width)
+	static inline void right_2_wide(pixel_range_t& range, u32 x, u32 width)
 	{
 		// right (2 wide)
 		assert(x >= 1);
@@ -33,7 +33,7 @@ namespace libimage
 	}
 
 
-	static void top_2_high(pixel_range_t& range, u32 y, u32 height)
+	static inline void top_2_high(pixel_range_t& range, u32 y, u32 height)
 	{
 		// top (2 high)
 		assert(y <= height - 2);
@@ -42,7 +42,7 @@ namespace libimage
 	}
 
 
-	static void bottom_2_high(pixel_range_t& range, u32 y, u32 height)
+	static inline void bottom_2_high(pixel_range_t& range, u32 y, u32 height)
 	{
 		// bottom (2 high)
 		assert(y >= 1);
@@ -52,7 +52,7 @@ namespace libimage
 	}
 
 
-	static void top_or_bottom_3_high(pixel_range_t& range, u32 y, u32 height)
+	static inline void top_or_bottom_3_high(pixel_range_t& range, u32 y, u32 height)
 	{
 		// top or bottom (3 high)
 		assert(y >= 1);
@@ -62,7 +62,7 @@ namespace libimage
 	}
 
 
-	static void left_or_right_3_wide(pixel_range_t& range, u32 x, u32 width)
+	static inline void left_or_right_3_wide(pixel_range_t& range, u32 x, u32 width)
 	{
 		// left or right (3 wide)
 		assert(x >= 1);
@@ -72,7 +72,7 @@ namespace libimage
 	}
 
 
-	static void top_or_bottom_5_high(pixel_range_t& range, u32 y, u32 height)
+	static inline void top_or_bottom_5_high(pixel_range_t& range, u32 y, u32 height)
 	{
 		// top or bottom (5 high)
 		assert(y >= 2);
@@ -82,7 +82,7 @@ namespace libimage
 	}
 
 
-	static void left_or_right_5_wide(pixel_range_t& range, u32 x, u32 width)
+	static inline void left_or_right_5_wide(pixel_range_t& range, u32 x, u32 width)
 	{
 		// left or right (5 wide)
 		assert(x >= 2);
