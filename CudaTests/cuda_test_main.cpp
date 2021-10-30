@@ -41,6 +41,7 @@ const auto DST_IMAGE_ROOT = ROOT_PATH + "out_files/";
 void empty_dir(path_t& dir);
 void process_tests(path_t& out_dir);
 void cuda_tests(path_t& out_dir);
+void gradient_times(path_t& out_dir);
 void print(img::stats_t const& stats);
 
 int main()
@@ -53,6 +54,9 @@ int main()
 	auto dst_cuda = dst_root + "cuda/";
 	cuda_tests(dst_cuda);
 
+	auto dst_timing = dst_root + "timing/";
+	gradient_times(dst_timing);
+
     printf("\nDone.\n");
 }
 
@@ -62,7 +66,7 @@ void process_tests(path_t& out_dir)
 	// C++17 not available on Jetson Nano.
 	// No stl parallel algorithms
 
-	std::cout << "process:\n";
+	std::cout << "\nprocess:\n";
 	empty_dir(out_dir);
 
 	// get image
@@ -198,7 +202,7 @@ void process_tests(path_t& out_dir)
 
 void cuda_tests(path_t& out_dir)
 {
-	std::cout << "cuda:\n";
+	std::cout << "\ncuda:\n";
 	empty_dir(out_dir);
 
 	Image corvette_img;
@@ -212,8 +216,7 @@ void cuda_tests(path_t& out_dir)
 	Image caddy_img;
 	caddy_img.width = width;
 	caddy_img.height = height;
-	img::resize_image(img_read, caddy_img);
-	
+	img::resize_image(img_read, caddy_img);	
 
 	Image src_img;
 	img::make_image(src_img, width, height);
@@ -226,7 +229,6 @@ void cuda_tests(path_t& out_dir)
 
 	GrayImage dst_gray_img;
 	img::make_image(dst_gray_img, width, height);
-
 	
 	// setup device memory for color images
 	DeviceBuffer<Pixel> color_buffer;
@@ -391,12 +393,126 @@ void cuda_tests(path_t& out_dir)
 }
 
 
-void speed_test(path_t& out_dir)
+void gradient_times(path_t& out_dir)
 {
-	GrayImage src;
-	GrayImage dst;
+	std::cout << "\ngradients:\n";
+	empty_dir(out_dir);
 
-	
+	u32 n_image_sizes = 3;
+	u32 image_dim_factor = 2;
+
+	u32 n_image_counts = 5;
+	u32 image_count_factor = 2;
+
+	u32 width_start = 400;
+	u32 height_start = 300;
+	u32 image_count_start = 10;
+
+	auto green = img::to_pixel(88, 100, 29);
+	auto blue = img::to_pixel(0, 119, 182);
+
+	img::multi_chart_data_t seq_times;
+	seq_times.color = green;
+
+	img::multi_chart_data_t gpu_times;
+	gpu_times.color = green;
+
+	Stopwatch sw;
+	u32 width = width_start;
+	u32 height = height_start;
+	u32 image_count = image_count_start;
+
+	auto const current_pixels = [&]() { return static_cast<r64>(width) * height * image_count; };
+
+	auto const start_pixels = current_pixels();
+
+	auto const scale = [&](auto t) { return static_cast<r32>(start_pixels / current_pixels() * t); };
+	auto const print_wh = [&]() { std::cout << "\nwidth: " << width << " height: " << height << '\n'; };
+	auto const print_count = [&]() { std::cout << "  image count: " << image_count << '\n'; };
+
+	r64 t = 0;
+	auto const print_t = [&](const char* label) { std::cout << "    " << label << " time: " << scale(t) << '\n'; };
+
+	DeviceBuffer<r32> kernel_buffer;
+	auto kernel_bytes = 70 * sizeof(r32);
+	device_malloc(kernel_buffer, kernel_bytes);
+
+	img::BlurKernels blur_k;
+	img::make_blur_kernels(blur_k, kernel_buffer);
+
+	img::GradientKernels grad_k;
+	img::make_gradient_kernels(grad_k, kernel_buffer);
+
+	for (u32 s = 0; s < n_image_sizes; ++s)
+	{
+		print_wh();
+		image_count = image_count_start;
+		std::vector<r32> seq;
+		std::vector<r32> gpu;
+		GrayImage src;
+		GrayImage dst;
+		GrayImage tmp;
+		img::make_image(src, width, height);
+		img::make_image(dst, width, height);
+		img::make_image(tmp, width, height);
+
+		DeviceBuffer<GrayPixel> d_buffer;
+		auto gray_bytes = 3 * width * height * G_PIXEL_SZ;
+		device_malloc(d_buffer, gray_bytes);
+
+		CudaGrayImage d_src;
+		CudaGrayImage d_dst;
+		CudaGrayImage d_tmp;
+		img::make_image(d_src, width, height, d_buffer);
+		img::make_image(d_dst, width, height, d_buffer);
+		img::make_image(d_tmp, width, height, d_buffer);
+
+		for (u32 c = 0; c < n_image_counts; ++c)
+		{
+			print_count();
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::seq::gradients(src, dst, tmp);
+			}
+			t = sw.get_time_milli();
+			seq.push_back(scale(t));
+			print_t("seq");
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::copy_to_device(src, d_src);
+				img::gradients(d_src, d_dst, d_tmp, blur_k, grad_k);
+				img::copy_to_host(d_dst, dst);
+			}
+			t = sw.get_time_milli();
+			gpu.push_back(scale(t));
+			print_t("gpu");
+
+			image_count *= image_count_factor;
+
+		}
+
+		device_free(d_buffer);
+
+		seq_times.data_list.push_back(seq);
+		gpu_times.data_list.push_back(gpu);
+
+		width *= image_dim_factor;
+		height *= image_dim_factor;
+	}
+
+	device_free(kernel_buffer);
+
+	img::grouped_multi_chart_data_t chart_data
+	{ 
+		seq_times, gpu_times
+	};
+	Image chart;
+	img::draw_bar_multi_chart_grouped(chart_data, chart);
+	img::write_image(chart, out_dir + "gradients.bmp");
 }
 
 

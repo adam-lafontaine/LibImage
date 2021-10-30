@@ -290,35 +290,54 @@ proc_h += ../libimage/proc/verify.hpp
 proc_h += ../libimage/proc/index_range.hpp
 proc_h += ../libimage/proc/convolve.hpp
 
-main_c          := cuda_test_main.cpp
+main_c         := cuda_test_main.cpp
+main_o         := $(build)/cuda_test_main.o
+object_files   := $(main_o)
 
+libimage_c     := ../libimage/libimage.cpp
+libimage_o     := $(build)/libimage.o
+object_files   += $(libimage_o)
 
+stb_libimage_c    := ../libimage/stb_wrapper/stb_libimage.cpp
+stb_libimage_o    := $(build)/stb_libimage.o
+object_files      += $(stb_libimage_o)
 
+math_c         := ../libimage/math/math.cpp
+math_o         := $(build)/math.o
+object_files   += $(math_o)
 
-libimage_c      := ../libimage/libimage.cpp
-stb_libimage_c  := ../libimage/stb_wrapper/stb_libimage.cpp
-math_c          := ../libimage/math/math.cpp
-charts_c        := ../libimage/math/charts.cpp
-transform_c     := ../libimage/proc/transform.cpp
-alpha_blend_c   := ../libimage/proc/alpha_blend.cpp
-copy_c          := ../libimage/proc/copy.cpp
-binarize_c      := ../libimage/proc/binarize.cpp
-blur_c          := ../libimage/proc/blur.cpp
-convolve_c      := ../libimage/proc/convolve.cpp
-gradient_c      := ../libimage/proc/gradient.cpp
+charts_c       := ../libimage/math/charts.cpp
+charts_o       := $(build)/charts.o
+object_files   += $(charts_o)
 
-main_o          := $(build)/cuda_test_main.o
-libimage_o      := $(build)/libimage.o
-stb_libimage_o  := $(build)/stb_libimage.o
-math_o          := $(build)/math.o
-charts_o        := $(build)/charts.o
-copy_o          := $(build)/copy.o
-transform_o     := $(build)/transform.o
-alpha_blend_o   := $(build)/alpha_blend.o
-binarize_o      := $(build)/binarize.o
-blur_o          := $(build)/blur.o
-convolve_o      := $(build)/convolve.o
-gradient_o      := $(build)/gradient.o
+copy_c         := ../libimage/proc/copy.cpp
+copy_o         := $(build)/copy.o
+object_files   += $(copy_o)
+
+transform_c    := ../libimage/proc/transform.cpp
+transform_o    := $(build)/transform.o
+object_files   += $(transform_o)
+
+alpha_blend_c    := ../libimage/proc/alpha_blend.cpp
+alpha_blend_o    := $(build)/alpha_blend.o
+object_files     += $(alpha_blend_o)
+
+binarize_c     := ../libimage/proc/binarize.cpp
+binarize_o     := $(build)/binarize.o
+object_files   += $(binarize_o)
+
+blur_c         := ../libimage/proc/blur.cpp
+blur_o         := $(build)/blur.o
+object_files   += $(blur_o)
+
+convolve_c     := ../libimage/proc/convolve.cpp
+convolve_o     := $(build)/convolve.o
+object_files   += $(convolve_o)
+
+gradient_c     := ../libimage/proc/gradient.cpp
+gradient_o     := $(build)/gradient.o
+object_files   += $(gradient_o)
+
 
 gpu_h := $(types_h)
 gpu_h += ../libimage/rgba.hpp
@@ -329,32 +348,17 @@ gpu_h += ../libimage/cuda/device.hpp
 gpu_h += ../libimage/cuda/device_image.hpp
 gpu_h += ../libimage/cuda/process.hpp
 
-gpu_convolve_h := ../libimage/cuda/convolve.cuh
+gpu_device_c   := ../libimage/cuda/device.cu
+gpu_device_o   := $(build)/gpu_device.o
+object_files   += $(gpu_device_o)
 
-gpu_device_c       := ../libimage/cuda/device.cu
-gpu_device_image_c := ../libimage/cuda/device_image.cpp
-gpu_process_c      := ../libimage/cuda/process.cu
+gpu_device_image_c   := ../libimage/cuda/device_image.cpp
+gpu_device_image_o   := $(build)/gpu_device_image.o
+object_files         += $(gpu_device_image_o)
 
-gpu_device_o       := $(build)/gpu_device.o
-gpu_device_image_o := $(build)/gpu_device_image.o
-gpu_process_o      := $(build)/gpu_process.o
-
-object_files := $(main_o)
-object_files += $(libimage_o)
-object_files += $(stb_libimage_o)
-object_files += $(math_o)
-object_files += $(charts_o)
-object_files += $(copy_o)
-object_files += $(alpha_blend_o)
-object_files += $(transform_o)
-object_files += $(binarize_o)
-object_files += $(blur_o)
-object_files += $(convolve_o)
-object_files += $(gradient_o)
-
-object_files += $(gpu_device_image_o)
-object_files += $(gpu_process_o)
-object_files += $(gpu_device_o)
+gpu_process_c   := ../libimage/cuda/process.cu
+gpu_process_o   := $(build)/gpu_process.o
+object_files    += $(gpu_process_o)
 
 cuda_test_exe := $(build)/cuda_test
 
