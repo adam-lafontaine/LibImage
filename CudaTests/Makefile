@@ -281,7 +281,9 @@ stb_h := ../libimage/stb_wrapper/stb_image.h
 stb_h += ../libimage/stb_wrapper/stb_write.h
 stb_h += ../libimage/stb_wrapper/stb_resize.h
 
-math_h := ../libimage/math/libimage_math.hpp
+math_h := ../libimage/math/math.hpp
+
+charts_h := ../libimage/math/charts.hpp
 
 proc_h := ../libimage/proc/process.hpp
 proc_h += ../libimage/proc/verify.hpp
@@ -289,9 +291,14 @@ proc_h += ../libimage/proc/index_range.hpp
 proc_h += ../libimage/proc/convolve.hpp
 
 main_c          := cuda_test_main.cpp
+
+
+
+
 libimage_c      := ../libimage/libimage.cpp
 stb_libimage_c  := ../libimage/stb_wrapper/stb_libimage.cpp
-libimage_math_c := ../libimage/math/libimage_math.cpp
+math_c          := ../libimage/math/math.cpp
+charts_c        := ../libimage/math/charts.cpp
 transform_c     := ../libimage/proc/transform.cpp
 alpha_blend_c   := ../libimage/proc/alpha_blend.cpp
 copy_c          := ../libimage/proc/copy.cpp
@@ -303,7 +310,8 @@ gradient_c      := ../libimage/proc/gradient.cpp
 main_o          := $(build)/cuda_test_main.o
 libimage_o      := $(build)/libimage.o
 stb_libimage_o  := $(build)/stb_libimage.o
-libimage_math_o := $(build)/libimage_math.o
+math_o          := $(build)/math.o
+charts_o        := $(build)/charts.o
 copy_o          := $(build)/copy.o
 transform_o     := $(build)/transform.o
 alpha_blend_o   := $(build)/alpha_blend.o
@@ -334,7 +342,8 @@ gpu_process_o      := $(build)/gpu_process.o
 object_files := $(main_o)
 object_files += $(libimage_o)
 object_files += $(stb_libimage_o)
-object_files += $(libimage_math_o)
+object_files += $(math_o)
+object_files += $(charts_o)
 object_files += $(copy_o)
 object_files += $(alpha_blend_o)
 object_files += $(transform_o)
@@ -370,8 +379,12 @@ $(stb_libimage_o): $(stb_libimage_c) $(libimage_h)
 	@echo "\n stb_libimage.o"
 	$(GPP) -o $@ -c $<
 
-$(libimage_math_o): $(libimage_math_c) $(libimage_h) $(math_h)
-	@echo "\n libimage_math.o"
+$(math_o): $(math_c) $(libimage_h) $(math_h)
+	@echo "\n math.o"
+	$(GPP) -o $@ -c $<
+
+$(charts_o): $(charts_c) $(libimage_h) $(charts_h)
+	@echo "\n math.o"
 	$(GPP) -o $@ -c $<
 
 $(copy_o): $(copy_c) $(libimage_h) $(proc_h)

@@ -1,6 +1,7 @@
 #include "../libimage/libimage.hpp"
 #include "../libimage/proc/process.hpp"
-#include "../libimage/math/libimage_math.hpp"
+#include "../libimage/math/math.hpp"
+#include "../libimage/math/charts.hpp"
 #include "../libimage/cuda/process.hpp"
 #include "./utils/stopwatch.hpp"
 
@@ -139,7 +140,8 @@ void process_tests(path_t& out_dir)
 	img::write_image(dst_gray_img, out_dir + "blur.png");	
 
 	// edge detection
-	img::seq::edges(src_gray_img, dst_gray_img, 150);
+	u32 threshold = 150;
+	img::seq::edges(src_gray_img, dst_gray_img, threshold);
 	img::write_image(dst_gray_img, out_dir + "edges.png");
 
 	// gradient
@@ -157,12 +159,13 @@ void process_tests(path_t& out_dir)
 	range.y_end = height / 2;
 	auto src_sub = img::sub_view(src_gray_img, range);
 	auto dst_sub = img::sub_view(dst_gray_img, range);
-	img::seq::binarize(src_sub, dst_sub, is_white);	
+	img::seq::gradients(src_sub, dst_sub);
+	
 
 	range.x_begin = width / 2;
 	range.x_end = width;
 	src_sub = img::sub_view(src_gray_img, range);
-	dst_sub = img::sub_view(dst_gray_img, range);
+	dst_sub = img::sub_view(dst_gray_img, range);	
 	img::seq::transform_contrast(src_sub, dst_sub, shade_min, shade_max);
 
 	range.x_begin = 0;
@@ -177,7 +180,15 @@ void process_tests(path_t& out_dir)
 	range.x_end = width;
 	src_sub = img::sub_view(src_gray_img, range);
 	dst_sub = img::sub_view(dst_gray_img, range);
-	img::seq::gradients(src_sub, dst_sub);
+	img::seq::binarize(src_sub, dst_sub, is_white);	
+
+	range.x_begin = width / 4;
+	range.x_end = range.x_begin + width / 2;
+	range.y_begin = height / 4;
+	range.y_end = range.y_begin + height / 2;
+	src_sub = img::sub_view(src_gray_img, range);
+	dst_sub = img::sub_view(dst_gray_img, range);
+	img::seq::edges(src_sub, dst_sub, threshold);
 
 	img::write_image(dst_gray_img, out_dir + "combo.png");
 

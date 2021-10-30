@@ -21,10 +21,6 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR
 
-	constexpr auto ugly_yellow = to_pixel(255, 249, 79);
-	constexpr auto ugly_green = to_pixel(153, 255, 51);
-
-
 	static void img_fill(image_t const& img, pixel_t const& p)
 	{
 		std::fill(std::execution::par, img.begin(), img.end(), p);
@@ -88,7 +84,11 @@ namespace libimage
 
 namespace libimage
 {
-#ifndef LIBIMAGE_NO_COLOR
+#ifndef LIBIMAGE_NO_COLOR	
+
+	constexpr auto ugly_yellow = to_pixel(255, 249, 79);
+	constexpr auto ugly_green = to_pixel(153, 255, 51);
+
 
 	void draw_histogram(rgb_stats_t const& rgb_stats, image_t& image_dst)
 	{

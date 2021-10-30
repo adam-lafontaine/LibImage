@@ -1,6 +1,12 @@
 #pragma once
+/*
+
+Copyright (c) 2021 Adam Lafontaine
+
+*/
 
 #include <cstdint>
+#include <cstddef>
 #include <array>
 
 using u8 = uint8_t;
@@ -60,4 +66,4 @@ namespace libimage
 }
 
 
-//#define NDEBUG
+#define NDEBUG
