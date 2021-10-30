@@ -45,8 +45,6 @@ void empty_dir(fs::path const& dir);
 void print(ImageView const& view);
 void print(GrayView const& view);
 void print(img::stats_t const& stats);
-void make_image(Image& image, u32 size);
-void make_image(GrayImage& image, u32 size);
 
 void basic_tests(fs::path const& out_dir);
 void math_tests(fs::path const& out_dir);
@@ -68,15 +66,15 @@ int main()
 
 	auto dst_root = fs::path(DST_IMAGE_ROOT);	
 
-	//basic_tests(dst_root / "basic");
-	//math_tests(dst_root / "math");
-	//process_tests(dst_root / "process");
+	basic_tests(dst_root / "basic");
+	math_tests(dst_root / "math");
+	process_tests(dst_root / "process");
 
 	auto timing_dir = dst_root / "timing";
 	empty_dir(timing_dir);
 
-	//for_each_tests(timing_dir);
-	//transform_tests(timing_dir);
+	for_each_tests(timing_dir);
+	transform_tests(timing_dir);
 	gradient_times(timing_dir);
 
 	std::cout << "\nDone.\n";
@@ -688,52 +686,6 @@ void process_tests(fs::path const& out_dir)
 	img::gradients(src_sub, dst_sub);
 
 	img::write_image(dst_gray_image, out_dir / "combo.png");
-
-
-	// compare edge detection speeds
-	auto green = img::to_pixel(88, 100, 29);
-	auto blue = img::to_pixel(0, 119, 182);
-
-	img::chart_data_t seq_times;
-	seq_times.color = green;
-
-	img::chart_data_t par_times;
-	par_times.color = blue;
-
-	Stopwatch sw;
-	u32 size_start = 10000;
-
-	u32 size = size_start;
-	auto const scale = [&](auto t) { return static_cast<r32>(10000 * t / size); };
-
-	for (u32 i = 0; i < 10; ++i, size *= 2)
-	{
-		GrayImage image;
-		make_image(image, size);
-		GrayImage dst;
-		make_image(dst, size);
-		auto view = img::make_view(image);
-		auto dst_view = img::make_view(dst);
-
-		sw.start();
-		img::seq::edges(view, dst_view, 150);
-		auto t = sw.get_time_milli();
-		seq_times.data.push_back(scale(t));
-
-		sw.start();
-		img::edges(view, dst_view, 150);
-		t = sw.get_time_milli();
-		par_times.data.push_back(scale(t));
-	}
-
-	Image view_chart;
-	img::grouped_chart_data_t view_data =
-	{
-		seq_times, par_times
-	};
-
-	img::draw_bar_chart_grouped(view_data, view_chart);
-	img::write_image(view_chart, out_dir / "edges_times.png");
 }
 
 
@@ -894,22 +846,4 @@ void print(GrayView const& view)
 void print(img::stats_t const& stats)
 {
 	std::cout << "mean = " << (double)stats.mean << " sigma = " << (double)stats.std_dev << '\n';
-}
-
-
-void make_image(Image& image, u32 size)
-{
-	u32 width = size / 5;
-	u32 height = size / width;
-
-	img::make_image(image, width, height);
-}
-
-
-void make_image(GrayImage& image, u32 size)
-{
-	u32 width = size / 5;
-	u32 height = size / width;
-
-	img::make_image(image, width, height);
 }
