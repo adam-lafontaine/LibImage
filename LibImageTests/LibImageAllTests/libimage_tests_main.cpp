@@ -70,13 +70,14 @@ int main()
 
 	//basic_tests(dst_root / "basic");
 	//math_tests(dst_root / "math");
-
-	//for_each_tests(dst_root / "for_each");
-	//transform_tests(dst_root / "transform");
-
 	//process_tests(dst_root / "process");
 
-	gradient_times(dst_root / "timing");
+	auto timing_dir = dst_root / "timing";
+	empty_dir(timing_dir);
+
+	for_each_tests(timing_dir);
+	//transform_tests(timing_dir);
+	//gradient_times(timing_dir);
 
 	std::cout << "\nDone.\n";
 }
@@ -246,7 +247,6 @@ Pixel alpha_blend_linear(Pixel const& src, Pixel const& current)
 void for_each_tests(fs::path const& out_dir)
 {
 	std::cout << "for_each:\n";
-	empty_dir(out_dir);
 
 	std::random_device rd;
 	std::default_random_engine reng(rd());
@@ -266,95 +266,163 @@ void for_each_tests(fs::path const& out_dir)
 
 	auto const random_blended_pixel = [&](Pixel& p) 
 	{
-		Pixel src = random_pixel();
+		Pixel src = img::to_pixel(0);// random_pixel();
 
 		p = alpha_blend_linear(src, p);
 	};
 
+	u32 n_image_sizes = 3;
+	u32 image_dim_factor = 2;
+
+	u32 n_image_counts = 5;
+	u32 image_count_factor = 2;
+
+	u32 width_start = 400;
+	u32 height_start = 300;
+	u32 image_count_start = 50;
+
 	auto green = img::to_pixel(88, 100, 29);
 	auto blue = img::to_pixel(0, 119, 182);
 
-	img::chart_data_t image_loop_times;
-	image_loop_times.color = green;
+	img::multi_chart_data_t loop_image_times;
+	loop_image_times.color = green;
 
-	img::chart_data_t image_stl_times;
-	image_stl_times.color = green;
+	img::multi_chart_data_t loop_view_times;
+	loop_view_times.color = blue;
 
-	img::chart_data_t image_par_times;
-	image_par_times.color = green;
+	img::multi_chart_data_t stl_image_times;
+	stl_image_times.color = green;
 
-	img::chart_data_t view_loop_times;
-	view_loop_times.color = blue;
+	img::multi_chart_data_t stl_view_times;
+	stl_view_times.color = blue;
 
-	img::chart_data_t view_stl_times;
-	view_stl_times.color = blue;
+	img::multi_chart_data_t par_image_times;
+	par_image_times.color = green;
 
-	img::chart_data_t view_par_times;
-	view_par_times.color = blue;
+	img::multi_chart_data_t par_view_times;
+	par_view_times.color = blue;
+
 
 	Stopwatch sw;
-	u32 size_start = 10000;
+	u32 width = width_start;
+	u32 height = height_start;
+	u32 image_count = image_count_start;
 
-	u32 size = size_start;
-	auto const scale = [&](auto t) { return static_cast<r32>(10000 * t / size); };
-		
+	auto const current_pixels = [&]() { return static_cast<r64>(width) * height * image_count; };
 
-	// compare processing times for views
-	size = size_start;
-	for (u32 i = 0; i < 10; ++i, size *= 2)
+	auto const start_pixels = current_pixels();
+
+	auto const scale = [&](auto t) { return static_cast<r32>(start_pixels / current_pixels() * t); };
+	auto const print_wh = [&]() { std::cout << "width: " << width << " height: " << height << '\n'; };
+	auto const print_count = [&]() { std::cout << "  image count: " << image_count << '\n'; };
+
+	r64 t = 0;
+	auto const print_t = [&](const char* label) { std::cout << "    " << label << " time: " << scale(t) << '\n'; };
+
+	for (u32 s = 0; s < n_image_sizes; ++s)
 	{
+		print_wh();
+		image_count = image_count_start;
+
 		Image image;
-		make_image(image, size);
-
-		sw.start();
-		img::for_each_pixel(image, random_blended_pixel);
-		auto t = sw.get_time_milli();
-		image_loop_times.data.push_back(scale(t));
-
-		sw.start();
-		std::for_each(image.begin(), image.end(), random_blended_pixel);
-		t = sw.get_time_milli();
-		image_stl_times.data.push_back(scale(t));
-
-		sw.start();
-		std::for_each(std::execution::par, image.begin(), image.end(), random_blended_pixel);
-		t = sw.get_time_milli();
-		image_par_times.data.push_back(scale(t));
-
+		img::make_image(image, width, height);
 		auto view = img::make_view(image);
 
-		sw.start();
-		img::for_each_pixel(view, random_blended_pixel);
-		t = sw.get_time_milli();
-		view_loop_times.data.push_back(scale(t));
+		std::vector<r32> loop_image;
+		std::vector<r32> loop_view;
+		std::vector<r32> stl_image;
+		std::vector<r32> stl_view;
+		std::vector<r32> par_image;
+		std::vector<r32> par_view;
 
-		sw.start();
-		std::for_each(view.begin(), view.end(), random_blended_pixel);
-		t = sw.get_time_milli();
-		view_stl_times.data.push_back(scale(t));
+		for (u32 c = 0; c < n_image_counts; ++c)
+		{
+			print_count();			
 
-		sw.start();
-		std::for_each(std::execution::par, view.begin(), view.end(), random_blended_pixel);
-		t = sw.get_time_milli();
-		view_par_times.data.push_back(scale(t));
-	}
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::for_each_pixel(image, random_blended_pixel);
+			}			
+			t = sw.get_time_milli();
+			loop_image.push_back(scale(t));
+			print_t("loop image");
 
-	Image view_chart;
-	img::grouped_chart_data_t view_data = 
-	{ 
-		image_loop_times, image_stl_times, image_par_times,
-		view_loop_times, view_stl_times, view_par_times
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::for_each_pixel(view, random_blended_pixel);
+			}			
+			t = sw.get_time_milli();
+			loop_view.push_back(scale(t));
+			print_t("loop view");
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				std::for_each(image.begin(), image.end(), random_blended_pixel);
+			}
+			t = sw.get_time_milli();
+			stl_image.push_back(scale(t));
+			print_t("stl image");
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				std::for_each(view.begin(), view.end(), random_blended_pixel);
+			}
+			t = sw.get_time_milli();
+			stl_view.push_back(scale(t));
+			print_t("stl view");
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				std::for_each(std::execution::par, image.begin(), image.end(), random_blended_pixel);
+			}
+			t = sw.get_time_milli();
+			par_image.push_back(scale(t));
+			print_t("par image");
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				std::for_each(std::execution::par, view.begin(), view.end(), random_blended_pixel);
+			}
+			t = sw.get_time_milli();
+			par_view.push_back(scale(t));
+			print_t("par view");
+
+			image_count *= image_count_factor;
+		}
+
+		loop_image_times.data_list.push_back(loop_image);
+		loop_view_times.data_list.push_back(loop_view);
+		stl_image_times.data_list.push_back(stl_image);
+		stl_view_times.data_list.push_back(stl_view);
+		par_image_times.data_list.push_back(par_image);
+		par_view_times.data_list.push_back(par_view);
+
+		width *= image_dim_factor;
+		height *= image_dim_factor;
+	}	
+
+	Image chart;
+	img::grouped_multi_chart_data_t chart_data
+	{
+		loop_image_times, loop_view_times,
+		stl_image_times, stl_view_times,
+		par_image_times, par_view_times,
 	};
 
-	img::draw_bar_chart_grouped(view_data, view_chart);
-	img::write_image(view_chart, out_dir / "for_each_image_view_times.png");
+	img::draw_bar_multi_chart_grouped(chart_data, chart);
+	img::write_image(chart, out_dir / "for_each.bmp");
 }
 
 
 void transform_tests(fs::path const& out_dir)
 {
 	std::cout << "transform:\n";
-	empty_dir(out_dir);
 
 	std::random_device rd;
 	std::default_random_engine reng(rd());
@@ -613,7 +681,6 @@ void process_tests(fs::path const& out_dir)
 void gradient_times(fs::path const& out_dir)
 {
 	std::cout << "gradients:\n";
-	empty_dir(out_dir);
 
 	u32 n_image_sizes = 5;
 	u32 image_dim_factor = 2;
@@ -639,7 +706,7 @@ void gradient_times(fs::path const& out_dir)
 	u32 image_count = image_count_start;
 
 	auto const image_size = [&]() { return width * height; };
-	auto const scale = [&](auto t) { return static_cast<r32>(10000 * t / image_size()); };
+	auto const scale = [&](auto t) { return static_cast<r32>(10000 * t / image_size() / image_count); };
 	auto const print_wh = [&]() { std::cout << "width: " << width << " height: " << height << '\n'; };
 	auto const print_count = [&]() { std::cout << "  image count: " << image_count << '\n'; };
 
@@ -649,23 +716,30 @@ void gradient_times(fs::path const& out_dir)
 		image_count = image_count_start;
 		std::vector<r32> seq;
 		std::vector<r32> par;
+		GrayImage src;
+		GrayImage dst;
+		GrayImage tmp;
+		img::make_image(src, width, height);
+		img::make_image(dst, width, height);
+		img::make_image(tmp, width, height);
+
 		for (u32 c = 0; c < n_image_counts; ++c)
 		{
 			print_count();
-			GrayImage src;
-			GrayImage dst;
-			GrayImage tmp;
-			img::make_image(src, width, height);
-			img::make_image(dst, width, height);
-			img::make_image(tmp, width, height);
 
 			sw.start();
-			img::seq::gradients(src, dst, tmp);
-			auto t = sw.get_time_milli();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::seq::gradients(src, dst, tmp);
+			}			
+			auto t = sw.get_time_milli();			
 			seq.push_back(scale(t));
 
 			sw.start();
-			img::gradients(src, dst, tmp);
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::gradients(src, dst, tmp);
+			}
 			t = sw.get_time_milli();
 			par.push_back(scale(t));
 
@@ -682,7 +756,7 @@ void gradient_times(fs::path const& out_dir)
 	img::grouped_multi_chart_data_t chart_data{ seq_times, par_times };
 	Image chart;
 	img::draw_bar_multi_chart_grouped(chart_data, chart);
-	img::write_image(chart, out_dir / "gradient_times.bmp");
+	img::write_image(chart, out_dir / "gradients_seq_vs_par.bmp");
 }
 
 
