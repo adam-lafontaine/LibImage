@@ -21,6 +21,8 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR
 
+	constexpr auto ugly_yellow = to_pixel(255, 249, 79);
+	constexpr auto ugly_green = to_pixel(153, 255, 51);
 	static void img_fill(image_t const& img, pixel_t const& p)
 	{
 		std::fill(std::execution::par, img.begin(), img.end(), p);
@@ -167,6 +169,8 @@ namespace libimage
 		assert(same_size);
 		if (!same_size)
 		{
+			make_image(image_dst, 13, 13);
+			img_fill(image_dst, ugly_yellow);
 			return;
 		}
 
@@ -180,7 +184,7 @@ namespace libimage
 		u32 const group_width = n_groups * bar_width + (n_groups - 1) * bar_spacing;
 		u32 const image_width = n_buckets * group_width + (n_buckets - 1) * group_spacing + 2 * bar_spacing;
 
-		pixel_t white = to_pixel(255, 255, 255);
+		pixel_t white = to_pixel(240, 240, 240);
 
 		make_image(image_dst, image_width, image_height);
 		img_fill(image_dst, white);
@@ -237,6 +241,8 @@ namespace libimage
 		assert(same_size);
 		if (!same_size)
 		{
+			make_image(image_dst, 13, 13);
+			img_fill(image_dst, ugly_yellow);
 			return;
 		}
 
@@ -249,6 +255,8 @@ namespace libimage
 		assert(same_size);
 		if (!same_size)
 		{
+			make_image(image_dst, 13, 13);
+			img_fill(image_dst, ugly_green);
 			return;
 		}
 
