@@ -1,4 +1,10 @@
-#include "libimage_math.hpp"
+/*
+
+Copyright (c) 2021 Adam Lafontaine
+
+*/
+
+#include "charts.hpp"
 
 #include <numeric>
 #include <algorithm>
@@ -14,6 +20,10 @@ namespace libimage
 #ifndef LIBIMAGE_NO_PARALLEL
 
 #ifndef LIBIMAGE_NO_COLOR
+
+	constexpr auto ugly_yellow = to_pixel(255, 249, 79);
+	constexpr auto ugly_green = to_pixel(153, 255, 51);
+
 
 	static void img_fill(image_t const& img, pixel_t const& p)
 	{
@@ -76,180 +86,9 @@ namespace libimage
 }
 
 
-
-
 namespace libimage
 {
-	constexpr auto HIST_BUCKET_SIZE = CHANNEL_SIZE / N_HIST_BUCKETS;
-
-	typedef struct
-	{
-		r32 mean;
-		hist_t hist;
-
-	} basic_stats_t;
-
-
-	static r32 calc_std_dev(hist_t const& hist, r32 mean)
-	{
-		r32 diff_sq_total = 0.0f;
-		size_t qty_total = 0;
-		for (u32 bucket = 0; bucket < hist.size(); ++bucket)
-		{
-			auto qty = hist[bucket];
-
-			if (!qty)
-				continue;
-
-			qty_total += qty;
-			r32 diff = static_cast<r32>(bucket) - mean;
-
-			diff_sq_total += qty * diff * diff;
-		}
-
-		return qty_total == 0 ? 0.0f : std::sqrt(diff_sq_total / qty_total);
-	}
-
-
 #ifndef LIBIMAGE_NO_COLOR
-
-	rgb_stats_t calc_stats(image_t const& image)
-	{
-		std::array<hist_t, RGB_CHANNELS> c_hists = { 0 };
-		std::array<r32, RGB_CHANNELS> c_counts = { 0 };
-
-		auto const update = [&](pixel_t const& p)
-		{
-			for (u32 c = 0; c < RGB_CHANNELS; ++c)
-			{
-				auto bucket = p.channels[c] / HIST_BUCKET_SIZE;
-
-				++c_hists[c][bucket];
-				c_counts[c] += p.channels[c];
-			}
-		};
-
-		std::for_each(image.begin(), image.end(), update);
-
-		auto num_pixels = static_cast<size_t>(image.width) * image.height;
-
-		rgb_stats_t rgb_stats = {};
-
-		for_each_channel_rgb([&](u32 c) 
-		{
-			auto mean = c_counts[c] / num_pixels;
-
-			r32 std_dev = calc_std_dev(c_hists[c], mean);
-			rgb_stats.stats[c] = { mean, std_dev, c_hists[c] };
-		});
-
-		return rgb_stats;
-	}
-	
-	
-	rgb_stats_t calc_stats(view_t const& view)
-	{
-		std::array<hist_t, RGB_CHANNELS> c_hists = { 0 };
-		std::array<r32, RGB_CHANNELS> c_counts = { 0 };
-
-		auto const update = [&](pixel_t const& p)
-		{
-			for_each_channel_rgb([&](u32 c) 
-			{
-				auto bucket = p.channels[c] / HIST_BUCKET_SIZE;
-
-				++c_hists[c][bucket];
-				c_counts[c] += p.channels[c];
-			});
-		};
-
-		std::for_each(view.begin(), view.end(), update);
-
-		auto num_pixels = static_cast<size_t>(view.width) * view.height;
-
-		rgb_stats_t rgb_stats = {};
-
-		for_each_channel_rgb([&](u32 c) 
-		{
-			auto mean = c_counts[c] / num_pixels;
-
-			r32 std_dev = calc_std_dev(c_hists[c], mean);
-			rgb_stats.stats[c] = { mean, std_dev, c_hists[c] };
-		});
-
-		return rgb_stats;
-	}
-
-
-	static basic_stats_t calc_basic_stats(image_t const& image, u32 channel)
-	{
-		hist_t hist = { 0 };
-		r32 count = 0.0f;
-
-		auto const update = [&](pixel_t const& p)
-		{
-			auto shade = p.channels[channel];
-			auto bucket = shade / HIST_BUCKET_SIZE;
-			++hist[bucket];
-			count += shade;
-		};
-
-		std::for_each(image.begin(), image.end(), update);
-
-		auto num_pixels = image.width * image.height;
-		r32 mean = count / num_pixels;
-
-		assert(mean >= 0);
-		assert(mean < CHANNEL_SIZE);
-
-		return { mean, std::move(hist) };
-	}
-
-
-	static basic_stats_t calc_basic_stats(view_t const& view, u32 channel)
-	{
-		hist_t hist = { 0 };
-		r32 count = 0.0f;
-
-		auto const update = [&](pixel_t const& p)
-		{
-			auto shade = p.channels[channel];
-			auto bucket = shade / HIST_BUCKET_SIZE;
-			++hist[bucket];
-			count += shade;
-		};
-
-		std::for_each(view.begin(), view.end(), update);
-
-		auto num_pixels = view.width * view.height;
-		r32 mean = count / num_pixels;
-
-		assert(mean >= 0);
-		assert(mean < CHANNEL_SIZE);
-
-		return { mean, std::move(hist) };
-	}
-
-
-	stats_t calc_stats(image_t const& image, Channel ch)
-	{
-		auto basic = calc_basic_stats(image, to_channel_index(ch));
-
-		r32 std_dev = calc_std_dev(basic.hist, basic.mean);
-
-		return { basic.mean, std_dev, std::move(basic.hist) };
-	}
-
-
-	stats_t calc_stats(view_t const& view, Channel ch)
-	{
-		auto basic = calc_basic_stats(view, to_channel_index(ch));
-
-		r32 std_dev = calc_std_dev(basic.hist, basic.mean);
-
-		return { basic.mean, std_dev, std::move(basic.hist) };
-	}
-
 
 	void draw_histogram(rgb_stats_t const& rgb_stats, image_t& image_dst)
 	{
@@ -275,16 +114,16 @@ namespace libimage
 		img_fill(image_dst, white);
 
 		u32 max_count = 0;
-		for_each_channel_rgb([&](u32 c) 
-		{
-			auto& hist = rgb_stats.stats[c].hist;
-			auto max = *std::max_element(hist.begin(), hist.end());
-
-			if (max > max_count)
+		for_each_channel_rgb([&](u32 c)
 			{
-				max_count = max;
-			}
-		});
+				auto& hist = rgb_stats.stats[c].hist;
+				auto max = *std::max_element(hist.begin(), hist.end());
+
+				if (max > max_count)
+				{
+					max_count = max;
+				}
+			});
 
 		const auto norm = [&](u32 count)
 		{
@@ -320,25 +159,25 @@ namespace libimage
 	}
 
 
-	void draw_bar_chart(std::vector<data_color_t> const& data, image_t& image_dst)
+	void draw_bar_chart_grouped(grouped_chart_data_t const& data, image_t& image_dst)
 	{
 		assert(!image_dst.width);
 		assert(!image_dst.height);
 		assert(!image_dst.data);
 		assert(!data.empty());
 
-	    u32 const n_buckets = static_cast<u32>(data[0].data.size());
-		for (auto const& item : data)
+		u32 const n_buckets = static_cast<u32>(data[0].data.size());
+		auto same_size =  std::all_of(data.begin(), data.end(), [&](auto const& v) { return v.data.size() == n_buckets; });
+		assert(same_size);
+		if (!same_size)
 		{
-			if (item.data.size() != n_buckets)
-			{
-				assert(false);
-				return;
-			}
+			make_image(image_dst, 13, 13);
+			img_fill(image_dst, ugly_yellow);
+			return;
 		}
 
 		u32 const max_relative_qty = 200;
-		u32 const image_height = max_relative_qty + 1;		
+		u32 const image_height = max_relative_qty + 1;
 
 		u32 const bar_width = 20;
 		u32 const bar_spacing = 2;
@@ -347,7 +186,7 @@ namespace libimage
 		u32 const group_width = n_groups * bar_width + (n_groups - 1) * bar_spacing;
 		u32 const image_width = n_buckets * group_width + (n_buckets - 1) * group_spacing + 2 * bar_spacing;
 
-		pixel_t white = to_pixel(255, 255, 255);
+		pixel_t white = to_pixel(240, 240, 240);
 
 		make_image(image_dst, image_width, image_height);
 		img_fill(image_dst, white);
@@ -370,17 +209,16 @@ namespace libimage
 		};
 
 		pixel_range_t bar_range = {};
-		bar_range.y_begin = 0;
 		bar_range.y_end = image_height;
 
 		for (u32 bucket = 0; bucket < n_buckets; ++bucket)
 		{
 			for (u32 group = 0; group < n_groups; ++group)
 			{
-				auto& d = data[group];
-
 				bar_range.x_begin = bar_spacing + bucket * (group_width + group_spacing) + group * (bar_width + bar_spacing);
 				bar_range.x_end = bar_range.x_begin + bar_width;
+
+				auto& d = data[group];
 				bar_range.y_begin = bar_range.y_end - norm(d.data[bucket]);
 
 				if (bar_range.y_end > bar_range.y_begin)
@@ -392,78 +230,105 @@ namespace libimage
 		}
 	}
 
+
+	void draw_bar_multi_chart_grouped(grouped_multi_chart_data_t const& data, image_t& image_dst)
+	{
+		assert(!image_dst.width);
+		assert(!image_dst.height);
+		assert(!image_dst.data);
+		assert(!data.empty());
+
+		u32 const n_charts = static_cast<u32>(data[0].data_list.size());
+		auto same_size = std::all_of(data.begin(), data.end(), [&](auto const& v) { return v.data_list.size() == n_charts; });
+		assert(same_size);
+		if (!same_size)
+		{
+			make_image(image_dst, 13, 13);
+			img_fill(image_dst, ugly_yellow);
+			return;
+		}
+
+		u32 const n_buckets = static_cast<u32>(data[0].data_list[0].size());
+		same_size = std::all_of(data.begin(), data.end(), 
+			[&](auto const& v) 
+			{ 
+				return std::all_of(v.data_list.begin(), v.data_list.end(), [&](auto const& d) { return d.size() == n_buckets;  }); 
+			});
+		assert(same_size);
+		if (!same_size)
+		{
+			make_image(image_dst, 13, 13);
+			img_fill(image_dst, ugly_green);
+			return;
+		}
+
+		u32 const max_relative_qty = 200;
+		u32 const chart_height = max_relative_qty + 1;
+		u32 chart_spacing = 10;
+		u32 const image_height = n_charts * (max_relative_qty + 1) + (n_charts - 1) * chart_spacing;
+
+		u32 const bar_width = 20;
+		u32 const bar_spacing = 2;
+		u32 const n_groups = static_cast<u32>(data.size());
+		u32 const group_spacing = 10;
+		u32 const group_width = n_groups * bar_width + (n_groups - 1) * bar_spacing;
+		u32 const image_width = n_buckets * group_width + (n_buckets - 1) * group_spacing + 2 * bar_spacing;
+
+		pixel_t white = to_pixel(240, 240, 240);
+
+		make_image(image_dst, image_width, image_height);
+		img_fill(image_dst, white);
+
+		r32 max_count = 0.0f;
+		for (auto const& mcd : data)
+		{
+			for (auto const& vec : mcd.data_list)
+			{
+				auto max = *std::max_element(vec.begin(), vec.end());
+
+				if (max > max_count)
+				{
+					max_count = max;
+				}
+			}
+		}
+
+		const auto norm = [&](r32 val)
+		{
+			return static_cast<u32>(val / max_count * max_relative_qty);
+		};
+
+		pixel_range_t bar_range = {};
+
+		for (u32 chart = 0; chart < n_charts; ++chart)
+		{
+			bar_range.y_end = (chart + 1) * chart_height + chart * chart_spacing;
+
+			for (u32 bucket = 0; bucket < n_buckets; ++bucket)
+			{
+				for (u32 group = 0; group < n_groups; ++group)
+				{
+					bar_range.x_begin = bar_spacing + bucket * (group_width + group_spacing) + group * (bar_width + bar_spacing);
+					bar_range.x_end = bar_range.x_begin + bar_width;
+
+					auto& mcd = data[group];
+					auto val = mcd.data_list[chart][bucket];
+
+					bar_range.y_begin = bar_range.y_end - norm(val);
+					if (bar_range.y_end > bar_range.y_begin)
+					{
+						auto bar_view = sub_view(image_dst, bar_range);
+						img_fill(bar_view, mcd.color);
+					}
+				}
+			}
+		}
+	}
+
+
 #endif // !LIBIMAGE_NO_COLOR
 
-
 #ifndef	LIBIMAGE_NO_GRAYSCALE
-
-	static basic_stats_t calc_basic_stats(gray::image_t const& image)
-	{
-		hist_t hist = { 0 };
-		r32 count = 0.0f;
-
-		auto const update = [&](u8 shade)
-		{
-			auto bucket = shade / HIST_BUCKET_SIZE;
-			++hist[bucket];
-			count += shade;
-		};
-
-		std::for_each(image.begin(), image.end(), update);
-
-		auto num_pixels = image.width * image.height;
-		r32 mean = count / num_pixels;
-
-		assert(mean >= 0);
-		assert(mean < CHANNEL_SIZE);
-
-		return { mean, hist };
-	}
-
-
-	static basic_stats_t calc_basic_stats(gray::view_t const& view)
-	{
-		hist_t hist = { 0 };
-		r32 count = 0.0f;
-
-		auto const update = [&](u8 shade)
-		{
-			auto bucket = shade / HIST_BUCKET_SIZE;
-			++hist[bucket];
-			count += shade;
-		};
-
-		std::for_each(view.begin(), view.end(), update);
-
-		auto num_pixels = view.width * view.height;
-		r32 mean = count / num_pixels;
-
-		assert(mean >= 0);
-		assert(mean < CHANNEL_SIZE);
-
-		return { mean, hist };
-	}
-
-
-	stats_t calc_stats(gray::image_t const& image)
-	{
-		auto basic = calc_basic_stats(image);
-
-		r32 std_dev = calc_std_dev(basic.hist, basic.mean);
-
-		return { basic.mean, std_dev, std::move(basic.hist) };
-	}
-
-
-	stats_t calc_stats(gray::view_t const& view)
-	{
-		auto basic = calc_basic_stats(view);
-
-		r32 std_dev = calc_std_dev(basic.hist, basic.mean);
-
-		return { basic.mean, std_dev, std::move(basic.hist) };
-	}
-
 
 	void draw_histogram(hist_t const& hist, gray::image_t& image_dst)
 	{
@@ -476,7 +341,7 @@ namespace libimage
 		u32 const max_relative_qty = 200;
 		u32 const image_height = max_relative_qty + 1;
 
-		u32 const n_buckets = static_cast<u32>(hist.size());	
+		u32 const n_buckets = static_cast<u32>(hist.size());
 
 		u32 const bucket_width = 20;
 		u32 const bucket_spacing = 1;
@@ -517,7 +382,6 @@ namespace libimage
 
 	}
 
-
 #endif // !LIBIMAGE_NO_GRAYSCALE
-	
+
 }
