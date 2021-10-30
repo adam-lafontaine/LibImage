@@ -66,4 +66,4 @@ namespace libimage
 }
 
 
-#define NDEBUG
+//#define NDEBUG
