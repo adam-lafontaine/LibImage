@@ -374,9 +374,74 @@ void cuda_tests(path_t& out_dir)
 
 	img::write_image(dst_gray_img, out_dir + "combo.png");
 
-
 	device_free(color_buffer);
 	device_free(gray_buffer);
+	device_free(kernel_buffer);
+}
+
+
+void speed_test(path_t& out_dir)
+{
+	GrayImage src;
+	GrayImage dst;
+
+	
+}
+
+
+void do_gradients(GrayImage const& src, GrayImage& dst, u32 qty)
+{
+	auto const width = src.width;
+	auto const height = src.height;
+
+	GrayImage tmp;
+	img::make_image(tmp, width, height);
+
+	for(u32 i = 0; i < qty; ++i)
+	{
+		img::seq::gradients(src, dst, tmp);
+	}
+}
+
+
+void cuda_do_gradients(GrayImage const& src, GrayImage& dst, u32 qty)
+{
+	auto const width = src.width;
+	auto const height = src.height;
+
+	DeviceBuffer<GrayPixel> d_buffer;
+	auto gray_bytes = 3 * src.width * src.height * G_PIXEL_SZ;
+	device_malloc(d_buffer, gray_bytes);
+
+	CudaGrayImage d_src;
+	CudaGrayImage d_dst;
+	CudaGrayImage d_tmp;
+
+	img::make_image(d_src, width, height, d_buffer);
+	img::make_image(d_dst, width, height, d_buffer);
+	img::make_image(d_tmp, width, height, d_buffer);
+
+	// convolution kernels
+	DeviceBuffer<r32> kernel_buffer;
+	auto kernel_bytes = 70 * sizeof(r32);
+	device_malloc(kernel_buffer, kernel_bytes);
+
+	img::BlurKernels blur_k;
+	img::make_blur_kernels(blur_k, kernel_buffer);
+
+	img::GradientKernels grad_k;
+	img::make_gradient_kernels(grad_k, kernel_buffer);
+
+	for(u32 i = 0; i < qty; ++i)
+	{
+		img::copy_to_device(src, d_src);
+
+		img::gradients(d_src, d_dst, d_tmp, blur_k, grad_k);
+
+		img::copy_to_host(d_dst, dst);
+	}
+
+	device_free(d_buffer);
 	device_free(kernel_buffer);
 }
 
