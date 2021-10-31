@@ -66,16 +66,16 @@ int main()
 
 	auto dst_root = fs::path(DST_IMAGE_ROOT);	
 
-	basic_tests(dst_root / "basic");
-	math_tests(dst_root / "math");
+	/*basic_tests(dst_root / "basic");
+	math_tests(dst_root / "math");*/
 	process_tests(dst_root / "process");
 
-	auto timing_dir = dst_root / "timing";
+	/*auto timing_dir = dst_root / "timing";
 	empty_dir(timing_dir);
 
 	for_each_tests(timing_dir);
 	transform_tests(timing_dir);
-	gradient_times(timing_dir);
+	gradient_times(timing_dir);*/
 
 	std::cout << "\nDone.\n";
 }
@@ -649,7 +649,7 @@ void process_tests(fs::path const& out_dir)
 	img::write_image(dst_gray_image, out_dir / "edges.png");
 
 	// gradient
-	img::gradients(src_gray_image, dst_gray_image);
+	img::seq::gradients(src_gray_image, dst_gray_image);
 	img::write_image(dst_gray_image, out_dir / "gradient.png");
 
 	// combine transformations in the same image

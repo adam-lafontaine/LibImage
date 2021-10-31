@@ -9,8 +9,10 @@ Copyright (c) 2021 Adam Lafontaine
 #include "convolve.hpp"
 #include "../libimage.hpp"
 
-#include <algorithm>
 #include <array>
+
+
+
 
 namespace libimage
 {
@@ -100,9 +102,12 @@ namespace libimage
 		u32 w = 0;
 		r32 total = 0.0f;
 
-		auto const add_weight = [&](u8 p) { total += weights[w++] * p; };
+		auto const add_weight = [&](u8 p) 
+		{ 
+			total += weights[w++] * p; 
+		};
 
-		std::for_each(view.begin(), view.end(), add_weight);
+		for_each_pixel(view, add_weight);
 
 		return total;
 	}
@@ -238,17 +243,42 @@ namespace libimage
 	}
 
 
+	constexpr r32 D3 = 16.0f;
+	constexpr std::array<r32, 9> GAUSS_3X3
+	{
+		(1 / D3), (2 / D3), (1 / D3),
+		(2 / D3), (4 / D3), (2 / D3),
+		(1 / D3), (2 / D3), (1 / D3),
+	};
+
+	constexpr r32 D5 = 256.0f;
+	constexpr std::array<r32, 25> GAUSS_5X5
+	{
+		(1 / D5), (4 / D5),  (6 / D5),  (4 / D5),  (1 / D5),
+		(4 / D5), (16 / D5), (24 / D5), (16 / D5), (4 / D5),
+		(6 / D5), (24 / D5), (36 / D5), (24 / D5), (6 / D5),
+		(4 / D5), (16 / D5), (24 / D5), (16 / D5), (4 / D5),
+		(1 / D5), (4 / D5),  (6 / D5),  (4 / D5),  (1 / D5),
+	};
+
+
+	constexpr std::array<r32, 9> GRAD_X_3X3
+	{
+		1.0f, 0.0f, -1.0f,
+		2.0f, 0.0f, -2.0f,
+		1.0f, 0.0f, -1.0f,
+	};
+	constexpr std::array<r32, 9> GRAD_Y_3X3
+	{
+		1.0f,  2.0f,  1.0f,
+		0.0f,  0.0f,  0.0f,
+		-1.0f, -2.0f, -1.0f,
+	};
+
+
 	u8 gauss3(gray::image_t const& img, u32 x, u32 y)
 	{
-		constexpr auto rw = [](u8 w) { return w / 16.0f; };
-		constexpr std::array<r32, 9> gauss
-		{
-			rw(1), rw(2), rw(1),
-			rw(2), rw(4), rw(2),
-			rw(1), rw(2), rw(1),
-		};
-
-		auto p = weighted_center(img, x, y, gauss);
+		auto p = weighted_center(img, x, y, GAUSS_3X3);
 
 		assert(p >= 0.0f);
 		assert(p <= 255.0f);
@@ -259,15 +289,7 @@ namespace libimage
 
 	u8 gauss3(gray::view_t const& view, u32 x, u32 y)
 	{
-		constexpr auto rw = [](u8 w) { return w / 16.0f; };
-		constexpr std::array<r32, 9> gauss
-		{
-			rw(1), rw(2), rw(1),
-			rw(2), rw(4), rw(2),
-			rw(1), rw(2), rw(1),
-		};
-
-		auto p = weighted_center(view, x, y, gauss);
+		auto p = weighted_center(view, x, y, GAUSS_3X3);
 
 		assert(p >= 0.0f);
 		assert(p <= 255.0f);
@@ -278,17 +300,7 @@ namespace libimage
 
 	u8 gauss5(gray::image_t const& img, u32 x, u32 y)
 	{
-		constexpr auto rw = [](u8 w) { return w / 256.0f; };
-		constexpr std::array<r32, 25> gauss
-		{
-			rw(1), rw(4),  rw(6),  rw(4),  rw(1),
-			rw(4), rw(16), rw(24), rw(16), rw(4),
-			rw(6), rw(24), rw(36), rw(24), rw(6),
-			rw(4), rw(16), rw(24), rw(16), rw(4),
-			rw(1), rw(4),  rw(6),  rw(4),  rw(1),
-		};
-
-		auto p = weighted_center(img, x, y, gauss);
+		auto p = weighted_center(img, x, y, GAUSS_5X5);
 
 		assert(p >= 0.0f);
 		assert(p <= 255.0f);
@@ -298,18 +310,8 @@ namespace libimage
 
 
 	u8 gauss5(gray::view_t const& view, u32 x, u32 y)
-	{
-		constexpr auto rw = [](u8 w) { return w / 256.0f; };
-		constexpr std::array<r32, 25> gauss
-		{
-			rw(1), rw(4),  rw(6),  rw(4),  rw(1),
-			rw(4), rw(16), rw(24), rw(16), rw(4),
-			rw(6), rw(24), rw(36), rw(24), rw(6),
-			rw(4), rw(16), rw(24), rw(16), rw(4),
-			rw(1), rw(4),  rw(6),  rw(4),  rw(1),
-		};
-
-		auto p = weighted_center(view, x, y, gauss);
+	{		
+		auto p = weighted_center(view, x, y, GAUSS_5X5);
 
 		assert(p >= 0.0f);
 		assert(p <= 255.0f);
@@ -320,53 +322,28 @@ namespace libimage
 
 	r32 x_gradient(gray::image_t const& img, u32 x, u32 y)
 	{
-		constexpr std::array<r32, 9> kernel
-		{
-			1.0f, 0.0f, -1.0f,
-			2.0f, 0.0f, -2.0f,
-			1.0f, 0.0f, -1.0f,
-		};
-
-		return weighted_center(img, x, y, kernel);
+		return weighted_center(img, x, y, GRAD_X_3X3);
 	}
 
 
 	r32 x_gradient(gray::view_t const& view, u32 x, u32 y)
 	{
-		constexpr std::array<r32, 9> kernel
-		{
-			1.0f, 0.0f, -1.0f,
-			2.0f, 0.0f, -2.0f,
-			1.0f, 0.0f, -1.0f,
-		};
-
-		return weighted_center(view, x, y, kernel);
+		return weighted_center(view, x, y, GRAD_X_3X3);
 	}
+
+
+	
 
 
 	r32 y_gradient(gray::image_t const& img, u32 x, u32 y)
 	{
-		constexpr std::array<r32, 9> kernel
-		{
-			 1.0f,  2.0f,  1.0f,
-			 0.0f,  0.0f,  0.0f,
-			-1.0f, -2.0f, -1.0f,
-		};
-
-		return weighted_center(img, x, y, kernel);
+		return weighted_center(img, x, y, GRAD_Y_3X3);
 	}
 
 
 	r32 y_gradient(gray::view_t const& view, u32 x, u32 y)
 	{
-		constexpr std::array<r32, 9> kernel
-		{
-			 1.0f,  2.0f,  1.0f,
-			 0.0f,  0.0f,  0.0f,
-			-1.0f, -2.0f, -1.0f,
-		};
-
-		return weighted_center(view, x, y, kernel);
+		return weighted_center(view, x, y, GRAD_Y_3X3);
 	}
 }
 

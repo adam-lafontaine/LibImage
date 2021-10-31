@@ -82,7 +82,6 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
-
 #endif // !LIBIMAGE_NO_PARALLEL
 	namespace seq
 	{

@@ -327,7 +327,7 @@ namespace libimage
 
 
 		template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-		static void inner_gauss(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+		static void inner_gauss_old(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 		{
 			u32 x_first = 2;
 			u32 y_first = 2;
@@ -336,10 +336,92 @@ namespace libimage
 			for (u32 y = y_first; y <= y_last; ++y)
 			{
 				auto dst_row = dst.row_begin(y);
+
 				for (u32 x = x_first; x <= x_last; ++x)
 				{
 					dst_row[x] = gauss5(src, x, y);
 				}
+			}
+		}
+
+
+#include <xmmintrin.h>
+
+		using quadr32 = __m128;
+
+		constexpr r32 D5 = 256.0f;
+		constexpr std::array<r32, 25> GAUSS_5X5
+		{
+			(1 / D5), (4 / D5),  (6 / D5),  (4 / D5),  (1 / D5),
+			(4 / D5), (16 / D5), (24 / D5), (16 / D5), (4 / D5),
+			(6 / D5), (24 / D5), (36 / D5), (24 / D5), (6 / D5),
+			(4 / D5), (16 / D5), (24 / D5), (16 / D5), (4 / D5),
+			(1 / D5), (4 / D5),  (6 / D5),  (4 / D5),  (1 / D5),
+		};
+
+
+		static void gauss5(u8* src_begin, u8* dst_begin, u32 length, u32 pitch)
+		{
+			for (int i = 0; i < length; ++i)
+			{
+				u32 w = 0;
+				r32 acc = 0.0f;
+
+				for (int gy = -2; gy < 3; ++gy)
+				{
+					for (int gx = -2; gx < 3; ++gx)
+					{
+						int offset = gy * pitch + gx;
+
+						auto src_val = src_begin[i + offset];
+						auto weight = GAUSS_5X5[w];
+
+						acc += src_val * weight;
+						++w;
+					}
+				}
+
+				dst_begin[i] = static_cast<u8>(acc);
+			}
+		}
+
+
+
+
+
+		template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+		static void inner_gauss(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+		{
+			u32 x_first = 2;
+			u32 y_first = 2;
+			u32 x_last = src.width - 3;
+			u32 y_last = src.height - 3;
+
+			auto length = x_last - x_first + 1;
+			auto pitch = static_cast<u32>(src.row_begin(1) - src.row_begin(0));
+
+			for (u32 y = y_first; y <= y_last; ++y)
+			{
+				gauss5(src.row_begin(y), dst.row_begin(y), length, pitch);
+
+				/*auto dst_row = dst.row_begin(y);
+
+				for (u32 x = x_first; x <= x_last; x += 1)
+				{
+					u32 w = 0;
+					r32 total = 0.0f;
+
+					for (u32 gy = y - 2; gy < y + 3; ++gy)
+					{
+						for (u32 gx = x - 2; gx < x + 3; ++gx)
+						{
+							auto p = *src.xy_at(gx, gy);
+							total += GAUSS_5X5[w++] * p;
+						}
+					}
+
+					dst_row[x] = static_cast<u8>(total);
+				}*/
 			}
 		}
 
