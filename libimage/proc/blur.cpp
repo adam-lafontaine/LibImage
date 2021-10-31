@@ -347,7 +347,39 @@ namespace libimage
 
 #include <xmmintrin.h>
 
-		using quadr32 = __m128;
+		typedef union
+		{
+			__m128 quad;
+			r32 lanes[4];
+
+		} quad_r32_t;
+
+
+		void set_zero(quad_r32_t& q)
+		{
+			q.quad = _mm_setzero_ps();
+		}
+
+
+		quad_r32_t make_quad_r32()
+		{
+			quad_r32_t quad;
+			quad.quad = _mm_setzero_ps();
+
+			return quad;
+		}
+
+
+		void load_lanes(quad_r32_t& q, r32* begin)
+		{
+			q.lanes[0] = begin[0];
+			q.lanes[1] = begin[1];
+			q.lanes[2] = begin[2];
+			q.lanes[3] = begin[3];
+		}
+
+
+		
 
 		constexpr r32 D5 = 256.0f;
 		constexpr std::array<r32, 25> GAUSS_5X5
@@ -362,27 +394,49 @@ namespace libimage
 
 		static void gauss5(u8* src_begin, u8* dst_begin, u32 length, u32 pitch)
 		{
-			for (int i = 0; i < length; ++i)
+			r32 vals_r32[4];
+
+			auto const do_simd = [&](int i) 
 			{
 				u32 w = 0;
-				r32 acc = 0.0f;
+				auto acc = _mm_setzero_ps();
 
 				for (int gy = -2; gy < 3; ++gy)
 				{
 					for (int gx = -2; gx < 3; ++gx)
 					{
 						int offset = gy * pitch + gx;
+						auto weight = _mm_load1_ps(GAUSS_5X5.data() + w);
 
-						auto src_val = src_begin[i + offset];
-						auto weight = GAUSS_5X5[w];
+						vals_r32[0] = src_begin[i];
+						vals_r32[1] = src_begin[i + 1];
+						vals_r32[2] = src_begin[i + 2];
+						vals_r32[3] = src_begin[i + 3];
 
-						acc += src_val * weight;
+						auto src_val = _mm_load_ps(vals_r32);
+
+						acc = _mm_add_ps(acc, _mm_mul_ps(weight, src_val));
+
+						_mm_store_ps(vals_r32, acc);
+
+						dst_begin[i] = static_cast<u8>(vals_r32[0]);
+						dst_begin[i + 1] = static_cast<u8>(vals_r32[1]);
+						dst_begin[i + 2] = static_cast<u8>(vals_r32[2]);
+						dst_begin[i + 3] = static_cast<u8>(vals_r32[3]);
+
 						++w;
 					}
 				}
+			};
 
-				dst_begin[i] = static_cast<u8>(acc);
+			for (int i = 0; i < length; i += 4)
+			{
+				do_simd(i);
 			}
+
+			do_simd(length - 4);
+
+
 		}
 
 
