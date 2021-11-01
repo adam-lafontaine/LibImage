@@ -327,7 +327,7 @@ namespace libimage
 
 
 		template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-		static void inner_gauss_old(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+		static void inner_gauss(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 		{
 			u32 x_first = 2;
 			u32 y_first = 2;
@@ -345,41 +345,7 @@ namespace libimage
 		}
 
 
-#include <xmmintrin.h>
-
-		typedef union
-		{
-			__m128 quad;
-			r32 lanes[4];
-
-		} quad_r32_t;
-
-
-		void set_zero(quad_r32_t& q)
-		{
-			q.quad = _mm_setzero_ps();
-		}
-
-
-		quad_r32_t make_quad_r32()
-		{
-			quad_r32_t quad;
-			quad.quad = _mm_setzero_ps();
-
-			return quad;
-		}
-
-
-		void load_lanes(quad_r32_t& q, r32* begin)
-		{
-			q.lanes[0] = begin[0];
-			q.lanes[1] = begin[1];
-			q.lanes[2] = begin[2];
-			q.lanes[3] = begin[3];
-		}
-
-
-		
+#include <xmmintrin.h>		
 
 		constexpr r32 D5 = 256.0f;
 		constexpr std::array<r32, 25> GAUSS_5X5
@@ -392,44 +358,44 @@ namespace libimage
 		};
 
 
-		static void gauss5(u8* src_begin, u8* dst_begin, u32 length, u32 pitch)
+		static void gauss5_simd(u8* src_begin, u8* dst_begin, u32 length, u32 pitch)
 		{
-			r32 vals_r32[4];
+			r32 memory[4];
 
 			auto const do_simd = [&](int i) 
 			{
 				u32 w = 0;
-				auto acc = _mm_setzero_ps();
+				auto acc_vec = _mm_setzero_ps();
 
 				for (int gy = -2; gy < 3; ++gy)
 				{
 					for (int gx = -2; gx < 3; ++gx)
 					{
-						int offset = gy * pitch + gx;
+						int offset = gy * pitch + gx + i;
 						auto weight = _mm_load1_ps(GAUSS_5X5.data() + w);
 
-						vals_r32[0] = src_begin[i];
-						vals_r32[1] = src_begin[i + 1];
-						vals_r32[2] = src_begin[i + 2];
-						vals_r32[3] = src_begin[i + 3];
+						memory[0] = src_begin[offset];
+						memory[1] = src_begin[offset + 1];
+						memory[2] = src_begin[offset + 2];
+						memory[3] = src_begin[offset + 3];
 
-						auto src_val = _mm_load_ps(vals_r32);
+						auto src_vec = _mm_load_ps(memory);
 
-						acc = _mm_add_ps(acc, _mm_mul_ps(weight, src_val));
+						acc_vec = _mm_add_ps(acc_vec, _mm_mul_ps(weight, src_vec));
 
-						_mm_store_ps(vals_r32, acc);
-
-						dst_begin[i] = static_cast<u8>(vals_r32[0]);
-						dst_begin[i + 1] = static_cast<u8>(vals_r32[1]);
-						dst_begin[i + 2] = static_cast<u8>(vals_r32[2]);
-						dst_begin[i + 3] = static_cast<u8>(vals_r32[3]);
+						_mm_store_ps(memory, acc_vec);
 
 						++w;
 					}
+
+					dst_begin[i] = static_cast<u8>(memory[0]);
+					dst_begin[i + 1] = static_cast<u8>(memory[1]);
+					dst_begin[i + 2] = static_cast<u8>(memory[2]);
+					dst_begin[i + 3] = static_cast<u8>(memory[3]);
 				}
 			};
 
-			for (int i = 0; i < length; i += 4)
+			for (u32 i = 0; i < length; i += 4)
 			{
 				do_simd(i);
 			}
@@ -444,38 +410,19 @@ namespace libimage
 
 
 		template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-		static void inner_gauss(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+		static void inner_gauss_new(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 		{
-			u32 x_first = 2;
-			u32 y_first = 2;
-			u32 x_last = src.width - 3;
-			u32 y_last = src.height - 3;
+			u32 x_begin = 2;
+			u32 y_begin = 2;
+			u32 x_end = src.width - 2;
+			u32 y_end = src.height - 2;
 
-			auto length = x_last - x_first + 1;
+			auto length = x_end - x_begin;
 			auto pitch = static_cast<u32>(src.row_begin(1) - src.row_begin(0));
 
-			for (u32 y = y_first; y <= y_last; ++y)
+			for (u32 y = y_begin; y < y_end; ++y)
 			{
-				gauss5(src.row_begin(y), dst.row_begin(y), length, pitch);
-
-				/*auto dst_row = dst.row_begin(y);
-
-				for (u32 x = x_first; x <= x_last; x += 1)
-				{
-					u32 w = 0;
-					r32 total = 0.0f;
-
-					for (u32 gy = y - 2; gy < y + 3; ++gy)
-					{
-						for (u32 gx = x - 2; gx < x + 3; ++gx)
-						{
-							auto p = *src.xy_at(gx, gy);
-							total += GAUSS_5X5[w++] * p;
-						}
-					}
-
-					dst_row[x] = static_cast<u8>(total);
-				}*/
+				gauss5_simd(src.row_begin(y) + x_begin, dst.row_begin(y) + x_begin, length, pitch);
 			}
 		}
 
