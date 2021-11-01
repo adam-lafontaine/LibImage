@@ -327,7 +327,7 @@ namespace libimage
 
 
 		template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-		static void inner_gauss(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+		static void inner_gauss_old(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 		{
 			u32 x_first = 2;
 			u32 y_first = 2;
@@ -358,7 +358,7 @@ namespace libimage
 		};
 
 
-		static void gauss5_simd(u8* src_begin, u8* dst_begin, u32 length, u32 pitch)
+		static void gauss5_row_simd(u8* src_begin, u8* dst_begin, u32 length, u32 pitch)
 		{
 			r32 memory[4];
 
@@ -369,7 +369,7 @@ namespace libimage
 
 				for (int gy = -2; gy < 3; ++gy)
 				{
-					for (int gx = -2; gx < 3; ++gx)
+					for (int gx = -2; gx < 3; ++gx, ++w)
 					{
 						int offset = gy * pitch + gx + i;
 						auto weight = _mm_load1_ps(GAUSS_5X5.data() + w);
@@ -382,17 +382,15 @@ namespace libimage
 						auto src_vec = _mm_load_ps(memory);
 
 						acc_vec = _mm_add_ps(acc_vec, _mm_mul_ps(weight, src_vec));
-
-						_mm_store_ps(memory, acc_vec);
-
-						++w;
 					}
-
-					dst_begin[i] = static_cast<u8>(memory[0]);
-					dst_begin[i + 1] = static_cast<u8>(memory[1]);
-					dst_begin[i + 2] = static_cast<u8>(memory[2]);
-					dst_begin[i + 3] = static_cast<u8>(memory[3]);
 				}
+
+				_mm_store_ps(memory, acc_vec);
+
+				dst_begin[i] = static_cast<u8>(memory[0]);
+				dst_begin[i + 1] = static_cast<u8>(memory[1]);
+				dst_begin[i + 2] = static_cast<u8>(memory[2]);
+				dst_begin[i + 3] = static_cast<u8>(memory[3]);
 			};
 
 			for (u32 i = 0; i < length; i += 4)
@@ -401,16 +399,11 @@ namespace libimage
 			}
 
 			do_simd(length - 4);
-
-
 		}
 
 
-
-
-
 		template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-		static void inner_gauss_new(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+		static void inner_gauss(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 		{
 			u32 x_begin = 2;
 			u32 y_begin = 2;
@@ -422,7 +415,7 @@ namespace libimage
 
 			for (u32 y = y_begin; y < y_end; ++y)
 			{
-				gauss5_simd(src.row_begin(y) + x_begin, dst.row_begin(y) + x_begin, length, pitch);
+				gauss5_row_simd(src.row_begin(y) + x_begin, dst.row_begin(y) + x_begin, length, pitch);
 			}
 		}
 

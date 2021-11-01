@@ -68,7 +68,7 @@ int main()
 
 	//basic_tests(dst_root / "basic");
 	//math_tests(dst_root / "math");
-	//process_tests(dst_root / "process");
+	process_tests(dst_root / "process");
 
 	auto timing_dir = dst_root / "timing";
 	empty_dir(timing_dir);
@@ -641,7 +641,7 @@ void process_tests(fs::path const& out_dir)
 	img::write_image(dst_gray_image, out_dir / "binarize.png");
 
 	//blur
-	img::blur(src_gray_image, dst_gray_image);
+	img::seq::blur(src_gray_image, dst_gray_image);
 	img::write_image(dst_gray_image, out_dir / "blur.png");	
 
 	// edge detection
@@ -649,7 +649,7 @@ void process_tests(fs::path const& out_dir)
 	img::write_image(dst_gray_image, out_dir / "edges.png");
 
 	// gradient
-	img::gradients(src_gray_image, dst_gray_image);
+	img::seq::gradients(src_gray_image, dst_gray_image);
 	img::write_image(dst_gray_image, out_dir / "gradient.png");
 
 	// combine transformations in the same image
@@ -693,7 +693,7 @@ void gradient_times(fs::path const& out_dir)
 {
 	std::cout << "\ngradients:\n";
 
-	u32 n_image_sizes = 3;
+	u32 n_image_sizes = 1;
 	u32 image_dim_factor = 2;
 
 	u32 n_image_counts = 5;

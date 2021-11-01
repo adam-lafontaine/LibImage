@@ -428,7 +428,7 @@ namespace libimage
 
 
 		template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-		static void gradients_inner(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+		static void gradients_inner_old(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 		{
 			u32 x_first = 1;
 			u32 y_first = 1;
@@ -448,11 +448,98 @@ namespace libimage
 		}
 
 
+#include <xmmintrin.h>
+
+
+		constexpr std::array<r32, 9> GRAD_X_3X3
+		{
+			1.0f, 0.0f, -1.0f,
+			2.0f, 0.0f, -2.0f,
+			1.0f, 0.0f, -1.0f,
+		};
+		constexpr std::array<r32, 9> GRAD_Y_3X3
+		{
+			1.0f,  2.0f,  1.0f,
+			0.0f,  0.0f,  0.0f,
+			-1.0f, -2.0f, -1.0f,
+		};
+
+
+		static void gradients_row_simd(u8* src_begin, u8* dst_begin, u32 length, u32 pitch)
+		{
+			r32 memory[4];
+
+			auto const do_simd = [&](int i)
+			{
+				u32 w = 0;
+				auto vec_x = _mm_setzero_ps();
+				auto vec_y = _mm_setzero_ps();
+
+				for (int gy = -1; gy < 2; ++gy)
+				{
+					for (int gx = -1; gx < 2; ++gx, ++w)
+					{
+						int offset = gy * pitch + gx + i;
+						auto weight_x = _mm_load1_ps(GRAD_X_3X3.data() + w);
+						auto weight_y = _mm_load1_ps(GRAD_Y_3X3.data() + w);
+
+						memory[0] = src_begin[offset];
+						memory[1] = src_begin[offset + 1];
+						memory[2] = src_begin[offset + 2];
+						memory[3] = src_begin[offset + 3];
+
+						auto src_vec = _mm_load_ps(memory);
+
+						vec_x = _mm_add_ps(vec_x, _mm_mul_ps(weight_x, src_vec));
+						vec_y = _mm_add_ps(vec_y, _mm_mul_ps(weight_y, src_vec));						
+					}
+				}
+
+				vec_x = _mm_mul_ps(vec_x, vec_x);
+				vec_y = _mm_mul_ps(vec_y, vec_y);
+
+				auto grad = _mm_sqrt_ps(_mm_add_ps(vec_x, vec_y));
+
+				_mm_store_ps(memory, grad);
+
+				dst_begin[i] = static_cast<u8>(memory[0]);
+				dst_begin[i + 1] = static_cast<u8>(memory[1]);
+				dst_begin[i + 2] = static_cast<u8>(memory[2]);
+				dst_begin[i + 3] = static_cast<u8>(memory[3]);
+			};
+
+			for (u32 i = 0; i < length; i += 4)
+			{
+				do_simd(i);
+			}
+
+			do_simd(length - 4);
+		}
+
+
+		template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+		static void gradients_inner(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+		{
+			u32 x_begin = 1;
+			u32 y_begin = 1;
+			u32 x_end = src.width - 1;
+			u32 y_end = src.height - 1;
+
+			auto length = x_end - x_begin;
+			auto pitch = static_cast<u32>(src.row_begin(1) - src.row_begin(0));
+
+			for (u32 y = y_begin; y < y_end; ++y)
+			{
+				gradients_row_simd(src.row_begin(y) + x_begin, dst.row_begin(y) + x_begin, length, pitch);
+			}
+		}
+
+
 		template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
 		static void do_gradients(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 		{
-			zero_top_bottom(dst);
-			zero_left_right(dst);
+			seq::zero_top_bottom(dst);
+			seq::zero_left_right(dst);
 
 			seq::gradients_inner(src, dst);
 		}
