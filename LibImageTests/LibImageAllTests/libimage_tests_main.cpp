@@ -641,7 +641,7 @@ void process_tests(fs::path const& out_dir)
 	img::write_image(dst_gray_image, out_dir / "binarize.png");
 
 	//blur
-	img::seq::blur(src_gray_image, dst_gray_image);
+	img::simd::blur(src_gray_image, dst_gray_image);
 	img::write_image(dst_gray_image, out_dir / "blur.png");	
 
 	// edge detection
@@ -696,8 +696,8 @@ void gradient_times(fs::path const& out_dir)
 	u32 n_image_sizes = 1;
 	u32 image_dim_factor = 2;
 
-	u32 n_image_counts = 5;
-	u32 image_count_factor = 2;
+	u32 n_image_counts = 2;
+	u32 image_count_factor = 16;
 
 	u32 width_start = 400;
 	u32 height_start = 300;
@@ -717,6 +717,12 @@ void gradient_times(fs::path const& out_dir)
 
 	img::multi_chart_data_t par_view_times;
 	par_view_times.color = blue;
+
+	img::multi_chart_data_t simd_image_times;
+	simd_image_times.color = green;
+
+	img::multi_chart_data_t simd_view_times;
+	simd_view_times.color = blue;
 
 	Stopwatch sw;
 	u32 width = width_start;
@@ -742,6 +748,8 @@ void gradient_times(fs::path const& out_dir)
 		std::vector<r32> seq_view;
 		std::vector<r32> par_image;
 		std::vector<r32> par_view;
+		std::vector<r32> simd_image;
+		std::vector<r32> simd_view;
 		GrayImage src;
 		GrayImage dst;
 		GrayImage tmp;
@@ -762,7 +770,7 @@ void gradient_times(fs::path const& out_dir)
 			}			
 			t = sw.get_time_milli();
 			seq_image.push_back(scale(t));
-			print_t("seq image");
+			print_t(" seq image");
 
 			sw.start();
 			for (u32 i = 0; i < image_count; ++i)
@@ -771,7 +779,7 @@ void gradient_times(fs::path const& out_dir)
 			}
 			t = sw.get_time_milli();
 			seq_view.push_back(scale(t));
-			print_t(" seq view");
+			print_t("  seq view");
 
 			sw.start();
 			for (u32 i = 0; i < image_count; ++i)
@@ -780,7 +788,7 @@ void gradient_times(fs::path const& out_dir)
 			}
 			t = sw.get_time_milli();
 			par_image.push_back(scale(t));
-			print_t("par image");
+			print_t(" par image");
 
 			sw.start();
 			for (u32 i = 0; i < image_count; ++i)
@@ -789,7 +797,25 @@ void gradient_times(fs::path const& out_dir)
 			}
 			t = sw.get_time_milli();
 			par_view.push_back(scale(t));
-			print_t(" par view");
+			print_t("  par view");
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::simd::gradients(src, dst, tmp);
+			}
+			t = sw.get_time_milli();
+			simd_image.push_back(scale(t));
+			print_t("simd image");
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::simd::gradients(src_v, dst_v, tmp);
+			}
+			t = sw.get_time_milli();
+			simd_view.push_back(scale(t));
+			print_t(" simd view");
 
 			image_count *= image_count_factor;
 		}
@@ -798,6 +824,8 @@ void gradient_times(fs::path const& out_dir)
 		seq_view_times.data_list.push_back(seq_view);
 		par_image_times.data_list.push_back(par_image);
 		par_view_times.data_list.push_back(par_view);
+		simd_image_times.data_list.push_back(simd_image);
+		simd_view_times.data_list.push_back(simd_view);
 
 		width *= image_dim_factor;
 		height *= image_dim_factor;
@@ -806,7 +834,8 @@ void gradient_times(fs::path const& out_dir)
 	img::grouped_multi_chart_data_t chart_data
 	{ 
 		seq_image_times, seq_view_times,
-		par_image_times, par_view_times
+		par_image_times, par_view_times,
+		simd_image_times, simd_view_times
 	};
 	Image chart;
 	img::draw_bar_multi_chart_grouped(chart_data, chart);
