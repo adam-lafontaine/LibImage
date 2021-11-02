@@ -379,25 +379,25 @@ namespace libimage
 	}
 
 
-	void transform_grayscale(image_t const& src, gray::image_t const& dst)
+	void grayscale(image_t const& src, gray::image_t const& dst)
 	{
 		transform(src, dst, pixel_grayscale_standard);
 	}
 
 
-	void transform_grayscale(image_t const& src, gray::view_t const& dst)
+	void grayscale(image_t const& src, gray::view_t const& dst)
 	{
 		transform(src, dst, pixel_grayscale_standard);
 	}
 
 
-	void transform_grayscale(view_t const& src, gray::image_t const& dst)
+	void grayscale(view_t const& src, gray::image_t const& dst)
 	{
 		transform(src, dst, pixel_grayscale_standard);
 	}
 
 
-	void transform_grayscale(view_t const& src, gray::view_t const& dst)
+	void grayscale(view_t const& src, gray::view_t const& dst)
 	{
 		transform(src, dst, pixel_grayscale_standard);
 	}
@@ -694,25 +694,25 @@ namespace libimage
 		}
 
 
-		void transform_grayscale(image_t const& src, gray::image_t const& dst)
+		void grayscale(image_t const& src, gray::image_t const& dst)
 		{
 			seq::transform(src, dst, pixel_grayscale_standard);
 		}
 
 
-		void transform_grayscale(image_t const& src, gray::view_t const& dst)
+		void grayscale(image_t const& src, gray::view_t const& dst)
 		{
 			seq::transform(src, dst, pixel_grayscale_standard);
 		}
 
 
-		void transform_grayscale(view_t const& src, gray::image_t const& dst)
+		void grayscale(view_t const& src, gray::image_t const& dst)
 		{
 			seq::transform(src, dst, pixel_grayscale_standard);
 		}
 
 
-		void transform_grayscale(view_t const& src, gray::view_t const& dst)
+		void grayscale(view_t const& src, gray::view_t const& dst)
 		{
 			seq::transform(src, dst, pixel_grayscale_standard);
 		}
@@ -733,7 +733,7 @@ namespace libimage
 			constexpr u32 STEP = N;
 			r32 memory[N];
 
-			r32 weights[] = { 0.299, 0.587, 0.114 };
+			r32 weights[] = { 0.299f, 0.587f, 0.114f };
 
 			auto const do_simd = [&](u32 i) 
 			{
@@ -743,7 +743,7 @@ namespace libimage
 				{
 					for (u32 n = 0; n < N; ++n)
 					{
-						memory[n] = static_cast<r32>(src_begin[i].channels[c]);
+						memory[n] = static_cast<r32>(src_begin[i + n].channels[c]);
 					}
 
 					auto src_vec = _mm_load_ps(memory);
@@ -760,25 +760,54 @@ namespace libimage
 				}
 			};
 
-			for (u32 i = 0; i < length - 4; i += 4)
+			for (u32 i = 0; i < length - STEP; i += STEP)
 			{
 				do_simd(i);
 			}
 
-			do_simd(length - 4);
+			do_simd(length - STEP);
 		}
 
 
-		void transform_grayscale(image_t const& src, gray::image_t const& dst)
+		void grayscale(image_t const& src, gray::image_t const& dst)
 		{
+			assert(verify(src, dst));
 
+			grayscale_row(src.begin(), dst.begin(), src.width * src.height);
 		}
 
-		void transform_grayscale(image_t const& src, gray::view_t const& dst);
 
-		void transform_grayscale(view_t const& src, gray::image_t const& dst);
+		void grayscale(image_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
 
-		void transform_grayscale(view_t const& src, gray::view_t const& dst);
+			for (u32 y = 0; y < src.height; ++y)
+			{
+				grayscale_row(src.row_begin(y), dst.row_begin(y), src.width);
+			}
+		}
+
+
+		void grayscale(view_t const& src, gray::image_t const& dst)
+		{
+			assert(verify(src, dst));
+
+			for (u32 y = 0; y < src.height; ++y)
+			{
+				grayscale_row(src.row_begin(y), dst.row_begin(y), src.width);
+			}
+		}
+
+
+		void grayscale(view_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+
+			for (u32 y = 0; y < src.height; ++y)
+			{
+				grayscale_row(src.row_begin(y), dst.row_begin(y), src.width);
+			}
+		}
 
 
 #endif // !LIBIMAGE_NO_GRAYSCALE

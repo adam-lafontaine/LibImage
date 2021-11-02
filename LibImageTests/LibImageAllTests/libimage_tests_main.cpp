@@ -606,7 +606,7 @@ void process_tests(fs::path const& out_dir)
 	img::write_image(dst_image, out_dir / "alpha_blend_src_dst.png");
 
 	// grayscale
-	img::transform_grayscale(corvette_view, dst_gray_image);
+	img::simd::grayscale(corvette_view, dst_gray_image);
 	img::write_image(dst_gray_image, out_dir / "convert_grayscale.png");
 	
 	// stats
