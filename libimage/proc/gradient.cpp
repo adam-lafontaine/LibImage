@@ -162,6 +162,7 @@ namespace libimage
 			[&]() { zero_left(dst); },
 			[&]() { zero_right(dst); },
 			[&]() { gradients_inner(src, dst); }
+			//[&]() { simd::inner_gradients(src, dst); }
 		};
 
 		std::for_each(std::execution::par, f_list.begin(), f_list.end(), [](auto const& f) { f(); });
@@ -645,91 +646,13 @@ namespace libimage
 
 	namespace simd
 	{
-#include <xmmintrin.h>
-
-
-		constexpr std::array<r32, 9> GRAD_X_3X3
-		{
-			1.0f, 0.0f, -1.0f,
-			2.0f, 0.0f, -2.0f,
-			1.0f, 0.0f, -1.0f,
-		};
-		constexpr std::array<r32, 9> GRAD_Y_3X3
-		{
-			1.0f,  2.0f,  1.0f,
-			0.0f,  0.0f,  0.0f,
-			-1.0f, -2.0f, -1.0f,
-		};
-
-
-		static void gradients_row(u8* src_begin, u8* dst_begin, u32 length, u32 pitch)
-		{
-			r32 memory[4];
-
-			auto const do_simd = [&](int i)
-			{
-				u32 w = 0;
-				auto vec_x = _mm_setzero_ps();
-				auto vec_y = _mm_setzero_ps();
-
-				for (int ry = -1; ry < 2; ++ry)
-				{
-					for (int rx = -1; rx < 2; ++rx, ++w)
-					{
-						int offset = ry * pitch + rx + i;
-
-						memory[0] = static_cast<r32>(src_begin[offset]);
-						memory[1] = static_cast<r32>(src_begin[offset + 1]);
-						memory[2] = static_cast<r32>(src_begin[offset + 2]);
-						memory[3] = static_cast<r32>(src_begin[offset + 3]);
-
-						auto src_vec = _mm_load_ps(memory);
-
-						auto weight_x = _mm_load1_ps(GRAD_X_3X3.data() + w);
-						auto weight_y = _mm_load1_ps(GRAD_Y_3X3.data() + w);
-
-						vec_x = _mm_add_ps(vec_x, _mm_mul_ps(weight_x, src_vec));
-						vec_y = _mm_add_ps(vec_y, _mm_mul_ps(weight_y, src_vec));
-					}
-				}
-
-				vec_x = _mm_mul_ps(vec_x, vec_x);
-				vec_y = _mm_mul_ps(vec_y, vec_y);
-
-				auto grad = _mm_sqrt_ps(_mm_add_ps(vec_x, vec_y));
-
-				_mm_store_ps(memory, grad);
-
-				dst_begin[i] = static_cast<u8>(memory[0]);
-				dst_begin[i + 1] = static_cast<u8>(memory[1]);
-				dst_begin[i + 2] = static_cast<u8>(memory[2]);
-				dst_begin[i + 3] = static_cast<u8>(memory[3]);
-			};
-
-			for (u32 i = 0; i < length - 4; i += 4)
-			{
-				do_simd(i);
-			}
-
-			do_simd(length - 4);
-		}
-
-
 		template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-		static void gradients_inner(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+		static void do_gradients(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 		{
-			u32 x_begin = 1;
-			u32 y_begin = 1;
-			u32 x_end = src.width - 1;
-			u32 y_end = src.height - 1;
+			seq::zero_top_bottom(dst);
+			seq::zero_left_right(dst);
 
-			auto length = x_end - x_begin;
-			auto pitch = static_cast<u32>(src.row_begin(1) - src.row_begin(0));
-
-			for (u32 y = y_begin; y < y_end; ++y)
-			{
-				gradients_row(src.row_begin(y) + x_begin, dst.row_begin(y) + x_begin, length, pitch);
-			}
+			simd::inner_gradients(src, dst);
 		}
 
 
@@ -739,12 +662,29 @@ namespace libimage
 			assert(verify(src, temp));
 
 			simd::blur(src, temp);
-
-			seq::zero_top_bottom(dst);
-			seq::zero_left_right(dst);
-
-			simd::gradients_inner(temp, dst);
+			simd::do_gradients(temp, dst);
 		}
+
+
+		void gradients(gray::image_t const& src, gray::view_t const& dst, gray::image_t const& temp)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			simd::blur(src, temp);
+			simd::do_gradients(temp, dst);
+		}
+
+
+		void gradients(gray::view_t const& src, gray::image_t const& dst, gray::image_t const& temp)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			simd::blur(src, temp);
+			simd::do_gradients(temp, dst);
+		}
+
 
 
 		void gradients(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp)
@@ -753,12 +693,57 @@ namespace libimage
 			assert(verify(src, temp));
 
 			simd::blur(src, temp);
-
-			seq::zero_top_bottom(dst);
-			seq::zero_left_right(dst);
-
-			simd::gradients_inner(temp, dst);
+			simd::do_gradients(temp, dst);
 		}
+
+
+		void gradients(gray::image_t const& src, gray::image_t const& dst)
+		{
+			assert(verify(src, dst));
+
+			gray::image_t temp;
+			make_image(temp, src.width, src.height);
+			simd::blur(src, temp);
+
+			simd::do_gradients(temp, dst);
+		}
+
+
+		void gradients(gray::image_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+
+			gray::image_t temp;
+			make_image(temp, src.width, src.height);
+			simd::blur(src, temp);
+
+			simd::do_gradients(temp, dst);
+		}
+
+
+		void gradients(gray::view_t const& src, gray::image_t const& dst)
+		{
+			assert(verify(src, dst));
+
+			gray::image_t temp;
+			make_image(temp, src.width, src.height);
+			simd::blur(src, temp);
+
+			simd::do_gradients(temp, dst);
+		}
+
+
+		void gradients(gray::view_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+
+			gray::image_t temp;
+			make_image(temp, src.width, src.height);
+			simd::blur(src, temp);
+
+			simd::do_gradients(temp, dst);
+		}
+
 	}
 }
 

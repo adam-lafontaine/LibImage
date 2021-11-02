@@ -649,7 +649,7 @@ void process_tests(fs::path const& out_dir)
 	img::write_image(dst_gray_image, out_dir / "edges.png");
 
 	// gradient
-	img::seq::gradients(src_gray_image, dst_gray_image);
+	img::simd::gradients(src_gray_image, dst_gray_image);
 	img::write_image(dst_gray_image, out_dir / "gradient.png");
 
 	// combine transformations in the same image

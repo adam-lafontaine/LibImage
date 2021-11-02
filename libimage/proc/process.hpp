@@ -488,12 +488,28 @@ namespace libimage
 
 		void blur(gray::image_t const& src, gray::image_t const& dst);
 
+		void blur(gray::image_t const& src, gray::view_t const& dst);
+
 		void blur(gray::view_t const& src, gray::image_t const& dst);
+
+		void blur(gray::view_t const& src, gray::view_t const& dst);
 
 
 		void gradients(gray::image_t const& src, gray::image_t const& dst, gray::image_t const& temp);
 
+		void gradients(gray::image_t const& src, gray::view_t const& dst, gray::image_t const& temp);
+
+		void gradients(gray::view_t const& src, gray::image_t const& dst, gray::image_t const& temp);
+
 		void gradients(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp);
+
+		void gradients(gray::image_t const& src, gray::image_t const& dst);
+
+		void gradients(gray::image_t const& src, gray::view_t const& dst);
+
+		void gradients(gray::view_t const& src, gray::image_t const& dst);
+
+		void gradients(gray::view_t const& src, gray::view_t const& dst);
 
 
 #endif // !LIBIMAGE_NO_GRAYSCALE

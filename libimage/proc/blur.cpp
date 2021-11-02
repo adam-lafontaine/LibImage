@@ -194,7 +194,7 @@ namespace libimage
 			[&]() { gauss_inner_bottom(src, dst); },
 			[&]() { gauss_inner_left(src, dst); },
 			[&]() { gauss_inner_right(src, dst); },
-			[&]() { inner_gauss(src, dst); }
+			[&]() { simd::inner_gauss(src, dst); }
 		};
 
 		// execute everything
@@ -406,216 +406,31 @@ namespace libimage
 
 	namespace simd
 	{
-#include <xmmintrin.h>
-
-		constexpr r32 D5 = 256.0f;
-		constexpr std::array<r32, 25> GAUSS_5X5
-		{
-			(1 / D5), (4 / D5),  (6 / D5),  (4 / D5),  (1 / D5),
-			(4 / D5), (16 / D5), (24 / D5), (16 / D5), (4 / D5),
-			(6 / D5), (24 / D5), (36 / D5), (24 / D5), (6 / D5),
-			(4 / D5), (16 / D5), (24 / D5), (16 / D5), (4 / D5),
-			(1 / D5), (4 / D5),  (6 / D5),  (4 / D5),  (1 / D5),
-		};
-
-
-		constexpr r32 D3 = 16.0f;
-		constexpr std::array<r32, 9> GAUSS_3X3
-		{
-			(1 / D3), (2 / D3), (1 / D3),
-			(2 / D3), (4 / D3), (2 / D3),
-			(1 / D3), (2 / D3), (1 / D3),
-		};
-
-
-		/*template<class SRC_GRAY_IMG_T, class DST_GRAY_IMG_T>
-		static void copy_top_bottom(SRC_GRAY_IMG_T const& src, DST_GRAY_IMG_T const& dst)
-		{
-			constexpr u8 N = 4;
-			constexpr u32 STEP = N * sizeof(32) / sizeof(u8);
-
-			u32 x_begin = 0;
-			u32 x_end = src.width;
-			u32 y_begin = 0;
-			u32 y_last = src.height - 1;
-
-			auto src_top = src.row_begin(y_begin);
-			auto src_bottom = src.row_begin(y_last);
-			auto dst_top = dst.row_begin(y_begin);
-			auto dst_bottom = dst.row_begin(y_last);
-
-			auto length = x_end - x_begin;
-
-			auto const do_simd = [&](u32 offset_u8)
-			{
-				auto src_top32 = (r32*)(src_top + offset_u8);
-				auto dst_top32 = (r32*)(dst_top + offset_u8);
-				auto src_bottom32 = (r32*)(src_bottom + offset_u8);
-				auto dst_bottom32 = (r32*)(dst_bottom + offset_u8);
-
-				_mm_store_ps(dst_top32, _mm_load_ps(src_top32));
-				_mm_store_ps(dst_bottom32, _mm_load_ps(src_bottom32));
-			};
-
-			for (u32 i = 0; i < length - STEP; i += STEP)
-			{
-				do_simd(i);
-			}
-
-			do_simd(length - STEP);
-		}*/
-
-
-		static void gauss5_row(u8* src_begin, u8* dst_begin, u32 length, u32 pitch)
-		{
-			constexpr u32 N = 4;
-			constexpr u32 STEP = N;
-			r32 memory[N];
-
-			auto const do_simd = [&](int i)
-			{
-				u32 w = 0;
-				auto acc_vec = _mm_setzero_ps();
-
-				for (int ry = -2; ry < 3; ++ry)
-				{
-					for (int rx = -2; rx < 3; ++rx, ++w)
-					{
-						int offset = ry * pitch + rx + i;
-
-						for (u32 n = 0; n < N; ++n)
-						{
-							memory[n] = static_cast<r32>(src_begin[offset + (int)n]);
-						}
-
-						auto src_vec = _mm_load_ps(memory);
-
-						auto weight = _mm_load1_ps(GAUSS_5X5.data() + w);
-
-						acc_vec = _mm_add_ps(acc_vec, _mm_mul_ps(weight, src_vec));
-					}
-				}
-
-				_mm_store_ps(memory, acc_vec);
-
-				for (u32 n = 0; n < N; ++n)
-				{
-					dst_begin[i + n] = static_cast<u8>(memory[n]);
-				}
-			};
-
-			for (u32 i = 0; i < length - STEP; i += STEP)
-			{
-				do_simd(i);
-			}
-
-			do_simd(length - STEP);
-		}
-
-
-		template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-		static void inner_gauss(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
-		{
-			u32 x_begin = 2;
-			u32 y_begin = 2;
-			u32 x_end = src.width - 2;
-			u32 y_end = src.height - 2;
-
-			auto length = x_end - x_begin;
-			auto pitch = static_cast<u32>(src.row_begin(1) - src.row_begin(0));
-
-			for (u32 y = y_begin; y < y_end; ++y)
-			{
-				auto src_row = src.row_begin(y) + x_begin;
-				auto dst_row = dst.row_begin(y) + x_begin;
-				gauss5_row(src_row, dst_row, length, pitch);
-			}
-		}
-
-
-		/*static void gauss3_row(u8* src_begin, u8* dst_begin, u32 length, u32 pitch)
-		{
-			constexpr u32 N = 4;
-			constexpr u32 STEP = N;
-			r32 memory[N];
-
-			auto const do_simd = [&](int i) 
-			{
-				u32 w = 0;
-				auto acc_vec = _mm_setzero_ps();
-
-				for (int ry = -1; ry < 2; ++ry)
-				{
-					for (int rx = -1; rx < 2; ++rx, ++w)
-					{
-						int offset = ry * pitch + rx + i;
-
-						for (u32 n = 0; n < N; ++n)
-						{
-							memory[n] = static_cast<r32>(src_begin[offset + (int)n]);
-						}
-
-						auto src_vec = _mm_load_ps(memory);
-
-						auto weight = _mm_load1_ps(GAUSS_3X3.data() + w);
-
-						acc_vec = _mm_add_ps(acc_vec, _mm_mul_ps(weight, src_vec));
-					}
-				}
-
-				_mm_store_ps(memory, acc_vec);
-
-				for (u32 n = 0; n < N; ++n)
-				{
-					dst_begin[i + n] = static_cast<u8>(memory[n]);
-				}
-			};
-
-			for (u32 i = 0; i < length - STEP; i += STEP)
-			{
-				do_simd(i);
-			}
-
-			do_simd(length - STEP);
-		}
-
-
-		template<class SRC_GRAY_IMG_T, class DST_GRAY_IMG_T>
-		static void gauss_inner_top_bottom(SRC_GRAY_IMG_T const& src, DST_GRAY_IMG_T const& dst)
-		{
-			u32 x_begin = 1;
-			u32 x_end = src.width - 1;
-			u32 y_begin = 1;
-			u32 y_last = src.height - 2;
-
-			auto length = x_end - x_begin;
-			auto pitch = static_cast<u32>(src.row_begin(1) - src.row_begin(0));
-
-			auto src_row = src.row_begin(y_begin) + x_begin;
-			auto dst_row = dst.row_begin(y_begin) + x_begin;
-			gauss3_row(src_row, dst_row, length, pitch);
-
-			src_row = src.row_begin(y_last) + x_begin;
-			dst_row = dst.row_begin(y_last) + x_begin;
-			gauss3_row(src_row, dst_row, length, pitch);
-		}*/
-
-
 		void blur(gray::image_t const& src, gray::image_t const& dst)
 		{
 			assert(verify(src, dst));
 			assert(src.width >= VIEW_MIN_DIM);
 			assert(src.height >= VIEW_MIN_DIM);
-
-			simd::inner_gauss(src, dst);
-
+			
+			seq::copy_top_bottom(src, dst);
+			seq::copy_left_right(src, dst);
 			seq::gauss_inner_top_bottom(src, dst);
-
 			seq::gauss_inner_left_right(src, dst);
+			simd::inner_gauss(src, dst);
+		}
+
+
+		void blur(gray::image_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+			assert(src.width >= VIEW_MIN_DIM);
+			assert(src.height >= VIEW_MIN_DIM);
 
 			seq::copy_top_bottom(src, dst);
-
 			seq::copy_left_right(src, dst);
+			seq::gauss_inner_top_bottom(src, dst);
+			seq::gauss_inner_left_right(src, dst);
+			simd::inner_gauss(src, dst);
 		}
 
 
@@ -625,15 +440,25 @@ namespace libimage
 			assert(src.width >= VIEW_MIN_DIM);
 			assert(src.height >= VIEW_MIN_DIM);
 
-			simd::inner_gauss(src, dst);
-
+			seq::copy_top_bottom(src, dst);
+			seq::copy_left_right(src, dst);
 			seq::gauss_inner_top_bottom(src, dst);
-
 			seq::gauss_inner_left_right(src, dst);
+			simd::inner_gauss(src, dst);
+		}
+
+
+		void blur(gray::view_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+			assert(src.width >= VIEW_MIN_DIM);
+			assert(src.height >= VIEW_MIN_DIM);
 
 			seq::copy_top_bottom(src, dst);
-
 			seq::copy_left_right(src, dst);
+			seq::gauss_inner_top_bottom(src, dst);
+			seq::gauss_inner_left_right(src, dst);
+			simd::inner_gauss(src, dst);
 		}
 	}
 }
