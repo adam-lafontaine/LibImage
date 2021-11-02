@@ -320,9 +320,12 @@ namespace libimage
 			th_begin = 0;
 		}
 
-		for (u32 th = th_begin; th < th_end; ++th)
+		u32 th = 0;
+		auto const bin_cond = [&th](u8 p) { return p >= th; };
+
+		for (th = th_begin; th < th_end; ++th)
 		{
-			binarize(grad, edges, th);
+			binarize(grad, edges, bin_cond);
 
 			auto res = search_edges(edges, pattern);
 			if (res.delta < res_min.delta)

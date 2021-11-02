@@ -160,27 +160,13 @@ namespace libimage
 	void contrast_self(gray::view_t const& src_dst, u8 src_low, u8 src_high);
 
 
-	void binarize(gray::image_t const& src, gray::image_t const& dst, u8 min_threshold);
+	void binarize(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
 
-	void binarize(gray::image_t const& src, gray::view_t const& dst, u8 min_threshold);
+	void binarize(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
 
-	void binarize(gray::view_t const& src, gray::image_t const& dst, u8 min_threshold);
+	void binarize(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
 
-	void binarize(gray::view_t const& src, gray::view_t const& dst, u8 min_threshold);
-
-
-	void binarize_self(gray::image_t const& src_dst, u8 min_threshold);
-
-	void binarize_self(gray::view_t const& src_dst, u8 min_threshold);
-
-
-	void binarize(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& func);
-
-	void binarize(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& func);
-
-	void binarize(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& func);
-
-	void binarize(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& func);
+	void binarize(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
 
 
 	void binarize_self(gray::image_t const& src_dst, u8_to_bool_f const& func);
@@ -381,32 +367,18 @@ namespace libimage
 		void contrast_self(gray::view_t const& src_dst, u8 src_low, u8 src_high);
 
 
-		void binarize(gray::image_t const& src, gray::image_t const& dst, u8 min_threshold);
+		void binarize(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
 
-		void binarize(gray::image_t const& src, gray::view_t const& dst, u8 min_threshold);
+		void binarize(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
 
-		void binarize(gray::view_t const& src, gray::image_t const& dst, u8 min_threshold);
+		void binarize(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
 
-		void binarize(gray::view_t const& src, gray::view_t const& dst, u8 min_threshold);
-
-
-		void binarize_self(gray::image_t const& src_dst, u8 min_threshold);
-
-		void binarize_self(gray::view_t const& src_dst, u8 min_threshold);
+		void binarize(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
 
 
-		void binarize(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& func);
+		void binarize_self(gray::image_t const& src_dst, u8_to_bool_f const& cond);
 
-		void binarize(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& func);
-
-		void binarize(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& func);
-
-		void binarize(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& func);
-
-
-		void binarize_self(gray::image_t const& src_dst, u8_to_bool_f const& func);
-
-		void binarize_self(gray::view_t const& src_dst, u8_to_bool_f const& func);
+		void binarize_self(gray::view_t const& src_dst, u8_to_bool_f const& cond);
 
 
 		void blur(gray::image_t const& src, gray::image_t const& dst);
