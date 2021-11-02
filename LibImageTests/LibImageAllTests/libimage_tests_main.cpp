@@ -645,7 +645,7 @@ void process_tests(fs::path const& out_dir)
 	img::write_image(dst_gray_image, out_dir / "blur.png");	
 
 	// edge detection
-	img::edges(src_gray_image, dst_gray_image, [](u8 g) { return g >= 100; });
+	img::simd::edges(src_gray_image, dst_gray_image, [](u8 g) { return g >= 100; });
 	img::write_image(dst_gray_image, out_dir / "edges.png");
 
 	// gradient

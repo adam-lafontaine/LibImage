@@ -4,6 +4,8 @@
 
 #include "../gray.hpp"
 
+#include <functional>
+
 namespace libimage
 {	
 	// only used in blur.cpp
@@ -27,9 +29,11 @@ namespace libimage
 
 	r32 y_gradient(gray::view_t const& view, u32 x, u32 y);
 
-
 	namespace simd
 	{
+		using u8_to_bool_f = std::function<bool(u8)>;
+
+
 		void inner_gauss(gray::image_t const& src, gray::image_t const& dst);
 
 		void inner_gauss(gray::image_t const& src, gray::view_t const& dst);
@@ -46,6 +50,15 @@ namespace libimage
 		void inner_gradients(gray::view_t const& src, gray::image_t const& dst);
 
 		void inner_gradients(gray::view_t const& src, gray::view_t const& dst);
+
+
+		void inner_edges(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
+
+		void inner_edges(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
+
+		void inner_edges(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
+
+		void inner_edges(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
 	}
 }
 
