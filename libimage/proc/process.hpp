@@ -146,18 +146,18 @@ namespace libimage
 	void transform_self(gray::view_t const& src_dst, u8_to_u8_f const& func);
 
 
-	void transform_contrast(gray::image_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high);
+	void contrast(gray::image_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high);
 
-	void transform_contrast(gray::image_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high);
+	void contrast(gray::image_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high);
 
-	void transform_contrast(gray::view_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high);
+	void contrast(gray::view_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high);
 
-	void transform_contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high);
+	void contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high);
 
 
-	void transform_contrast_self(gray::image_t const& src_dst, u8 src_low, u8 src_high);
+	void contrast_self(gray::image_t const& src_dst, u8 src_low, u8 src_high);
 
-	void transform_contrast_self(gray::view_t const& src_dst, u8 src_low, u8 src_high);
+	void contrast_self(gray::view_t const& src_dst, u8 src_low, u8 src_high);
 
 
 	void binarize(gray::image_t const& src, gray::image_t const& dst, u8 min_threshold);
@@ -367,18 +367,18 @@ namespace libimage
 		void transform_self(gray::view_t const& src_dst, u8_to_u8_f const& func);
 
 
-		void transform_contrast(gray::image_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high);
+		void contrast(gray::image_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high);
 
-		void transform_contrast(gray::image_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high);
+		void contrast(gray::image_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high);
 
-		void transform_contrast(gray::view_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high);
+		void contrast(gray::view_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high);
 
-		void transform_contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high);
+		void contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high);
 
 
-		void transform_contrast_self(gray::image_t const& src_dst, u8 src_low, u8 src_high);
+		void contrast_self(gray::image_t const& src_dst, u8 src_low, u8 src_high);
 
-		void transform_contrast_self(gray::view_t const& src_dst, u8 src_low, u8 src_high);
+		void contrast_self(gray::view_t const& src_dst, u8 src_low, u8 src_high);
 
 
 		void binarize(gray::image_t const& src, gray::image_t const& dst, u8 min_threshold);
@@ -513,6 +513,22 @@ namespace libimage
 
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
+
+#ifndef LIBIMAGE_NO_COLOR
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+
+		void transform_grayscale(image_t const& src, gray::image_t const& dst);
+
+		void transform_grayscale(image_t const& src, gray::view_t const& dst);
+
+		void transform_grayscale(view_t const& src, gray::image_t const& dst);
+
+		void transform_grayscale(view_t const& src, gray::view_t const& dst);
+
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+#endif // !LIBIMAGE_NO_COLOR
 	}
 }
 

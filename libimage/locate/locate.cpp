@@ -301,7 +301,7 @@ namespace libimage
 		assert(p_width < v_width);
 		assert(p_height < v_height);
 		
-		transform_contrast(view, v1, props.contrast_low, props.contrast_high);
+		contrast(view, v1, props.contrast_low, props.contrast_high);
 		blur(v1, v2);
 		q_gradient(v2, v1);
 

@@ -453,7 +453,9 @@ namespace libimage
 
 		static void xy_gradients_row(u8* src_begin, u8* dst_begin, u32 length, u32 pitch)
 		{
-			r32 memory[4];
+			constexpr u32 N = 4;
+			constexpr u32 STEP = N;
+			r32 memory[N];
 
 			auto const do_simd = [&](int i)
 			{
@@ -467,10 +469,10 @@ namespace libimage
 					{
 						int offset = ry * pitch + rx + i;
 
-						memory[0] = static_cast<r32>(src_begin[offset]);
-						memory[1] = static_cast<r32>(src_begin[offset + 1]);
-						memory[2] = static_cast<r32>(src_begin[offset + 2]);
-						memory[3] = static_cast<r32>(src_begin[offset + 3]);
+						for (u32 n = 0; n < N; ++n)
+						{
+							memory[n] = static_cast<r32>(src_begin[offset + (int)n]);
+						}
 
 						auto src_vec = _mm_load_ps(memory);
 
@@ -489,10 +491,10 @@ namespace libimage
 
 				_mm_store_ps(memory, grad);
 
-				dst_begin[i] = static_cast<u8>(memory[0]);
-				dst_begin[i + 1] = static_cast<u8>(memory[1]);
-				dst_begin[i + 2] = static_cast<u8>(memory[2]);
-				dst_begin[i + 3] = static_cast<u8>(memory[3]);
+				for (u32 n = 0; n < N; ++n)
+				{
+					dst_begin[i + n] = static_cast<u8>(memory[n]);
+				}
 			};
 
 			for (u32 i = 0; i < length - 4; i += 4)

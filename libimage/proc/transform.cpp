@@ -9,6 +9,7 @@ Copyright (c) 2021 Adam Lafontaine
 #include "index_range.hpp"
 
 #include <algorithm>
+#include <xmmintrin.h>
 
 #ifndef LIBIMAGE_NO_PARALLEL
 #include <execution>
@@ -284,7 +285,7 @@ namespace libimage
 	}
 
 
-	void transform_contrast(gray::image_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high)
+	void contrast(gray::image_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high)
 	{
 		assert(src_low < src_high);
 		constexpr u8 dst_low = 0;
@@ -294,7 +295,7 @@ namespace libimage
 	}
 
 
-	void transform_contrast(gray::image_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high)
+	void contrast(gray::image_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high)
 	{
 		assert(src_low < src_high);
 		constexpr u8 dst_low = 0;
@@ -304,7 +305,7 @@ namespace libimage
 	}
 
 
-	void transform_contrast(gray::view_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high)
+	void contrast(gray::view_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high)
 	{
 		assert(src_low < src_high);
 		constexpr u8 dst_low = 0;
@@ -315,7 +316,7 @@ namespace libimage
 
 
 
-	void transform_contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high)
+	void contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high)
 	{
 		assert(src_low < src_high);
 		constexpr u8 dst_low = 0;
@@ -325,7 +326,7 @@ namespace libimage
 	}
 
 
-	void transform_contrast_self(gray::image_t const& src_dst, u8 src_low, u8 src_high)
+	void contrast_self(gray::image_t const& src_dst, u8 src_low, u8 src_high)
 	{
 		assert(src_low < src_high);
 		constexpr u8 dst_low = 0;
@@ -335,7 +336,7 @@ namespace libimage
 	}
 
 
-	void transform_contrast_self(gray::view_t const& src_dst, u8 src_low, u8 src_high)
+	void contrast_self(gray::view_t const& src_dst, u8 src_low, u8 src_high)
 	{
 		assert(src_low < src_high);
 		constexpr u8 dst_low = 0;
@@ -599,7 +600,7 @@ namespace libimage
 		}
 
 
-		void transform_contrast(gray::image_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high)
+		void contrast(gray::image_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high)
 		{
 			assert(src_low < src_high);
 			u8 dst_low = 0;
@@ -609,7 +610,7 @@ namespace libimage
 		}
 
 
-		void transform_contrast(gray::image_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high)
+		void contrast(gray::image_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high)
 		{
 			assert(src_low < src_high);
 			u8 dst_low = 0;
@@ -619,7 +620,7 @@ namespace libimage
 		}
 
 
-		void transform_contrast(gray::view_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high)
+		void contrast(gray::view_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high)
 		{
 			assert(src_low < src_high);
 			u8 dst_low = 0;
@@ -629,7 +630,7 @@ namespace libimage
 		}
 
 
-		void transform_contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high)
+		void contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high)
 		{
 			assert(src_low < src_high);
 			u8 dst_low = 0;
@@ -639,7 +640,7 @@ namespace libimage
 		}
 
 
-		void transform_contrast_self(gray::image_t const& src_dst, u8 src_low, u8 src_high)
+		void contrast_self(gray::image_t const& src_dst, u8 src_low, u8 src_high)
 		{
 			assert(src_low < src_high);
 			u8 dst_low = 0;
@@ -649,7 +650,7 @@ namespace libimage
 		}
 
 
-		void transform_contrast_self(gray::view_t const& src_dst, u8 src_low, u8 src_high)
+		void contrast_self(gray::view_t const& src_dst, u8 src_low, u8 src_high)
 		{
 			assert(src_low < src_high);
 			u8 dst_low = 0;
@@ -715,6 +716,70 @@ namespace libimage
 		{
 			seq::transform(src, dst, pixel_grayscale_standard);
 		}
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+#endif // !LIBIMAGE_NO_COLOR
+	}
+
+
+	namespace simd
+	{
+#ifndef LIBIMAGE_NO_COLOR
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+		static void grayscale_row(pixel_t* src_begin, u8* dst_begin, u32 length)
+		{
+			constexpr u32 N = 4;
+			constexpr u32 STEP = N;
+			r32 memory[N];
+
+			r32 weights[] = { 0.299, 0.587, 0.114 };
+
+			auto const do_simd = [&](u32 i) 
+			{
+				auto dst_vec = _mm_setzero_ps();
+
+				for (u32 c = 0; c < RGB_CHANNELS; ++c)
+				{
+					for (u32 n = 0; n < N; ++n)
+					{
+						memory[n] = static_cast<r32>(src_begin[i].channels[c]);
+					}
+
+					auto src_vec = _mm_load_ps(memory);
+					auto w_vec = _mm_load1_ps(weights + c);
+
+					dst_vec = _mm_add_ps(dst_vec, _mm_mul_ps(src_vec, w_vec));
+				}
+
+				_mm_store_ps(memory, dst_vec);
+
+				for (u32 n = 0; n < N; ++n)
+				{
+					dst_begin[i + n] = static_cast<u8>(memory[n]);
+				}
+			};
+
+			for (u32 i = 0; i < length - 4; i += 4)
+			{
+				do_simd(i);
+			}
+
+			do_simd(length - 4);
+		}
+
+
+		void transform_grayscale(image_t const& src, gray::image_t const& dst)
+		{
+
+		}
+
+		void transform_grayscale(image_t const& src, gray::view_t const& dst);
+
+		void transform_grayscale(view_t const& src, gray::image_t const& dst);
+
+		void transform_grayscale(view_t const& src, gray::view_t const& dst);
+
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 #endif // !LIBIMAGE_NO_COLOR
