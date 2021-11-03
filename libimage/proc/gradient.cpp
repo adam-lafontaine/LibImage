@@ -755,7 +755,6 @@ namespace libimage
 		}
 
 
-
 		void gradients(gray::image_t const& src, gray::image_t const& dst, gray::image_t const& temp)
 		{
 			assert(verify(src, dst));

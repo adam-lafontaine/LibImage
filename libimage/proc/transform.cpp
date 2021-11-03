@@ -753,12 +753,57 @@ namespace libimage
 				}
 
 				_mm_store_ps(memory, dst_vec);
-
 				for (u32 n = 0; n < N; ++n)
 				{
 					dst_begin[i + n] = static_cast<u8>(memory[n]);
 				}
 			};
+
+			for (u32 i = 0; i < length - STEP; i += STEP)
+			{
+				do_simd(i); 
+			}
+
+			do_simd(length - STEP);
+		}
+
+
+		static void contrast_row(u8* src_begin, u8* dst_begin, u32 length, u8 src_low, u8 src_high)
+		{
+			constexpr u32 N = 4;
+			constexpr u32 STEP = N;
+			r32 memory[N];
+
+			r32 low = src_low;
+			r32 high = src_high;
+
+			auto low_vec = _mm_load1_ps(&low);
+			auto high_vec = _mm_load1_ps(&high);
+
+			auto const do_simd = [&](u32 i) 
+			{
+				auto dst_vec = _mm_setzero_ps();
+
+				for (u32 n = 0; n < N; ++n)
+				{
+					memory[n] = static_cast<r32>(src_begin[i + n]);
+				}
+
+				auto val_vec = _mm_load_ps(memory);
+
+				_mm_cmple_ps(val_vec, low_vec);
+
+				_mm_cmpge_ps(val_vec, high_vec);
+
+				// not done
+
+				_mm_store_ps(memory, dst_vec);
+				for (u32 n = 0; n < N; ++n)
+				{
+					dst_begin[i + n] = static_cast<u8>(memory[n]);
+				}
+			};
+
 
 			for (u32 i = 0; i < length - STEP; i += STEP)
 			{

@@ -458,6 +458,7 @@ namespace libimage
 	{
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
+
 		void blur(gray::image_t const& src, gray::image_t const& dst);
 
 		void blur(gray::image_t const& src, gray::view_t const& dst);

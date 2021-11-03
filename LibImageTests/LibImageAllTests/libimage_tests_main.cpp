@@ -607,7 +607,7 @@ void process_tests(fs::path const& out_dir)
 
 	// grayscale
 	img::simd::grayscale(corvette_view, dst_gray_image);
-	img::write_image(dst_gray_image, out_dir / "convert_grayscale.png");
+	img::write_image(dst_gray_image, out_dir / "grayscale.png");
 	
 	// stats
 	auto gray_stats = img::calc_stats(dst_gray_image);
@@ -693,11 +693,11 @@ void gradient_times(fs::path const& out_dir)
 {
 	std::cout << "\ngradients:\n";
 
-	u32 n_image_sizes = 1;
+	u32 n_image_sizes = 4;
 	u32 image_dim_factor = 2;
 
-	u32 n_image_counts = 2;
-	u32 image_count_factor = 16;
+	u32 n_image_counts = 3;
+	u32 image_count_factor = 4;
 
 	u32 width_start = 400;
 	u32 height_start = 300;
