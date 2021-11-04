@@ -194,7 +194,7 @@ namespace libimage
 			[&]() { gauss_inner_bottom(src, dst); },
 			[&]() { gauss_inner_left(src, dst); },
 			[&]() { gauss_inner_right(src, dst); },
-			[&]() { simd::inner_gauss(src, dst); }
+			[&]() { inner_gauss(src, dst); }
 		};
 
 		// execute everything
