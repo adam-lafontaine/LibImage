@@ -398,11 +398,11 @@ void gradient_times(path_t& out_dir)
 	std::cout << "\ngradients:\n";
 	empty_dir(out_dir);
 
-	u32 n_image_sizes = 3;
+	u32 n_image_sizes = 4;
 	u32 image_dim_factor = 2;
 
-	u32 n_image_counts = 5;
-	u32 image_count_factor = 2;
+	u32 n_image_counts = 3;
+	u32 image_count_factor = 4;
 
 	u32 width_start = 400;
 	u32 height_start = 300;
