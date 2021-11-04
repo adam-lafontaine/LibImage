@@ -183,15 +183,6 @@ namespace libimage
 	void blur(gray::view_t const& src, gray::view_t const& dst);
 
 
-	void edges(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
-
-	void edges(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
-
-	void edges(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
-
-	void edges(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
-
-
 	void edges(gray::image_t const& src, gray::image_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond);
 
 	void edges(gray::image_t const& src, gray::view_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond);
@@ -201,13 +192,13 @@ namespace libimage
 	void edges(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond);
 
 
-	void gradients(gray::image_t const& src, gray::image_t const& dst);
+	void edges(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
 
-	void gradients(gray::image_t const& src, gray::view_t const& dst);
+	void edges(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
 
-	void gradients(gray::view_t const& src, gray::image_t const& dst);
+	void edges(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
 
-	void gradients(gray::view_t const& src, gray::view_t const& dst);
+	void edges(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
 
 
 	void gradients(gray::image_t const& src, gray::image_t const& dst, gray::image_t const& temp);
@@ -217,6 +208,15 @@ namespace libimage
 	void gradients(gray::view_t const& src, gray::image_t const& dst, gray::image_t const& temp);
 
 	void gradients(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp);
+
+
+	void gradients(gray::image_t const& src, gray::image_t const& dst);
+
+	void gradients(gray::image_t const& src, gray::view_t const& dst);
+
+	void gradients(gray::view_t const& src, gray::image_t const& dst);
+
+	void gradients(gray::view_t const& src, gray::view_t const& dst);
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 

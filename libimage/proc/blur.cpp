@@ -270,7 +270,7 @@ namespace libimage
 			auto src_bottom = src.row_begin(y_last);
 			auto dst_top = dst.row_begin(y_first);
 			auto dst_bottom = dst.row_begin(y_last);
-			for (u32 x = x_first; x <= x_last; ++x) // top and bottom rows
+			for (u32 x = x_first; x <= x_last; ++x)
 			{
 				dst_top[x] = src_top[x];
 				dst_bottom[x] = src_bottom[x];
