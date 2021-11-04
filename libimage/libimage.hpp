@@ -14,7 +14,8 @@ Copyright (c) 2021 Adam Lafontaine
 
 
 // jetson nano
-//#define LIBIMAGE_NO_CPP17
+#define LIBIMAGE_NO_CPP17
+#define LIBIMAGE_NO_SIMD
 
 
 #ifdef LIBIMAGE_NO_CPP17

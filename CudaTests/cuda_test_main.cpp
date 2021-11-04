@@ -105,7 +105,7 @@ void process_tests(path_t& out_dir)
 	img::write_image(dst_img, out_dir + "alpha_blend_src_dst.png");
 
 	// grayscale
-	img::seq::transform_grayscale(corvette_img, dst_gray_img);
+	img::seq::grayscale(corvette_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "convert_grayscale.png");
 
 	// stats
@@ -131,7 +131,7 @@ void process_tests(path_t& out_dir)
 	// contrast
 	auto shade_min = static_cast<u8>(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
 	auto shade_max = static_cast<u8>(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
-	img::seq::transform_contrast(src_gray_img, dst_gray_img, shade_min, shade_max);
+	img::seq::contrast(src_gray_img, dst_gray_img, shade_min, shade_max);
 	img::write_image(dst_gray_img, out_dir + "contrast.png");
 
 	// binarize
@@ -144,7 +144,7 @@ void process_tests(path_t& out_dir)
 	img::write_image(dst_gray_img, out_dir + "blur.png");	
 
 	// edge detection
-	u32 threshold = 150;
+	auto const threshold = [](u8 g) { return g >= 100; };
 	img::seq::edges(src_gray_img, dst_gray_img, threshold);
 	img::write_image(dst_gray_img, out_dir + "edges.png");
 
@@ -170,7 +170,7 @@ void process_tests(path_t& out_dir)
 	range.x_end = width;
 	src_sub = img::sub_view(src_gray_img, range);
 	dst_sub = img::sub_view(dst_gray_img, range);	
-	img::seq::transform_contrast(src_sub, dst_sub, shade_min, shade_max);
+	img::seq::contrast(src_sub, dst_sub, shade_min, shade_max);
 
 	range.x_begin = 0;
 	range.x_end = width / 2;
@@ -277,7 +277,7 @@ void cuda_tests(path_t& out_dir)
 
 	// grayscale
 	img::copy_to_device(caddy_img, d_src_img);
-	img::transform_grayscale(d_src_img, d_dst_gray_img);
+	img::grayscale(d_src_img, d_dst_gray_img);
 	img::copy_to_host(d_dst_gray_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "grayscale.png");
 
@@ -382,7 +382,7 @@ void cuda_tests(path_t& out_dir)
 	src_sub = img::sub_view(src_gray_img, range);
 	dst_sub = img::sub_view(dst_gray_img, range);
 	img::copy_to_device(src_sub, d_src_sub);
-	img::transform_contrast(d_src_sub, d_dst_sub, 20, 100);
+	img::contrast(d_src_sub, d_dst_sub, 20, 100);
 	img::copy_to_host(d_dst_sub, dst_sub);
 
 	img::write_image(dst_gray_img, out_dir + "combo.png");

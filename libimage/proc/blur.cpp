@@ -403,6 +403,7 @@ namespace libimage
 		}
 	}
 
+#ifndef LIBIMAGE_NO_SIMD
 
 	namespace simd
 	{
@@ -461,9 +462,9 @@ namespace libimage
 			simd::inner_gauss(src, dst);
 		}
 	}
+
+#endif // !LIBIMAGE_NO_SIMD
+
 }
-
-
-
 
 #endif // !LIBIMAGE_NO_GRAYSCALE

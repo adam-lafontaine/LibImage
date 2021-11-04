@@ -9,11 +9,14 @@ Copyright (c) 2021 Adam Lafontaine
 #include "index_range.hpp"
 
 #include <algorithm>
-#include <xmmintrin.h>
 
 #ifndef LIBIMAGE_NO_PARALLEL
 #include <execution>
 #endif // !LIBIMAGE_NO_PARALLEL
+
+#ifndef LIBIMAGE_NO_SIMD
+#include <xmmintrin.h>
+#endif // !LIBIMAGE_NO_SIMD
 
 
 namespace libimage
@@ -722,6 +725,8 @@ namespace libimage
 	}
 
 
+#ifndef LIBIMAGE_NO_SIMD
+
 	namespace simd
 	{
 #ifndef LIBIMAGE_NO_COLOR
@@ -858,5 +863,7 @@ namespace libimage
 #endif // !LIBIMAGE_NO_GRAYSCALE
 #endif // !LIBIMAGE_NO_COLOR
 	}
+
+#endif // !LIBIMAGE_NO_SIMD
 
 }

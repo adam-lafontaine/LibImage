@@ -643,6 +643,8 @@ namespace libimage
 	}
 
 
+#ifndef LIBIMAGE_NO_SIMD
+
 	namespace simd
 	{
 
@@ -843,6 +845,9 @@ namespace libimage
 		}
 
 	}
+
+#endif // !LIBIMAGE_NO_SIMD
+
 }
 
 

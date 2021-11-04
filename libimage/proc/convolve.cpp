@@ -10,7 +10,10 @@ Copyright (c) 2021 Adam Lafontaine
 #include "../libimage.hpp"
 
 #include <array>
+
+#ifndef LIBIMAGE_NO_SIMD
 #include <xmmintrin.h>
+#endif // !LIBIMAGE_NO_SIMD
 
 
 
@@ -343,6 +346,7 @@ namespace libimage
 		return weighted_center(view, x, y, GRAD_Y_3X3);
 	}
 
+#ifndef LIBIMAGE_NO_SIMD
 
 	namespace simd
 	{
@@ -737,6 +741,8 @@ namespace libimage
 		}
 		
 	}
+
+#endif // !LIBIMAGE_NO_SIMD
 }
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
