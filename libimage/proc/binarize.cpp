@@ -20,86 +20,44 @@ namespace libimage
 #ifndef LIBIMAGE_NO_PARALLEL
 
 
-	void binarize(gray::image_t const& src, gray::image_t const& dst, u8 min_threshold)
+	void binarize(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond)
 	{
-		auto const conv = [&](u8 p) { return p >= min_threshold ? 255 : 0; };
+		auto const conv = [&](u8 p) { return cond(p) ? 255 : 0; };
 		transform(src, dst, conv);
 	}
 
 
-	void binarize(gray::image_t const& src, gray::view_t const& dst, u8 min_threshold)
+	void binarize(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond)
 	{
-		auto const conv = [&](u8 p) { return p >= min_threshold ? 255 : 0; };
+		auto const conv = [&](u8 p) { return cond(p) ? 255 : 0; };
 		transform(src, dst, conv);
 	}
 
 
-	void binarize(gray::view_t const& src, gray::image_t const& dst, u8 min_threshold)
+	void binarize(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond)
 	{
-		auto const conv = [&](u8 p) { return p >= min_threshold ? 255 : 0; };
+		auto const conv = [&](u8 p) { return cond(p) ? 255 : 0; };
 		transform(src, dst, conv);
 	}
 
 
-	void binarize(gray::view_t const& src, gray::view_t const& dst, u8 min_threshold)
+	void binarize(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond)
 	{
-		auto const conv = [&](u8 p) { return p >= min_threshold ? 255 : 0; };
+		auto const conv = [&](u8 p) { return cond(p) ? 255 : 0; };
 		transform(src, dst, conv);
 	}
 
 
-	void binarize_self(gray::image_t const& src_dst, u8 min_threshold)
+	void binarize_self(gray::image_t const& src_dst, u8_to_bool_f const& cond)
 	{
-		auto const conv = [&](u8 p) { return p >= min_threshold ? 255 : 0; };
+		auto const conv = [&](u8 p) { return cond(p) ? 255 : 0; };
 		transform_self(src_dst, conv);
 	}
 
 
-	void binarize_self(gray::view_t const& src_dst, u8 min_threshold)
+	void binarize_self(gray::view_t const& src_dst, u8_to_bool_f const& cond)
 	{
-		auto const conv = [&](u8 p) { return p >= min_threshold ? 255 : 0; };
-		transform_self(src_dst, conv);
-	}
-
-
-	void binarize(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& func)
-	{
-		auto const conv = [&](u8 p) { return func(p) ? 255 : 0; };
-		transform(src, dst, conv);
-	}
-
-
-	void binarize(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& func)
-	{
-		auto const conv = [&](u8 p) { return func(p) ? 255 : 0; };
-		transform(src, dst, conv);
-	}
-
-
-	void binarize(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& func)
-	{
-		auto const conv = [&](u8 p) { return func(p) ? 255 : 0; };
-		transform(src, dst, conv);
-	}
-
-
-	void binarize(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& func)
-	{
-		auto const conv = [&](u8 p) { return func(p) ? 255 : 0; };
-		transform(src, dst, conv);
-	}
-
-
-	void binarize_self(gray::image_t const& src_dst, u8_to_bool_f const& func)
-	{
-		auto const conv = [&](u8 p) { return func(p) ? 255 : 0; };
-		transform_self(src_dst, conv);
-	}
-
-
-	void binarize_self(gray::view_t const& src_dst, u8_to_bool_f const& func)
-	{
-		auto const conv = [&](u8 p) { return func(p) ? 255 : 0; };
+		auto const conv = [&](u8 p) { return cond(p) ? 255 : 0; };
 		transform_self(src_dst, conv);
 	}
 
@@ -108,86 +66,44 @@ namespace libimage
 	namespace seq
 	{
 
-		void binarize(gray::image_t const& src, gray::image_t const& dst, u8 min_threshold)
+		void binarize(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond)
 		{
-			auto const conv = [&](u8 p) { return p >= min_threshold ? 255 : 0; };
+			auto const conv = [&](u8 p) { return cond(p) ? 255 : 0; };
 			seq::transform(src, dst, conv);
 		}
 
 
-		void binarize(gray::image_t const& src, gray::view_t const& dst, u8 min_threshold)
+		void binarize(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond)
 		{
-			auto const conv = [&](u8 p) { return p >= min_threshold ? 255 : 0; };
+			auto const conv = [&](u8 p) { return cond(p) ? 255 : 0; };
 			seq::transform(src, dst, conv);
 		}
 
 
-		void binarize(gray::view_t const& src, gray::image_t const& dst, u8 min_threshold)
+		void binarize(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond)
 		{
-			auto const conv = [&](u8 p) { return p >= min_threshold ? 255 : 0; };
+			auto const conv = [&](u8 p) { return cond(p) ? 255 : 0; };
 			seq::transform(src, dst, conv);
 		}
 
 
-		void binarize(gray::view_t const& src, gray::view_t const& dst, u8 min_threshold)
+		void binarize(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond)
 		{
-			auto const conv = [&](u8 p) { return p >= min_threshold ? 255 : 0; };
+			auto const conv = [&](u8 p) { return cond(p) ? 255 : 0; };
 			seq::transform(src, dst, conv);
 		}
 
 
-		void binarize_self(gray::image_t const& src_dst, u8 min_threshold)
+		void binarize_self(gray::image_t const& src_dst, u8_to_bool_f const& cond)
 		{
-			auto const conv = [&](u8 p) { return p >= min_threshold ? 255 : 0; };
+			auto const conv = [&](u8 p) { return cond(p) ? 255 : 0; };
 			seq::transform_self(src_dst, conv);
 		}
 
 
-		void binarize_self(gray::view_t const& src_dst, u8 min_threshold)
+		void binarize_self(gray::view_t const& src_dst, u8_to_bool_f const& cond)
 		{
-			auto const conv = [&](u8 p) { return p >= min_threshold ? 255 : 0; };
-			seq::transform_self(src_dst, conv);
-		}
-
-
-		void binarize(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& func)
-		{
-			auto const conv = [&](u8 p) { return func(p) ? 255 : 0; };
-			seq::transform(src, dst, conv);
-		}
-
-
-		void binarize(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& func)
-		{
-			auto const conv = [&](u8 p) { return func(p) ? 255 : 0; };
-			seq::transform(src, dst, conv);
-		}
-
-
-		void binarize(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& func)
-		{
-			auto const conv = [&](u8 p) { return func(p) ? 255 : 0; };
-			seq::transform(src, dst, conv);
-		}
-
-
-		void binarize(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& func)
-		{
-			auto const conv = [&](u8 p) { return func(p) ? 255 : 0; };
-			seq::transform(src, dst, conv);
-		}
-
-
-		void binarize_self(gray::image_t const& src_dst, u8_to_bool_f const& func)
-		{
-			auto const conv = [&](u8 p) { return func(p) ? 255 : 0; };
-			seq::transform_self(src_dst, conv);
-		}
-
-
-		void binarize_self(gray::view_t const& src_dst, u8_to_bool_f const& func)
-		{
-			auto const conv = [&](u8 p) { return func(p) ? 255 : 0; };
+			auto const conv = [&](u8 p) { return cond(p) ? 255 : 0; };
 			seq::transform_self(src_dst, conv);
 		}
 	}

@@ -11,6 +11,7 @@ A Basic image processing libray for C++
 * Copy, conversion, binarization, alpha blending, edge detection
 * Sequential and parallel processing available
 * Widespread abuse of lambdas
+* Limited SIMD functionality
 * See /LibImageTests/LibImageAllTests/libimage_tests.cpp for demonstration
 
 Support for CUDA

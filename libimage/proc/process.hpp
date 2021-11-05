@@ -146,41 +146,27 @@ namespace libimage
 	void transform_self(gray::view_t const& src_dst, u8_to_u8_f const& func);
 
 
-	void transform_contrast(gray::image_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high);
+	void contrast(gray::image_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high);
 
-	void transform_contrast(gray::image_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high);
+	void contrast(gray::image_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high);
 
-	void transform_contrast(gray::view_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high);
+	void contrast(gray::view_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high);
 
-	void transform_contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high);
-
-
-	void transform_contrast_self(gray::image_t const& src_dst, u8 src_low, u8 src_high);
-
-	void transform_contrast_self(gray::view_t const& src_dst, u8 src_low, u8 src_high);
+	void contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high);
 
 
-	void binarize(gray::image_t const& src, gray::image_t const& dst, u8 min_threshold);
+	void contrast_self(gray::image_t const& src_dst, u8 src_low, u8 src_high);
 
-	void binarize(gray::image_t const& src, gray::view_t const& dst, u8 min_threshold);
-
-	void binarize(gray::view_t const& src, gray::image_t const& dst, u8 min_threshold);
-
-	void binarize(gray::view_t const& src, gray::view_t const& dst, u8 min_threshold);
+	void contrast_self(gray::view_t const& src_dst, u8 src_low, u8 src_high);
 
 
-	void binarize_self(gray::image_t const& src_dst, u8 min_threshold);
+	void binarize(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
 
-	void binarize_self(gray::view_t const& src_dst, u8 min_threshold);
+	void binarize(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
 
+	void binarize(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
 
-	void binarize(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& func);
-
-	void binarize(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& func);
-
-	void binarize(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& func);
-
-	void binarize(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& func);
+	void binarize(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
 
 
 	void binarize_self(gray::image_t const& src_dst, u8_to_bool_f const& func);
@@ -197,31 +183,22 @@ namespace libimage
 	void blur(gray::view_t const& src, gray::view_t const& dst);
 
 
-	void edges(gray::image_t const& src, gray::image_t const& dst, u8 threshold);
+	void edges(gray::image_t const& src, gray::image_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond);
 
-	void edges(gray::image_t const& src, gray::view_t const& dst, u8 threshold);
+	void edges(gray::image_t const& src, gray::view_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond);
 
-	void edges(gray::view_t const& src, gray::image_t const& dst, u8 threshold);
+	void edges(gray::view_t const& src, gray::image_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond);
 
-	void edges(gray::view_t const& src, gray::view_t const& dst, u8 threshold);
-
-
-	void edges(gray::image_t const& src, gray::image_t const& dst, u8 threshold, gray::image_t const& temp);
-
-	void edges(gray::image_t const& src, gray::view_t const& dst, u8 threshold, gray::image_t const& temp);
-
-	void edges(gray::view_t const& src, gray::image_t const& dst, u8 threshold, gray::image_t const& temp);
-
-	void edges(gray::view_t const& src, gray::view_t const& dst, u8 threshold, gray::image_t const& temp);
+	void edges(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond);
 
 
-	void gradients(gray::image_t const& src, gray::image_t const& dst);
+	void edges(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
 
-	void gradients(gray::image_t const& src, gray::view_t const& dst);
+	void edges(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
 
-	void gradients(gray::view_t const& src, gray::image_t const& dst);
+	void edges(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
 
-	void gradients(gray::view_t const& src, gray::view_t const& dst);
+	void edges(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
 
 
 	void gradients(gray::image_t const& src, gray::image_t const& dst, gray::image_t const& temp);
@@ -231,6 +208,15 @@ namespace libimage
 	void gradients(gray::view_t const& src, gray::image_t const& dst, gray::image_t const& temp);
 
 	void gradients(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp);
+
+
+	void gradients(gray::image_t const& src, gray::image_t const& dst);
+
+	void gradients(gray::image_t const& src, gray::view_t const& dst);
+
+	void gradients(gray::view_t const& src, gray::image_t const& dst);
+
+	void gradients(gray::view_t const& src, gray::view_t const& dst);
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
@@ -247,13 +233,13 @@ namespace libimage
 	void transform(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func);
 
 
-	void transform_grayscale(image_t const& src, gray::image_t const& dst);
+	void grayscale(image_t const& src, gray::image_t const& dst);
 
-	void transform_grayscale(image_t const& src, gray::view_t const& dst);
+	void grayscale(image_t const& src, gray::view_t const& dst);
 
-	void transform_grayscale(view_t const& src, gray::image_t const& dst);
+	void grayscale(view_t const& src, gray::image_t const& dst);
 
-	void transform_grayscale(view_t const& src, gray::view_t const& dst);
+	void grayscale(view_t const& src, gray::view_t const& dst);
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 #endif // !LIBIMAGE_NO_COLOR
@@ -367,46 +353,32 @@ namespace libimage
 		void transform_self(gray::view_t const& src_dst, u8_to_u8_f const& func);
 
 
-		void transform_contrast(gray::image_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high);
+		void contrast(gray::image_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high);
 
-		void transform_contrast(gray::image_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high);
+		void contrast(gray::image_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high);
 
-		void transform_contrast(gray::view_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high);
+		void contrast(gray::view_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high);
 
-		void transform_contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high);
-
-
-		void transform_contrast_self(gray::image_t const& src_dst, u8 src_low, u8 src_high);
-
-		void transform_contrast_self(gray::view_t const& src_dst, u8 src_low, u8 src_high);
+		void contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high);
 
 
-		void binarize(gray::image_t const& src, gray::image_t const& dst, u8 min_threshold);
+		void contrast_self(gray::image_t const& src_dst, u8 src_low, u8 src_high);
 
-		void binarize(gray::image_t const& src, gray::view_t const& dst, u8 min_threshold);
-
-		void binarize(gray::view_t const& src, gray::image_t const& dst, u8 min_threshold);
-
-		void binarize(gray::view_t const& src, gray::view_t const& dst, u8 min_threshold);
+		void contrast_self(gray::view_t const& src_dst, u8 src_low, u8 src_high);
 
 
-		void binarize_self(gray::image_t const& src_dst, u8 min_threshold);
+		void binarize(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
 
-		void binarize_self(gray::view_t const& src_dst, u8 min_threshold);
+		void binarize(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
 
+		void binarize(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
 
-		void binarize(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& func);
-
-		void binarize(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& func);
-
-		void binarize(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& func);
-
-		void binarize(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& func);
+		void binarize(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
 
 
-		void binarize_self(gray::image_t const& src_dst, u8_to_bool_f const& func);
+		void binarize_self(gray::image_t const& src_dst, u8_to_bool_f const& cond);
 
-		void binarize_self(gray::view_t const& src_dst, u8_to_bool_f const& func);
+		void binarize_self(gray::view_t const& src_dst, u8_to_bool_f const& cond);
 
 
 		void blur(gray::image_t const& src, gray::image_t const& dst);
@@ -418,22 +390,22 @@ namespace libimage
 		void blur(gray::view_t const& src, gray::view_t const& dst);
 
 
-		void edges(gray::image_t const& src, gray::image_t const& dst, u8 threshold);
+		void edges(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
 
-		void edges(gray::image_t const& src, gray::view_t const& dst, u8 threshold);
+		void edges(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
 
-		void edges(gray::view_t const& src, gray::image_t const& dst, u8 threshold);
+		void edges(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
 
-		void edges(gray::view_t const& src, gray::view_t const& dst, u8 threshold);
+		void edges(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
 
 
-		void edges(gray::image_t const& src, gray::image_t const& dst, u8 threshold, gray::image_t const& temp);
+		void edges(gray::image_t const& src, gray::image_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond);
 
-		void edges(gray::image_t const& src, gray::view_t const& dst, u8 threshold, gray::image_t const& temp);
+		void edges(gray::image_t const& src, gray::view_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond);
 
-		void edges(gray::view_t const& src, gray::image_t const& dst, u8 threshold, gray::image_t const& temp);
+		void edges(gray::view_t const& src, gray::image_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond);
 
-		void edges(gray::view_t const& src, gray::view_t const& dst, u8 threshold, gray::image_t const& temp);
+		void edges(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond);
 
 
 		void gradients(gray::image_t const& src, gray::image_t const& dst);
@@ -468,17 +440,85 @@ namespace libimage
 		void transform(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func);
 
 
-		void transform_grayscale(image_t const& src, gray::image_t const& dst);
+		void grayscale(image_t const& src, gray::image_t const& dst);
 
-		void transform_grayscale(image_t const& src, gray::view_t const& dst);
+		void grayscale(image_t const& src, gray::view_t const& dst);
 
-		void transform_grayscale(view_t const& src, gray::image_t const& dst);
+		void grayscale(view_t const& src, gray::image_t const& dst);
 
-		void transform_grayscale(view_t const& src, gray::view_t const& dst);
+		void grayscale(view_t const& src, gray::view_t const& dst);
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 #endif // !LIBIMAGE_NO_COLOR	
 
+	}
+
+
+	namespace simd
+	{
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+
+		void blur(gray::image_t const& src, gray::image_t const& dst);
+
+		void blur(gray::image_t const& src, gray::view_t const& dst);
+
+		void blur(gray::view_t const& src, gray::image_t const& dst);
+
+		void blur(gray::view_t const& src, gray::view_t const& dst);
+
+
+		void edges(gray::image_t const& src, gray::image_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond);
+
+		void edges(gray::image_t const& src, gray::view_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond);
+
+		void edges(gray::view_t const& src, gray::image_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond);
+
+		void edges(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond);
+
+		void edges(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
+
+		void edges(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
+
+		void edges(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
+
+		void edges(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
+
+
+		void gradients(gray::image_t const& src, gray::image_t const& dst, gray::image_t const& temp);
+
+		void gradients(gray::image_t const& src, gray::view_t const& dst, gray::image_t const& temp);
+
+		void gradients(gray::view_t const& src, gray::image_t const& dst, gray::image_t const& temp);
+
+		void gradients(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp);
+
+		void gradients(gray::image_t const& src, gray::image_t const& dst);
+
+		void gradients(gray::image_t const& src, gray::view_t const& dst);
+
+		void gradients(gray::view_t const& src, gray::image_t const& dst);
+
+		void gradients(gray::view_t const& src, gray::view_t const& dst);
+
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+
+#ifndef LIBIMAGE_NO_COLOR
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+
+		void grayscale(image_t const& src, gray::image_t const& dst);
+
+		void grayscale(image_t const& src, gray::view_t const& dst);
+
+		void grayscale(view_t const& src, gray::image_t const& dst);
+
+		void grayscale(view_t const& src, gray::view_t const& dst);
+
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+#endif // !LIBIMAGE_NO_COLOR
 	}
 }
 

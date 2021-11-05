@@ -50,7 +50,7 @@ namespace libimage
 
 	bool gradients(gray::device_image_t const& src, gray::device_image_t const& dst, gray::device_image_t const& temp, BlurKernels const& blur_k, GradientKernels const& grad_k);
 
-	bool transform_contrast(gray::device_image_t const& src, gray::device_image_t const& dst, u8 src_low, u8 src_high);
+	bool contrast(gray::device_image_t const& src, gray::device_image_t const& dst, u8 src_low, u8 src_high);
 
 	        
 
@@ -60,7 +60,7 @@ namespace libimage
 #ifndef LIBIMAGE_NO_COLOR
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-    bool transform_grayscale(device_image_t const& src, gray::device_image_t const& dst);
+    bool grayscale(device_image_t const& src, gray::device_image_t const& dst);
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 #endif // !LIBIMAGE_NO_COLOR	

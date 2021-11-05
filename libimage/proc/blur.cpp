@@ -255,6 +255,8 @@ namespace libimage
 
 
 #endif // !LIBIMAGE_NO_PARALLEL
+
+
 	namespace seq
 	{
 		template<class SRC_GRAY_IMG_T, class DST_GRAY_IMG_T>
@@ -268,7 +270,7 @@ namespace libimage
 			auto src_bottom = src.row_begin(y_last);
 			auto dst_top = dst.row_begin(y_first);
 			auto dst_bottom = dst.row_begin(y_last);
-			for (u32 x = x_first; x <= x_last; ++x) // top and bottom rows
+			for (u32 x = x_first; x <= x_last; ++x)
 			{
 				dst_top[x] = src_top[x];
 				dst_bottom[x] = src_bottom[x];
@@ -336,6 +338,7 @@ namespace libimage
 			for (u32 y = y_first; y <= y_last; ++y)
 			{
 				auto dst_row = dst.row_begin(y);
+
 				for (u32 x = x_first; x <= x_last; ++x)
 				{
 					dst_row[x] = gauss5(src, x, y);
@@ -399,6 +402,69 @@ namespace libimage
 			seq::inner_gauss(src, dst);
 		}
 	}
+
+#ifndef LIBIMAGE_NO_SIMD
+
+	namespace simd
+	{
+		void blur(gray::image_t const& src, gray::image_t const& dst)
+		{
+			assert(verify(src, dst));
+			assert(src.width >= VIEW_MIN_DIM);
+			assert(src.height >= VIEW_MIN_DIM);
+			
+			seq::copy_top_bottom(src, dst);
+			seq::copy_left_right(src, dst);
+			seq::gauss_inner_top_bottom(src, dst);
+			seq::gauss_inner_left_right(src, dst);
+			simd::inner_gauss(src, dst);
+		}
+
+
+		void blur(gray::image_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+			assert(src.width >= VIEW_MIN_DIM);
+			assert(src.height >= VIEW_MIN_DIM);
+
+			seq::copy_top_bottom(src, dst);
+			seq::copy_left_right(src, dst);
+			seq::gauss_inner_top_bottom(src, dst);
+			seq::gauss_inner_left_right(src, dst);
+			simd::inner_gauss(src, dst);
+		}
+
+
+		void blur(gray::view_t const& src, gray::image_t const& dst)
+		{
+			assert(verify(src, dst));
+			assert(src.width >= VIEW_MIN_DIM);
+			assert(src.height >= VIEW_MIN_DIM);
+
+			seq::copy_top_bottom(src, dst);
+			seq::copy_left_right(src, dst);
+			seq::gauss_inner_top_bottom(src, dst);
+			seq::gauss_inner_left_right(src, dst);
+			simd::inner_gauss(src, dst);
+		}
+
+
+		void blur(gray::view_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+			assert(src.width >= VIEW_MIN_DIM);
+			assert(src.height >= VIEW_MIN_DIM);
+
+			seq::copy_top_bottom(src, dst);
+			seq::copy_left_right(src, dst);
+			seq::gauss_inner_top_bottom(src, dst);
+			seq::gauss_inner_left_right(src, dst);
+			simd::inner_gauss(src, dst);
+		}
+	}
+
+#endif // !LIBIMAGE_NO_SIMD
+
 }
 
 #endif // !LIBIMAGE_NO_GRAYSCALE

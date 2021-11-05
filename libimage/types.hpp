@@ -14,6 +14,7 @@ using u32 = uint32_t;
 using u64 = uint64_t;
 using r32 = float;
 using r64 = double;
+using i32 = int32_t;
 
 namespace libimage
 {

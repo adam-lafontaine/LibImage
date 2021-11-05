@@ -557,7 +557,7 @@ namespace libimage
     }
 
 
-    bool transform_contrast(gray::device_image_t const& src, gray::device_image_t const& dst, u8 src_low, u8 src_high)
+    bool contrast(gray::device_image_t const& src, gray::device_image_t const& dst, u8 src_low, u8 src_high)
     {
         assert(src.data);
         assert(src.width);
@@ -596,7 +596,7 @@ namespace libimage
 #ifndef LIBIMAGE_NO_GRAYSCALE
         
 
-    bool transform_grayscale(device_image_t const& src, gray::device_image_t const& dst)
+    bool grayscale(device_image_t const& src, gray::device_image_t const& dst)
     {
         assert(src.data);
         assert(src.width);
