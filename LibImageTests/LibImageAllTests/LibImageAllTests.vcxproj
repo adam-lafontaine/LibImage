@@ -158,6 +158,7 @@
     <ClCompile Include="libimage_tests_main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\libimage\defines.hpp" />
     <ClInclude Include="..\..\libimage\gray.hpp" />
     <ClInclude Include="..\..\libimage\libimage.hpp" />
     <ClInclude Include="..\..\libimage\locate\locate.hpp" />

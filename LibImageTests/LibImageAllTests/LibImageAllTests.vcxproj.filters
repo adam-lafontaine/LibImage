@@ -131,5 +131,8 @@
     <ClInclude Include="..\..\libimage\math\charts.hpp">
       <Filter>Header Files\libimage\math</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\libimage\defines.hpp">
+      <Filter>Header Files\libimage</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

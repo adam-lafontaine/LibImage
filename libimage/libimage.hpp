@@ -1,29 +1,6 @@
 #pragma once
-/*
 
-Copyright (c) 2021 Adam Lafontaine
-
-*/
-
-//#define LIBIMAGE_NO_COLOR
-//#define LIBIMAGE_NO_GRAYSCALE
-//#define LIBIMAGE_NO_WRITE
-//#define LIBIMAGE_NO_RESIZE
-//#define LIBIMAGE_NO_PARALLEL
-//#define LIBIMAGE_NO_FILESYSTEM
-
-
-// jetson nano
-//#define LIBIMAGE_NO_CPP17
-//#define LIBIMAGE_NO_SIMD
-
-
-#ifdef LIBIMAGE_NO_CPP17
-
-#define LIBIMAGE_NO_PARALLEL
-#define LIBIMAGE_NO_FILESYSTEM
-
-#endif // LIBIMAGE_NO_CPP17
+#include "defines.hpp"
 
 #ifndef LIBIMAGE_NO_COLOR
 #include "rgba.hpp"
@@ -35,8 +12,6 @@ Copyright (c) 2021 Adam Lafontaine
 
 #include <functional>
 #include <string>
-
-
 
 
 namespace libimage

@@ -1,13 +1,18 @@
 #pragma once
-/*
 
-Copyright (c) 2021 Adam Lafontaine
-
-*/
+#include "../defines.hpp"
 
 #define STBI_NO_JPEG
-//#define STBI_NO_PNG
-//#define STBI_NO_BMP
+
+#ifndef LIBIMAGE_PNG
+#define STBI_NO_PNG
+#endif // !LIBIMAGE_PNG
+
+#ifndef LIBIMAGE_BMP
+#define STBI_NO_BMP
+#endif // !LIBIMAGE_BMP
+
+
 #define STBI_NO_GIF
 #define STBI_NO_PSD
 #define STBI_NO_PIC
