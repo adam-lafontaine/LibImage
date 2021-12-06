@@ -269,8 +269,8 @@ void for_each_tests(fs::path const& out_dir)
 		p = alpha_blend_linear(src, p);
 	};
 
-	u32 n_image_sizes = 3;
-	u32 image_dim_factor = 2;
+	u32 n_image_sizes = 2;
+	u32 image_dim_factor = 4;
 
 	u32 n_image_counts = 5;
 	u32 image_count_factor = 2;
@@ -445,8 +445,8 @@ void transform_tests(fs::path const& out_dir)
 		return alpha_blend_linear(src, p);
 	};
 
-	u32 n_image_sizes = 3;
-	u32 image_dim_factor = 2;
+	u32 n_image_sizes = 2;
+	u32 image_dim_factor = 4;
 
 	u32 n_image_counts = 5;
 	u32 image_count_factor = 2;
@@ -693,8 +693,8 @@ void gradient_times(fs::path const& out_dir)
 {
 	std::cout << "\ngradients:\n";
 
-	u32 n_image_sizes = 4;
-	u32 image_dim_factor = 2;
+	u32 n_image_sizes = 2;
+	u32 image_dim_factor = 4;
 
 	u32 n_image_counts = 3;
 	u32 image_count_factor = 4;
