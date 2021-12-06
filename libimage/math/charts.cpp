@@ -1,9 +1,3 @@
-/*
-
-Copyright (c) 2021 Adam Lafontaine
-
-*/
-
 #include "charts.hpp"
 
 #include <numeric>

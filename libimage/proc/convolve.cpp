@@ -1,9 +1,3 @@
-/*
-
-Copyright (c) 2021 Adam Lafontaine
-
-*/
-
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
 #include "convolve.hpp"
