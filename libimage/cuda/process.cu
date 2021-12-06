@@ -1,10 +1,3 @@
-/*
-
-Copyright (c) 2021 Adam Lafontaine
-
-*/
-
-
 #include "cuda_def.cuh"
 #include "process.hpp"
 #include "convolve.cuh"

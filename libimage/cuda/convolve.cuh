@@ -1,9 +1,5 @@
 #pragma once
-/*
 
-Copyright (c) 2021 Adam Lafontaine
-
-*/
 #include "cuda_def.cuh"
 #include "../types.hpp"
 

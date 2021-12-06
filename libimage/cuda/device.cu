@@ -1,8 +1,3 @@
-/*
-
-Copyright (c) 2021 Adam Lafontaine
-
-*/
 #include "device.hpp"
 #include "cuda_def.cuh"
 

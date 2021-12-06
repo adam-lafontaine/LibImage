@@ -1,10 +1,4 @@
-/*
-
-Copyright (c) 2021 Adam Lafontaine
-
-*/
 #include "device_image.hpp"
-
 
 #include <cassert>
 
