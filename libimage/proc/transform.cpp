@@ -10,6 +10,7 @@
 
 #ifndef LIBIMAGE_NO_SIMD
 #include <xmmintrin.h>
+#include <immintrin.h>
 #endif // !LIBIMAGE_NO_SIMD
 
 
@@ -730,31 +731,45 @@ namespace libimage
 		{
 			constexpr u32 N = 4;
 			constexpr u32 STEP = N;
-			r32 memory[N];
 
 			r32 weights[] = { 0.299f, 0.587f, 0.114f };
+			auto red_w_vec = _mm_load_ps1(weights);
+			auto green_w_vec = _mm_load_ps1(weights + 1);
+			auto blue_w_vec = _mm_load_ps1(weights + 2);
+
+			auto dst_vec = _mm_setzero_ps();
 
 			auto const do_simd = [&](u32 i) 
 			{
-				auto dst_vec = _mm_setzero_ps();
+				// pixels are interleaved
+				// make these 4 pixels r32 planar
+				auto ptr = src_begin + i;
 
-				for (u32 c = 0; c < RGB_CHANNELS; ++c)
+				r32 r_memory[] = { (r32)ptr[0].red,   (r32)ptr[1].red,   (r32)ptr[2].red,   (r32)ptr[3].red, };
+				r32 g_memory[] = { (r32)ptr[0].green, (r32)ptr[1].green, (r32)ptr[2].green, (r32)ptr[3].green, };
+				r32 b_memory[] = { (r32)ptr[0].blue,  (r32)ptr[1].blue,  (r32)ptr[2].blue,  (r32)ptr[3].blue, };
+								
+				/*for (u32 n = 0; n < N; ++n)
 				{
-					for (u32 n = 0; n < N; ++n)
-					{
-						memory[n] = static_cast<r32>(src_begin[i + n].channels[c]);
-					}
+					r_memory[n] = (r32)(src_begin[i + n].red);
+					g_memory[n] = (r32)(src_begin[i + n].green);
+					b_memory[n] = (r32)(src_begin[i + n].blue);
+				}*/
 
-					auto src_vec = _mm_load_ps(memory);
-					auto w_vec = _mm_load1_ps(weights + c);
+				auto src_vec = _mm_load_ps(r_memory);
+				dst_vec = _mm_mul_ps(src_vec, red_w_vec);
 
-					dst_vec = _mm_add_ps(dst_vec, _mm_mul_ps(src_vec, w_vec));
-				}
+				src_vec = _mm_load_ps(g_memory);
+				dst_vec = _mm_fmadd_ps(src_vec, green_w_vec, dst_vec);
 
-				_mm_store_ps(memory, dst_vec);
+				src_vec = _mm_load_ps(b_memory);
+				dst_vec = _mm_fmadd_ps(src_vec, blue_w_vec, dst_vec);
+
+				_mm_store_ps(r_memory, dst_vec);
+
 				for (u32 n = 0; n < N; ++n)
 				{
-					dst_begin[i + n] = static_cast<u8>(memory[n]);
+					dst_begin[i + n] = (u8)(r_memory[n]);
 				}
 			};
 

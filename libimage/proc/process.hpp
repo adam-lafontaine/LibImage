@@ -2,7 +2,6 @@
 
 #include "../libimage.hpp"
 
-#include <functional>
 #include <array>
 
 
