@@ -345,6 +345,26 @@ namespace libimage
 
 	namespace simd
 	{
+		template <typename SRC_T, typename DST_T>
+		static void copy_4(SRC_T* src, DST_T* dst)
+		{
+			dst[0] = (DST_T)src[0];
+			dst[1] = (DST_T)src[1];
+			dst[2] = (DST_T)src[2];
+			dst[3] = (DST_T)src[3];
+		}
+
+
+		template <typename SRC_T, typename DST_T, class FUNC_T>
+		static void transform_4(SRC_T* src, DST_T* dst, FUNC_T const& func)
+		{
+			dst[0] = func(src[0]);
+			dst[1] = func(src[1]);
+			dst[2] = func(src[2]);
+			dst[3] = func(src[3]);
+		}
+
+
 		template<class SRC_GRAY_IMG_T, class DST_GRAY_IMG_T>
 		static void copy_top_bottom(SRC_GRAY_IMG_T const& src, DST_GRAY_IMG_T const& dst)
 		{
@@ -387,12 +407,13 @@ namespace libimage
 		{
 			constexpr u32 N = 4;
 			constexpr u32 STEP = N;
-			//r32 memory[N];
 
 			auto const do_simd = [&](int i)
 			{
+				r32 mem[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 				u32 w = 0;
 				auto acc_vec = _mm_setzero_ps();
+				auto src_vec = _mm_setzero_ps();
 
 				for (int ry = -1; ry < 2; ++ry)
 				{
@@ -400,39 +421,19 @@ namespace libimage
 					{
 						int offset = ry * pitch + rx + i;
 						auto ptr = src_begin + offset;
+						copy_4(ptr, mem);
 
-						r32 memory[] = { (r32)ptr[0], (r32)ptr[1], (r32)ptr[2], (r32)ptr[3] };
-
-						/*for (u32 n = 0; n < N; ++n)
-						{
-							memory[n] = static_cast<r32>(src_begin[offset + (int)n]);
-						}*/
-
-						auto src_vec = _mm_load_ps(memory);
+						src_vec = _mm_load_ps(mem);
 
 						auto weight = _mm_load_ps1(GAUSS_3X3.data() + w);
-
-						//acc_vec = _mm_add_ps(acc_vec, _mm_mul_ps(weight, src_vec));
 
 						acc_vec = _mm_fmadd_ps(weight, src_vec, acc_vec);
 					}
 				}
 
-				r32 mem[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-
 				_mm_store_ps(mem, acc_vec);
 
-				for (u32 n = 0; n < N; ++n)
-				{
-					dst_begin[i + n] = (u8)(mem[n]);
-				}
-
-				/*_mm_store_ps(memory, acc_vec);
-
-				for (u32 n = 0; n < N; ++n)
-				{
-					dst_begin[i + n] = static_cast<u8>(memory[n]);
-				}*/
+				copy_4(mem, dst_begin + i);
 			};
 
 			for (u32 i = 0; i < length - STEP; i += STEP)
@@ -471,9 +472,11 @@ namespace libimage
 			constexpr u32 STEP = N;			
 
 			auto const do_simd = [&](int i)
-			{				
+			{
+				r32 mem[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 				u32 w = 0;
 				auto acc_vec = _mm_setzero_ps();
+				auto src_vec = _mm_setzero_ps();
 
 				for (int ry = -2; ry < 3; ++ry)
 				{
@@ -481,9 +484,9 @@ namespace libimage
 					{
 						int offset = ry * pitch + rx + i;
 						auto ptr = src_begin + offset;
-						r32 memory[] = { (r32)ptr[0], (r32)ptr[1], (r32)ptr[2], (r32)ptr[3] };
+						copy_4(ptr, mem);
 
-						auto src_vec = _mm_load_ps(memory);
+						src_vec = _mm_load_ps(mem);
 
 						auto weight = _mm_load_ps1(GAUSS_5X5.data() + w);
 
@@ -491,14 +494,9 @@ namespace libimage
 					}
 				}
 
-				r32 mem[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-
 				_mm_store_ps(mem, acc_vec);
 
-				for (u32 n = 0; n < N; ++n)
-				{
-					dst_begin[i + n] = (u8)(mem[n]);
-				}
+				copy_4(mem, dst_begin + i);
 			};
 
 			for (u32 i = 0; i < length - STEP; i += STEP)
@@ -537,9 +535,11 @@ namespace libimage
 
 			auto const do_simd = [&](int i)
 			{
+				r32 mem[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 				u32 w = 0;
 				auto vec_x = _mm_setzero_ps();
 				auto vec_y = _mm_setzero_ps();
+				auto src_vec = _mm_setzero_ps();
 
 				for (int ry = -1; ry < 2; ++ry)
 				{
@@ -547,9 +547,9 @@ namespace libimage
 					{
 						int offset = ry * pitch + rx + i;
 						auto ptr = src_begin + offset;
-						r32 memory[] = { (r32)ptr[0], (r32)ptr[1], (r32)ptr[2], (r32)ptr[3] };
+						copy_4(ptr, mem);
 
-						auto src_vec = _mm_load_ps(memory);
+						src_vec = _mm_load_ps(mem);
 
 						auto weight_x = _mm_load_ps1(GRAD_X_3X3.data() + w);
 						auto weight_y = _mm_load_ps1(GRAD_Y_3X3.data() + w);
@@ -563,14 +563,9 @@ namespace libimage
 				vec_y = _mm_mul_ps(vec_y, vec_y);
 
 				auto grad = _mm_sqrt_ps(_mm_add_ps(vec_x, vec_y));
-
-				r32 mem[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 				_mm_store_ps(mem, grad);
 
-				for (u32 n = 0; n < N; ++n)
-				{
-					dst_begin[i + n] = (u8)mem[n];
-				}
+				copy_4(mem, dst_begin + i);
 			};
 
 			for (u32 i = 0; i < length - STEP; i += STEP)
@@ -604,13 +599,14 @@ namespace libimage
 		{
 			constexpr u32 N = 4;
 			constexpr u32 STEP = N;
-			//r32 memory[N];
 
 			auto const do_simd = [&](int i)
 			{
+				r32 mem[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 				u32 w = 0;
 				auto vec_x = _mm_setzero_ps();
 				auto vec_y = _mm_setzero_ps();
+				auto src_vec = _mm_setzero_ps();
 
 				for (int ry = -1; ry < 2; ++ry)
 				{
@@ -618,9 +614,9 @@ namespace libimage
 					{
 						int offset = ry * pitch + rx + i;
 						auto ptr = src_begin + offset;
-						r32 memory[] = { (r32)ptr[0], (r32)ptr[1], (r32)ptr[2], (r32)ptr[3] };
+						copy_4(ptr, mem);
 
-						auto src_vec = _mm_load_ps(memory);
+						src_vec = _mm_load_ps(mem);
 
 						auto weight_x = _mm_load_ps1(GRAD_X_3X3.data() + w);
 						auto weight_y = _mm_load_ps1(GRAD_Y_3X3.data() + w);
@@ -634,14 +630,9 @@ namespace libimage
 				vec_y = _mm_mul_ps(vec_y, vec_y);
 
 				auto grad = _mm_sqrt_ps(_mm_add_ps(vec_x, vec_y));
-
-				r32 mem[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 				_mm_store_ps(mem, grad);
 
-				for (u32 n = 0; n < N; ++n)
-				{
-					dst_begin[i + n] = cond((u8)mem[n]) ? 255 : 0;
-				}
+				transform_4(mem, dst_begin + i, [&](r32 val) { return (u8)(cond((u8)val) ? 255 : 0); });
 			};
 
 			for (u32 i = 0; i < length - STEP; i += STEP)

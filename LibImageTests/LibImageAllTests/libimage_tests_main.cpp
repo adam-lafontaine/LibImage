@@ -69,7 +69,7 @@ int main()
 	/*basic_tests(dst_root / "basic");
 	math_tests(dst_root / "math");*/
 
-	process_tests(dst_root / "process");
+	//process_tests(dst_root / "process");
 
 	auto timing_dir = dst_root / "timing";
 	empty_dir(timing_dir);
@@ -77,7 +77,7 @@ int main()
 	/*for_each_tests(timing_dir);
 	transform_tests(timing_dir);*/
 
-	//gradient_times(timing_dir);
+	gradient_times(timing_dir);
 
 	std::cout << "\nDone.\n";
 }
