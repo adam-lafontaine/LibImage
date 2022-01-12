@@ -551,11 +551,11 @@ namespace libimage
 
 						auto src_vec = _mm_load_ps(memory);
 
-						auto weight_x = _mm_load1_ps(GRAD_X_3X3.data() + w);
-						auto weight_y = _mm_load1_ps(GRAD_Y_3X3.data() + w);
+						auto weight_x = _mm_load_ps1(GRAD_X_3X3.data() + w);
+						auto weight_y = _mm_load_ps1(GRAD_Y_3X3.data() + w);
 
-						vec_x = _mm_add_ps(vec_x, _mm_mul_ps(weight_x, src_vec));
-						vec_y = _mm_add_ps(vec_y, _mm_mul_ps(weight_y, src_vec));
+						vec_x = _mm_fmadd_ps(weight_x, src_vec, vec_x);
+						vec_y = _mm_fmadd_ps(weight_y, src_vec, vec_y);
 					}
 				}
 
@@ -604,7 +604,7 @@ namespace libimage
 		{
 			constexpr u32 N = 4;
 			constexpr u32 STEP = N;
-			r32 memory[N];
+			//r32 memory[N];
 
 			auto const do_simd = [&](int i)
 			{
@@ -617,19 +617,16 @@ namespace libimage
 					for (int rx = -1; rx < 2; ++rx, ++w)
 					{
 						int offset = ry * pitch + rx + i;
-
-						for (u32 n = 0; n < N; ++n)
-						{
-							memory[n] = static_cast<r32>(src_begin[offset + (int)n]);
-						}
+						auto ptr = src_begin + offset;
+						r32 memory[] = { (r32)ptr[0], (r32)ptr[1], (r32)ptr[2], (r32)ptr[3] };
 
 						auto src_vec = _mm_load_ps(memory);
 
-						auto weight_x = _mm_load1_ps(GRAD_X_3X3.data() + w);
-						auto weight_y = _mm_load1_ps(GRAD_Y_3X3.data() + w);
+						auto weight_x = _mm_load_ps1(GRAD_X_3X3.data() + w);
+						auto weight_y = _mm_load_ps1(GRAD_Y_3X3.data() + w);
 
-						vec_x = _mm_add_ps(vec_x, _mm_mul_ps(weight_x, src_vec));
-						vec_y = _mm_add_ps(vec_y, _mm_mul_ps(weight_y, src_vec));
+						vec_x = _mm_fmadd_ps(weight_x, src_vec, vec_x);
+						vec_y = _mm_fmadd_ps(weight_y, src_vec, vec_y);
 					}
 				}
 
@@ -638,11 +635,12 @@ namespace libimage
 
 				auto grad = _mm_sqrt_ps(_mm_add_ps(vec_x, vec_y));
 
-				_mm_store_ps(memory, grad);
+				r32 mem[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+				_mm_store_ps(mem, grad);
 
 				for (u32 n = 0; n < N; ++n)
 				{
-					dst_begin[i + n] = cond(static_cast<u8>(memory[n])) ? 255 : 0;
+					dst_begin[i + n] = cond((u8)mem[n]) ? 255 : 0;
 				}
 			};
 
