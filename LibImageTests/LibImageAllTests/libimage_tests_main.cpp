@@ -67,15 +67,17 @@ int main()
 	auto dst_root = fs::path(DST_IMAGE_ROOT);	
 
 	/*basic_tests(dst_root / "basic");
-	math_tests(dst_root / "math");
-	process_tests(dst_root / "process");*/
+	math_tests(dst_root / "math");*/
+
+	process_tests(dst_root / "process");
 
 	auto timing_dir = dst_root / "timing";
 	empty_dir(timing_dir);
 
 	/*for_each_tests(timing_dir);
 	transform_tests(timing_dir);*/
-	gradient_times(timing_dir);
+
+	//gradient_times(timing_dir);
 
 	std::cout << "\nDone.\n";
 }
@@ -693,7 +695,7 @@ void gradient_times(fs::path const& out_dir)
 {
 	std::cout << "\ngradients:\n";
 
-	u32 n_image_sizes = 2;
+	u32 n_image_sizes = 1;
 	u32 image_dim_factor = 4;
 
 	u32 n_image_counts = 3;
