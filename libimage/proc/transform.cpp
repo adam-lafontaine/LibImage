@@ -737,27 +737,17 @@ namespace libimage
 			auto green_w_vec = _mm_load_ps1(weights + 1);
 			auto blue_w_vec = _mm_load_ps1(weights + 2);
 
-			auto dst_vec = _mm_setzero_ps();
-
 			auto const do_simd = [&](u32 i) 
 			{
 				// pixels are interleaved
 				// make these 4 pixels r32 planar
 				auto ptr = src_begin + i;
-
 				r32 r_memory[] = { (r32)ptr[0].red,   (r32)ptr[1].red,   (r32)ptr[2].red,   (r32)ptr[3].red, };
 				r32 g_memory[] = { (r32)ptr[0].green, (r32)ptr[1].green, (r32)ptr[2].green, (r32)ptr[3].green, };
 				r32 b_memory[] = { (r32)ptr[0].blue,  (r32)ptr[1].blue,  (r32)ptr[2].blue,  (r32)ptr[3].blue, };
-								
-				/*for (u32 n = 0; n < N; ++n)
-				{
-					r_memory[n] = (r32)(src_begin[i + n].red);
-					g_memory[n] = (r32)(src_begin[i + n].green);
-					b_memory[n] = (r32)(src_begin[i + n].blue);
-				}*/
 
 				auto src_vec = _mm_load_ps(r_memory);
-				dst_vec = _mm_mul_ps(src_vec, red_w_vec);
+				auto dst_vec = _mm_mul_ps(src_vec, red_w_vec);
 
 				src_vec = _mm_load_ps(g_memory);
 				dst_vec = _mm_fmadd_ps(src_vec, green_w_vec, dst_vec);
@@ -782,50 +772,50 @@ namespace libimage
 		}
 
 
-		static void contrast_row(u8* src_begin, u8* dst_begin, u32 length, u8 src_low, u8 src_high)
-		{
-			constexpr u32 N = 4;
-			constexpr u32 STEP = N;
-			r32 memory[N];
+		//static void contrast_row(u8* src_begin, u8* dst_begin, u32 length, u8 src_low, u8 src_high)
+		//{
+		//	constexpr u32 N = 4;
+		//	constexpr u32 STEP = N;
+		//	r32 memory[N];
 
-			r32 low = src_low;
-			r32 high = src_high;
+		//	r32 low = src_low;
+		//	r32 high = src_high;
 
-			auto low_vec = _mm_load1_ps(&low);
-			auto high_vec = _mm_load1_ps(&high);
+		//	auto low_vec = _mm_load1_ps(&low);
+		//	auto high_vec = _mm_load1_ps(&high);
 
-			auto const do_simd = [&](u32 i) 
-			{
-				auto dst_vec = _mm_setzero_ps();
+		//	auto const do_simd = [&](u32 i) 
+		//	{
+		//		auto dst_vec = _mm_setzero_ps();
 
-				for (u32 n = 0; n < N; ++n)
-				{
-					memory[n] = static_cast<r32>(src_begin[i + n]);
-				}
+		//		for (u32 n = 0; n < N; ++n)
+		//		{
+		//			memory[n] = static_cast<r32>(src_begin[i + n]);
+		//		}
 
-				auto val_vec = _mm_load_ps(memory);
+		//		auto val_vec = _mm_load_ps(memory);
 
-				_mm_cmple_ps(val_vec, low_vec);
+		//		_mm_cmple_ps(val_vec, low_vec);
 
-				_mm_cmpge_ps(val_vec, high_vec);
+		//		_mm_cmpge_ps(val_vec, high_vec);
 
-				// not done
+		//		// not done
 
-				_mm_store_ps(memory, dst_vec);
-				for (u32 n = 0; n < N; ++n)
-				{
-					dst_begin[i + n] = static_cast<u8>(memory[n]);
-				}
-			};
+		//		_mm_store_ps(memory, dst_vec);
+		//		for (u32 n = 0; n < N; ++n)
+		//		{
+		//			dst_begin[i + n] = static_cast<u8>(memory[n]);
+		//		}
+		//	};
 
 
-			for (u32 i = 0; i < length - STEP; i += STEP)
-			{
-				do_simd(i);
-			}
+		//	for (u32 i = 0; i < length - STEP; i += STEP)
+		//	{
+		//		do_simd(i);
+		//	}
 
-			do_simd(length - STEP);
-		}
+		//	do_simd(length - STEP);
+		//}
 
 
 		void grayscale(image_t const& src, gray::image_t const& dst)

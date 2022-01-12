@@ -7,6 +7,7 @@
 
 #ifndef LIBIMAGE_NO_SIMD
 #include <xmmintrin.h>
+#include <immintrin.h>
 #endif // !LIBIMAGE_NO_SIMD
 
 
@@ -453,11 +454,10 @@ namespace libimage
 		static void gauss5_row(u8* src_begin, u8* dst_begin, u32 length, u32 pitch)
 		{
 			constexpr u32 N = 4;
-			constexpr u32 STEP = N;
-			r32 memory[N];
+			constexpr u32 STEP = N;			
 
 			auto const do_simd = [&](int i)
-			{
+			{				
 				u32 w = 0;
 				auto acc_vec = _mm_setzero_ps();
 
@@ -466,25 +466,25 @@ namespace libimage
 					for (int rx = -2; rx < 3; ++rx, ++w)
 					{
 						int offset = ry * pitch + rx + i;
+						auto ptr = src_begin + offset;
 
-						for (u32 n = 0; n < N; ++n)
-						{
-							memory[n] = static_cast<r32>(src_begin[offset + (int)n]);
-						}
+						r32 memory[] = { (r32)ptr[0], (r32)ptr[1], (r32)ptr[2], (r32)ptr[3] };
 
 						auto src_vec = _mm_load_ps(memory);
 
-						auto weight = _mm_load1_ps(GAUSS_5X5.data() + w);
+						auto weight = _mm_load_ps1(GAUSS_5X5.data() + w);
 
-						acc_vec = _mm_add_ps(acc_vec, _mm_mul_ps(weight, src_vec));
+						acc_vec = _mm_fmadd_ps(weight, src_vec, acc_vec);
 					}
 				}
 
-				_mm_store_ps(memory, acc_vec);
+				r32 mem[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+				_mm_store_ps(mem, acc_vec);
 
 				for (u32 n = 0; n < N; ++n)
 				{
-					dst_begin[i + n] = static_cast<u8>(memory[n]);
+					dst_begin[i + n] = (u8)(mem[n]);
 				}
 			};
 
