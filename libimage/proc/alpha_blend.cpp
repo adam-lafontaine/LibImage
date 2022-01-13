@@ -241,28 +241,6 @@ namespace libimage
 		};
 
 
-		static void copy_4(pixel_t* src, PixelPlanar4& dst)
-		{
-			for (u32 i = 0; i < 4; ++i)
-			{
-				dst.red[i] = src[i].red;
-				dst.green[i] = src[i].green;
-				dst.blue[i] = src[i].blue;
-				dst.alpha[i] = src[i].alpha;
-			}
-		}
-
-
-		template <typename SRC_T, typename DST_T>
-		static void copy_4(SRC_T* src, DST_T* dst)
-		{
-			dst[0] = (DST_T)src[0];
-			dst[1] = (DST_T)src[1];
-			dst[2] = (DST_T)src[2];
-			dst[3] = (DST_T)src[3];
-		}
-
-
 		static void alpha_blend_row(pixel_t* src_begin, pixel_t* cur_begin, pixel_t* dst_begin, u32 length)
 		{
 			constexpr u32 N = 4;
