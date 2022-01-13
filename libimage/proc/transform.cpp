@@ -727,6 +727,39 @@ namespace libimage
 #ifndef LIBIMAGE_NO_COLOR
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
+
+		class PixelPlanar4
+		{
+		public:
+			r32 red[4] = { 0 };
+			r32 green[4] = { 0 };
+			r32 blue[4] = { 0 };
+			r32 alpha[4] = { 0 };
+		};
+
+
+		static void copy_4(pixel_t* src, PixelPlanar4& dst)
+		{
+			for (u32 i = 0; i < 4; ++i)
+			{
+				dst.red[i] = src[i].red;
+				dst.green[i] = src[i].green;
+				dst.blue[i] = src[i].blue;
+				dst.alpha[i] = src[i].alpha;
+			}
+		}
+
+
+		template <typename SRC_T, typename DST_T>
+		static void copy_4(SRC_T* src, DST_T* dst)
+		{
+			dst[0] = (DST_T)src[0];
+			dst[1] = (DST_T)src[1];
+			dst[2] = (DST_T)src[2];
+			dst[3] = (DST_T)src[3];
+		}
+
+
 		static void grayscale_row(pixel_t* src_begin, u8* dst_begin, u32 length)
 		{
 			constexpr u32 N = 4;
@@ -741,26 +774,21 @@ namespace libimage
 			{
 				// pixels are interleaved
 				// make these 4 pixels r32 planar
-				auto ptr = src_begin + i;
-				r32 r_memory[] = { (r32)ptr[0].red,   (r32)ptr[1].red,   (r32)ptr[2].red,   (r32)ptr[3].red, };
-				r32 g_memory[] = { (r32)ptr[0].green, (r32)ptr[1].green, (r32)ptr[2].green, (r32)ptr[3].green, };
-				r32 b_memory[] = { (r32)ptr[0].blue,  (r32)ptr[1].blue,  (r32)ptr[2].blue,  (r32)ptr[3].blue, };
+				PixelPlanar4 mem{};
+				copy_4(src_begin + i, mem);
 
-				auto src_vec = _mm_load_ps(r_memory);
+				auto src_vec = _mm_load_ps(mem.red);
 				auto dst_vec = _mm_mul_ps(src_vec, red_w_vec);
 
-				src_vec = _mm_load_ps(g_memory);
+				src_vec = _mm_load_ps(mem.green);
 				dst_vec = _mm_fmadd_ps(src_vec, green_w_vec, dst_vec);
 
-				src_vec = _mm_load_ps(b_memory);
+				src_vec = _mm_load_ps(mem.blue);
 				dst_vec = _mm_fmadd_ps(src_vec, blue_w_vec, dst_vec);
 
-				_mm_store_ps(r_memory, dst_vec);
+				_mm_store_ps(mem.red, dst_vec);
 
-				for (u32 n = 0; n < N; ++n)
-				{
-					dst_begin[i + n] = (u8)(r_memory[n]);
-				}
+				copy_4(mem.red, dst_begin + i);
 			};
 
 			for (u32 i = 0; i < length - STEP; i += STEP)

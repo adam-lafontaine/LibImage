@@ -450,8 +450,36 @@ namespace libimage
 
 	namespace simd
 	{
-#ifndef LIBIMAGE_NO_GRAYSCALE
+#ifndef LIBIMAGE_NO_COLOR
 
+		void alpha_blend(image_t const& src, image_t const& current, image_t const& dst);
+
+		void alpha_blend(image_t const& src, image_t const& current, view_t const& dst);
+
+		void alpha_blend(image_t const& src, view_t const& current, image_t const& dst);
+
+		void alpha_blend(image_t const& src, view_t const& current, view_t const& dst);
+
+		void alpha_blend(view_t const& src, image_t const& current, image_t const& dst);
+
+		void alpha_blend(view_t const& src, image_t const& current, view_t const& dst);
+
+		void alpha_blend(view_t const& src, view_t const& current, image_t const& dst);
+
+		void alpha_blend(view_t const& src, view_t const& current, view_t const& dst);
+
+
+		void alpha_blend(image_t const& src, image_t const& current_dst);
+
+		void alpha_blend(image_t const& src, view_t const& current_dst);
+
+		void alpha_blend(view_t const& src, image_t const& current_dst);
+
+		void alpha_blend(view_t const& src, view_t const& current_dst);
+
+#endif // !LIBIMAGE_NO_COLOR
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
 
 		void blur(gray::image_t const& src, gray::image_t const& dst);
 

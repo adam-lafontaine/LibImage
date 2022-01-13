@@ -69,7 +69,7 @@ int main()
 	/*basic_tests(dst_root / "basic");
 	math_tests(dst_root / "math");*/
 
-	//process_tests(dst_root / "process");
+	process_tests(dst_root / "process");
 
 	auto timing_dir = dst_root / "timing";
 	empty_dir(timing_dir);
@@ -77,7 +77,7 @@ int main()
 	/*for_each_tests(timing_dir);
 	transform_tests(timing_dir);*/
 
-	gradient_times(timing_dir);
+	//gradient_times(timing_dir);
 
 	std::cout << "\nDone.\n";
 }
@@ -600,11 +600,11 @@ void process_tests(fs::path const& out_dir)
 
 	// alpha blending
 	img::transform_alpha(caddy_view, [](auto const& p) { return 128; });
-	img::alpha_blend(caddy_view, corvette_view, dst_image);
+	img::simd::alpha_blend(caddy_view, corvette_view, dst_image);
 	img::write_image(dst_image, out_dir / "alpha_blend.png");
 
 	img::copy(corvette_view, dst_image);
-	img::alpha_blend(caddy_view, dst_image);
+	img::simd::alpha_blend(caddy_view, dst_image);
 	img::write_image(dst_image, out_dir / "alpha_blend_src_dst.png");
 
 	// grayscale
