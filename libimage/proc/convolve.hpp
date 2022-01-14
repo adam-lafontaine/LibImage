@@ -2,9 +2,7 @@
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-#include "../gray.hpp"
-
-#include <functional>
+#include "proc_def.hpp"
 
 namespace libimage
 {	
@@ -29,10 +27,11 @@ namespace libimage
 
 	r32 y_gradient(gray::view_t const& view, u32 x, u32 y);
 
+
+#ifndef LIBIMAGE_NO_SIMD
+
 	namespace simd
 	{
-		using u8_to_bool_f = std::function<bool(u8)>;
-
 
 		void inner_gauss(gray::image_t const& src, gray::image_t const& dst);
 
@@ -60,6 +59,8 @@ namespace libimage
 
 		void inner_edges(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
 	}
+
+#endif // !LIBIMAGE_NO_SIMD
 }
 
 #endif

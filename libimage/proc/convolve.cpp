@@ -341,6 +341,7 @@ namespace libimage
 		return weighted_center(view, x, y, GRAD_Y_3X3);
 	}
 
+
 #ifndef LIBIMAGE_NO_SIMD
 
 	namespace simd

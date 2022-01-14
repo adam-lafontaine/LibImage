@@ -81,11 +81,14 @@
     <ClCompile Include="..\..\libimage\proc\blur.cpp">
       <Filter>Source Files\libimage\proc</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\libimage\proc\gradient.cpp">
+    <ClCompile Include="..\..\libimage\proc\edges_gradients.cpp">
       <Filter>Source Files\libimage\proc</Filter>
     </ClCompile>
     <ClCompile Include="..\..\libimage\math\charts.cpp">
       <Filter>Source Files\libimage\math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libimage\proc\contrast.cpp">
+      <Filter>Source Files\libimage\proc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -133,6 +136,33 @@
     </ClInclude>
     <ClInclude Include="..\..\libimage\defines.hpp">
       <Filter>Header Files\libimage</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage\proc\copy.hpp">
+      <Filter>Header Files\libimage\proc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage\proc\transform.hpp">
+      <Filter>Header Files\libimage\proc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage\proc\alpha_blend.hpp">
+      <Filter>Header Files\libimage\proc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage\proc\contrast.hpp">
+      <Filter>Header Files\libimage\proc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage\proc\binarize.hpp">
+      <Filter>Header Files\libimage\proc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage\proc\proc_def.hpp">
+      <Filter>Header Files\libimage\proc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage\proc\blur.hpp">
+      <Filter>Header Files\libimage\proc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage\proc\edges.hpp">
+      <Filter>Header Files\libimage\proc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage\proc\gradients.hpp">
+      <Filter>Header Files\libimage\proc</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
