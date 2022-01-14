@@ -34,9 +34,7 @@ namespace libimage
 	void transform_alpha(view_t const& src_dst, pixel_to_u8_f const& func);
 
 
-	void transform_alpha_grayscale(image_t const& src);
-
-	void transform_alpha_grayscale(view_t const& src);
+	
 
 #endif // !LIBIMAGE_NO_COLOR
 
@@ -84,15 +82,6 @@ namespace libimage
 
 	void transform(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func);
 
-
-	void grayscale(image_t const& src, gray::image_t const& dst);
-
-	void grayscale(image_t const& src, gray::view_t const& dst);
-
-	void grayscale(view_t const& src, gray::image_t const& dst);
-
-	void grayscale(view_t const& src, gray::view_t const& dst);
-
 #endif // !LIBIMAGE_NO_GRAYSCALE
 #endif // !LIBIMAGE_NO_COLOR
 
@@ -122,11 +111,6 @@ namespace libimage
 		void transform_alpha(image_t const& src_dst, pixel_to_u8_f const& func);
 
 		void transform_alpha(view_t const& src_dst, pixel_to_u8_f const& func);
-
-
-		void transform_alpha_grayscale(image_t const& src);
-
-		void transform_alpha_grayscale(view_t const& src);
 
 
 #endif // !LIBIMAGE_NO_COLOR
@@ -174,41 +158,7 @@ namespace libimage
 
 		void transform(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func);
 
-
-		void grayscale(image_t const& src, gray::image_t const& dst);
-
-		void grayscale(image_t const& src, gray::view_t const& dst);
-
-		void grayscale(view_t const& src, gray::image_t const& dst);
-
-		void grayscale(view_t const& src, gray::view_t const& dst);
-
 #endif // !LIBIMAGE_NO_GRAYSCALE
 #endif // !LIBIMAGE_NO_COLOR
 	}
-
-
-
-	/*** transform simd **/
-
-#ifndef LIBIMAGE_NO_SIMD
-
-	namespace simd
-	{
-#ifndef LIBIMAGE_NO_COLOR
-#ifndef LIBIMAGE_NO_GRAYSCALE
-
-		void grayscale(image_t const& src, gray::image_t const& dst);
-
-		void grayscale(image_t const& src, gray::view_t const& dst);
-
-		void grayscale(view_t const& src, gray::image_t const& dst);
-
-		void grayscale(view_t const& src, gray::view_t const& dst);
-
-#endif // !LIBIMAGE_NO_GRAYSCALE
-#endif // !LIBIMAGE_NO_COLOR
-	}
-
-#endif // !LIBIMAGE_NO_SIMD
 }

@@ -271,10 +271,10 @@ void for_each_tests(fs::path const& out_dir)
 		p = alpha_blend_linear(src, p);
 	};
 
-	u32 n_image_sizes = 2;
+	u32 n_image_sizes = 1;
 	u32 image_dim_factor = 4;
 
-	u32 n_image_counts = 5;
+	u32 n_image_counts = 1;
 	u32 image_count_factor = 2;
 
 	u32 width_start = 400;
@@ -447,10 +447,10 @@ void transform_tests(fs::path const& out_dir)
 		return alpha_blend_linear(src, p);
 	};
 
-	u32 n_image_sizes = 2;
+	u32 n_image_sizes = 1;
 	u32 image_dim_factor = 4;
 
-	u32 n_image_counts = 5;
+	u32 n_image_counts = 1;
 	u32 image_count_factor = 2;
 
 	u32 width_start = 400;
@@ -619,7 +619,7 @@ void process_tests(fs::path const& out_dir)
 	print(gray_stats);
 
 	// alpha grayscale
-	img::transform_alpha_grayscale(corvette_view);
+	img::simd::alpha_grayscale(corvette_view);
 	auto alpha_stats = img::calc_stats(corvette_image, img::Channel::Alpha);
 	GrayImage alpha_stats_image;
 	img::draw_histogram(alpha_stats.hist, alpha_stats_image);
@@ -698,7 +698,7 @@ void gradient_times(fs::path const& out_dir)
 	u32 n_image_sizes = 1;
 	u32 image_dim_factor = 4;
 
-	u32 n_image_counts = 3;
+	u32 n_image_counts = 1;
 	u32 image_count_factor = 4;
 
 	u32 width_start = 400;

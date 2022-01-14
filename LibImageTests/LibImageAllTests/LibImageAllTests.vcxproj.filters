@@ -90,6 +90,9 @@
     <ClCompile Include="..\..\libimage\proc\contrast.cpp">
       <Filter>Source Files\libimage\proc</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\libimage\proc\grayscale.cpp">
+      <Filter>Source Files\libimage\proc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\libimage\libimage.hpp">
@@ -162,6 +165,9 @@
       <Filter>Header Files\libimage\proc</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libimage\proc\gradients.hpp">
+      <Filter>Header Files\libimage\proc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage\proc\grayscale.hpp">
       <Filter>Header Files\libimage\proc</Filter>
     </ClInclude>
   </ItemGroup>

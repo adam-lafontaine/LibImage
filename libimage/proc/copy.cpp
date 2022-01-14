@@ -150,36 +150,6 @@ namespace libimage
 #endif // !LIBIMAGE_NO_GRAYSCALE
 	}
 
-//#ifndef LIBIMAGE_NO_SIMD
-//
-//	namespace simd
-//	{
-//#ifndef LIBIMAGE_NO_COLOR	
-//
-//		void copy(image_t const& src, image_t const& dst);
-//
-//		void copy(image_t const& src, view_t const& dst);
-//
-//		void copy(view_t const& src, image_t const& dst);
-//
-//		void copy(view_t const& src, view_t const& dst);
-//
-//#endif // !LIBIMAGE_NO_COLOR
-//
-//#ifndef LIBIMAGE_NO_GRAYSCALE
-//
-//		void copy(gray::image_t const& src, gray::image_t const& dst);
-//
-//		void copy(gray::image_t const& src, gray::view_t const& dst);
-//
-//		void copy(gray::view_t const& src, gray::image_t const& dst);
-//
-//		void copy(gray::view_t const& src, gray::view_t const& dst);
-//
-//
-//#endif // !LIBIMAGE_NO_GRAYSCALE
-//	}
-//
-//#endif // !LIBIMAGE_NO_SIMD
+
 }
 

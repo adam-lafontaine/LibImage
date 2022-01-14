@@ -7,6 +7,7 @@
 #include "copy.hpp"
 #include "edges.hpp"
 #include "gradients.hpp"
+#include "grayscale.hpp"
 #include "transform.hpp"
 
 

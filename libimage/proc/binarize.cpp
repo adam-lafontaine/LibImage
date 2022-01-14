@@ -1,8 +1,6 @@
 #include "process.hpp"
 #include "verify.hpp"
 
-#include <algorithm>
-
 #ifndef LIBIMAGE_NO_PARALLEL
 #include <execution>
 #endif // !LIBIMAGE_NO_PARALLEL
