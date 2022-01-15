@@ -7,6 +7,7 @@
 
 #ifndef LIBIMAGE_NO_SIMD
 #include <xmmintrin.h>
+#include <immintrin.h>
 #endif // !LIBIMAGE_NO_SIMD
 
 
@@ -340,10 +341,31 @@ namespace libimage
 		return weighted_center(view, x, y, GRAD_Y_3X3);
 	}
 
+
 #ifndef LIBIMAGE_NO_SIMD
 
 	namespace simd
 	{
+		template <typename SRC_T, typename DST_T>
+		static void copy_4(SRC_T* src, DST_T* dst)
+		{
+			dst[0] = (DST_T)src[0];
+			dst[1] = (DST_T)src[1];
+			dst[2] = (DST_T)src[2];
+			dst[3] = (DST_T)src[3];
+		}
+
+
+		template <typename SRC_T, typename DST_T, class FUNC_T>
+		static void transform_4(SRC_T* src, DST_T* dst, FUNC_T const& func)
+		{
+			dst[0] = func(src[0]);
+			dst[1] = func(src[1]);
+			dst[2] = func(src[2]);
+			dst[3] = func(src[3]);
+		}
+
+
 		template<class SRC_GRAY_IMG_T, class DST_GRAY_IMG_T>
 		static void copy_top_bottom(SRC_GRAY_IMG_T const& src, DST_GRAY_IMG_T const& dst)
 		{
@@ -386,38 +408,33 @@ namespace libimage
 		{
 			constexpr u32 N = 4;
 			constexpr u32 STEP = N;
-			r32 memory[N];
 
 			auto const do_simd = [&](int i)
 			{
+				r32 mem[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 				u32 w = 0;
 				auto acc_vec = _mm_setzero_ps();
+				auto src_vec = _mm_setzero_ps();
 
 				for (int ry = -1; ry < 2; ++ry)
 				{
 					for (int rx = -1; rx < 2; ++rx, ++w)
 					{
 						int offset = ry * pitch + rx + i;
+						auto ptr = src_begin + offset;
+						copy_4(ptr, mem);
 
-						for (u32 n = 0; n < N; ++n)
-						{
-							memory[n] = static_cast<r32>(src_begin[offset + (int)n]);
-						}
+						src_vec = _mm_load_ps(mem);
 
-						auto src_vec = _mm_load_ps(memory);
+						auto weight = _mm_load_ps1(GAUSS_3X3.data() + w);
 
-						auto weight = _mm_load1_ps(GAUSS_3X3.data() + w);
-
-						acc_vec = _mm_add_ps(acc_vec, _mm_mul_ps(weight, src_vec));
+						acc_vec = _mm_fmadd_ps(weight, src_vec, acc_vec);
 					}
 				}
 
-				_mm_store_ps(memory, acc_vec);
+				_mm_store_ps(mem, acc_vec);
 
-				for (u32 n = 0; n < N; ++n)
-				{
-					dst_begin[i + n] = static_cast<u8>(memory[n]);
-				}
+				copy_4(mem, dst_begin + i);
 			};
 
 			for (u32 i = 0; i < length - STEP; i += STEP)
@@ -453,39 +470,34 @@ namespace libimage
 		static void gauss5_row(u8* src_begin, u8* dst_begin, u32 length, u32 pitch)
 		{
 			constexpr u32 N = 4;
-			constexpr u32 STEP = N;
-			r32 memory[N];
+			constexpr u32 STEP = N;			
 
 			auto const do_simd = [&](int i)
 			{
+				r32 mem[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 				u32 w = 0;
 				auto acc_vec = _mm_setzero_ps();
+				auto src_vec = _mm_setzero_ps();
 
 				for (int ry = -2; ry < 3; ++ry)
 				{
 					for (int rx = -2; rx < 3; ++rx, ++w)
 					{
 						int offset = ry * pitch + rx + i;
+						auto ptr = src_begin + offset;
+						copy_4(ptr, mem);
 
-						for (u32 n = 0; n < N; ++n)
-						{
-							memory[n] = static_cast<r32>(src_begin[offset + (int)n]);
-						}
+						src_vec = _mm_load_ps(mem);
 
-						auto src_vec = _mm_load_ps(memory);
+						auto weight = _mm_load_ps1(GAUSS_5X5.data() + w);
 
-						auto weight = _mm_load1_ps(GAUSS_5X5.data() + w);
-
-						acc_vec = _mm_add_ps(acc_vec, _mm_mul_ps(weight, src_vec));
+						acc_vec = _mm_fmadd_ps(weight, src_vec, acc_vec);
 					}
 				}
 
-				_mm_store_ps(memory, acc_vec);
+				_mm_store_ps(mem, acc_vec);
 
-				for (u32 n = 0; n < N; ++n)
-				{
-					dst_begin[i + n] = static_cast<u8>(memory[n]);
-				}
+				copy_4(mem, dst_begin + i);
 			};
 
 			for (u32 i = 0; i < length - STEP; i += STEP)
@@ -521,32 +533,30 @@ namespace libimage
 		{
 			constexpr u32 N = 4;
 			constexpr u32 STEP = N;
-			r32 memory[N];
 
 			auto const do_simd = [&](int i)
 			{
+				r32 mem[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 				u32 w = 0;
 				auto vec_x = _mm_setzero_ps();
 				auto vec_y = _mm_setzero_ps();
+				auto src_vec = _mm_setzero_ps();
 
 				for (int ry = -1; ry < 2; ++ry)
 				{
 					for (int rx = -1; rx < 2; ++rx, ++w)
 					{
 						int offset = ry * pitch + rx + i;
+						auto ptr = src_begin + offset;
+						copy_4(ptr, mem);
 
-						for (u32 n = 0; n < N; ++n)
-						{
-							memory[n] = static_cast<r32>(src_begin[offset + (int)n]);
-						}
+						src_vec = _mm_load_ps(mem);
 
-						auto src_vec = _mm_load_ps(memory);
+						auto weight_x = _mm_load_ps1(GRAD_X_3X3.data() + w);
+						auto weight_y = _mm_load_ps1(GRAD_Y_3X3.data() + w);
 
-						auto weight_x = _mm_load1_ps(GRAD_X_3X3.data() + w);
-						auto weight_y = _mm_load1_ps(GRAD_Y_3X3.data() + w);
-
-						vec_x = _mm_add_ps(vec_x, _mm_mul_ps(weight_x, src_vec));
-						vec_y = _mm_add_ps(vec_y, _mm_mul_ps(weight_y, src_vec));
+						vec_x = _mm_fmadd_ps(weight_x, src_vec, vec_x);
+						vec_y = _mm_fmadd_ps(weight_y, src_vec, vec_y);
 					}
 				}
 
@@ -554,13 +564,9 @@ namespace libimage
 				vec_y = _mm_mul_ps(vec_y, vec_y);
 
 				auto grad = _mm_sqrt_ps(_mm_add_ps(vec_x, vec_y));
+				_mm_store_ps(mem, grad);
 
-				_mm_store_ps(memory, grad);
-
-				for (u32 n = 0; n < N; ++n)
-				{
-					dst_begin[i + n] = static_cast<u8>(memory[n]);
-				}
+				copy_4(mem, dst_begin + i);
 			};
 
 			for (u32 i = 0; i < length - STEP; i += STEP)
@@ -594,32 +600,30 @@ namespace libimage
 		{
 			constexpr u32 N = 4;
 			constexpr u32 STEP = N;
-			r32 memory[N];
 
 			auto const do_simd = [&](int i)
 			{
+				r32 mem[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 				u32 w = 0;
 				auto vec_x = _mm_setzero_ps();
 				auto vec_y = _mm_setzero_ps();
+				auto src_vec = _mm_setzero_ps();
 
 				for (int ry = -1; ry < 2; ++ry)
 				{
 					for (int rx = -1; rx < 2; ++rx, ++w)
 					{
 						int offset = ry * pitch + rx + i;
+						auto ptr = src_begin + offset;
+						copy_4(ptr, mem);
 
-						for (u32 n = 0; n < N; ++n)
-						{
-							memory[n] = static_cast<r32>(src_begin[offset + (int)n]);
-						}
+						src_vec = _mm_load_ps(mem);
 
-						auto src_vec = _mm_load_ps(memory);
+						auto weight_x = _mm_load_ps1(GRAD_X_3X3.data() + w);
+						auto weight_y = _mm_load_ps1(GRAD_Y_3X3.data() + w);
 
-						auto weight_x = _mm_load1_ps(GRAD_X_3X3.data() + w);
-						auto weight_y = _mm_load1_ps(GRAD_Y_3X3.data() + w);
-
-						vec_x = _mm_add_ps(vec_x, _mm_mul_ps(weight_x, src_vec));
-						vec_y = _mm_add_ps(vec_y, _mm_mul_ps(weight_y, src_vec));
+						vec_x = _mm_fmadd_ps(weight_x, src_vec, vec_x);
+						vec_y = _mm_fmadd_ps(weight_y, src_vec, vec_y);
 					}
 				}
 
@@ -627,13 +631,9 @@ namespace libimage
 				vec_y = _mm_mul_ps(vec_y, vec_y);
 
 				auto grad = _mm_sqrt_ps(_mm_add_ps(vec_x, vec_y));
+				_mm_store_ps(mem, grad);
 
-				_mm_store_ps(memory, grad);
-
-				for (u32 n = 0; n < N; ++n)
-				{
-					dst_begin[i + n] = cond(static_cast<u8>(memory[n])) ? 255 : 0;
-				}
+				transform_4(mem, dst_begin + i, [&](r32 val) { return (u8)(cond((u8)val) ? 255 : 0); });
 			};
 
 			for (u32 i = 0; i < length - STEP; i += STEP)

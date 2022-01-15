@@ -355,6 +355,7 @@ namespace libimage
 
 
 #endif // !LIBIMAGE_NO_PARALLEL
+	
 	namespace seq
 	{
 		template<class GRAY_IMG_T>
@@ -711,6 +712,8 @@ namespace libimage
 			simd::blur(src, temp);
 
 			simd::do_edges(temp, dst, cond);
+
+			temp.dispose();
 		}
 
 
@@ -723,6 +726,8 @@ namespace libimage
 			simd::blur(src, temp);
 
 			simd::do_edges(temp, dst, cond);
+
+			temp.dispose();
 		}
 
 
@@ -735,6 +740,8 @@ namespace libimage
 			simd::blur(src, temp);
 
 			simd::do_edges(temp, dst, cond);
+
+			temp.dispose();
 		}
 
 
@@ -747,6 +754,8 @@ namespace libimage
 			simd::blur(src, temp);
 
 			simd::do_edges(temp, dst, cond);
+
+			temp.dispose();
 		}
 
 
@@ -800,6 +809,8 @@ namespace libimage
 			simd::blur(src, temp);
 
 			simd::do_gradients(temp, dst);
+
+			temp.dispose();
 		}
 
 
@@ -812,6 +823,8 @@ namespace libimage
 			simd::blur(src, temp);
 
 			simd::do_gradients(temp, dst);
+
+			temp.dispose();
 		}
 
 
@@ -824,6 +837,8 @@ namespace libimage
 			simd::blur(src, temp);
 
 			simd::do_gradients(temp, dst);
+
+			temp.dispose();
 		}
 
 
@@ -836,6 +851,8 @@ namespace libimage
 			simd::blur(src, temp);
 
 			simd::do_gradients(temp, dst);
+
+			temp.dispose();
 		}
 
 	}

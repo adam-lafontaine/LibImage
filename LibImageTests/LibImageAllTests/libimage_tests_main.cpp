@@ -68,6 +68,7 @@ int main()
 
 	basic_tests(dst_root / "basic");
 	math_tests(dst_root / "math");
+
 	process_tests(dst_root / "process");
 
 	auto timing_dir = dst_root / "timing";
@@ -75,6 +76,7 @@ int main()
 
 	for_each_tests(timing_dir);
 	transform_tests(timing_dir);
+
 	gradient_times(timing_dir);
 
 	std::cout << "\nDone.\n";
@@ -272,7 +274,7 @@ void for_each_tests(fs::path const& out_dir)
 	u32 n_image_sizes = 2;
 	u32 image_dim_factor = 4;
 
-	u32 n_image_counts = 5;
+	u32 n_image_counts = 3;
 	u32 image_count_factor = 2;
 
 	u32 width_start = 400;
@@ -448,7 +450,7 @@ void transform_tests(fs::path const& out_dir)
 	u32 n_image_sizes = 2;
 	u32 image_dim_factor = 4;
 
-	u32 n_image_counts = 5;
+	u32 n_image_counts = 3;
 	u32 image_count_factor = 2;
 
 	u32 width_start = 400;
@@ -598,11 +600,11 @@ void process_tests(fs::path const& out_dir)
 
 	// alpha blending
 	img::transform_alpha(caddy_view, [](auto const& p) { return 128; });
-	img::alpha_blend(caddy_view, corvette_view, dst_image);
+	img::simd::alpha_blend(caddy_view, corvette_view, dst_image);
 	img::write_image(dst_image, out_dir / "alpha_blend.png");
 
 	img::copy(corvette_view, dst_image);
-	img::alpha_blend(caddy_view, dst_image);
+	img::simd::alpha_blend(caddy_view, dst_image);
 	img::write_image(dst_image, out_dir / "alpha_blend_src_dst.png");
 
 	// grayscale
@@ -617,7 +619,7 @@ void process_tests(fs::path const& out_dir)
 	print(gray_stats);
 
 	// alpha grayscale
-	img::transform_alpha_grayscale(corvette_view);
+	img::simd::alpha_grayscale(corvette_view);
 	auto alpha_stats = img::calc_stats(corvette_image, img::Channel::Alpha);
 	GrayImage alpha_stats_image;
 	img::draw_histogram(alpha_stats.hist, alpha_stats_image);
@@ -697,11 +699,11 @@ void gradient_times(fs::path const& out_dir)
 	u32 image_dim_factor = 4;
 
 	u32 n_image_counts = 3;
-	u32 image_count_factor = 4;
+	u32 image_count_factor = 2;
 
 	u32 width_start = 400;
 	u32 height_start = 300;
-	u32 image_count_start = 10;
+	u32 image_count_start = 50;
 
 	auto green = img::to_pixel(88, 100, 29);
 	auto blue = img::to_pixel(0, 119, 182);
