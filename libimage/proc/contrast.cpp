@@ -2,12 +2,6 @@
 #include "verify.hpp"
 #include "index_range.hpp"
 
-#include <algorithm>
-
-#ifndef LIBIMAGE_NO_PARALLEL
-#include <execution>
-#endif // !LIBIMAGE_NO_PARALLEL
-
 #ifndef LIBIMAGE_NO_SIMD
 #include <xmmintrin.h>
 #include <immintrin.h>

@@ -1,10 +1,6 @@
 #include "process.hpp"
 #include "verify.hpp"
 
-#ifndef LIBIMAGE_NO_PARALLEL
-#include <execution>
-#endif // !LIBIMAGE_NO_PARALLEL
-
 #ifndef LIBIMAGE_NO_SIMD
 #include <xmmintrin.h>
 #include <immintrin.h>
@@ -259,8 +255,6 @@ namespace libimage
 #ifndef LIBIMAGE_NO_COLOR
 
 
-
-
 		static void alpha_grayscale_row(pixel_t* src_begin, u32 length)
 		{
 			constexpr u32 N = 4;
@@ -289,7 +283,7 @@ namespace libimage
 
 				_mm_store_ps(mem.alpha, dst_vec);
 
-				for (u32 j = 0; j < 4; ++j)
+				for (u32 j = 0; j < N; ++j)
 				{
 					(src_begin + i)[j].alpha = (u8)mem.alpha[j];
 				}

@@ -1,9 +1,6 @@
 #include "process.hpp"
 #include "verify.hpp"
 
-#ifndef LIBIMAGE_NO_PARALLEL
-#include <execution>
-#endif // !LIBIMAGE_NO_PARALLEL
 
 namespace libimage
 {

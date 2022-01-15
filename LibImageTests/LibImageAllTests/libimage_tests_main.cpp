@@ -271,10 +271,10 @@ void for_each_tests(fs::path const& out_dir)
 		p = alpha_blend_linear(src, p);
 	};
 
-	u32 n_image_sizes = 1;
+	u32 n_image_sizes = 2;
 	u32 image_dim_factor = 4;
 
-	u32 n_image_counts = 1;
+	u32 n_image_counts = 3;
 	u32 image_count_factor = 2;
 
 	u32 width_start = 400;
@@ -447,10 +447,10 @@ void transform_tests(fs::path const& out_dir)
 		return alpha_blend_linear(src, p);
 	};
 
-	u32 n_image_sizes = 1;
+	u32 n_image_sizes = 2;
 	u32 image_dim_factor = 4;
 
-	u32 n_image_counts = 1;
+	u32 n_image_counts = 3;
 	u32 image_count_factor = 2;
 
 	u32 width_start = 400;
@@ -695,15 +695,15 @@ void gradient_times(fs::path const& out_dir)
 {
 	std::cout << "\ngradients:\n";
 
-	u32 n_image_sizes = 1;
+	u32 n_image_sizes = 2;
 	u32 image_dim_factor = 4;
 
-	u32 n_image_counts = 1;
-	u32 image_count_factor = 4;
+	u32 n_image_counts = 3;
+	u32 image_count_factor = 2;
 
 	u32 width_start = 400;
 	u32 height_start = 300;
-	u32 image_count_start = 10;
+	u32 image_count_start = 50;
 
 	auto green = img::to_pixel(88, 100, 29);
 	auto blue = img::to_pixel(0, 119, 182);
