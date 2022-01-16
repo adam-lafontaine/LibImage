@@ -95,7 +95,7 @@ namespace libimage
 	template<size_t N>
 	static r32 apply_weights(gray::view_t const& view, std::array<r32, N> weights)
 	{
-		assert(static_cast<size_t>(view.width) * view.height == weights.size());
+		assert((size_t)(view.width) * view.height == weights.size());
 
 		u32 w = 0;
 		r32 total = 0.0f;
@@ -455,7 +455,7 @@ namespace libimage
 			u32 y_last = src.height - 2;
 
 			auto length = x_end - x_begin;
-			auto pitch = static_cast<u32>(src.row_begin(1) - src.row_begin(0));
+			auto pitch = (u32)(src.row_begin(1) - src.row_begin(0));
 
 			auto src_row = src.row_begin(y_begin) + x_begin;
 			auto dst_row = dst.row_begin(y_begin) + x_begin;
@@ -518,7 +518,7 @@ namespace libimage
 			u32 y_end = src.height - 2;
 
 			auto length = x_end - x_begin;
-			auto pitch = static_cast<u32>(src.row_begin(1) - src.row_begin(0));
+			auto pitch = (u32)(src.row_begin(1) - src.row_begin(0));
 
 			for (u32 y = y_begin; y < y_end; ++y)
 			{
@@ -587,7 +587,7 @@ namespace libimage
 			u32 y_end = src.height - 1;
 
 			auto length = x_end - x_begin;
-			auto pitch = static_cast<u32>(src.row_begin(1) - src.row_begin(0));
+			auto pitch = (u32)(src.row_begin(1) - src.row_begin(0));
 
 			for (u32 y = y_begin; y < y_end; ++y)
 			{
@@ -654,7 +654,7 @@ namespace libimage
 			u32 y_end = src.height - 1;
 
 			auto length = x_end - x_begin;
-			auto pitch = static_cast<u32>(src.row_begin(1) - src.row_begin(0));
+			auto pitch = (u32)(src.row_begin(1) - src.row_begin(0));
 
 			for (u32 y = y_begin; y < y_end; ++y)
 			{

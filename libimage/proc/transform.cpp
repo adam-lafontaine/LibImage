@@ -11,6 +11,10 @@
 
 
 
+
+
+
+
 namespace libimage
 {
 	
@@ -132,7 +136,7 @@ namespace libimage
 
 	lookup_table_t to_lookup_table(u8_to_u8_f const& func)
 	{
-		std::array<u8, 256> lut = { 0 };
+		lookup_table_t lut = { 0 };
 
 		u32_range_t ids(0u, 256u);
 
@@ -356,7 +360,7 @@ namespace libimage
 
 		lookup_table_t to_lookup_table(u8_to_u8_f const& func)
 		{
-			std::array<u8, 256> lut = { 0 };
+			lookup_table_t lut = { 0 };
 
 			u32_range_t ids(0u, 256u);
 

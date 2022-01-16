@@ -89,7 +89,7 @@ namespace libimage
 			{
 				auto gx = x_gradient(src, x, y);
 				auto gy = y_gradient(src, x, y);
-				auto g = static_cast<u8>(std::hypot(gx, gy));
+				auto g = (u8)(std::hypot(gx, gy));
 				dst_row[x] = cond(g) ? 255 : 0;
 			};
 
@@ -136,7 +136,7 @@ namespace libimage
 				auto gx = x_gradient(src, x, y);
 				auto gy = y_gradient(src, x, y);
 				auto g = std::hypot(gx, gy);
-				dst_row[x] = static_cast<u8>(g);
+				dst_row[x] = (u8)(g);
 			};
 
 			std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), grad_x);
@@ -405,7 +405,7 @@ namespace libimage
 				{
 					auto gx = x_gradient(src, x, y);
 					auto gy = y_gradient(src, x, y);
-					auto g = static_cast<u8>(std::hypot(gx, gy));
+					auto g = (u8)(std::hypot(gx, gy));
 					dst_row[x] = cond(g) ? 255 : 0;
 				}
 			}
@@ -437,7 +437,7 @@ namespace libimage
 					auto gx = x_gradient(src, x, y);
 					auto gy = y_gradient(src, x, y);
 					auto g = std::hypot(gx, gy);
-					dst_row[x] = static_cast<u8>(g);
+					dst_row[x] = (u8)(g);
 				}
 			}
 		}

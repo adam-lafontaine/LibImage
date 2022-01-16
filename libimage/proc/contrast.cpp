@@ -7,7 +7,8 @@
 #include <immintrin.h>
 #endif // !LIBIMAGE_NO_SIMD
 
-
+constexpr u8 U8_MIN = 0;
+constexpr u8 U8_MAX = 255;
 
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
@@ -46,9 +47,7 @@ namespace libimage
 	void contrast(gray::image_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high)
 	{
 		assert(src_low < src_high);
-		constexpr u8 dst_low = 0;
-		constexpr u8 dst_high = 255;
-		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
+		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
 		transform(src, dst, conv);
 	}
 
@@ -56,9 +55,7 @@ namespace libimage
 	void contrast(gray::image_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high)
 	{
 		assert(src_low < src_high);
-		constexpr u8 dst_low = 0;
-		constexpr u8 dst_high = 255;
-		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
+		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
 		transform(src, dst, conv);
 	}
 
@@ -66,9 +63,7 @@ namespace libimage
 	void contrast(gray::view_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high)
 	{
 		assert(src_low < src_high);
-		constexpr u8 dst_low = 0;
-		constexpr u8 dst_high = 255;
-		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
+		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
 		transform(src, dst, conv);
 	}
 
@@ -77,9 +72,7 @@ namespace libimage
 	void contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high)
 	{
 		assert(src_low < src_high);
-		constexpr u8 dst_low = 0;
-		constexpr u8 dst_high = 255;
-		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
+		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
 		transform(src, dst, conv);
 	}
 
@@ -87,9 +80,7 @@ namespace libimage
 	void contrast_self(gray::image_t const& src_dst, u8 src_low, u8 src_high)
 	{
 		assert(src_low < src_high);
-		constexpr u8 dst_low = 0;
-		constexpr u8 dst_high = 255;
-		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
+		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
 		transform_self(src_dst, conv);
 	}
 
@@ -97,9 +88,7 @@ namespace libimage
 	void contrast_self(gray::view_t const& src_dst, u8 src_low, u8 src_high)
 	{
 		assert(src_low < src_high);
-		constexpr u8 dst_low = 0;
-		constexpr u8 dst_high = 255;
-		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
+		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
 		transform_self(src_dst, conv);
 	}
 
@@ -116,9 +105,7 @@ namespace libimage
 		void contrast(gray::image_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high)
 		{
 			assert(src_low < src_high);
-			u8 dst_low = 0;
-			u8 dst_high = 255;
-			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
+			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
 			seq::transform(src, dst, conv);
 		}
 
@@ -126,9 +113,7 @@ namespace libimage
 		void contrast(gray::image_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high)
 		{
 			assert(src_low < src_high);
-			u8 dst_low = 0;
-			u8 dst_high = 255;
-			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
+			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
 			seq::transform(src, dst, conv);
 		}
 
@@ -136,9 +121,7 @@ namespace libimage
 		void contrast(gray::view_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high)
 		{
 			assert(src_low < src_high);
-			u8 dst_low = 0;
-			u8 dst_high = 255;
-			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
+			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
 			seq::transform(src, dst, conv);
 		}
 
@@ -146,9 +129,7 @@ namespace libimage
 		void contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high)
 		{
 			assert(src_low < src_high);
-			u8 dst_low = 0;
-			u8 dst_high = 255;
-			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
+			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
 			seq::transform(src, dst, conv);
 		}
 
@@ -156,9 +137,7 @@ namespace libimage
 		void contrast_self(gray::image_t const& src_dst, u8 src_low, u8 src_high)
 		{
 			assert(src_low < src_high);
-			u8 dst_low = 0;
-			u8 dst_high = 255;
-			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
+			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
 			seq::transform_self(src_dst, conv);
 		}
 
@@ -166,9 +145,7 @@ namespace libimage
 		void contrast_self(gray::view_t const& src_dst, u8 src_low, u8 src_high)
 		{
 			assert(src_low < src_high);
-			u8 dst_low = 0;
-			u8 dst_high = 255;
-			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, dst_low, dst_high, p); };
+			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
 			seq::transform_self(src_dst, conv);
 		}
 

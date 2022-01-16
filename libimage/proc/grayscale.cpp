@@ -6,10 +6,19 @@
 #include <immintrin.h>
 #endif // !LIBIMAGE_NO_SIMD
 
+#include <array>
+
+
+constexpr r32 COEFF_RED = 0.299f;
+constexpr r32 COEFF_GREEN = 0.587f;
+constexpr r32 COEFF_BLUE = 0.114f;
+
+constexpr std::array<r32, 3> STANDARD_GRAYSCALE_COEFFS { COEFF_RED, COEFF_GREEN, COEFF_BLUE };
+
 
 static constexpr u8 rgb_grayscale_standard(u8 red, u8 green, u8 blue)
 {
-	return static_cast<u8>(0.299 * red + 0.587 * green + 0.114 * blue);
+	return static_cast<u8>(COEFF_RED * red + COEFF_GREEN * green + COEFF_BLUE * blue);
 }
 
 
@@ -165,7 +174,7 @@ namespace libimage
 			dst[1] = (DST_T)src[1];
 			dst[2] = (DST_T)src[2];
 			dst[3] = (DST_T)src[3];
-		}
+		}		
 
 
 		static void grayscale_row(pixel_t* src_begin, u8* dst_begin, u32 length)
@@ -173,7 +182,8 @@ namespace libimage
 			constexpr u32 N = 4;
 			constexpr u32 STEP = N;
 
-			r32 weights[] = { 0.299f, 0.587f, 0.114f };
+			auto weights = STANDARD_GRAYSCALE_COEFFS.data();
+
 			auto red_w_vec = _mm_load_ps1(weights);
 			auto green_w_vec = _mm_load_ps1(weights + 1);
 			auto blue_w_vec = _mm_load_ps1(weights + 2);
@@ -260,7 +270,8 @@ namespace libimage
 			constexpr u32 N = 4;
 			constexpr u32 STEP = N;
 
-			r32 weights[] = { 0.299f, 0.587f, 0.114f };
+			auto weights = STANDARD_GRAYSCALE_COEFFS.data();
+
 			auto red_w_vec = _mm_load_ps1(weights);
 			auto green_w_vec = _mm_load_ps1(weights + 1);
 			auto blue_w_vec = _mm_load_ps1(weights + 2);
