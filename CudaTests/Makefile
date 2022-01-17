@@ -323,29 +323,41 @@ charts_c       := ../libimage/math/charts.cpp
 charts_o       := $(build)/charts.o
 object_files   += $(charts_o)
 
-copy_c         := ../libimage/proc/copy.cpp
-copy_o         := $(build)/copy.o
-object_files   += $(copy_o)
+alpha_blend_c  := $(proc_dir)/alpha_blend.cpp
+alpha_blend_o  := $(build)/alpha_blend.o
+object_files   += $(alpha_blend_o)
 
-transform_c    := ../libimage/proc/transform.cpp
-transform_o    := $(build)/transform.o
-object_files   += $(transform_o)
-
-alpha_blend_c    := ../libimage/proc/alpha_blend.cpp
-alpha_blend_o    := $(build)/alpha_blend.o
-object_files     += $(alpha_blend_o)
-
-binarize_c     := ../libimage/proc/binarize.cpp
+binarize_c     := $(proc_dir)/binarize.cpp
 binarize_o     := $(build)/binarize.o
 object_files   += $(binarize_o)
 
-blur_c         := ../libimage/proc/blur.cpp
+blur_c         := $(proc_dir)/blur.cpp
 blur_o         := $(build)/blur.o
 object_files   += $(blur_o)
 
-convolve_c     := ../libimage/proc/convolve.cpp
+contrast_c     := $(proc_dir)/contrast.cpp
+contrast_o     := $(build)/contrast.o
+object_files   += $(contrast_o)
+
+convolve_c     := $(proc_dir)/convolve.cpp
 convolve_o     := $(build)/convolve.o
 object_files   += $(convolve_o)
+
+copy_c         := $(proc_dir)/copy.cpp
+copy_o         := $(build)/copy.o
+object_files   += $(copy_o)
+
+edges_gradients_c  := $(proc_dir)/edges_gradients.cpp
+edges_gradients_o  := $(build)/edges_gradients.o
+object_files       += $(edges_gradients_o)
+
+grayscale_c    := $(proc_dir)/grayscale.cpp
+grayscale_o    := $(build)/grayscale.o
+object_files   += $(grayscale_o)
+
+transform_c    := $(proc_dir)/transform.cpp
+transform_o    := $(build)/transform.o
+object_files   += $(transform_o)
 
 
 gpu_h := $(types_h)
@@ -400,14 +412,6 @@ $(charts_o): $(charts_c) $(libimage_h) $(charts_h)
 	@echo "\n math.o"
 	$(GPP) -o $@ -c $<
 
-$(copy_o): $(copy_c) $(libimage_h) $(proc_h)
-	@echo "\n copy.o"
-	$(GPP) -o $@ -c $<
-
-$(transform_o): $(transform_c) $(libimage_h) $(proc_h)
-	@echo "\n transform.o"
-	$(GPP) -o $@ -c $<
-
 $(alpha_blend_o): $(alpha_blend_c) $(libimage_h) $(proc_h)
 	@echo "\n alpha_blend.o"
 	$(GPP) -o $@ -c $<
@@ -416,12 +420,32 @@ $(binarize_o): $(binarize_c) $(libimage_h) $(proc_h)
 	@echo "\n binarize.o"
 	$(GPP) -o $@ -c $<
 
+$(blur_o): $(blur_c) $(libimage_h) $(proc_h)
+	@echo "\n blur.o"
+	$(GPP) -o $@ -c $<
+
+$(contrast_o): $(contrast_c) $(libimage_h) $(proc_h)
+	@echo "\n contrast.o"
+	$(GPP) -o $@ -c $<
+
 $(convolve_o): $(convolve_c) $(libimage_h) $(proc_h)
 	@echo "\n convolve.o"
 	$(GPP) -o $@ -c $<
 
-$(blur_o): $(blur_c) $(libimage_h) $(proc_h)
-	@echo "\n blur.o"
+$(copy_o): $(copy_c) $(libimage_h) $(proc_h)
+	@echo "\n copy.o"
+	$(GPP) -o $@ -c $<
+
+$(edges_gradients_o): $(edges_gradients_c) $(libimage_h) $(proc_h)
+	@echo "\n edges_gradients.o"
+	$(GPP) -o $@ -c $<
+
+$(grayscale_o): $(grayscale_c) $(libimage_h) $(proc_h)
+	@echo "\n grayscale.o"
+	$(GPP) -o $@ -c $<
+
+$(transform_o): $(transform_c) $(libimage_h) $(proc_h)
+	@echo "\n transform.o"
 	$(GPP) -o $@ -c $<
 
 $(gpu_device_o): $(gpu_device_c) $(gpu_h)
