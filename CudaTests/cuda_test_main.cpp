@@ -129,13 +129,13 @@ void process_tests(path_t& out_dir)
 	img::seq::copy(dst_gray_img, src_gray_img);
 
 	// contrast
-	auto shade_min = static_cast<u8>(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
-	auto shade_max = static_cast<u8>(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
+	auto shade_min = (u8)(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
+	auto shade_max = (u8)(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
 	img::seq::contrast(src_gray_img, dst_gray_img, shade_min, shade_max);
 	img::write_image(dst_gray_img, out_dir + "contrast.png");
 
 	// binarize
-	auto const is_white = [&](u8 p) { return static_cast<r32>(p) > gray_stats.mean; };
+	auto const is_white = [&](u8 p) { return (r32)(p) > gray_stats.mean; };
 	img::seq::binarize(src_gray_img, dst_gray_img, is_white);
 	img::write_image(dst_gray_img, out_dir + "binarize.png");
 
@@ -408,11 +408,11 @@ void gradient_times(path_t& out_dir)
 	u32 height = height_start;
 	u32 image_count = image_count_start;
 
-	auto const current_pixels = [&]() { return static_cast<r64>(width) * height * image_count; };
+	auto const current_pixels = [&]() { return (r64)(width) * height * image_count; };
 
 	auto const start_pixels = current_pixels();
 
-	auto const scale = [&](auto t) { return static_cast<r32>(start_pixels / current_pixels() * t); };
+	auto const scale = [&](auto t) { return (r32)(start_pixels / current_pixels() * t); };
 	auto const print_wh = [&]() { std::cout << "\nwidth: " << width << " height: " << height << '\n'; };
 	auto const print_count = [&]() { std::cout << "  image count: " << image_count << '\n'; };
 

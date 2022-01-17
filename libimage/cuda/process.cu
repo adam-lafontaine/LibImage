@@ -15,12 +15,12 @@ GPU_FUNCTION
 static u8 blend_linear(u8 s, u8 c, r32 a)
 {
     
-    auto const sf = static_cast<r32>(s);
-    auto const cf = static_cast<r32>(c);
+    auto const sf = (r32)(s);
+    auto const cf = (r32)(c);
 
     auto blended = a * cf + (1.0f - a) * sf;
 
-    return static_cast<u8>(blended);
+    return (u8)(blended);
 }
 
 
@@ -33,7 +33,7 @@ static void gpu_alpha_blend_linear(pixel_t* src, pixel_t* current, pixel_t* dst,
         return;
     }
 
-    auto const a = static_cast<r32>(src[i].alpha) / 255.0f;
+    auto const a = (r32)(src[i].alpha) / 255.0f;
     auto red = blend_linear(src[i].red, current[i].red, a);
     auto green = blend_linear(src[i].green, current[i].green, a);
     auto blue = blend_linear(src[i].blue, current[i].blue, a);
@@ -144,7 +144,7 @@ static void gpu_edges(u8* src, u8* dst, u32 width, u32 height, u8 threshold)
     {
         auto gx = convolve_3x3(src, width, height, i, GRAD_X_3X3);
         auto gy = convolve_3x3(src, width, height, i, GRAD_Y_3X3);
-        auto g = static_cast<u8>(std::hypot(gx, gy));
+        auto g = (u8)(std::hypot(gx, gy));
         dst[i] = g < threshold ? 0 : 255;
     }
 }
@@ -168,7 +168,7 @@ static void gpu_gradients(u8* src, u8* dst, u32 width, u32 height)
     {
         auto gx = convolve_3x3(src, width, height, i, GRAD_X_3X3);
         auto gy = convolve_3x3(src, width, height, i, GRAD_Y_3X3);
-        dst[i] = static_cast<u8>(std::hypot(gx, gy));
+        dst[i] = (u8)(std::hypot(gx, gy));
     }
 }
 
@@ -185,14 +185,14 @@ static u8 lerp_clamp(u8 src_low, u8 src_high, u8 dst_low, u8 dst_high, u8 val)
         return dst_high;
     }
 
-    auto const ratio = (static_cast<r64>(val) - src_low) / (src_high - src_low);
+    auto const ratio = ((r64)(val) - src_low) / (src_high - src_low);
 
     assert(ratio >= 0.0);
     assert(ratio <= 1.0);
 
     auto const diff = ratio * (dst_high - dst_low);
 
-    return dst_low + static_cast<u8>(diff);
+    return dst_low + (u8)(diff);
 }
 
 
@@ -219,7 +219,7 @@ static void gpu_transform_contrast(u8* src, u8* dst, u8 src_low, u8 src_high, u3
 GPU_FUNCTION
 static u8 rgb_grayscale_standard(u8 red, u8 green, u8 blue)
 {
-    return static_cast<u8>(0.299f * red + 0.587f * green + 0.114f * blue);
+    return (u8)(0.299f * red + 0.587f * green + 0.114f * blue);
 }
 
 
