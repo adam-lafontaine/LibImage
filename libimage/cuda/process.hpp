@@ -17,7 +17,7 @@ namespace libimage
 #endif // !LIBIMAGE_NO_COLOR	
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
-
+/*
 	class BlurKernels
 	{
 	public:
@@ -37,14 +37,15 @@ namespace libimage
 	bool make_blur_kernels(BlurKernels& blur_k, DeviceBuffer& buffer);
 
 	bool make_gradient_kernels(GradientKernels& grad_k, DeviceBuffer& buffer);
+	*/
 
 	bool binarize(gray::device_image_t const& src, gray::device_image_t const& dst, u8 min_threshold);
 
-	bool blur(gray::device_image_t const& src, gray::device_image_t const& dst, BlurKernels const& blur_k);
+	bool blur(gray::device_image_t const& src, gray::device_image_t const& dst/*, BlurKernels const& blur_k*/);
 
-	bool edges(gray::device_image_t const& src, gray::device_image_t const& dst, u8 threshold, gray::device_image_t const& temp, BlurKernels const& blur_k, GradientKernels const& grad_k);
+	bool edges(gray::device_image_t const& src, gray::device_image_t const& dst, u8 threshold, gray::device_image_t const& temp/*, BlurKernels const& blur_k, GradientKernels const& grad_k*/);
 
-	bool gradients(gray::device_image_t const& src, gray::device_image_t const& dst, gray::device_image_t const& temp, BlurKernels const& blur_k, GradientKernels const& grad_k);
+	bool gradients(gray::device_image_t const& src, gray::device_image_t const& dst, gray::device_image_t const& temp/*, BlurKernels const& blur_k, GradientKernels const& grad_k*/);
 
 	bool contrast(gray::device_image_t const& src, gray::device_image_t const& dst, u8 src_low, u8 src_high);
 

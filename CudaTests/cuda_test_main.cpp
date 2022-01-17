@@ -291,34 +291,21 @@ void cuda_tests(path_t& out_dir)
 	img::copy_to_host(d_dst_gray_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "binarize.png");
 
-
-	// convolution kernels
-	DeviceBuffer kernel_buffer;
-	auto kernel_bytes = 70 * sizeof(r32);
-	device_malloc(kernel_buffer, kernel_bytes);
-
-	img::BlurKernels blur_k;
-	img::make_blur_kernels(blur_k, kernel_buffer);
-
-	img::GradientKernels grad_k;
-	img::make_gradient_kernels(grad_k, kernel_buffer);
-
-
 	// blur
-	img::blur(d_src_gray_img, d_dst_gray_img, blur_k);
+	img::blur(d_src_gray_img, d_dst_gray_img);
 	img::copy_to_host(d_dst_gray_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "blur.png");
 
 
 	// edge detection
 	u8 threshold = 100;
-	img::edges(d_src_gray_img, d_dst_gray_img, threshold, d_tmp_gray_img, blur_k, grad_k);
+	img::edges(d_src_gray_img, d_dst_gray_img, threshold, d_tmp_gray_img);
 	img::copy_to_host(d_dst_gray_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "edges.png");
 
 
 	// gradients
-	img::gradients(d_src_gray_img, d_dst_gray_img, d_tmp_gray_img, blur_k, grad_k);
+	img::gradients(d_src_gray_img, d_dst_gray_img, d_tmp_gray_img);
 	img::copy_to_host(d_dst_gray_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "gradients.png");
 
@@ -354,7 +341,7 @@ void cuda_tests(path_t& out_dir)
 	src_sub = img::sub_view(src_gray_img, range);
 	dst_sub = img::sub_view(dst_gray_img, range);
 	img::copy_to_device(src_sub, d_src_sub);
-	img::blur(d_src_sub, d_dst_sub, blur_k);
+	img::blur(d_src_sub, d_dst_sub);
 	img::copy_to_host(d_dst_sub, dst_sub);
 
 	range.x_begin = 0;
@@ -364,7 +351,7 @@ void cuda_tests(path_t& out_dir)
 	src_sub = img::sub_view(src_gray_img, range);
 	dst_sub = img::sub_view(dst_gray_img, range);
 	img::copy_to_device(src_sub, d_src_sub);
-	img::gradients(d_src_sub, d_dst_sub, d_tmp_sub, blur_k, grad_k);
+	img::gradients(d_src_sub, d_dst_sub, d_tmp_sub);
 	img::copy_to_host(d_dst_sub, dst_sub);
 
 	range.x_begin = width / 2;
@@ -372,7 +359,7 @@ void cuda_tests(path_t& out_dir)
 	src_sub = img::sub_view(src_gray_img, range);
 	dst_sub = img::sub_view(dst_gray_img, range);
 	img::copy_to_device(src_sub, d_src_sub);
-	img::edges(d_src_sub, d_dst_sub, threshold, d_tmp_sub, blur_k, grad_k);	
+	img::edges(d_src_sub, d_dst_sub, threshold, d_tmp_sub);	
 	img::copy_to_host(d_dst_sub, dst_sub);
 
 	range.x_begin = width / 4;
@@ -389,7 +376,6 @@ void cuda_tests(path_t& out_dir)
 
 	device_free(color_buffer);
 	device_free(gray_buffer);
-	device_free(kernel_buffer);
 }
 
 
@@ -398,10 +384,10 @@ void gradient_times(path_t& out_dir)
 	std::cout << "\ngradients:\n";
 	empty_dir(out_dir);
 
-	u32 n_image_sizes = 4;
+	u32 n_image_sizes = 2;
 	u32 image_dim_factor = 2;
 
-	u32 n_image_counts = 3;
+	u32 n_image_counts = 2;
 	u32 image_count_factor = 4;
 
 	u32 width_start = 400;
@@ -432,16 +418,6 @@ void gradient_times(path_t& out_dir)
 
 	r64 t = 0;
 	auto const print_t = [&](const char* label) { std::cout << "    " << label << " time: " << scale(t) << '\n'; };
-
-	DeviceBuffer kernel_buffer;
-	auto kernel_bytes = 70 * sizeof(r32);
-	device_malloc(kernel_buffer, kernel_bytes);
-
-	img::BlurKernels blur_k;
-	img::make_blur_kernels(blur_k, kernel_buffer);
-
-	img::GradientKernels grad_k;
-	img::make_gradient_kernels(grad_k, kernel_buffer);
 
 	for (u32 s = 0; s < n_image_sizes; ++s)
 	{
@@ -484,7 +460,7 @@ void gradient_times(path_t& out_dir)
 			for (u32 i = 0; i < image_count; ++i)
 			{
 				img::copy_to_device(src, d_src);
-				img::gradients(d_src, d_dst, d_tmp, blur_k, grad_k);
+				img::gradients(d_src, d_dst, d_tmp);
 				img::copy_to_host(d_dst, dst);
 			}
 			t = sw.get_time_milli();
@@ -502,8 +478,6 @@ void gradient_times(path_t& out_dir)
 		width *= image_dim_factor;
 		height *= image_dim_factor;
 	}
-
-	device_free(kernel_buffer);
 
 	img::grouped_multi_chart_data_t chart_data
 	{ 
@@ -547,26 +521,14 @@ void cuda_do_gradients(GrayImage const& src, GrayImage& dst, u32 qty)
 	img::make_image(d_dst, width, height, d_buffer);
 	img::make_image(d_tmp, width, height, d_buffer);
 
-	// convolution kernels
-	DeviceBuffer kernel_buffer;
-	auto kernel_bytes = 70 * sizeof(r32);
-	device_malloc(kernel_buffer, kernel_bytes);
-
-	img::BlurKernels blur_k;
-	img::make_blur_kernels(blur_k, kernel_buffer);
-
-	img::GradientKernels grad_k;
-	img::make_gradient_kernels(grad_k, kernel_buffer);
-
 	for(u32 i = 0; i < qty; ++i)
 	{
 		img::copy_to_device(src, d_src);
-		img::gradients(d_src, d_dst, d_tmp, blur_k, grad_k);
+		img::gradients(d_src, d_dst, d_tmp);
 		img::copy_to_host(d_dst, dst);
 	}
 
 	device_free(d_buffer);
-	device_free(kernel_buffer);
 }
 
 

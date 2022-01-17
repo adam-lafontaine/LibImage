@@ -47,47 +47,42 @@ static void gpu_alpha_blend_linear(pixel_t* src, pixel_t* current, pixel_t* dst,
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
+GPU_CONSTEXPR_FUNCTION r32 div16(int i) { return i / 16.0f; }
 
-constexpr r32 d3 = 16.0f;
-constexpr u32 GAUSS_3X3_SIZE = 9;
-constexpr std::array<r32, GAUSS_3X3_SIZE> GAUSS_3X3
+GPU_GLOBAL_CONSTANT r32 GAUSS_3X3[]
 {
-    (1/d3), (2/d3), (1/d3),
-    (2/d3), (4/d3), (2/d3),
-    (1/d3), (2/d3), (1/d3),
+    div16(1), div16(2), div16(1),
+    div16(2), div16(4), div16(2),
+    div16(1), div16(2), div16(1),
 };
-constexpr u32 GAUSS_3X3_BYTES = GAUSS_3X3_SIZE * sizeof(r32);
 
-constexpr r32 d5 = 256.0f;
-constexpr u32 GAUSS_5X5_SIZE = 25;
-constexpr std::array<r32, GAUSS_5X5_SIZE> GAUSS_5X5
+
+GPU_CONSTEXPR_FUNCTION r32 div256(int i) { return i / 256.0f; }
+
+GPU_GLOBAL_CONSTANT r32 GAUSS_5X5[]
 {
-    (1/d5), (4/d5),  (6/d5),  (4/d5),  (1/d5),
-    (4/d5), (16/d5), (24/d5), (16/d5), (4/d5),
-    (6/d5), (24/d5), (36/d5), (24/d5), (6/d5),
-    (4/d5), (16/d5), (24/d5), (16/d5), (4/d5),
-    (1/d5), (4/d5),  (6/d5),  (4/d5),  (1/d5),
+    div256(1), div256(4),  div256(6),  div256(4),  div256(1),
+    div256(4), div256(16), div256(24), div256(16), div256(4),
+    div256(6), div256(24), div256(36), div256(24), div256(6),
+    div256(4), div256(16), div256(24), div256(16), div256(4),
+    div256(1), div256(4),  div256(6),  div256(4),  div256(1),
 };
-constexpr u32 GAUSS_5X5_BYTES = GAUSS_5X5_SIZE * sizeof(r32);
 
 
-constexpr u32 GRAD_3X3_SIZE = 9;
-constexpr std::array<r32, GRAD_3X3_SIZE> GRAD_X_3X3
+GPU_GLOBAL_CONSTANT r32 GRAD_X_3X3[]
 {
     1.0f, 0.0f, -1.0f,
     2.0f, 0.0f, -2.0f,
     1.0f, 0.0f, -1.0f,
 };
-constexpr std::array<r32, GRAD_3X3_SIZE> GRAD_Y_3X3
+
+
+GPU_GLOBAL_CONSTANT r32 GRAD_Y_3X3[]
 {
     1.0f,  2.0f,  1.0f,
     0.0f,  0.0f,  0.0f,
     -1.0f, -2.0f, -1.0f,
 };
-constexpr u32 GRAD_3X3_BYTES = GRAD_3X3_SIZE * sizeof(r32);
-
-
-
 
 
 GPU_KERNAL
@@ -104,7 +99,7 @@ static void gpu_binarize(u8* src, u8* dst, u8 threshold, u32 n_elements)
 
 
 GPU_KERNAL
-static void gpu_blur(u8* src, u8* dst, u32 width, u32 height, r32* g3x3, r32* g5x5)
+static void gpu_blur(u8* src, u8* dst, u32 width, u32 height)
 {
     u32 n_elements = width * height;
     u32 i = u32(blockDim.x * blockIdx.x + threadIdx.x);
@@ -112,6 +107,9 @@ static void gpu_blur(u8* src, u8* dst, u32 width, u32 height, r32* g3x3, r32* g5
     {
         return;
     }
+
+    auto g3x3 = (r32*)GAUSS_3X3;
+    auto g5x5 = (r32*)GAUSS_5X5;
 
     if(is_outer_edge(width, height, i))
     {
@@ -129,7 +127,7 @@ static void gpu_blur(u8* src, u8* dst, u32 width, u32 height, r32* g3x3, r32* g5
 
 
 GPU_KERNAL
-static void gpu_edges(u8* src, u8* dst, u32 width, u32 height, u8 threshold, r32* grad_x, r32* grad_y)
+static void gpu_edges(u8* src, u8* dst, u32 width, u32 height, u8 threshold)
 {
     u32 n_elements = width * height;
     u32 i = u32(blockDim.x * blockIdx.x + threadIdx.x);
@@ -144,8 +142,8 @@ static void gpu_edges(u8* src, u8* dst, u32 width, u32 height, u8 threshold, r32
     }
     else
     {
-        auto gx = convolve_3x3(src, width, height, i, grad_x);
-        auto gy = convolve_3x3(src, width, height, i, grad_y);
+        auto gx = convolve_3x3(src, width, height, i, GRAD_X_3X3);
+        auto gy = convolve_3x3(src, width, height, i, GRAD_Y_3X3);
         auto g = static_cast<u8>(std::hypot(gx, gy));
         dst[i] = g < threshold ? 0 : 255;
     }
@@ -153,7 +151,7 @@ static void gpu_edges(u8* src, u8* dst, u32 width, u32 height, u8 threshold, r32
 
 
 GPU_KERNAL
-static void gpu_gradients(u8* src, u8* dst, u32 width, u32 height, r32* grad_x, r32* grad_y)
+static void gpu_gradients(u8* src, u8* dst, u32 width, u32 height)
 {
     u32 n_elements = width * height;
     u32 i = u32(blockDim.x * blockIdx.x + threadIdx.x);
@@ -168,8 +166,8 @@ static void gpu_gradients(u8* src, u8* dst, u32 width, u32 height, r32* grad_x, 
     }
     else
     {
-        auto gx = convolve_3x3(src, width, height, i, grad_x);
-        auto gy = convolve_3x3(src, width, height, i, grad_y);
+        auto gx = convolve_3x3(src, width, height, i, GRAD_X_3X3);
+        auto gy = convolve_3x3(src, width, height, i, GRAD_Y_3X3);
         dst[i] = static_cast<u8>(std::hypot(gx, gy));
     }
 }
@@ -352,30 +350,7 @@ namespace libimage
     }
 
 
-    bool make_blur_kernels(BlurKernels& blur_k, DeviceBuffer& buffer)
-    {
-        bool proc;
-        proc = buffer.total_bytes - buffer.offset >= GAUSS_3X3_BYTES + GAUSS_5X5_BYTES;
-        assert(proc);
-
-        blur_k.kernel_3x3.n_elements = GAUSS_3X3_SIZE;
-        blur_k.kernel_5x5.n_elements = GAUSS_5X5_SIZE;
-
-        proc &= make_device_array(blur_k.kernel_3x3, GAUSS_3X3_SIZE, buffer);
-        assert(proc);
-        proc &= make_device_array(blur_k.kernel_5x5, GAUSS_5X5_SIZE, buffer);
-        assert(proc);
-
-        proc &= copy_to_device(GAUSS_3X3, blur_k.kernel_3x3);
-        assert(proc);
-        proc &= copy_to_device(GAUSS_5X5, blur_k.kernel_5x5);
-        assert(proc);
-
-        return proc;
-    }
-
-
-    bool blur(gray::device_image_t const& src, gray::device_image_t const& dst, BlurKernels const& blur_k)
+    bool blur(gray::device_image_t const& src, gray::device_image_t const& dst)
     {
         assert(src.data);
         assert(src.width);
@@ -383,10 +358,6 @@ namespace libimage
         assert(dst.data);
         assert(dst.width == src.width);
         assert(dst.height == src.height);
-        assert(blur_k.kernel_3x3.data);
-        assert(blur_k.kernel_3x3.n_elements == GAUSS_3X3_SIZE);
-        assert(blur_k.kernel_5x5.data);
-        assert(blur_k.kernel_5x5.n_elements == GAUSS_5X5_SIZE);
 
         u32 n_elements = src.width * src.height;
         int threads_per_block = THREADS_PER_BLOCK;
@@ -401,9 +372,7 @@ namespace libimage
             src.data, 
             dst.data, 
             src.width, 
-            src.height, 
-            blur_k.kernel_3x3.data, 
-            blur_k.kernel_5x5.data);
+            src.height);
         
         proc &= cuda_launch_success();
         assert(proc);
@@ -412,28 +381,7 @@ namespace libimage
     }
 
 
-    bool make_gradient_kernels(GradientKernels& grad_k, DeviceBuffer& buffer)
-    {
-        bool proc;
-
-        proc = buffer.total_bytes - buffer.offset >= 2 * GRAD_3X3_BYTES;
-        assert(proc);
-
-        proc &= make_device_array(grad_k.kernel_x_3x3, GRAD_3X3_SIZE, buffer);
-        assert(proc);
-        proc &= make_device_array(grad_k.kernel_y_3x3, GRAD_3X3_SIZE, buffer);
-        assert(proc);
-
-        proc &= copy_to_device(GRAD_X_3X3, grad_k.kernel_x_3x3);
-        assert(proc);
-        proc &= copy_to_device(GRAD_Y_3X3, grad_k.kernel_y_3x3);
-        assert(proc);
-
-        return proc;
-    }
-
-
-    bool edges(gray::device_image_t const& src, gray::device_image_t const& dst, u8 threshold, gray::device_image_t const& temp, BlurKernels const& blur_k, GradientKernels const& grad_k)
+    bool edges(gray::device_image_t const& src, gray::device_image_t const& dst, u8 threshold, gray::device_image_t const& temp)
     {
         assert(src.data);
         assert(src.width);
@@ -444,14 +392,6 @@ namespace libimage
         assert(temp.data);
         assert(temp.width == src.width);
         assert(temp.height == src.height);
-        assert(blur_k.kernel_3x3.data);
-        assert(blur_k.kernel_3x3.n_elements == GAUSS_3X3_SIZE);
-        assert(blur_k.kernel_5x5.data);
-        assert(blur_k.kernel_5x5.n_elements == GAUSS_5X5_SIZE);
-        assert(grad_k.kernel_x_3x3.data);
-        assert(grad_k.kernel_x_3x3.n_elements == GRAD_3X3_SIZE);
-        assert(grad_k.kernel_y_3x3.data);
-        assert(grad_k.kernel_y_3x3.n_elements == GRAD_3X3_SIZE);
 
         u32 n_elements = src.width * src.height;
         int threads_per_block = THREADS_PER_BLOCK;
@@ -466,9 +406,7 @@ namespace libimage
             src.data, 
             temp.data,
             src.width, 
-            src.height, 
-            blur_k.kernel_3x3.data, 
-            blur_k.kernel_5x5.data);
+            src.height);
         
         proc &= cuda_launch_success();
         assert(proc);
@@ -481,9 +419,7 @@ namespace libimage
             dst.data,
             src.width,
             src.height,
-            threshold,
-            grad_k.kernel_x_3x3.data,
-            grad_k.kernel_y_3x3.data);
+            threshold);
 
         proc &= cuda_launch_success();
         assert(proc);
@@ -492,7 +428,7 @@ namespace libimage
     }   
 
 
-    bool gradients(gray::device_image_t const& src, gray::device_image_t const& dst, gray::device_image_t const& temp, BlurKernels const& blur_k, GradientKernels const& grad_k)
+    bool gradients(gray::device_image_t const& src, gray::device_image_t const& dst, gray::device_image_t const& temp)
     {
         assert(src.data);
         assert(src.width);
@@ -503,14 +439,6 @@ namespace libimage
         assert(temp.data);
         assert(temp.width == src.width);
         assert(temp.height == src.height);
-        assert(blur_k.kernel_3x3.data);
-        assert(blur_k.kernel_3x3.n_elements == GAUSS_3X3_SIZE);
-        assert(blur_k.kernel_5x5.data);
-        assert(blur_k.kernel_5x5.n_elements == GAUSS_5X5_SIZE);
-        assert(grad_k.kernel_x_3x3.data);
-        assert(grad_k.kernel_x_3x3.n_elements == GRAD_3X3_SIZE);
-        assert(grad_k.kernel_y_3x3.data);
-        assert(grad_k.kernel_y_3x3.n_elements == GRAD_3X3_SIZE);
 
         u32 n_elements = src.width * src.height;
         int threads_per_block = THREADS_PER_BLOCK;
@@ -525,9 +453,7 @@ namespace libimage
             src.data, 
             temp.data,
             src.width, 
-            src.height, 
-            blur_k.kernel_3x3.data, 
-            blur_k.kernel_5x5.data);
+            src.height);
         
         proc &= cuda_launch_success();
         assert(proc);
@@ -539,9 +465,7 @@ namespace libimage
             temp.data,
             dst.data,
             src.width,
-            src.height,
-            grad_k.kernel_x_3x3.data,
-            grad_k.kernel_y_3x3.data);
+            src.height);
 
         proc &= cuda_launch_success();
         assert(proc);
