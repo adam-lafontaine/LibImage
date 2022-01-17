@@ -116,7 +116,7 @@ void process_tests(path_t& out_dir)
 	print(gray_stats);
 
 	// alpha grayscale
-	img::seq::transform_alpha_grayscale(corvette_img);
+	img::seq::alpha_grayscale(corvette_img);
 	auto alpha_stats = img::calc_stats(corvette_img, img::Channel::Alpha);
 	GrayImage alpha_stats_img;
 	img::draw_histogram(alpha_stats.hist, alpha_stats_img);
@@ -231,7 +231,7 @@ void cuda_tests(path_t& out_dir)
 	img::make_image(dst_gray_img, width, height);
 	
 	// setup device memory for color images
-	DeviceBuffer<Pixel> color_buffer;
+	DeviceBuffer color_buffer;
 	auto color_bytes = 3 * width * height * PIXEL_SZ;
 	device_malloc(color_buffer, color_bytes);
 
@@ -246,7 +246,7 @@ void cuda_tests(path_t& out_dir)
 
 
 	// setup device memory for gray images
-	DeviceBuffer<GrayPixel> gray_buffer;
+	DeviceBuffer gray_buffer;
 	auto gray_bytes = 3 * width * height * G_PIXEL_SZ;
 	device_malloc(gray_buffer, gray_bytes);
 
@@ -293,7 +293,7 @@ void cuda_tests(path_t& out_dir)
 
 
 	// convolution kernels
-	DeviceBuffer<r32> kernel_buffer;
+	DeviceBuffer kernel_buffer;
 	auto kernel_bytes = 70 * sizeof(r32);
 	device_malloc(kernel_buffer, kernel_bytes);
 
@@ -324,7 +324,7 @@ void cuda_tests(path_t& out_dir)
 
 
 	// recycle memory
-	DeviceBuffer<GrayPixel> sub_buffer;
+	DeviceBuffer sub_buffer;
 	sub_buffer.data = d_tmp_gray_img.data;
 	sub_buffer.total_bytes = width * height * G_PIXEL_SZ;
 	CudaGrayImage d_src_sub;
@@ -433,7 +433,7 @@ void gradient_times(path_t& out_dir)
 	r64 t = 0;
 	auto const print_t = [&](const char* label) { std::cout << "    " << label << " time: " << scale(t) << '\n'; };
 
-	DeviceBuffer<r32> kernel_buffer;
+	DeviceBuffer kernel_buffer;
 	auto kernel_bytes = 70 * sizeof(r32);
 	device_malloc(kernel_buffer, kernel_bytes);
 
@@ -456,7 +456,7 @@ void gradient_times(path_t& out_dir)
 		img::make_image(dst, width, height);
 		img::make_image(tmp, width, height);
 
-		DeviceBuffer<GrayPixel> d_buffer;
+		DeviceBuffer d_buffer;
 		auto gray_bytes = 3 * width * height * G_PIXEL_SZ;
 		device_malloc(d_buffer, gray_bytes);
 
@@ -535,7 +535,7 @@ void cuda_do_gradients(GrayImage const& src, GrayImage& dst, u32 qty)
 	auto const width = src.width;
 	auto const height = src.height;
 
-	DeviceBuffer<GrayPixel> d_buffer;
+	DeviceBuffer d_buffer;
 	auto gray_bytes = 3 * src.width * src.height * G_PIXEL_SZ;
 	device_malloc(d_buffer, gray_bytes);
 
@@ -548,7 +548,7 @@ void cuda_do_gradients(GrayImage const& src, GrayImage& dst, u32 qty)
 	img::make_image(d_tmp, width, height, d_buffer);
 
 	// convolution kernels
-	DeviceBuffer<r32> kernel_buffer;
+	DeviceBuffer kernel_buffer;
 	auto kernel_bytes = 70 * sizeof(r32);
 	device_malloc(kernel_buffer, kernel_bytes);
 

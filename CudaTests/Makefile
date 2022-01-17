@@ -285,10 +285,23 @@ math_h := ../libimage/math/math.hpp
 
 charts_h := ../libimage/math/charts.hpp
 
-proc_h := ../libimage/proc/process.hpp
-proc_h += ../libimage/proc/verify.hpp
-proc_h += ../libimage/proc/index_range.hpp
-proc_h += ../libimage/proc/convolve.hpp
+proc_dir := ../libimage/proc
+
+proc_h := $(proc_dir)/alpha_blend.hpp
+proc_h += $(proc_dir)/binarize.hpp
+proc_h += $(proc_dir)/blur.hpp
+proc_h += $(proc_dir)/contrast.hpp
+proc_h += $(proc_dir)/convolve.hpp
+proc_h += $(proc_dir)/copy.hpp
+proc_h += $(proc_dir)/edges.hpp
+proc_h += $(proc_dir)/gradients.hpp
+proc_h += $(proc_dir)/grayscale.hpp
+proc_h += $(proc_dir)/index_range.hpp
+proc_h += $(proc_dir)/proc_def.hpp
+proc_h += $(proc_dir)/process.hpp
+proc_h += $(proc_dir)/transform.hpp
+proc_h += $(proc_dir)/verify.hpp
+
 
 main_c         := cuda_test_main.cpp
 main_o         := $(build)/cuda_test_main.o
@@ -333,10 +346,6 @@ object_files   += $(blur_o)
 convolve_c     := ../libimage/proc/convolve.cpp
 convolve_o     := $(build)/convolve.o
 object_files   += $(convolve_o)
-
-gradient_c     := ../libimage/proc/gradient.cpp
-gradient_o     := $(build)/gradient.o
-object_files   += $(gradient_o)
 
 
 gpu_h := $(types_h)
@@ -415,10 +424,6 @@ $(blur_o): $(blur_c) $(libimage_h) $(proc_h)
 	@echo "\n blur.o"
 	$(GPP) -o $@ -c $<
 
-$(gradient_o): $(gradient_c) $(libimage_h) $(proc_h)
-	@echo "\n gradient.o"
-	$(GPP) -o $@ -c $<
-
 $(gpu_device_o): $(gpu_device_c) $(gpu_h)
 	@echo "\n gpu_device.o"
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
@@ -430,7 +435,6 @@ $(gpu_device_image_o): $(gpu_device_image_c) $(gpu_h)
 $(gpu_process_o): $(gpu_process_c) $(gpu_h)
 	@echo "\n gpu_process.o"
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
-
 
 $(cuda_test_exe): $(object_files)
 	@echo "\n cuda_test"

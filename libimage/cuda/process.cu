@@ -352,7 +352,7 @@ namespace libimage
     }
 
 
-    bool make_blur_kernels(BlurKernels& blur_k, DeviceBuffer<r32>& buffer)
+    bool make_blur_kernels(BlurKernels& blur_k, DeviceBuffer& buffer)
     {
         bool proc;
         proc = buffer.total_bytes - buffer.offset >= GAUSS_3X3_BYTES + GAUSS_5X5_BYTES;
@@ -361,9 +361,9 @@ namespace libimage
         blur_k.kernel_3x3.n_elements = GAUSS_3X3_SIZE;
         blur_k.kernel_5x5.n_elements = GAUSS_5X5_SIZE;
 
-        proc &= make_array(blur_k.kernel_3x3, GAUSS_3X3_SIZE, buffer);
+        proc &= make_device_array(blur_k.kernel_3x3, GAUSS_3X3_SIZE, buffer);
         assert(proc);
-        proc &= make_array(blur_k.kernel_5x5, GAUSS_5X5_SIZE, buffer);
+        proc &= make_device_array(blur_k.kernel_5x5, GAUSS_5X5_SIZE, buffer);
         assert(proc);
 
         proc &= copy_to_device(GAUSS_3X3, blur_k.kernel_3x3);
@@ -412,16 +412,16 @@ namespace libimage
     }
 
 
-    bool make_gradient_kernels(GradientKernels& grad_k, DeviceBuffer<r32>& buffer)
+    bool make_gradient_kernels(GradientKernels& grad_k, DeviceBuffer& buffer)
     {
         bool proc;
 
         proc = buffer.total_bytes - buffer.offset >= 2 * GRAD_3X3_BYTES;
         assert(proc);
 
-        proc &= make_array(grad_k.kernel_x_3x3, GRAD_3X3_SIZE, buffer);
+        proc &= make_device_array(grad_k.kernel_x_3x3, GRAD_3X3_SIZE, buffer);
         assert(proc);
-        proc &= make_array(grad_k.kernel_y_3x3, GRAD_3X3_SIZE, buffer);
+        proc &= make_device_array(grad_k.kernel_y_3x3, GRAD_3X3_SIZE, buffer);
         assert(proc);
 
         proc &= copy_to_device(GRAD_X_3X3, grad_k.kernel_x_3x3);

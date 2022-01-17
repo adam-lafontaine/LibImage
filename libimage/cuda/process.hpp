@@ -34,9 +34,9 @@ namespace libimage
 	};
 
 
-	bool make_blur_kernels(BlurKernels& blur_k, DeviceBuffer<r32>& buffer);
+	bool make_blur_kernels(BlurKernels& blur_k, DeviceBuffer& buffer);
 
-	bool make_gradient_kernels(GradientKernels& grad_k, DeviceBuffer<r32>& buffer);
+	bool make_gradient_kernels(GradientKernels& grad_k, DeviceBuffer& buffer);
 
 	bool binarize(gray::device_image_t const& src, gray::device_image_t const& dst, u8 min_threshold);
 

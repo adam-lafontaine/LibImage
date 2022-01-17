@@ -22,7 +22,7 @@ namespace libimage
     using device_image_t = DeviceRGBAImage;
 
 
-    bool make_image(device_image_t& image, u32 width, u32 height, DeviceBuffer<pixel_t>& buffer);
+    bool make_image(device_image_t& image, u32 width, u32 height, DeviceBuffer& buffer);
 
 
     bool copy_to_device(image_t const& src, device_image_t const& dst);
@@ -52,7 +52,7 @@ namespace libimage
     }
 
 
-    bool make_image(gray::device_image_t& image, u32 width, u32 height, DeviceBuffer<gray::pixel_t>& buffer);
+    bool make_image(gray::device_image_t& image, u32 width, u32 height, DeviceBuffer& buffer);
     
 
     bool copy_to_device(gray::image_t const& src, gray::device_image_t const& dst);

@@ -8,7 +8,7 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR
 
-    bool make_image(device_image_t& image, u32 width, u32 height, DeviceBuffer<pixel_t>& buffer)
+    bool make_image(device_image_t& image, u32 width, u32 height, DeviceBuffer& buffer)
     {
         assert(buffer.data);
         auto bytes = width * height * sizeof(pixel_t);
@@ -110,7 +110,7 @@ namespace libimage
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
 
-    bool make_image(gray::device_image_t& image, u32 width, u32 height, DeviceBuffer<gray::pixel_t>& buffer)
+    bool make_image(gray::device_image_t& image, u32 width, u32 height, DeviceBuffer& buffer)
     {
         assert(buffer.data);
         auto bytes = width * height * sizeof(gray::pixel_t);

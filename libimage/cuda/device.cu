@@ -1,7 +1,11 @@
 #include "device.hpp"
 #include "cuda_def.cuh"
 
-#include <iostream>
+#ifdef CUDA_PRINT_ERROR
+
+#include <cstdio>
+
+#endif
 
 
 static void check_error(cudaError_t err)
@@ -11,10 +15,13 @@ static void check_error(cudaError_t err)
         return;
     }
 
-    std::cout 
-        << "\n*** CUDA ERROR ***\n\n" 
-        << cudaGetErrorString(err)
-        << "\n\n******************\n\n";
+    #ifdef CUDA_PRINT_ERROR
+
+    printf("\n*** CUDA ERROR ***\n\n");
+    printf("%s", cudaGetErrorString(err));
+    printf("\n\n******************\n\n");
+
+    #endif
 }
 
 
@@ -69,4 +76,24 @@ bool cuda_launch_success()
     check_error(err);
 
     return err == cudaSuccess;
+}
+
+
+bool device_malloc(DeviceBuffer& buffer, size_t n_bytes)
+{
+    bool result = cuda_device_malloc((void**)&(buffer.data), n_bytes);
+    if(result)
+    {
+        buffer.total_bytes = n_bytes;
+    }
+
+    return result;
+}
+
+
+bool device_free(DeviceBuffer& buffer)
+{
+    buffer.total_bytes = 0;
+    buffer.offset = 0;
+    return cuda_device_free(buffer.data);
 }
