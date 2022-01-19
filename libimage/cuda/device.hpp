@@ -24,14 +24,17 @@ bool cuda_launch_success();
 
 
 
-template <typename T>
 class DeviceBuffer
 {
 public:
-    T* data = nullptr;
+    u8* data = nullptr;
     u32 total_bytes = 0;
     u32 offset = 0;
 };
+
+bool device_malloc(DeviceBuffer& buffer, size_t n_bytes);
+
+bool device_free(DeviceBuffer& buffer);
 
 
 template <typename T>
@@ -44,29 +47,7 @@ public:
 
 
 template <typename T>
-bool device_malloc(DeviceBuffer<T>& buffer, size_t n_bytes)
-{
-    bool result = cuda_device_malloc((void**)&(buffer.data), n_bytes);
-    if(result)
-    {
-        buffer.total_bytes = n_bytes;
-    }
-
-    return result;
-}
-
-
-template <typename T>
-bool device_free(DeviceBuffer<T>& buffer)
-{
-    buffer.total_bytes = 0;
-    buffer.offset = 0;
-    return cuda_device_free(buffer.data);
-}
-
-
-template <typename T>
-bool make_array(DeviceArray<T>& arr, u32 n_elements, DeviceBuffer<T>& buffer)
+bool make_device_array(DeviceArray<T>& arr, u32 n_elements, DeviceBuffer& buffer)
 {
     assert(buffer.data);
 
@@ -85,7 +66,7 @@ bool make_array(DeviceArray<T>& arr, u32 n_elements, DeviceBuffer<T>& buffer)
 
 
 template <typename T>
-void pop_array(DeviceArray<T>& arr, DeviceBuffer<T>& buffer)
+void pop_array(DeviceArray<T>& arr, DeviceBuffer& buffer)
 {
     auto bytes = arr.n_elements * sizeof(T);
     buffer.offset -= bytes;

@@ -29,7 +29,7 @@ namespace libimage
 
 				auto offset = y * width;
 
-				auto ptr = data + static_cast<u64>(offset);
+				auto ptr = data + (u64)(offset);
 				assert(ptr);
 
 				return ptr;
@@ -60,11 +60,11 @@ namespace libimage
 
 			pixel_t* begin() { return data; }
 
-			pixel_t* end() { return data + static_cast<u64>(width * static_cast<u64>(height)); }
+			pixel_t* end() { return data + (u64)(width * (u64)(height)); }
 
 			pixel_t* begin() const { return data; }
 
-			pixel_t* end() const { return data + static_cast<u64>(width * static_cast<u64>(height)); }
+			pixel_t* end() const { return data + (u64)(width * (u64)(height)); }
 		};
 
 
@@ -87,7 +87,7 @@ namespace libimage
 			pixel_t* row_begin(u32 y) const
 			{
 				auto offset = (y_begin + y) * image_width + x_begin;
-				return image_data + static_cast<u64>(offset);
+				return image_data + (u64)(offset);
 			}
 
 			pixel_t* xy_at(u32 x, u32 y) const
@@ -120,7 +120,7 @@ namespace libimage
 					assert(loc_y < y_end);
 
 					auto offset = loc_y * image_width + loc_x;
-					auto ptr = image_data + static_cast<u64>(offset);
+					auto ptr = image_data + (u64)(offset);
 					assert(ptr);
 
 					return ptr;
@@ -213,13 +213,13 @@ namespace libimage
 
 			u32 width = 0;
 
-			pixel_t* begin() { return image_data + static_cast<u64>(y_begin) * image_width + x_begin; }
+			pixel_t* begin() { return image_data + (u64)(y_begin) * image_width + x_begin; }
 
-			pixel_t* end() { return image_data + static_cast<u64>(y_begin) * image_width + x_end; }
+			pixel_t* end() { return image_data + (u64)(y_begin) * image_width + x_end; }
 
-			pixel_t* begin() const { return image_data + static_cast<u64>(y_begin) * image_width + x_begin; }
+			pixel_t* begin() const { return image_data + (u64)(y_begin) * image_width + x_begin; }
 
-			pixel_t* end() const { return image_data + static_cast<u64>(y_begin) * image_width + x_end; }
+			pixel_t* end() const { return image_data + (u64)(y_begin) * image_width + x_end; }
 		};
 
 
@@ -253,7 +253,7 @@ namespace libimage
 					assert(loc_y < y_end);
 
 					auto offset = loc_y * image_width + loc_x;
-					auto ptr = image_data + static_cast<u64>(offset);
+					auto ptr = image_data + (u64)(offset);
 					assert(ptr);
 
 					return ptr;

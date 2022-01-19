@@ -116,7 +116,7 @@ void process_tests(path_t& out_dir)
 	print(gray_stats);
 
 	// alpha grayscale
-	img::seq::transform_alpha_grayscale(corvette_img);
+	img::seq::alpha_grayscale(corvette_img);
 	auto alpha_stats = img::calc_stats(corvette_img, img::Channel::Alpha);
 	GrayImage alpha_stats_img;
 	img::draw_histogram(alpha_stats.hist, alpha_stats_img);
@@ -129,13 +129,13 @@ void process_tests(path_t& out_dir)
 	img::seq::copy(dst_gray_img, src_gray_img);
 
 	// contrast
-	auto shade_min = static_cast<u8>(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
-	auto shade_max = static_cast<u8>(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
+	auto shade_min = (u8)(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
+	auto shade_max = (u8)(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
 	img::seq::contrast(src_gray_img, dst_gray_img, shade_min, shade_max);
 	img::write_image(dst_gray_img, out_dir + "contrast.png");
 
 	// binarize
-	auto const is_white = [&](u8 p) { return static_cast<r32>(p) > gray_stats.mean; };
+	auto const is_white = [&](u8 p) { return (r32)(p) > gray_stats.mean; };
 	img::seq::binarize(src_gray_img, dst_gray_img, is_white);
 	img::write_image(dst_gray_img, out_dir + "binarize.png");
 
@@ -231,7 +231,7 @@ void cuda_tests(path_t& out_dir)
 	img::make_image(dst_gray_img, width, height);
 	
 	// setup device memory for color images
-	DeviceBuffer<Pixel> color_buffer;
+	DeviceBuffer color_buffer;
 	auto color_bytes = 3 * width * height * PIXEL_SZ;
 	device_malloc(color_buffer, color_bytes);
 
@@ -246,7 +246,7 @@ void cuda_tests(path_t& out_dir)
 
 
 	// setup device memory for gray images
-	DeviceBuffer<GrayPixel> gray_buffer;
+	DeviceBuffer gray_buffer;
 	auto gray_bytes = 3 * width * height * G_PIXEL_SZ;
 	device_malloc(gray_buffer, gray_bytes);
 
@@ -291,40 +291,27 @@ void cuda_tests(path_t& out_dir)
 	img::copy_to_host(d_dst_gray_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "binarize.png");
 
-
-	// convolution kernels
-	DeviceBuffer<r32> kernel_buffer;
-	auto kernel_bytes = 70 * sizeof(r32);
-	device_malloc(kernel_buffer, kernel_bytes);
-
-	img::BlurKernels blur_k;
-	img::make_blur_kernels(blur_k, kernel_buffer);
-
-	img::GradientKernels grad_k;
-	img::make_gradient_kernels(grad_k, kernel_buffer);
-
-
 	// blur
-	img::blur(d_src_gray_img, d_dst_gray_img, blur_k);
+	img::blur(d_src_gray_img, d_dst_gray_img);
 	img::copy_to_host(d_dst_gray_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "blur.png");
 
 
 	// edge detection
 	u8 threshold = 100;
-	img::edges(d_src_gray_img, d_dst_gray_img, threshold, d_tmp_gray_img, blur_k, grad_k);
+	img::edges(d_src_gray_img, d_dst_gray_img, threshold, d_tmp_gray_img);
 	img::copy_to_host(d_dst_gray_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "edges.png");
 
 
 	// gradients
-	img::gradients(d_src_gray_img, d_dst_gray_img, d_tmp_gray_img, blur_k, grad_k);
+	img::gradients(d_src_gray_img, d_dst_gray_img, d_tmp_gray_img);
 	img::copy_to_host(d_dst_gray_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "gradients.png");
 
 
 	// recycle memory
-	DeviceBuffer<GrayPixel> sub_buffer;
+	DeviceBuffer sub_buffer;
 	sub_buffer.data = d_tmp_gray_img.data;
 	sub_buffer.total_bytes = width * height * G_PIXEL_SZ;
 	CudaGrayImage d_src_sub;
@@ -354,7 +341,7 @@ void cuda_tests(path_t& out_dir)
 	src_sub = img::sub_view(src_gray_img, range);
 	dst_sub = img::sub_view(dst_gray_img, range);
 	img::copy_to_device(src_sub, d_src_sub);
-	img::blur(d_src_sub, d_dst_sub, blur_k);
+	img::blur(d_src_sub, d_dst_sub);
 	img::copy_to_host(d_dst_sub, dst_sub);
 
 	range.x_begin = 0;
@@ -364,7 +351,7 @@ void cuda_tests(path_t& out_dir)
 	src_sub = img::sub_view(src_gray_img, range);
 	dst_sub = img::sub_view(dst_gray_img, range);
 	img::copy_to_device(src_sub, d_src_sub);
-	img::gradients(d_src_sub, d_dst_sub, d_tmp_sub, blur_k, grad_k);
+	img::gradients(d_src_sub, d_dst_sub, d_tmp_sub);
 	img::copy_to_host(d_dst_sub, dst_sub);
 
 	range.x_begin = width / 2;
@@ -372,7 +359,7 @@ void cuda_tests(path_t& out_dir)
 	src_sub = img::sub_view(src_gray_img, range);
 	dst_sub = img::sub_view(dst_gray_img, range);
 	img::copy_to_device(src_sub, d_src_sub);
-	img::edges(d_src_sub, d_dst_sub, threshold, d_tmp_sub, blur_k, grad_k);	
+	img::edges(d_src_sub, d_dst_sub, threshold, d_tmp_sub);	
 	img::copy_to_host(d_dst_sub, dst_sub);
 
 	range.x_begin = width / 4;
@@ -389,7 +376,6 @@ void cuda_tests(path_t& out_dir)
 
 	device_free(color_buffer);
 	device_free(gray_buffer);
-	device_free(kernel_buffer);
 }
 
 
@@ -398,15 +384,15 @@ void gradient_times(path_t& out_dir)
 	std::cout << "\ngradients:\n";
 	empty_dir(out_dir);
 
-	u32 n_image_sizes = 4;
-	u32 image_dim_factor = 2;
+	u32 n_image_sizes = 2;
+	u32 image_dim_factor = 4;
 
-	u32 n_image_counts = 3;
-	u32 image_count_factor = 4;
+	u32 n_image_counts = 4;
+	u32 image_count_factor = 2;
 
 	u32 width_start = 400;
 	u32 height_start = 300;
-	u32 image_count_start = 10;
+	u32 image_count_start = 100;
 
 	auto green = img::to_pixel(88, 100, 29);
 	auto blue = img::to_pixel(0, 119, 182);
@@ -422,26 +408,16 @@ void gradient_times(path_t& out_dir)
 	u32 height = height_start;
 	u32 image_count = image_count_start;
 
-	auto const current_pixels = [&]() { return static_cast<r64>(width) * height * image_count; };
+	auto const current_pixels = [&]() { return (r64)(width) * height * image_count; };
 
 	auto const start_pixels = current_pixels();
 
-	auto const scale = [&](auto t) { return static_cast<r32>(start_pixels / current_pixels() * t); };
+	auto const scale = [&](auto t) { return (r32)(start_pixels / current_pixels() * t); };
 	auto const print_wh = [&]() { std::cout << "\nwidth: " << width << " height: " << height << '\n'; };
 	auto const print_count = [&]() { std::cout << "  image count: " << image_count << '\n'; };
 
 	r64 t = 0;
 	auto const print_t = [&](const char* label) { std::cout << "    " << label << " time: " << scale(t) << '\n'; };
-
-	DeviceBuffer<r32> kernel_buffer;
-	auto kernel_bytes = 70 * sizeof(r32);
-	device_malloc(kernel_buffer, kernel_bytes);
-
-	img::BlurKernels blur_k;
-	img::make_blur_kernels(blur_k, kernel_buffer);
-
-	img::GradientKernels grad_k;
-	img::make_gradient_kernels(grad_k, kernel_buffer);
 
 	for (u32 s = 0; s < n_image_sizes; ++s)
 	{
@@ -456,7 +432,7 @@ void gradient_times(path_t& out_dir)
 		img::make_image(dst, width, height);
 		img::make_image(tmp, width, height);
 
-		DeviceBuffer<GrayPixel> d_buffer;
+		DeviceBuffer d_buffer;
 		auto gray_bytes = 3 * width * height * G_PIXEL_SZ;
 		device_malloc(d_buffer, gray_bytes);
 
@@ -484,7 +460,7 @@ void gradient_times(path_t& out_dir)
 			for (u32 i = 0; i < image_count; ++i)
 			{
 				img::copy_to_device(src, d_src);
-				img::gradients(d_src, d_dst, d_tmp, blur_k, grad_k);
+				img::gradients(d_src, d_dst, d_tmp);
 				img::copy_to_host(d_dst, dst);
 			}
 			t = sw.get_time_milli();
@@ -502,8 +478,6 @@ void gradient_times(path_t& out_dir)
 		width *= image_dim_factor;
 		height *= image_dim_factor;
 	}
-
-	device_free(kernel_buffer);
 
 	img::grouped_multi_chart_data_t chart_data
 	{ 
@@ -535,7 +509,7 @@ void cuda_do_gradients(GrayImage const& src, GrayImage& dst, u32 qty)
 	auto const width = src.width;
 	auto const height = src.height;
 
-	DeviceBuffer<GrayPixel> d_buffer;
+	DeviceBuffer d_buffer;
 	auto gray_bytes = 3 * src.width * src.height * G_PIXEL_SZ;
 	device_malloc(d_buffer, gray_bytes);
 
@@ -547,26 +521,14 @@ void cuda_do_gradients(GrayImage const& src, GrayImage& dst, u32 qty)
 	img::make_image(d_dst, width, height, d_buffer);
 	img::make_image(d_tmp, width, height, d_buffer);
 
-	// convolution kernels
-	DeviceBuffer<r32> kernel_buffer;
-	auto kernel_bytes = 70 * sizeof(r32);
-	device_malloc(kernel_buffer, kernel_bytes);
-
-	img::BlurKernels blur_k;
-	img::make_blur_kernels(blur_k, kernel_buffer);
-
-	img::GradientKernels grad_k;
-	img::make_gradient_kernels(grad_k, kernel_buffer);
-
 	for(u32 i = 0; i < qty; ++i)
 	{
 		img::copy_to_device(src, d_src);
-		img::gradients(d_src, d_dst, d_tmp, blur_k, grad_k);
+		img::gradients(d_src, d_dst, d_tmp);
 		img::copy_to_host(d_dst, dst);
 	}
 
 	device_free(d_buffer);
-	device_free(kernel_buffer);
 }
 
 
