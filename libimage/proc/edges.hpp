@@ -28,18 +28,6 @@ namespace libimage
 	void edges(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
 
 
-	namespace fast
-	{
-		void edges(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
-
-		void edges(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
-
-		void edges(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
-
-		void edges(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
-	}
-
-
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
 #endif // !LIBIMAGE_NO_PARALLEL
@@ -65,18 +53,6 @@ namespace libimage
 		void edges(gray::view_t const& src, gray::image_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond);
 
 		void edges(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond);
-
-
-		namespace fast
-		{
-			void edges(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
-
-			void edges(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
-
-			void edges(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
-
-			void edges(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
-		}
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 	}
@@ -104,18 +80,6 @@ namespace libimage
 		void edges(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
 
 		void edges(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
-
-
-		namespace fast
-		{
-			void edges(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
-
-			void edges(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
-
-			void edges(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond);
-
-			void edges(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond);
-		}
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 	}

@@ -210,14 +210,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		// blur the image first
-		gray::image_t temp;
-		make_image(temp, src.width, src.height);
-		blur(src, temp);
-
-		do_edges(temp, dst, cond);
-
-		temp.dispose();
+		do_edges(src, dst, cond);
 	}
 
 
@@ -225,14 +218,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		// blur the image first
-		gray::image_t temp;
-		make_image(temp, src.width, src.height);
-		blur(src, temp);
-
-		do_edges(temp, dst, cond);
-
-		temp.dispose();
+		do_edges(src, dst, cond);
 	}
 
 
@@ -240,14 +226,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		// blur the image first
-		gray::image_t temp;
-		make_image(temp, src.width, src.height);
-		blur(src, temp);
-
-		do_edges(temp, dst, cond);
-
-		temp.dispose();
+		do_edges(src, dst, cond);
 	}
 
 
@@ -255,14 +234,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		// blur the image first
-		gray::image_t temp;
-		make_image(temp, src.width, src.height);
-		blur(src, temp);
-
-		do_edges(temp, dst, cond);
-
-		temp.dispose();
+		do_edges(src, dst, cond);
 	}
 
 
@@ -314,14 +286,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		// blur the image first
-		gray::image_t temp;
-		make_image(temp, src.width, src.height);
-		blur(src, temp);
-
-		do_gradients(temp, dst);
-
-		temp.dispose();
+		do_gradients(src, dst);
 	}
 
 
@@ -329,14 +294,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		// blur the image first
-		gray::image_t temp;
-		make_image(temp, src.width, src.height);
-		blur(src, temp);
-
-		do_gradients(temp, dst);
-
-		temp.dispose();
+		do_gradients(src, dst);
 	}
 
 
@@ -344,14 +302,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		// blur the image first
-		gray::image_t temp;
-		make_image(temp, src.width, src.height);
-		blur(src, temp);
-
-		do_gradients(temp, dst);
-
-		temp.dispose();
+		do_gradients(src, dst);
 	}
 
 
@@ -359,81 +310,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		// blur the image first
-		gray::image_t temp;
-		make_image(temp, src.width, src.height);
-		blur(src, temp);
-
-		do_gradients(temp, dst);
-
-		temp.dispose();
-	}
-
-
-	namespace fast
-	{
-		void edges(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond)
-		{
-			assert(verify(src, dst));
-
-			do_edges(src, dst, cond);
-		}
-		
-
-		void edges(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond)
-		{
-			assert(verify(src, dst));
-
-			do_edges(src, dst, cond);
-		}
-
-
-		void edges(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond)
-		{
-			assert(verify(src, dst));
-
-			do_edges(src, dst, cond);
-		}
-
-
-		void edges(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond)
-		{
-			assert(verify(src, dst));
-
-			do_edges(src, dst, cond);
-		}
-
-
-		void gradients(gray::image_t const& src, gray::image_t const& dst)
-		{
-			assert(verify(src, dst));
-
-			do_gradients(src, dst);
-		}
-
-
-		void gradients(gray::image_t const& src, gray::view_t const& dst)
-		{
-			assert(verify(src, dst));
-
-			do_gradients(src, dst);
-		}
-
-
-		void gradients(gray::view_t const& src, gray::image_t const& dst)
-		{
-			assert(verify(src, dst));
-
-			do_gradients(src, dst);
-		}
-
-
-		void gradients(gray::view_t const& src, gray::view_t const& dst)
-		{
-			assert(verify(src, dst));
-
-			do_gradients(src, dst);
-		}
+		do_gradients(src, dst);
 	}
 
 
@@ -540,13 +417,7 @@ namespace libimage
 		{
 			assert(verify(src, dst));
 
-			gray::image_t temp;
-			make_image(temp, src.width, src.height);
-			seq::blur(src, temp);
-
-			seq::do_edges(temp, dst, cond);
-
-			temp.dispose();
+			seq::do_edges(src, dst, cond);
 		}
 
 
@@ -554,13 +425,7 @@ namespace libimage
 		{
 			assert(verify(src, dst));
 
-			gray::image_t temp;
-			make_image(temp, src.width, src.height);
-			seq::blur(src, temp);
-
-			seq::do_edges(temp, dst, cond);
-
-			temp.dispose();
+			seq::do_edges(src, dst, cond);
 		}
 
 
@@ -568,13 +433,7 @@ namespace libimage
 		{
 			assert(verify(src, dst));
 
-			gray::image_t temp;
-			make_image(temp, src.width, src.height);
-			seq::blur(src, temp);
-
-			seq::do_edges(temp, dst, cond);
-
-			temp.dispose();
+			seq::do_edges(src, dst, cond);
 		}
 
 
@@ -582,13 +441,7 @@ namespace libimage
 		{
 			assert(verify(src, dst));
 
-			gray::image_t temp;
-			make_image(temp, src.width, src.height);
-			seq::blur(src, temp);
-
-			seq::do_edges(temp, dst, cond);
-
-			temp.dispose();
+			seq::do_edges(src, dst, cond);
 		}
 
 
@@ -640,13 +493,7 @@ namespace libimage
 		{
 			assert(verify(src, dst));
 
-			gray::image_t temp;
-			make_image(temp, src.width, src.height);
-			seq::blur(src, temp);
-
-			seq::do_gradients(temp, dst);
-
-			temp.dispose();
+			seq::do_gradients(src, dst);
 		}
 
 
@@ -654,13 +501,7 @@ namespace libimage
 		{
 			assert(verify(src, dst));
 
-			gray::image_t temp;
-			make_image(temp, src.width, src.height);
-			seq::blur(src, temp);
-
-			seq::do_gradients(temp, dst);
-
-			temp.dispose();
+			seq::do_gradients(src, dst);
 		}
 
 
@@ -668,13 +509,7 @@ namespace libimage
 		{
 			assert(verify(src, dst));
 
-			gray::image_t temp;
-			make_image(temp, src.width, src.height);
-			seq::blur(src, temp);
-
-			seq::do_gradients(temp, dst);
-
-			temp.dispose();
+			seq::do_gradients(src, dst);
 		}
 
 
@@ -682,13 +517,7 @@ namespace libimage
 		{
 			assert(verify(src, dst));
 
-			gray::image_t temp;
-			make_image(temp, src.width, src.height);
-			seq::blur(src, temp);
-
-			seq::do_gradients(temp, dst);
-
-			temp.dispose();
+			seq::do_gradients(src, dst);
 		}
 
 
@@ -733,73 +562,6 @@ namespace libimage
 			seq::blur(src, temp);
 
 			seq::do_gradients(temp, dst);
-		}
-
-
-		namespace fast
-		{
-			void edges(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond)
-			{
-				assert(verify(src, dst));
-
-				seq::do_edges(src, dst, cond);
-			}
-
-
-			void edges(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond)
-			{
-				assert(verify(src, dst));
-
-				seq::do_edges(src, dst, cond);
-			}
-
-
-			void edges(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond)
-			{
-				assert(verify(src, dst));
-
-				seq::do_edges(src, dst, cond);
-			}
-
-
-			void edges(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond)
-			{
-				assert(verify(src, dst));
-
-				seq::do_edges(src, dst, cond);
-			}
-
-
-			void gradients(gray::image_t const& src, gray::image_t const& dst)
-			{
-				assert(verify(src, dst));
-
-				seq::do_gradients(src, dst);
-			}
-
-
-			void gradients(gray::image_t const& src, gray::view_t const& dst)
-			{
-				assert(verify(src, dst));
-
-				seq::do_gradients(src, dst);
-			}
-
-
-			void gradients(gray::view_t const& src, gray::image_t const& dst)
-			{
-				assert(verify(src, dst));
-
-				seq::do_gradients(src, dst);
-			}
-
-
-			void gradients(gray::view_t const& src, gray::view_t const& dst)
-			{
-				assert(verify(src, dst));
-
-				seq::do_gradients(src, dst);
-			}
 		}
 	}
 
@@ -873,13 +635,7 @@ namespace libimage
 		{
 			assert(verify(src, dst));
 
-			gray::image_t temp;
-			make_image(temp, src.width, src.height);
-			simd::blur(src, temp);
-
-			simd::do_edges(temp, dst, cond);
-
-			temp.dispose();
+			simd::do_edges(src, dst, cond);
 		}
 
 
@@ -887,13 +643,7 @@ namespace libimage
 		{
 			assert(verify(src, dst));
 
-			gray::image_t temp;
-			make_image(temp, src.width, src.height);
-			simd::blur(src, temp);
-
-			simd::do_edges(temp, dst, cond);
-
-			temp.dispose();
+			simd::do_edges(src, dst, cond);
 		}
 
 
@@ -901,13 +651,7 @@ namespace libimage
 		{
 			assert(verify(src, dst));
 
-			gray::image_t temp;
-			make_image(temp, src.width, src.height);
-			simd::blur(src, temp);
-
-			simd::do_edges(temp, dst, cond);
-
-			temp.dispose();
+			simd::do_edges(src, dst, cond);
 		}
 
 
@@ -915,13 +659,7 @@ namespace libimage
 		{
 			assert(verify(src, dst));
 
-			gray::image_t temp;
-			make_image(temp, src.width, src.height);
-			simd::blur(src, temp);
-
-			simd::do_edges(temp, dst, cond);
-
-			temp.dispose();
+			simd::do_edges(src, dst, cond);
 		}
 
 
@@ -970,13 +708,7 @@ namespace libimage
 		{
 			assert(verify(src, dst));
 
-			gray::image_t temp;
-			make_image(temp, src.width, src.height);
-			simd::blur(src, temp);
-
-			simd::do_gradients(temp, dst);
-
-			temp.dispose();
+			simd::do_gradients(src, dst);
 		}
 
 
@@ -984,13 +716,7 @@ namespace libimage
 		{
 			assert(verify(src, dst));
 
-			gray::image_t temp;
-			make_image(temp, src.width, src.height);
-			simd::blur(src, temp);
-
-			simd::do_gradients(temp, dst);
-
-			temp.dispose();
+			simd::do_gradients(src, dst);
 		}
 
 
@@ -998,13 +724,7 @@ namespace libimage
 		{
 			assert(verify(src, dst));
 
-			gray::image_t temp;
-			make_image(temp, src.width, src.height);
-			simd::blur(src, temp);
-
-			simd::do_gradients(temp, dst);
-
-			temp.dispose();
+			simd::do_gradients(src, dst);
 		}
 
 
@@ -1012,80 +732,7 @@ namespace libimage
 		{
 			assert(verify(src, dst));
 
-			gray::image_t temp;
-			make_image(temp, src.width, src.height);
-			simd::blur(src, temp);
-
-			simd::do_gradients(temp, dst);
-
-			temp.dispose();
-		}
-
-
-		namespace fast
-		{
-			void edges(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond)
-			{
-				assert(verify(src, dst));
-				
-				simd::do_edges(src, dst, cond);
-			}
-
-
-			void edges(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond)
-			{
-				assert(verify(src, dst));
-				
-				simd::do_edges(src, dst, cond);
-			}
-
-
-			void edges(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond)
-			{
-				assert(verify(src, dst));
-				
-				simd::do_edges(src, dst, cond);
-			}
-
-
-			void edges(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond)
-			{
-				assert(verify(src, dst));
-				
-				simd::do_edges(src, dst, cond);
-			}
-
-
-			void gradients(gray::image_t const& src, gray::image_t const& dst)
-			{
-				assert(verify(src, dst));
-
-				simd::do_gradients(src, dst);
-			}
-
-
-			void gradients(gray::image_t const& src, gray::view_t const& dst)
-			{
-				assert(verify(src, dst));
-
-				simd::do_gradients(src, dst);
-			}
-
-
-			void gradients(gray::view_t const& src, gray::image_t const& dst)
-			{
-				assert(verify(src, dst));
-
-				simd::do_gradients(src, dst);
-			}
-
-
-			void gradients(gray::view_t const& src, gray::view_t const& dst)
-			{
-				assert(verify(src, dst));
-
-				simd::do_gradients(src, dst);
-			}
+			simd::do_gradients(src, dst);
 		}
 
 	}

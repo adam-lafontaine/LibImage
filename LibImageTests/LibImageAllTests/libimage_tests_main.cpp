@@ -646,12 +646,15 @@ void process_tests(fs::path const& out_dir)
 	img::simd::blur(src_gray_image, dst_gray_image);
 	img::write_image(dst_gray_image, out_dir / "blur.png");	
 
+	GrayImage gray_temp;
+	img::make_image(gray_temp, width, height);
+
 	// edge detection
-	img::simd::edges(src_gray_image, dst_gray_image, [](u8 g) { return g >= 100; });
+	img::simd::edges(src_gray_image, dst_gray_image, gray_temp, [](u8 g) { return g >= 100; });
 	img::write_image(dst_gray_image, out_dir / "edges.png");
 
 	// gradient
-	img::simd::gradients(src_gray_image, dst_gray_image);
+	img::simd::gradients(src_gray_image, dst_gray_image, gray_temp);
 	img::write_image(dst_gray_image, out_dir / "gradient.png");
 
 	// combine transformations in the same image

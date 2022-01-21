@@ -93,7 +93,7 @@ namespace libimage
 
 
 	template<size_t N>
-	static r32 apply_weights(gray::view_t const& view, std::array<r32, N> weights)
+	static r32 apply_weights(gray::view_t const& view, std::array<r32, N> const& weights)
 	{
 		assert((size_t)(view.width) * view.height == weights.size());
 
