@@ -15,49 +15,7 @@
 
 
 
-namespace libimage
-{
-	
 
-
-	/*static constexpr r32 q_inv_sqrt(r32 n)
-	{
-		const float threehalfs = 1.5F;
-		float y = n;
-
-		long i = *(long*)&y;
-
-		i = 0x5f3759df - (i >> 1);
-		y = *(float*)&i;
-
-		y = y * (threehalfs - ((n * 0.5F) * y * y));
-
-		return y;
-	}
-
-
-	static r32 rms_contrast(gray::view_t const& view)
-	{
-		assert(verify(view));
-
-		auto const norm = [](auto p) { return p / 255.0f; };
-
-		auto total = std::accumulate(view.begin(), view.end(), 0.0f);
-		auto mean = norm(total / (view.width * view.height));
-
-		total = std::accumulate(view.begin(), view.end(), 0.0f, [&](r32 total, u8 p) { auto diff = norm(p) - mean; return diff * diff; });
-
-		auto inv_mean = (view.width * view.height) / total;
-
-		return q_inv_sqrt(inv_mean);
-	}*/
-
-
-
-
-
-
-}
 
 
 namespace libimage

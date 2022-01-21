@@ -234,9 +234,9 @@ namespace libimage
 		class PixelPlanar4
 		{
 		public:
-			r32 red[4] = { 0 };
+			r32 red[4]   = { 0 };
 			r32 green[4] = { 0 };
-			r32 blue[4] = { 0 };
+			r32 blue[4]  = { 0 };
 			r32 alpha[4] = { 0 };
 		};
 
@@ -249,34 +249,35 @@ namespace libimage
 			r32 one = 1.0f;
 			r32 u8max = 255.0f;
 
-			auto one_vec = _mm_load_ps1(&one);
-			auto u8max_vec = _mm_load_ps1(&u8max);
-
 			auto const do_simd = [&](u32 i) 
 			{
 				// pixels are interleaved
 				// make these 4 pixels r32 planar
 				PixelPlanar4 src_mem{};
 				PixelPlanar4 cur_mem{};
+				PixelPlanar4 dst_mem{};
+
+				auto src = src_begin + i;
+				auto cur = cur_begin + i;
+				auto dst = dst_begin + i;
+
 				for (u32 j = 0; j < 4; ++j)
 				{
-					src_mem.red[j] = (r32)(src_begin + i)[j].red;
-					src_mem.green[j] = (r32)(src_begin + i)[j].green;
-					src_mem.blue[j] = (r32)(src_begin + i)[j].blue;
-					src_mem.alpha[j] = (r32)(src_begin + i)[j].alpha;
+					src_mem.red[j]   = (r32)src[j].red;
+					src_mem.green[j] = (r32)src[j].green;
+					src_mem.blue[j]  = (r32)src[j].blue;
+					src_mem.alpha[j] = (r32)src[j].alpha;
 
-					cur_mem.red[j] = (r32)(cur_begin + i)[j].red;
-					cur_mem.green[j] = (r32)(cur_begin + i)[j].green;
-					cur_mem.blue[j] = (r32)(cur_begin + i)[j].blue;
+					cur_mem.red[j]   = (r32)cur[j].red;
+					cur_mem.green[j] = (r32)cur[j].green;
+					cur_mem.blue[j]  = (r32)cur[j].blue;
 				}
+
+				auto one_vec = _mm_load_ps1(&one);
+				auto u8max_vec = _mm_load_ps1(&u8max);
 
 				auto src_a_vec = _mm_div_ps(_mm_load_ps(src_mem.alpha), u8max_vec);
 				auto cur_a_vec = _mm_sub_ps(one_vec, src_a_vec);
-
-				_mm_load_ps(src_mem.red);
-				_mm_load_ps(cur_mem.red);
-
-				PixelPlanar4 dst_mem{};
 
 				auto dst_vec = _mm_fmadd_ps(src_a_vec, _mm_load_ps(src_mem.red), _mm_mul_ps(cur_a_vec, _mm_load_ps(cur_mem.red)));
 				_mm_store_ps(dst_mem.red, dst_vec);
@@ -289,10 +290,10 @@ namespace libimage
 
 				for (u32 j = 0; j < 4; ++j)
 				{
-					(dst_begin + i)[j].red = (u8)dst_mem.red[j];
-					(dst_begin + i)[j].green = (u8)dst_mem.green[j];
-					(dst_begin + i)[j].blue = (u8)dst_mem.blue[j];
-					(dst_begin + i)[j].alpha = 255;
+					dst[j].red   = (u8)dst_mem.red[j];
+					dst[j].green = (u8)dst_mem.green[j];
+					dst[j].blue  = (u8)dst_mem.blue[j];
+					dst[j].alpha = 255;
 				}				
 			};
 

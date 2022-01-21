@@ -646,12 +646,15 @@ void process_tests(fs::path const& out_dir)
 	img::simd::blur(src_gray_image, dst_gray_image);
 	img::write_image(dst_gray_image, out_dir / "blur.png");	
 
+	GrayImage gray_temp;
+	img::make_image(gray_temp, width, height);
+
 	// edge detection
-	img::simd::edges(src_gray_image, dst_gray_image, [](u8 g) { return g >= 100; });
+	img::simd::edges(src_gray_image, dst_gray_image, gray_temp, [](u8 g) { return g >= 100; });
 	img::write_image(dst_gray_image, out_dir / "edges.png");
 
 	// gradient
-	img::simd::gradients(src_gray_image, dst_gray_image);
+	img::simd::gradients(src_gray_image, dst_gray_image, gray_temp);
 	img::write_image(dst_gray_image, out_dir / "gradient.png");
 
 	// combine transformations in the same image
@@ -695,10 +698,10 @@ void gradient_times(fs::path const& out_dir)
 {
 	std::cout << "\ngradients:\n";
 
-	u32 n_image_sizes = 2;
+	u32 n_image_sizes = 1;
 	u32 image_dim_factor = 4;
 
-	u32 n_image_counts = 3;
+	u32 n_image_counts = 1;
 	u32 image_count_factor = 2;
 
 	u32 width_start = 400;
