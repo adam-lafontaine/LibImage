@@ -281,7 +281,7 @@ namespace libimage
 		assert(p >= 0.0f);
 		assert(p <= 255.0f);
 
-		return static_cast<u8>(p);
+		return (u8)(p);
 	}
 
 
@@ -292,7 +292,7 @@ namespace libimage
 		assert(p >= 0.0f);
 		assert(p <= 255.0f);
 
-		return static_cast<u8>(p);
+		return (u8)(p);
 	}
 
 
@@ -303,7 +303,7 @@ namespace libimage
 		assert(p >= 0.0f);
 		assert(p <= 255.0f);
 
-		return static_cast<u8>(p);
+		return (u8)(p);
 	}
 
 
@@ -314,7 +314,7 @@ namespace libimage
 		assert(p >= 0.0f);
 		assert(p <= 255.0f);
 
-		return static_cast<u8>(p);
+		return (u8)(p);
 	}
 
 
@@ -347,60 +347,22 @@ namespace libimage
 	namespace simd
 	{
 		template <typename SRC_T, typename DST_T>
-		static void copy_4(SRC_T* src, DST_T* dst)
+		static void cast_copy4(SRC_T* src, DST_T* dst)
 		{
-			dst[0] = (DST_T)src[0];
-			dst[1] = (DST_T)src[1];
-			dst[2] = (DST_T)src[2];
-			dst[3] = (DST_T)src[3];
+			for (u32 i = 0; i < 4; ++i)
+			{
+				dst[i] = (DST_T)src[i];
+			}
 		}
 
 
 		template <typename SRC_T, typename DST_T, class FUNC_T>
 		static void transform_4(SRC_T* src, DST_T* dst, FUNC_T const& func)
 		{
-			dst[0] = func(src[0]);
-			dst[1] = func(src[1]);
-			dst[2] = func(src[2]);
-			dst[3] = func(src[3]);
-		}
-
-
-		template<class SRC_GRAY_IMG_T, class DST_GRAY_IMG_T>
-		static void copy_top_bottom(SRC_GRAY_IMG_T const& src, DST_GRAY_IMG_T const& dst)
-		{
-			constexpr u8 N = 4;
-			constexpr u32 STEP = N * sizeof(32) / sizeof(u8);
-
-			u32 x_begin = 0;
-			u32 x_end = src.width;
-			u32 y_begin = 0;
-			u32 y_last = src.height - 1;
-
-			auto src_top = src.row_begin(y_begin);
-			auto src_bottom = src.row_begin(y_last);
-			auto dst_top = dst.row_begin(y_begin);
-			auto dst_bottom = dst.row_begin(y_last);
-
-			auto length = x_end - x_begin;
-
-			auto const do_simd = [&](u32 offset_u8)
+			for (u32 i = 0; i < 4; ++i)
 			{
-				auto src_top32 = (r32*)(src_top + offset_u8);
-				auto dst_top32 = (r32*)(dst_top + offset_u8);
-				auto src_bottom32 = (r32*)(src_bottom + offset_u8);
-				auto dst_bottom32 = (r32*)(dst_bottom + offset_u8);
-
-				_mm_store_ps(dst_top32, _mm_load_ps(src_top32));
-				_mm_store_ps(dst_bottom32, _mm_load_ps(src_bottom32));
-			};
-
-			for (u32 i = 0; i < length - STEP; i += STEP)
-			{
-				do_simd(i);
+				dst[i] = func(src[i]);
 			}
-
-			do_simd(length - STEP);
 		}
 
 
@@ -422,7 +384,7 @@ namespace libimage
 					{
 						int offset = ry * pitch + rx + i;
 						auto ptr = src_begin + offset;
-						copy_4(ptr, mem);
+						cast_copy4(ptr, mem);
 
 						src_vec = _mm_load_ps(mem);
 
@@ -434,7 +396,7 @@ namespace libimage
 
 				_mm_store_ps(mem, acc_vec);
 
-				copy_4(mem, dst_begin + i);
+				cast_copy4(mem, dst_begin + i);
 			};
 
 			for (u32 i = 0; i < length - STEP; i += STEP)
@@ -485,7 +447,7 @@ namespace libimage
 					{
 						int offset = ry * pitch + rx + i;
 						auto ptr = src_begin + offset;
-						copy_4(ptr, mem);
+						cast_copy4(ptr, mem);
 
 						src_vec = _mm_load_ps(mem);
 
@@ -497,7 +459,7 @@ namespace libimage
 
 				_mm_store_ps(mem, acc_vec);
 
-				copy_4(mem, dst_begin + i);
+				cast_copy4(mem, dst_begin + i);
 			};
 
 			for (u32 i = 0; i < length - STEP; i += STEP)
@@ -548,7 +510,7 @@ namespace libimage
 					{
 						int offset = ry * pitch + rx + i;
 						auto ptr = src_begin + offset;
-						copy_4(ptr, mem);
+						cast_copy4(ptr, mem);
 
 						src_vec = _mm_load_ps(mem);
 
@@ -566,7 +528,7 @@ namespace libimage
 				auto grad = _mm_sqrt_ps(_mm_add_ps(vec_x, vec_y));
 				_mm_store_ps(mem, grad);
 
-				copy_4(mem, dst_begin + i);
+				cast_copy4(mem, dst_begin + i);
 			};
 
 			for (u32 i = 0; i < length - STEP; i += STEP)
@@ -615,7 +577,7 @@ namespace libimage
 					{
 						int offset = ry * pitch + rx + i;
 						auto ptr = src_begin + offset;
-						copy_4(ptr, mem);
+						cast_copy4(ptr, mem);
 
 						src_vec = _mm_load_ps(mem);
 

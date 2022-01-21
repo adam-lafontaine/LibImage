@@ -698,10 +698,10 @@ void gradient_times(fs::path const& out_dir)
 {
 	std::cout << "\ngradients:\n";
 
-	u32 n_image_sizes = 2;
+	u32 n_image_sizes = 1;
 	u32 image_dim_factor = 4;
 
-	u32 n_image_counts = 3;
+	u32 n_image_counts = 1;
 	u32 image_count_factor = 2;
 
 	u32 width_start = 400;
