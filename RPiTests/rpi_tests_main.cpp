@@ -164,7 +164,8 @@ void process_tests(path_t& out_dir)
 	img::seq::alpha_blend(caddy_img, corvette_img, dst_img);
 	img::write_image(dst_img, out_dir + "alpha_blend_seq.png");
 
-	// TODO: simd
+	img::simd::alpha_blend(caddy_img, corvette_img, dst_img);
+	img::write_image(dst_img, out_dir + "alpha_blend_simd.png");
 
 	img::copy(corvette_img, dst_img);
 
@@ -174,7 +175,8 @@ void process_tests(path_t& out_dir)
 	img::seq::alpha_blend(caddy_img, dst_img);
 	img::write_image(dst_img, out_dir + "alpha_blend_src_dst_seq.png");
 
-	// TODO: simd
+	img::simd::alpha_blend(caddy_img, dst_img);
+	img::write_image(dst_img, out_dir + "alpha_blend_src_dst_simd.png");
 
 
 	// grayscale
@@ -184,7 +186,8 @@ void process_tests(path_t& out_dir)
 	img::seq::grayscale(corvette_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "grayscale_seq.png");
 
-	// TODO: simd
+	img::simd::grayscale(corvette_img, dst_gray_img);
+	img::write_image(dst_gray_img, out_dir + "grayscale_simd.png");
 
 	// stats
 	auto gray_stats = img::calc_stats(dst_gray_img);
@@ -208,7 +211,12 @@ void process_tests(path_t& out_dir)
 	img::draw_histogram(alpha_stats.hist, alpha_stats_seq_img);
 	img::write_image(alpha_stats_img, out_dir + "gray_stats_alpha_seq.png");
 
-	// TODO: simd
+	GrayImage alpha_stats_simd_img;
+	img::simd::alpha_grayscale(corvette_img);
+	alpha_stats = img::calc_stats(corvette_img, img::Channel::Alpha);
+	
+	img::draw_histogram(alpha_stats.hist, alpha_stats_simd_img);
+	img::write_image(alpha_stats_img, out_dir + "gray_stats_alpha_simd.png");
 
 
 	// create a new grayscale source
@@ -245,7 +253,8 @@ void process_tests(path_t& out_dir)
 	img::seq::blur(src_gray_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "blur_seq.png");
 
-	// TODO: simd
+	img::simd::blur(src_gray_img, dst_gray_img);
+	img::write_image(dst_gray_img, out_dir + "blur_simd.png");
 
 
 	// edge detection
@@ -257,6 +266,9 @@ void process_tests(path_t& out_dir)
 	img::seq::edges(src_gray_img, dst_gray_img, threshold);
 	img::write_image(dst_gray_img, out_dir + "edges_seq.png");
 
+	img::simd::edges(src_gray_img, dst_gray_img, threshold);
+	img::write_image(dst_gray_img, out_dir + "edges_simd.png");
+
 
 	// gradient
 	img::gradients(src_gray_img, dst_gray_img);
@@ -265,7 +277,8 @@ void process_tests(path_t& out_dir)
 	img::seq::gradients(src_gray_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "gradient_seq.png");
 
-	// TODO: simd
+	img::simd::gradients(src_gray_img, dst_gray_img);
+	img::write_image(dst_gray_img, out_dir + "gradient_simd.png");
 
 
 	// combine transformations in the same image
@@ -320,6 +333,7 @@ void process_tests(path_t& out_dir)
 	gray_stats_img.dispose();
 	alpha_stats_img.dispose();
 	alpha_stats_seq_img.dispose();
+	alpha_stats_simd_img.dispose();
 	src_gray_img.dispose();
 
 	auto time = sw.get_time_sec();
