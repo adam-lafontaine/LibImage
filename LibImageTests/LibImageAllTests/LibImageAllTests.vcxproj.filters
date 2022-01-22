@@ -46,6 +46,12 @@
     <Filter Include="Source Files\libimage\locate">
       <UniqueIdentifier>{8dffc2b0-1b8c-4480-91bd-8b9f6a43cf77}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\libimage\proc\simd">
+      <UniqueIdentifier>{de8b064a-7c3a-4449-b531-e98c16d374f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\libimage\proc\simd">
+      <UniqueIdentifier>{8c2ba3dd-2bc2-46cf-83f2-f5012329415c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="libimage_tests_main.cpp">
@@ -92,6 +98,9 @@
     </ClCompile>
     <ClCompile Include="..\..\libimage\proc\grayscale.cpp">
       <Filter>Source Files\libimage\proc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libimage\proc\simd\simd_grayscale.cpp">
+      <Filter>Source Files\libimage\proc\simd</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -169,6 +178,9 @@
     </ClInclude>
     <ClInclude Include="..\..\libimage\proc\grayscale.hpp">
       <Filter>Header Files\libimage\proc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage\proc\simd\simd_def.hpp">
+      <Filter>Header Files\libimage\proc\simd</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
