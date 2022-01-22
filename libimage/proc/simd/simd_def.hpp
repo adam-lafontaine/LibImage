@@ -153,68 +153,69 @@ static inline vec_t simd_sqrt(vec_t const& a)
 
 #include <arm_neon.h>
 
-constexpr u32 VEC_LEN = 8;
 
-using vec_t = __m256;
+constexpr u32 VEC_LEN = 4;
+
+using vec_t = float32x4_t;
 
 
 static inline vec_t simd_load_broadcast(const r32* a)
 {
-	return _mm256_broadcast_ss(a);
+	return vld1_dup_f32(a);
 }
 
 
 static inline vec_t simd_load(const r32* a)
 {
-	return _mm256_load_ps(a);
+	return vld1q_f32(a);
 }
 
 
 static inline void simd_store(r32* dst, vec_t const& a)
 {
-	_mm256_store_ps(dst, a);
+	vst1q_f32(dst, a);
 }
 
 
 static inline vec_t simd_setzero()
 {
-	return _mm256_setzero_ps();
+	return vmovq_n_f32(0);
 }
 
 
 static inline vec_t simd_add(vec_t const& a, vec_t const& b)
 {
-	return _mm256_add_ps(a, b);
+	return vaddq_f32(a, b);
 }
 
 
 static inline vec_t simd_subtract(vec_t const& a, vec_t const& b)
 {
-	return _mm256_sub_ps(a, b);
+	return vaddq_f32(a, b);
 }
 
 
 static inline vec_t simd_multiply(vec_t const& a, vec_t const& b)
 {
-	return _mm256_mul_ps(a, b);
+	return vmulq_f32(a, b);
 }
 
 
 static inline vec_t simd_divide(vec_t const& a, vec_t const& b)
 {
-	return _mm256_div_ps(a, b);
+	return vmulq_f32(a, vrecpeq_f32(b));
 }
 
 
 static inline vec_t simd_fmadd(vec_t const& a, vec_t const& b, vec_t const& c)
 {
-	return _mm256_fmadd_ps(a, b, c);
+	return vmlaq_f32(c, b, a);
 }
 
 
 static inline vec_t simd_sqrt(vec_t const& a)
 {
-	return _mm256_sqrt_ps(a);
+	return vrecpeq_f32(vrsqrteq_f32(a));
 }
 
 

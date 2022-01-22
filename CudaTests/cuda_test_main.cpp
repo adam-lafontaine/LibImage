@@ -105,7 +105,7 @@ void process_tests(path_t& out_dir)
 
 	// grayscale
 	img::seq::grayscale(corvette_img, dst_gray_img);
-	img::write_image(dst_gray_img, out_dir + "convert_grayscale.png");
+	img::write_image(dst_gray_img, out_dir + "grayscale.png");
 
 	// stats
 	auto gray_stats = img::calc_stats(dst_gray_img);

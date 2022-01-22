@@ -128,6 +128,9 @@ void process_tests(path_t& out_dir)
 	printf("\nprocess:\n");
 	empty_dir(out_dir);
 
+	Stopwatch sw;
+	sw.start();
+
 	// get image
 	Image corvette_img;
 	img::read_image_from_file(CORVETTE_PATH, corvette_img);
@@ -318,6 +321,10 @@ void process_tests(path_t& out_dir)
 	alpha_stats_img.dispose();
 	alpha_stats_seq_img.dispose();
 	src_gray_img.dispose();
+
+	auto time = sw.get_time_sec();
+
+	printf("Done %f seconds\n", time);
 }
 
 

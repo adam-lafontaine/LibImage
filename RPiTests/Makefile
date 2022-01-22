@@ -110,6 +110,8 @@ object_files   += $(transform_o)
 INCLUDES  :=
 LIBRARIES :=
 
+GPP += -O3
+
 
 $(main_o): $(main_c) $(libimage_h) $(proc_h) $(math_h) $(charts_h)
 	@echo "\n main"
