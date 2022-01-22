@@ -22,3 +22,13 @@
 #define LIBIMAGE_NO_FILESYSTEM
 
 #endif // LIBIMAGE_NO_CPP17
+
+
+#ifndef LIBIMAGE_NO_SIMD
+
+
+#define SIMD_INTEL_128
+//#define SIMD_INTEL_256
+
+
+#endif // !LIBIMAGE_NO_SIMD

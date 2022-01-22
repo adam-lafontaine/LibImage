@@ -3,10 +3,6 @@
 #include "../process.hpp"
 
 
-//#define SIMD_INTEL_128
-#define SIMD_INTEL_256
-
-
 #ifdef  SIMD_INTEL_128
 
 #include <xmmintrin.h>
