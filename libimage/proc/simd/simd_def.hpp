@@ -3,10 +3,11 @@
 #include "../process.hpp"
 
 
-#define SIMD_INTEL
+//#define SIMD_INTEL_128
+#define SIMD_INTEL_256
 
 
-#ifdef  SIMD_INTEL
+#ifdef  SIMD_INTEL_128
 
 #include <xmmintrin.h>
 #include <immintrin.h>
@@ -20,10 +21,10 @@ using vec_t = __m128;
 class PixelPlanar
 {
 public:
-	r32 red[4]   = { 0 };
-	r32 green[4] = { 0 };
-	r32 blue[4]  = { 0 };
-	r32 alpha[4] = { 0 };
+	r32 red[VEC_LEN]   = { 0 };
+	r32 green[VEC_LEN] = { 0 };
+	r32 blue[VEC_LEN]  = { 0 };
+	r32 alpha[VEC_LEN] = { 0 };
 };
 
 
@@ -57,7 +58,62 @@ static inline vec_t simd_fmadd(vec_t& a, vec_t& b, vec_t& c)
 }
 
 
-#endif //  SIMD_INTEL
+#endif // SIMD_INTEL_128
+
+#ifdef SIMD_INTEL_256
+
+#include <xmmintrin.h>
+#include <immintrin.h>
+
+constexpr u32 VEC_LEN = 8;
+
+
+using vec_t = __m256;
+
+
+class PixelPlanar
+{
+public:
+	r32 red[VEC_LEN]   = { 0 };
+	r32 green[VEC_LEN] = { 0 };
+	r32 blue[VEC_LEN]  = { 0 };
+	r32 alpha[VEC_LEN] = { 0 };
+};
+
+
+static inline vec_t simd_load_broadcast(const r32* a)
+{
+	return _mm256_broadcast_ss(a);
+}
+
+
+static inline vec_t simd_load(const r32* a)
+{
+	return _mm256_load_ps(a);
+}
+
+
+static inline void simd_store(r32* dst, vec_t& a)
+{
+	_mm256_store_ps(dst, a);
+}
+
+
+static inline vec_t simd_multiply(vec_t& a, vec_t& b)
+{
+	return _mm256_mul_ps(a, b);
+}
+
+
+static inline vec_t simd_fmadd(vec_t& a, vec_t& b, vec_t& c)
+{
+	return _mm256_fmadd_ps(a, b, c);
+}
+
+
+#endif // SIMD_INTEL_256
+
+
 
 
 static inline void copy_vec_len(libimage::pixel_t* src, PixelPlanar& dst)

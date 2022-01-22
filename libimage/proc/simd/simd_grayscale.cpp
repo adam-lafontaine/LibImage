@@ -6,12 +6,6 @@
 #include "simd_def.hpp"
 
 
-
-
-
-
-
-
 #include <array>
 
 
@@ -45,7 +39,7 @@ namespace libimage
 			auto const do_simd = [&](u32 i)
 			{
 				// pixels are interleaved
-				// make these 4 pixels r32 planar
+				// make them planar
 				PixelPlanar mem{};
 				copy_vec_len(src_begin + i, mem);
 
