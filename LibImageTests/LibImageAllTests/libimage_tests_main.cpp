@@ -12,7 +12,6 @@
 #endif
 
 #include <cstdio>
-#include <iostream>
 #include <random>
 #include <algorithm>
 #include <execution>
@@ -67,26 +66,26 @@ int main()
 
 	auto dst_root = fs::path(DST_IMAGE_ROOT);	
 
-	/*basic_tests(dst_root / "basic");
+	basic_tests(dst_root / "basic");
 	math_tests(dst_root / "math");
 
-	process_tests(dst_root / "process");*/
+	process_tests(dst_root / "process");
 
 	auto timing_dir = dst_root / "timing";
 	empty_dir(timing_dir);
 
-	/*for_each_tests(timing_dir);
-	transform_tests(timing_dir);*/
+	for_each_tests(timing_dir);
+	transform_tests(timing_dir);
 
 	gradient_times(timing_dir);
 
-	std::cout << "\nDone.\n";
+	printf("\nDone.\n");
 }
 
 
 void basic_tests(fs::path const& out_dir)
 {
-	std::cout << "basic:\n";
+	printf("basic:\n");
 	empty_dir(out_dir);
 
 	Image image;
@@ -172,13 +171,13 @@ void basic_tests(fs::path const& out_dir)
 	img::write_image(resize_image_gray, out_dir / "resize_image_gray.bmp");
 	img::write_view(resize_view_gray, out_dir / "resize_view_gray.bmp");
 
-	std::cout << '\n';
+	printf("\n");
 }
 
 
 void math_tests(fs::path const& out_dir)
 {
-	std::cout << "math:\n";
+	printf("math:\n");
 	empty_dir(out_dir);
 
 	GrayImage image_gray;
@@ -217,7 +216,7 @@ void math_tests(fs::path const& out_dir)
 
 	img::write_image(binary, out_dir / "binary.png");
 
-	std::cout << '\n';
+	printf("\n");
 }
 
 
@@ -247,7 +246,7 @@ Pixel alpha_blend_linear(Pixel const& src, Pixel const& current)
 
 void for_each_tests(fs::path const& out_dir)
 {
-	std::cout << "\nfor_each:\n";
+	printf("\nfor_each:\n");
 
 	std::random_device rd;
 	std::default_random_engine reng(rd());
@@ -313,12 +312,12 @@ void for_each_tests(fs::path const& out_dir)
 
 	auto const start_pixels = current_pixels();
 
-	auto const scale = [&](auto t) { return static_cast<r32>(start_pixels / current_pixels() * t); };
-	auto const print_wh = [&]() { std::cout << "\nwidth: " << width << " height: " << height << '\n'; };
-	auto const print_count = [&]() { std::cout << "  image count: " << image_count << '\n'; };
+	auto const scale = [&](auto t) { return (r32)(start_pixels / current_pixels() * t); };
+	auto const print_wh = [&]() { printf("\nwidth: %u height: %u\n", width, height); };
+	auto const print_count = [&]() { printf("  image count: %u\n", image_count); };
 
 	r64 t = 0;
-	auto const print_t = [&](const char* label) { std::cout << "    " << label << " time: " << scale(t) << '\n'; };
+	auto const print_t = [&](const char* label) { printf("    %s time: %f\n", label, scale(t)); };
 
 	for (u32 s = 0; s < n_image_sizes; ++s)
 	{
@@ -423,7 +422,8 @@ void for_each_tests(fs::path const& out_dir)
 
 void transform_tests(fs::path const& out_dir)
 {
-	std::cout << "\ntransform:\n";
+	printf("\ntransform:\n");
+	empty_dir(out_dir);
 
 	std::random_device rd;
 	std::default_random_engine reng(rd());
@@ -483,12 +483,12 @@ void transform_tests(fs::path const& out_dir)
 
 	auto const start_pixels = current_pixels();
 
-	auto const scale = [&](auto t) { return static_cast<r32>(start_pixels / current_pixels() * t); };
-	auto const print_wh = [&]() { std::cout << "\nwidth: " << width << " height: " << height << '\n'; };
-	auto const print_count = [&]() { std::cout << "  image count: " << image_count << '\n'; };
+	auto const scale = [&](auto t) { return (r32)(start_pixels / current_pixels() * t); };
+	auto const print_wh = [&]() { printf("\nwidth: %u height: %u\n", width, height); };
+	auto const print_count = [&]() { printf("  image count: %u\n", image_count); };
 
 	r64 t = 0;
-	auto const print_t = [&](const char* label) { std::cout << "    " << label << " time: " << scale(t) << '\n'; };
+	auto const print_t = [&](const char* label) { printf("    %s time: %f\n", label, scale(t)); };
 
 	for (u32 s = 0; s < n_image_sizes; ++s)
 	{
@@ -573,7 +573,7 @@ void transform_tests(fs::path const& out_dir)
 
 void process_tests(fs::path const& out_dir)
 {
-	std::cout << "\nprocess:\n";
+	printf("\nprocess:\n");
 	empty_dir(out_dir);
 
 	// get image
@@ -697,7 +697,8 @@ void process_tests(fs::path const& out_dir)
 
 void gradient_times(fs::path const& out_dir)
 {
-	std::cout << "\ngradients:\n";
+	printf("\ngradients:\n");
+	empty_dir(out_dir);
 
 	u32 n_image_sizes = 2;
 	u32 image_dim_factor = 4;
@@ -865,7 +866,7 @@ void print(ImageView const& view)
 	auto w = view.width;
 	auto h = view.height;
 
-	std::cout << "width: " << w << " height: " << h << "\n";
+	printf("width: %u height: %u\n", w, h);
 }
 
 
@@ -874,11 +875,11 @@ void print(GrayView const& view)
 	auto w = view.width;
 	auto h = view.height;
 
-	std::cout << "width: " << w << " height: " << h << "\n";
+	printf("width: %u height: %u\n", w, h);
 }
 
 
 void print(img::stats_t const& stats)
 {
-	std::cout << "mean = " << (double)stats.mean << " sigma = " << (double)stats.std_dev << '\n';
+	printf("mean = %f sigma = %f\n", stats.mean, stats.std_dev);
 }
