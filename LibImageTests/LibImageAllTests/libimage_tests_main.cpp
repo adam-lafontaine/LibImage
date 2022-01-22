@@ -11,6 +11,7 @@
 #include "../utils/win32_leak_check.h"
 #endif
 
+#include <cstdio>
 #include <iostream>
 #include <random>
 #include <algorithm>
@@ -738,12 +739,12 @@ void gradient_times(fs::path const& out_dir)
 
 	auto const start_pixels = current_pixels();
 
-	auto const scale = [&](auto t) { return static_cast<r32>(start_pixels / current_pixels() * t); };
-	auto const print_wh = [&]() { std::cout << "\nwidth: " << width << " height: " << height << '\n'; };
-	auto const print_count = [&]() { std::cout << "  image count: " << image_count << '\n'; };
+	auto const scale = [&](auto t) { return (r32)(start_pixels / current_pixels() * t); };
+	auto const print_wh = [&]() { printf("\nwidth: %u height: %u\n", width, height); };
+	auto const print_count = [&]() { printf("  image count: %u\n", image_count); };
 
 	r64 t = 0;
-	auto const print_t = [&](const char* label) { std::cout << "    " << label << " time: " << scale(t) << '\n'; };
+	auto const print_t = [&](const char* label) { printf("    %s time: %f\n", label, scale(t)); };
 
 	for (u32 s = 0; s < n_image_sizes; ++s)
 	{

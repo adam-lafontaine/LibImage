@@ -32,17 +32,21 @@ const auto DST_IMAGE_ROOT = ROOT_PATH + "out_files/";
 void empty_dir(path_t& dir);
 void basic_tests(path_t& out_dir);
 void process_tests(path_t& out_dir);
+void gradient_times(path_t& out_dir);
 
 
 int main()
 {	
 	auto dst_root = DST_IMAGE_ROOT;
 
-	auto dst_basic = dst_root + "basic/";
+	//auto dst_basic = dst_root + "basic/";
     //basic_tests(dst_basic);
 
-	auto dst_process = dst_root + "process/";
-	process_tests(dst_process);
+	//auto dst_process = dst_root + "process/";
+	//process_tests(dst_process);
+
+	auto dst_gradients = dst_root + "gradients/";
+	gradient_times(dst_gradients);
 }
 
 
@@ -339,6 +343,165 @@ void process_tests(path_t& out_dir)
 	auto time = sw.get_time_sec();
 
 	printf("Done %f seconds\n", time);
+}
+
+
+void gradient_times(path_t& out_dir)
+{
+	printf("\ngradients:\n");
+	empty_dir(out_dir);
+
+
+	u32 n_image_sizes = 2;
+	u32 image_dim_factor = 4;
+
+	u32 n_image_counts = 2;
+	u32 image_count_factor = 4;
+
+	u32 width_start = 400;
+	u32 height_start = 300;
+	u32 image_count_start = 50;
+
+	auto green = img::to_pixel(88, 100, 29);
+	auto blue = img::to_pixel(0, 119, 182);
+
+	img::multi_chart_data_t seq_image_times;
+	seq_image_times.color = green;
+
+	img::multi_chart_data_t seq_view_times;
+	seq_view_times.color = blue;
+
+	img::multi_chart_data_t par_image_times;
+	par_image_times.color = green;
+
+	img::multi_chart_data_t par_view_times;
+	par_view_times.color = blue;
+
+	img::multi_chart_data_t simd_image_times;
+	simd_image_times.color = green;
+
+	img::multi_chart_data_t simd_view_times;
+	simd_view_times.color = blue;
+
+	Stopwatch sw;
+	u32 width = width_start;
+	u32 height = height_start;
+	u32 image_count = image_count_start;
+
+	auto const current_pixels = [&]() { return (u64)(width) * height * image_count; };
+
+	auto const start_pixels = current_pixels();
+
+	auto const scale = [&](auto t) { return (r32)(start_pixels) / current_pixels() * t; };
+	auto const print_wh = [&]() { printf("\nwidth: %u height: %u\n", width, height); };
+	auto const print_count = [&]() { printf("  image count: %u\n", image_count); };
+
+	r64 t = 0;
+	auto const print_t = [&](const char* label) { printf("    %s time: %f\n", label, scale(t)); };
+
+	for (u32 s = 0; s < n_image_sizes; ++s)
+	{
+		print_wh();
+		image_count = image_count_start;
+		std::vector<r32> seq_image;
+		std::vector<r32> seq_view;
+		std::vector<r32> par_image;
+		std::vector<r32> par_view;
+		std::vector<r32> simd_image;
+		std::vector<r32> simd_view;
+		GrayImage src;
+		GrayImage dst;
+		GrayImage tmp;
+		img::make_image(src, width, height);
+		img::make_image(dst, width, height);
+		img::make_image(tmp, width, height);
+		auto src_v = img::make_view(src);
+		auto dst_v = img::make_view(dst);
+
+		for (u32 c = 0; c < n_image_counts; ++c)
+		{
+			print_count();
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::seq::gradients(src, dst, tmp);
+			}			
+			t = sw.get_time_milli();
+			seq_image.push_back(scale(t));
+			print_t(" seq image");
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::seq::gradients(src_v, dst_v, tmp);
+			}
+			t = sw.get_time_milli();
+			seq_view.push_back(scale(t));
+			print_t("  seq view");
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::gradients(src, dst, tmp);
+			}
+			t = sw.get_time_milli();
+			par_image.push_back(scale(t));
+			print_t(" par image");
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::gradients(src_v, dst_v, tmp);
+			}
+			t = sw.get_time_milli();
+			par_view.push_back(scale(t));
+			print_t("  par view");
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::simd::gradients(src, dst, tmp);
+			}
+			t = sw.get_time_milli();
+			simd_image.push_back(scale(t));
+			print_t("simd image");
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::simd::gradients(src_v, dst_v, tmp);
+			}
+			t = sw.get_time_milli();
+			simd_view.push_back(scale(t));
+			print_t(" simd view");
+
+			image_count *= image_count_factor;
+		}
+
+		seq_image_times.data_list.push_back(seq_image);
+		seq_view_times.data_list.push_back(seq_view);
+		par_image_times.data_list.push_back(par_image);
+		par_view_times.data_list.push_back(par_view);
+		simd_image_times.data_list.push_back(simd_image);
+		simd_view_times.data_list.push_back(simd_view);
+
+		width *= image_dim_factor;
+		height *= image_dim_factor;
+	}
+
+	img::grouped_multi_chart_data_t chart_data
+	{ 
+		seq_image_times, seq_view_times,
+		par_image_times, par_view_times,
+		simd_image_times, simd_view_times
+	};
+	Image chart;
+	img::draw_bar_multi_chart_grouped(chart_data, chart);
+	img::write_image(chart, out_dir + "gradients.bmp");
+
+
+
 }
 
 
