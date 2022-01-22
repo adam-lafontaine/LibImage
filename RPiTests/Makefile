@@ -8,6 +8,7 @@ libimage := ../libimage
 math := $(libimage)/math
 proc := $(libimage)/proc
 stb := $(libimage)/stb_wrapper
+simd := $(proc)/simd
 
 
 # main
@@ -104,11 +105,27 @@ transform_c    := $(proc)/transform.cpp
 transform_o    := $(build)/transform.o
 object_files   += $(transform_o)
 
+# SIMD
+simd_h := $(simd)/simd_def.hpp
+
+simd_alpha_blend_c  := $(simd)/simd_alpha_blend.cpp
+simd_alpha_blend_o  := $(build)/simd_alpha_blend.o
+object_files        += $(simd_alpha_blend_o)
+
+simd_convolve_c := $(simd)/simd_convolve.cpp
+simd_convolve_o := $(build)/simd_convolve.o
+object_files    += $(simd_convolve_o)
+
+simd_grayscale_c := $(simd)/simd_grayscale.cpp
+simd_grayscale_o := $(build)/simd_grayscale.o
+object_files     += $(simd_grayscale_o)
+
 
 # build rules
 
 INCLUDES  :=
 LIBRARIES :=
+CCFLAGS := -march=armv8-a -mtune=cortex-a72 -mfpu=neon-fp-armv8 -mfloat-abi=hard
 
 GPP += -O3
 
@@ -118,56 +135,68 @@ $(main_o): $(main_c) $(libimage_h) $(proc_h) $(math_h) $(charts_h)
 	$(GPP) -o $@ -c $<
 
 $(stb_libimage_o): $(stb_libimage_c) $(libimage_h) $(stb_h)
-	@echo "\n stb_libimage.o"
+	@echo "\n stb_libimage"
 	$(GPP) -o $@ -c $<
 
 $(libimage_o): $(libimage_c) $(libimage_h)
-	@echo "\n libimage.o"
+	@echo "\n libimage"
 	$(GPP) -o $@ -c $<
 
 $(math_o): $(math_c) $(libimage_h) $(math_h)
-	@echo "\n math.o"
+	@echo "\n math"
 	$(GPP) -o $@ -c $<
 
 $(charts_o): $(charts_c) $(libimage_h) $(charts_h)
-	@echo "\n charts.o"
+	@echo "\n charts"
 	$(GPP) -o $@ -c $<
 
 $(alpha_blend_o): $(alpha_blend_c) $(libimage_h) $(proc_h)
-	@echo "\n alpha_blend.o"
+	@echo "\n alpha_blend"
 	$(GPP) -o $@ -c $<
 
 $(binarize_o): $(binarize_c) $(libimage_h) $(proc_h)
-	@echo "\n binarize.o"
+	@echo "\n binarize"
 	$(GPP) -o $@ -c $<
 
 $(blur_o): $(blur_c) $(libimage_h) $(proc_h)
-	@echo "\n blur.o"
+	@echo "\n blur"
 	$(GPP) -o $@ -c $<
 
 $(contrast_o): $(contrast_c) $(libimage_h) $(proc_h)
-	@echo "\n contrast.o"
+	@echo "\n contrast"
 	$(GPP) -o $@ -c $<
 
 $(convolve_o): $(convolve_c) $(libimage_h) $(proc_h)
-	@echo "\n convolve.o"
+	@echo "\n convolve"
 	$(GPP) -o $@ -c $<
 
 $(copy_o): $(copy_c) $(libimage_h) $(proc_h)
-	@echo "\n copy.o"
+	@echo "\n copy"
 	$(GPP) -o $@ -c $<
 
 $(edges_gradients_o): $(edges_gradients_c) $(libimage_h) $(proc_h)
-	@echo "\n edges_gradients.o"
+	@echo "\n edges_gradients"
 	$(GPP) -o $@ -c $<
 
 $(grayscale_o): $(grayscale_c) $(libimage_h) $(proc_h)
-	@echo "\n grayscale.o"
+	@echo "\n grayscale"
 	$(GPP) -o $@ -c $<
 
 $(transform_o): $(transform_c) $(libimage_h) $(proc_h)
-	@echo "\n transform.o"
+	@echo "\n transform"
 	$(GPP) -o $@ -c $<
+
+$(simd_alpha_blend_o): $(simd_alpha_blend_c) $(libimage_h) $(proc_h) $(simd_h)
+	@echo "\n simd_alpha_blend"
+	$(GPP) $(CCFLAGS) -o $@ -c $<
+
+$(simd_convolve_o): $(simd_convolve_c) $(libimage_h) $(proc_h) $(simd_h)
+	@echo "\n simd_convolve"
+	$(GPP) $(CCFLAGS) -o $@ -c $<
+
+$(simd_grayscale_o): $(simd_grayscale_c) $(libimage_h) $(proc_h) $(simd_h)
+	@echo "\n simd_grayscale"
+	$(GPP) $(CCFLAGS) -o $@ -c $<
 
 $(rpi_tests_exe): $(object_files)
 	@echo "\n rpi_tests"

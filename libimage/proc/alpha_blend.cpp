@@ -9,11 +9,6 @@
 #include <execution>
 #endif // !LIBIMAGE_NO_PARALLEL
 
-#ifndef LIBIMAGE_NO_SIMD
-#include <xmmintrin.h>
-#include <immintrin.h>
-#endif // !LIBIMAGE_NO_SIMD
-
 namespace libimage
 {
 	static pixel_t alpha_blend_linear(pixel_t const& src, pixel_t const& current)

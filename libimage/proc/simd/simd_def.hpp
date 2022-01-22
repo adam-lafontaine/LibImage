@@ -161,7 +161,8 @@ using vec_t = float32x4_t;
 
 static inline vec_t simd_load_broadcast(const r32* a)
 {
-	return vld1_dup_f32(a);
+	return vld1q_dup_f32(a);
+	//return vmovq_n_f32(*a);
 }
 
 
