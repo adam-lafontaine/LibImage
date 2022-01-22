@@ -121,14 +121,15 @@ simd_grayscale_o := $(build)/simd_grayscale.o
 object_files     += $(simd_grayscale_o)
 
 
-# build rules
-
+# flags
 INCLUDES  :=
 LIBRARIES :=
 CCFLAGS := -march=armv8-a -mtune=cortex-a72 -mfpu=neon-fp-armv8 -mfloat-abi=hard
 
 GPP += -O3
 
+
+# build rules
 
 $(main_o): $(main_c) $(libimage_h) $(proc_h) $(math_h) $(charts_h)
 	@echo "\n main"

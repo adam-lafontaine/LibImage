@@ -10,9 +10,9 @@ A Basic image processing libray for C++
 * Histogram, mean, standard deviation
 * Copy, conversion, binarization, alpha blending, edge detection
 * Sequential and parallel processing available
-* Widespread abuse of lambdas
-* Limited SIMD functionality
+* SIMD available for Intel 128 bit, Intel 256 bit, ARM 128 bit
 * See /LibImageTests/LibImageAllTests/libimage_tests.cpp for demonstration
+* Settings macros in /libimage/defines.hpp
 
 Support for CUDA
 
