@@ -1,5 +1,7 @@
 #pragma once
 
+#ifndef LIBIMAGE_NO_SIMD
+
 #include "../process.hpp"
 
 
@@ -9,7 +11,6 @@
 #include <immintrin.h>
 
 constexpr u32 VEC_LEN = 4;
-
 
 using vec_t = __m128;
 
@@ -83,6 +84,76 @@ static inline vec_t simd_sqrt(vec_t const& a)
 
 constexpr u32 VEC_LEN = 8;
 
+using vec_t = __m256;
+
+
+static inline vec_t simd_load_broadcast(const r32* a)
+{
+	return _mm256_broadcast_ss(a);
+}
+
+
+static inline vec_t simd_load(const r32* a)
+{
+	return _mm256_load_ps(a);
+}
+
+
+static inline void simd_store(r32* dst, vec_t const& a)
+{
+	_mm256_store_ps(dst, a);
+}
+
+
+static inline vec_t simd_setzero()
+{
+	return _mm256_setzero_ps();
+}
+
+
+static inline vec_t simd_add(vec_t const& a, vec_t const& b)
+{
+	return _mm256_add_ps(a, b);
+}
+
+
+static inline vec_t simd_subtract(vec_t const& a, vec_t const& b)
+{
+	return _mm256_sub_ps(a, b);
+}
+
+
+static inline vec_t simd_multiply(vec_t const& a, vec_t const& b)
+{
+	return _mm256_mul_ps(a, b);
+}
+
+
+static inline vec_t simd_divide(vec_t const& a, vec_t const& b)
+{
+	return _mm256_div_ps(a, b);
+}
+
+
+static inline vec_t simd_fmadd(vec_t const& a, vec_t const& b, vec_t const& c)
+{
+	return _mm256_fmadd_ps(a, b, c);
+}
+
+
+static inline vec_t simd_sqrt(vec_t const& a)
+{
+	return _mm256_sqrt_ps(a);
+}
+
+#endif // SIMD_INTEL_256
+
+
+#ifdef SIMD_ARM_NEON
+
+#include <arm_neon.h>
+
+constexpr u32 VEC_LEN = 8;
 
 using vec_t = __m256;
 
@@ -147,7 +218,7 @@ static inline vec_t simd_sqrt(vec_t const& a)
 }
 
 
-#endif // SIMD_INTEL_256
+#endif // SIMD_ARM_NEON
 
 
 
@@ -210,3 +281,4 @@ static inline void copy_vec_len(SRC_T* src, DST_T* dst)
 	}
 }
 
+#endif // !LIBIMAGE_NO_SIMD

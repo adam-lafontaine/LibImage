@@ -285,22 +285,22 @@ math_h := ../libimage/math/math.hpp
 
 charts_h := ../libimage/math/charts.hpp
 
-proc_dir := ../libimage/proc
+proc := ../libimage/proc
 
-proc_h := $(proc_dir)/alpha_blend.hpp
-proc_h += $(proc_dir)/binarize.hpp
-proc_h += $(proc_dir)/blur.hpp
-proc_h += $(proc_dir)/contrast.hpp
-proc_h += $(proc_dir)/convolve.hpp
-proc_h += $(proc_dir)/copy.hpp
-proc_h += $(proc_dir)/edges.hpp
-proc_h += $(proc_dir)/gradients.hpp
-proc_h += $(proc_dir)/grayscale.hpp
-proc_h += $(proc_dir)/index_range.hpp
-proc_h += $(proc_dir)/proc_def.hpp
-proc_h += $(proc_dir)/process.hpp
-proc_h += $(proc_dir)/transform.hpp
-proc_h += $(proc_dir)/verify.hpp
+proc_h := $(proc)/alpha_blend.hpp
+proc_h += $(proc)/binarize.hpp
+proc_h += $(proc)/blur.hpp
+proc_h += $(proc)/contrast.hpp
+proc_h += $(proc)/convolve.hpp
+proc_h += $(proc)/copy.hpp
+proc_h += $(proc)/edges.hpp
+proc_h += $(proc)/gradients.hpp
+proc_h += $(proc)/grayscale.hpp
+proc_h += $(proc)/index_range.hpp
+proc_h += $(proc)/proc_def.hpp
+proc_h += $(proc)/process.hpp
+proc_h += $(proc)/transform.hpp
+proc_h += $(proc)/verify.hpp
 
 
 main_c         := cuda_test_main.cpp
@@ -323,39 +323,39 @@ charts_c       := ../libimage/math/charts.cpp
 charts_o       := $(build)/charts.o
 object_files   += $(charts_o)
 
-alpha_blend_c  := $(proc_dir)/alpha_blend.cpp
+alpha_blend_c  := $(proc)/alpha_blend.cpp
 alpha_blend_o  := $(build)/alpha_blend.o
 object_files   += $(alpha_blend_o)
 
-binarize_c     := $(proc_dir)/binarize.cpp
+binarize_c     := $(proc)/binarize.cpp
 binarize_o     := $(build)/binarize.o
 object_files   += $(binarize_o)
 
-blur_c         := $(proc_dir)/blur.cpp
+blur_c         := $(proc)/blur.cpp
 blur_o         := $(build)/blur.o
 object_files   += $(blur_o)
 
-contrast_c     := $(proc_dir)/contrast.cpp
+contrast_c     := $(proc)/contrast.cpp
 contrast_o     := $(build)/contrast.o
 object_files   += $(contrast_o)
 
-convolve_c     := $(proc_dir)/convolve.cpp
+convolve_c     := $(proc)/convolve.cpp
 convolve_o     := $(build)/convolve.o
 object_files   += $(convolve_o)
 
-copy_c         := $(proc_dir)/copy.cpp
+copy_c         := $(proc)/copy.cpp
 copy_o         := $(build)/copy.o
 object_files   += $(copy_o)
 
-edges_gradients_c  := $(proc_dir)/edges_gradients.cpp
+edges_gradients_c  := $(proc)/edges_gradients.cpp
 edges_gradients_o  := $(build)/edges_gradients.o
 object_files       += $(edges_gradients_o)
 
-grayscale_c    := $(proc_dir)/grayscale.cpp
+grayscale_c    := $(proc)/grayscale.cpp
 grayscale_o    := $(build)/grayscale.o
 object_files   += $(grayscale_o)
 
-transform_c    := $(proc_dir)/transform.cpp
+transform_c    := $(proc)/transform.cpp
 transform_o    := $(build)/transform.o
 object_files   += $(transform_o)
 
@@ -409,7 +409,7 @@ $(math_o): $(math_c) $(libimage_h) $(math_h)
 	$(GPP) -o $@ -c $<
 
 $(charts_o): $(charts_c) $(libimage_h) $(charts_h)
-	@echo "\n math.o"
+	@echo "\n charts.o"
 	$(GPP) -o $@ -c $<
 
 $(alpha_blend_o): $(alpha_blend_c) $(libimage_h) $(proc_h)
@@ -473,3 +473,6 @@ run: build
 clean:
 	rm -rfv $(build)/*
 	rm -rfv ./out_files/*
+
+setup:
+	mkdir -p $(build)
