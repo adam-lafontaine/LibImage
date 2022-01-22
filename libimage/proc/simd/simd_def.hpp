@@ -191,7 +191,7 @@ static inline vec_t simd_add(vec_t const& a, vec_t const& b)
 
 static inline vec_t simd_subtract(vec_t const& a, vec_t const& b)
 {
-	return vaddq_f32(a, b);
+	return vsubq_f32(a, b);
 }
 
 
