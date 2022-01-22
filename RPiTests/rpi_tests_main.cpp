@@ -19,7 +19,7 @@ using GrayView = img::gray::view_t;
 using GrayPixel = img::gray::pixel_t;
 
 // make sure these files exist
-constexpr auto ROOT_DIR = "/home/adam/Repos/LibImage/CudaTests/";
+constexpr auto ROOT_DIR = "/home/pi/Repos/LibImage/RPiTests/";
 
 const auto ROOT_PATH = std::string(ROOT_DIR);
 
