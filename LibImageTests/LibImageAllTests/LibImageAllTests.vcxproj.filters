@@ -105,6 +105,9 @@
     <ClCompile Include="..\..\libimage\proc\simd\simd_alpha_blend.cpp">
       <Filter>Source Files\libimage\proc\simd</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\libimage\proc\simd\simd_convolve.cpp">
+      <Filter>Source Files\libimage\proc\simd</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\libimage\libimage.hpp">

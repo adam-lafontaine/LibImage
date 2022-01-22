@@ -156,6 +156,7 @@
     <ClCompile Include="..\..\libimage\proc\edges_gradients.cpp" />
     <ClCompile Include="..\..\libimage\proc\grayscale.cpp" />
     <ClCompile Include="..\..\libimage\proc\simd\simd_alpha_blend.cpp" />
+    <ClCompile Include="..\..\libimage\proc\simd\simd_convolve.cpp" />
     <ClCompile Include="..\..\libimage\proc\simd\simd_grayscale.cpp" />
     <ClCompile Include="..\..\libimage\proc\transform.cpp" />
     <ClCompile Include="..\..\libimage\stb_wrapper\stb_libimage.cpp" />

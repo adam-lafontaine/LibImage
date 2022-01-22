@@ -1,8 +1,6 @@
-
-#include "../verify.hpp"
-
 #ifndef LIBIMAGE_NO_SIMD
 
+#include "../verify.hpp"
 #include "simd_def.hpp"
 
 
