@@ -39,7 +39,10 @@ int main()
 	auto dst_root = DST_IMAGE_ROOT;
 
 	auto dst_basic = dst_root + "basic/";
-    basic_tests(dst_basic);
+    //basic_tests(dst_basic);
+
+	auto dst_process = dst_root + "process/";
+	process_tests(dst_process);
 }
 
 
@@ -113,6 +116,9 @@ void basic_tests(path_t& out_dir)
 	img::write_image(resize_image_gray, out_dir + "resize_image_gray.bmp");
 	img::write_view(resize_view_gray, out_dir + "resize_view_gray.bmp");
 
+	image.dispose();
+	image_gray.dispose();
+
 	printf("\n");
 }
 
@@ -127,8 +133,191 @@ void process_tests(path_t& out_dir)
 	img::read_image_from_file(CORVETTE_PATH, corvette_img);
 	img::write_image(corvette_img, out_dir + "vette.png");
 
+	auto const width = corvette_img.width;
+	auto const height = corvette_img.height;	
+
+	// get another image for blending
+	// make sure it is the same size
+	Image caddy_read;
+	img::read_image_from_file(CADILLAC_PATH, caddy_read);
+	Image caddy_img;
+	caddy_img.width = width;
+	caddy_img.height = height;
+	img::resize_image(caddy_read, caddy_img);
+	img::write_image(caddy_img, out_dir + "caddy.png");
+
+	Image dst_img;
+	img::make_image(dst_img, width, height);
+
+	GrayImage dst_gray_img;
+	img::make_image(dst_gray_img, width, height);
+
+	// alpha blending
+	img::transform_alpha(caddy_img, [](auto const& p) { return 128; });
+
+	img::alpha_blend(caddy_img, corvette_img, dst_img);
+	img::write_image(dst_img, out_dir + "alpha_blend.png");
+
+	img::seq::alpha_blend(caddy_img, corvette_img, dst_img);
+	img::write_image(dst_img, out_dir + "alpha_blend_seq.png");
+
+	// TODO: simd
+
+	img::copy(corvette_img, dst_img);
+
+	img::alpha_blend(caddy_img, dst_img);
+	img::write_image(dst_img, out_dir + "alpha_blend_src_dst.png");
+
+	img::seq::alpha_blend(caddy_img, dst_img);
+	img::write_image(dst_img, out_dir + "alpha_blend_src_dst_seq.png");
+
+	// TODO: simd
+
+
+	// grayscale
+	img::grayscale(corvette_img, dst_gray_img);
+	img::write_image(dst_gray_img, out_dir + "grayscale.png");
+
+	img::seq::grayscale(corvette_img, dst_gray_img);
+	img::write_image(dst_gray_img, out_dir + "grayscale_seq.png");
+
+	// TODO: simd
+
+	// stats
+	auto gray_stats = img::calc_stats(dst_gray_img);
+	GrayImage gray_stats_img;
+	img::draw_histogram(gray_stats.hist, gray_stats_img);
+	img::write_image(gray_stats_img, out_dir + "gray_stats.png");
+
+
+	// alpha grayscale
+	GrayImage alpha_stats_img;
+	img::alpha_grayscale(corvette_img);
+	auto alpha_stats = img::calc_stats(corvette_img, img::Channel::Alpha);
+	
+	img::draw_histogram(alpha_stats.hist, alpha_stats_img);
+	img::write_image(alpha_stats_img, out_dir + "gray_stats_alpha.png");
+
+	GrayImage alpha_stats_seq_img;
+	img::seq::alpha_grayscale(corvette_img);
+	alpha_stats = img::calc_stats(corvette_img, img::Channel::Alpha);
+	
+	img::draw_histogram(alpha_stats.hist, alpha_stats_seq_img);
+	img::write_image(alpha_stats_img, out_dir + "gray_stats_alpha_seq.png");
+
+	// TODO: simd
+
+
+	// create a new grayscale source
+	GrayImage src_gray_img;
+	img::make_image(src_gray_img, width, height);
+	img::copy(dst_gray_img, src_gray_img);
+
+
+	// contrast
+	auto shade_min = (u8)(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
+	auto shade_max = (u8)(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
+
+	img::contrast(src_gray_img, dst_gray_img, shade_min, shade_max);
+	img::write_image(dst_gray_img, out_dir + "contrast.png");
+
+	img::seq::contrast(src_gray_img, dst_gray_img, shade_min, shade_max);
+	img::write_image(dst_gray_img, out_dir + "contrast_seq.png");
+
+
+	// binarize
+	auto const is_white = [&](u8 p) { return (r32)(p) > gray_stats.mean; };
+
+	img::binarize(src_gray_img, dst_gray_img, is_white);
+	img::write_image(dst_gray_img, out_dir + "binarize.png");
+
+	img::seq::binarize(src_gray_img, dst_gray_img, is_white);
+	img::write_image(dst_gray_img, out_dir + "binarize_seq.png");
+
+
+	//blur
+	img::blur(src_gray_img, dst_gray_img);
+	img::write_image(dst_gray_img, out_dir + "blur.png");
+
+	img::seq::blur(src_gray_img, dst_gray_img);
+	img::write_image(dst_gray_img, out_dir + "blur_seq.png");
+
+	// TODO: simd
+
+
+	// edge detection
+	auto const threshold = [](u8 g) { return g >= 100; };
+
+	img::edges(src_gray_img, dst_gray_img, threshold);
+	img::write_image(dst_gray_img, out_dir + "edges.png");
+
+	img::seq::edges(src_gray_img, dst_gray_img, threshold);
+	img::write_image(dst_gray_img, out_dir + "edges_seq.png");
+
+
+	// gradient
+	img::gradients(src_gray_img, dst_gray_img);
+	img::write_image(dst_gray_img, out_dir + "gradient.png");
+
+	img::seq::gradients(src_gray_img, dst_gray_img);
+	img::write_image(dst_gray_img, out_dir + "gradient_seq.png");
+
+	// TODO: simd
+
+
+	// combine transformations in the same image
+	// regular grayscale to start
+	img::seq::copy(src_gray_img, dst_gray_img);
+
+	img::pixel_range_t range;
+	range.x_begin = 0;
+	range.x_end = width / 2;
+	range.y_begin = 0;
+	range.y_end = height / 2;
+	auto src_sub = img::sub_view(src_gray_img, range);
+	auto dst_sub = img::sub_view(dst_gray_img, range);
+	img::gradients(src_sub, dst_sub);
+	
+
+	range.x_begin = width / 2;
+	range.x_end = width;
+	src_sub = img::sub_view(src_gray_img, range);
+	dst_sub = img::sub_view(dst_gray_img, range);	
+	img::contrast(src_sub, dst_sub, shade_min, shade_max);
+
+	range.x_begin = 0;
+	range.x_end = width / 2;
+	range.y_begin = height / 2;
+	range.y_end = height;
+	src_sub = img::sub_view(src_gray_img, range);
+	dst_sub = img::sub_view(dst_gray_img, range);
+	img::blur(src_sub, dst_sub);	
+
+	range.x_begin = width / 2;
+	range.x_end = width;
+	src_sub = img::sub_view(src_gray_img, range);
+	dst_sub = img::sub_view(dst_gray_img, range);
+	img::binarize(src_sub, dst_sub, is_white);	
+
+	range.x_begin = width / 4;
+	range.x_end = range.x_begin + width / 2;
+	range.y_begin = height / 4;
+	range.y_end = range.y_begin + height / 2;
+	src_sub = img::sub_view(src_gray_img, range);
+	dst_sub = img::sub_view(dst_gray_img, range);
+	img::edges(src_sub, dst_sub, threshold);
+
+	img::write_image(dst_gray_img, out_dir + "combo.png");
 
 	corvette_img.dispose();
+	caddy_read.dispose();
+	caddy_img.dispose();
+	dst_img.dispose();
+	dst_gray_img.dispose();
+	gray_stats_img.dispose();
+	alpha_stats_img.dispose();
+	alpha_stats_seq_img.dispose();
+	src_gray_img.dispose();
 }
 
 
