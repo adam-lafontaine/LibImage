@@ -1,19 +1,10 @@
 #include "process.hpp"
 #include "verify.hpp"
 
-#ifndef LIBIMAGE_NO_SIMD
-#include <xmmintrin.h>
-#include <immintrin.h>
-#endif // !LIBIMAGE_NO_SIMD
-
-#include <array>
-
 
 constexpr r32 COEFF_RED = 0.299f;
 constexpr r32 COEFF_GREEN = 0.587f;
 constexpr r32 COEFF_BLUE = 0.114f;
-
-constexpr std::array<r32, 3> STANDARD_GRAYSCALE_COEFFS { COEFF_RED, COEFF_GREEN, COEFF_BLUE };
 
 
 static constexpr u8 rgb_grayscale_standard(u8 red, u8 green, u8 blue)
@@ -81,8 +72,6 @@ namespace libimage
 	}
 
 #endif // !LIBIMAGE_NO_COLOR
-
-
 
 
 #endif // !LIBIMAGE_NO_PARALLEL

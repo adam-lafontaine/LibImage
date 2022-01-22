@@ -18,8 +18,6 @@ constexpr std::array<r32, 3> STANDARD_GRAYSCALE_COEFFS{ COEFF_RED, COEFF_GREEN, 
 
 namespace libimage
 {
-
-
 	namespace simd
 	{
 #ifndef LIBIMAGE_NO_COLOR

@@ -40,19 +40,37 @@ static inline vec_t simd_load(const r32* a)
 }
 
 
-static inline void simd_store(r32* dst, vec_t& a)
+static inline void simd_store(r32* dst, vec_t const& a)
 {
 	_mm_store_ps(dst, a);
 }
 
 
-static inline vec_t simd_multiply(vec_t& a, vec_t& b)
+static inline vec_t simd_add(vec_t const& a, vec_t const& b)
+{
+	return _mm_add_ps(a, b);
+}
+
+
+static inline vec_t simd_subtract(vec_t const& a, vec_t const& b)
+{
+	return _mm_sub_ps(a, b);
+}
+
+
+static inline vec_t simd_multiply(vec_t const& a, vec_t const& b)
 {
 	return _mm_mul_ps(a, b);
 }
 
 
-static inline vec_t simd_fmadd(vec_t& a, vec_t& b, vec_t& c)
+static inline vec_t simd_divide(vec_t const& a, vec_t const& b)
+{
+	return _mm_div_ps(a, b);
+}
+
+
+static inline vec_t simd_fmadd(vec_t const& a, vec_t const& b, vec_t const& c)
 {
 	return _mm_fmadd_ps(a, b, c);
 }
@@ -93,25 +111,46 @@ static inline vec_t simd_load(const r32* a)
 }
 
 
-static inline void simd_store(r32* dst, vec_t& a)
+static inline void simd_store(r32* dst, vec_t const& a)
 {
 	_mm256_store_ps(dst, a);
 }
 
 
-static inline vec_t simd_multiply(vec_t& a, vec_t& b)
+static inline vec_t simd_add(vec_t const& a, vec_t const& b)
+{
+	return _mm256_add_ps(a, b);
+}
+
+
+static inline vec_t simd_subtract(vec_t const& a, vec_t const& b)
+{
+	return _mm256_sub_ps(a, b);
+}
+
+
+static inline vec_t simd_multiply(vec_t const& a, vec_t const& b)
 {
 	return _mm256_mul_ps(a, b);
 }
 
 
-static inline vec_t simd_fmadd(vec_t& a, vec_t& b, vec_t& c)
+static inline vec_t simd_divide(vec_t const& a, vec_t const& b)
+{
+	return _mm256_div_ps(a, b);
+}
+
+
+static inline vec_t simd_fmadd(vec_t const& a, vec_t const& b, vec_t const& c)
 {
 	return _mm256_fmadd_ps(a, b, c);
 }
 
 
 #endif // SIMD_INTEL_256
+
+
+
 
 
 
