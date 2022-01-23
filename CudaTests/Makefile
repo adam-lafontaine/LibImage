@@ -270,24 +270,64 @@ endif
 GPP := g++-10 -std=c++17
 build := ./build_files
 
-types_h := ../libimage/types.hpp
+cuda_test_exe := $(build)/cuda_test
 
-libimage_h := $(types_h)
-libimage_h += ../libimage/libimage.hpp
-libimage_h += ../libimage/rgba.hpp
-libimage_h += ../libimage/gray.hpp
+# directories
+libimage := ../libimage
+math := $(libimage)/math
+proc := $(libimage)/proc
+stb := $(libimage)/stb_wrapper
+cuda := $(libimage)/cuda
+simd := $(proc)/simd
 
-stb_h := ../libimage/stb_wrapper/stb_image.h
-stb_h += ../libimage/stb_wrapper/stb_write.h
-stb_h += ../libimage/stb_wrapper/stb_resize.h
 
-math_h := ../libimage/math/math.hpp
+# main
+main_c         := cuda_test_main.cpp
+main_o         := $(build)/cuda_test_main.o
+object_files   := $(main_o)
 
-charts_h := ../libimage/math/charts.hpp
+types_h := $(libimage)/types.hpp
 
-proc := ../libimage/proc
 
-proc_h := $(proc)/alpha_blend.hpp
+# libimage
+libimage_h := $(libimage)/types.hpp
+libimage_h += $(libimage)/defines.hpp
+libimage_h += $(libimage)/rgba.hpp
+libimage_h += $(libimage)/gray.hpp
+libimage_h += $(libimage)/libimage.hpp
+
+libimage_c     := $(libimage)/libimage.cpp
+libimage_o     := $(build)/libimage.o
+object_files   += $(libimage_o)
+
+
+# stb
+stb_h := $(stb)/stb_image_resize.h
+stb_h += $(stb)/stb_image_write.h
+stb_h += $(stb)/stb_image.h
+stb_h += $(stb)/stb_include.hpp
+
+stb_libimage_c := $(stb)/stb_libimage.cpp
+stb_libimage_o := $(build)/stb_libimage.o
+object_files   += $(stb_libimage_o)
+
+
+#math/charts
+math_h   := $(math)/math.hpp
+charts_h := $(math)/charts.hpp
+
+math_c         := $(math)/math.cpp
+math_o         := $(build)/math.o
+object_files   += $(math_o)
+
+charts_c       := $(math)/charts.cpp
+charts_o       := $(build)/charts.o
+object_files   += $(charts_o)
+
+
+# image processing
+proc_h := $(proc)/process.hpp
+proc_h += $(proc)/alpha_blend.hpp
 proc_h += $(proc)/binarize.hpp
 proc_h += $(proc)/blur.hpp
 proc_h += $(proc)/contrast.hpp
@@ -296,32 +336,10 @@ proc_h += $(proc)/copy.hpp
 proc_h += $(proc)/edges.hpp
 proc_h += $(proc)/gradients.hpp
 proc_h += $(proc)/grayscale.hpp
-proc_h += $(proc)/index_range.hpp
-proc_h += $(proc)/proc_def.hpp
-proc_h += $(proc)/process.hpp
 proc_h += $(proc)/transform.hpp
 proc_h += $(proc)/verify.hpp
 
-
-main_c         := cuda_test_main.cpp
-main_o         := $(build)/cuda_test_main.o
-object_files   := $(main_o)
-
-libimage_c     := ../libimage/libimage.cpp
-libimage_o     := $(build)/libimage.o
-object_files   += $(libimage_o)
-
-stb_libimage_c    := ../libimage/stb_wrapper/stb_libimage.cpp
-stb_libimage_o    := $(build)/stb_libimage.o
-object_files      += $(stb_libimage_o)
-
-math_c         := ../libimage/math/math.cpp
-math_o         := $(build)/math.o
-object_files   += $(math_o)
-
-charts_c       := ../libimage/math/charts.cpp
-charts_o       := $(build)/charts.o
-object_files   += $(charts_o)
+proc_h += $(proc)/index_range.hpp # TODO: utils
 
 alpha_blend_c  := $(proc)/alpha_blend.cpp
 alpha_blend_o  := $(build)/alpha_blend.o
@@ -360,28 +378,29 @@ transform_o    := $(build)/transform.o
 object_files   += $(transform_o)
 
 
+# CUDA
 gpu_h := $(types_h)
-gpu_h += ../libimage/rgba.hpp
-gpu_h += ../libimage/gray.hpp
-gpu_h += ../libimage/cuda/cuda_def.cuh
-gpu_h += ../libimage/cuda/convolve.cuh
-gpu_h += ../libimage/cuda/device.hpp
-gpu_h += ../libimage/cuda/device_image.hpp
-gpu_h += ../libimage/cuda/process.hpp
+gpu_h += $(libimage)/rgba.hpp
+gpu_h += $(libimage)/gray.hpp
+gpu_h += $(cuda)/cuda_def.cuh
+gpu_h += $(cuda)/convolve.cuh
+gpu_h += $(cuda)/device.hpp
+gpu_h += $(cuda)/device_image.hpp
+gpu_h += $(cuda)/process.hpp
 
-gpu_device_c   := ../libimage/cuda/device.cu
+gpu_device_c   := $(cuda)/device.cu
 gpu_device_o   := $(build)/gpu_device.o
 object_files   += $(gpu_device_o)
 
-gpu_device_image_c   := ../libimage/cuda/device_image.cpp
+gpu_device_image_c   := $(cuda)/device_image.cpp
 gpu_device_image_o   := $(build)/gpu_device_image.o
 object_files         += $(gpu_device_image_o)
 
-gpu_process_c   := ../libimage/cuda/process.cu
+gpu_process_c   := $(cuda)/process.cu
 gpu_process_o   := $(build)/gpu_process.o
 object_files    += $(gpu_process_o)
 
-cuda_test_exe := $(build)/cuda_test
+
 
 
 
@@ -392,36 +411,36 @@ else
 	@echo "Sample is ready - all dependencies have been met"
 endif
 
-$(main_o): $(main_c) $(libimage_h)
-	@echo "\n cuda_test_main.o"
+$(main_o): $(main_c) $(libimage_h) $(proc_h) $(math_h) $(charts_h)
+	@echo "\n main"
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
-$(libimage_o): $(libimage_c) $(libimage_h)
-	@echo "\n libimage.o"
+$(libimage_o): $(libimage_c) $(libimage_h) $(libimage_h) $(stb_h)
+	@echo "\n libimage"
 	$(GPP) -o $@ -c $<
 
 $(stb_libimage_o): $(stb_libimage_c) $(libimage_h)
-	@echo "\n stb_libimage.o"
+	@echo "\n stb_libimage"
 	$(GPP) -o $@ -c $<
 
 $(math_o): $(math_c) $(libimage_h) $(math_h)
-	@echo "\n math.o"
+	@echo "\n math"
 	$(GPP) -o $@ -c $<
 
 $(charts_o): $(charts_c) $(libimage_h) $(charts_h)
-	@echo "\n charts.o"
+	@echo "\n charts"
 	$(GPP) -o $@ -c $<
 
 $(alpha_blend_o): $(alpha_blend_c) $(libimage_h) $(proc_h)
-	@echo "\n alpha_blend.o"
+	@echo "\n alpha_blend"
 	$(GPP) -o $@ -c $<
 
 $(binarize_o): $(binarize_c) $(libimage_h) $(proc_h)
-	@echo "\n binarize.o"
+	@echo "\n binarize"
 	$(GPP) -o $@ -c $<
 
 $(blur_o): $(blur_c) $(libimage_h) $(proc_h)
-	@echo "\n blur.o"
+	@echo "\n blur"
 	$(GPP) -o $@ -c $<
 
 $(contrast_o): $(contrast_c) $(libimage_h) $(proc_h)
@@ -429,35 +448,35 @@ $(contrast_o): $(contrast_c) $(libimage_h) $(proc_h)
 	$(GPP) -o $@ -c $<
 
 $(convolve_o): $(convolve_c) $(libimage_h) $(proc_h)
-	@echo "\n convolve.o"
+	@echo "\n convolve"
 	$(GPP) -o $@ -c $<
 
 $(copy_o): $(copy_c) $(libimage_h) $(proc_h)
-	@echo "\n copy.o"
+	@echo "\n copy"
 	$(GPP) -o $@ -c $<
 
 $(edges_gradients_o): $(edges_gradients_c) $(libimage_h) $(proc_h)
-	@echo "\n edges_gradients.o"
+	@echo "\n edges_gradients"
 	$(GPP) -o $@ -c $<
 
 $(grayscale_o): $(grayscale_c) $(libimage_h) $(proc_h)
-	@echo "\n grayscale.o"
+	@echo "\n grayscale"
 	$(GPP) -o $@ -c $<
 
 $(transform_o): $(transform_c) $(libimage_h) $(proc_h)
-	@echo "\n transform.o"
+	@echo "\n transform"
 	$(GPP) -o $@ -c $<
 
 $(gpu_device_o): $(gpu_device_c) $(gpu_h)
-	@echo "\n gpu_device.o"
+	@echo "\n gpu_device"
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
 $(gpu_device_image_o): $(gpu_device_image_c) $(gpu_h)
-	@echo "\n gpu_device_image.o"
+	@echo "\n gpu_device_image"
 	$(GPP) -o $@ -c $<
 
 $(gpu_process_o): $(gpu_process_c) $(gpu_h)
-	@echo "\n gpu_process.o"
+	@echo "\n gpu_process"
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
 $(cuda_test_exe): $(object_files)

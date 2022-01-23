@@ -12,7 +12,7 @@
 
 
 // jetson nano
-//#define LIBIMAGE_NO_CPP17
+#define LIBIMAGE_NO_CPP17
 //#define LIBIMAGE_NO_SIMD
 
 
@@ -26,8 +26,8 @@
 
 #ifndef LIBIMAGE_NO_SIMD
 
-#define SIMD_INTEL_128
+//#define SIMD_INTEL_128
 //#define SIMD_INTEL_256
-//#define SIMD_ARM_NEON
+#define SIMD_ARM_NEON
 
 #endif // !LIBIMAGE_NO_SIMD

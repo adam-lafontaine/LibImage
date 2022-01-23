@@ -6,7 +6,6 @@
 #include "./utils/stopwatch.hpp"
 
 #include <cstdio>
-#include <iostream>
 #include <string>
 #include <array>
 
@@ -65,7 +64,7 @@ void process_tests(path_t& out_dir)
 	// C++17 not available on Jetson Nano.
 	// No stl parallel algorithms
 
-	std::cout << "\nprocess:\n";
+	printf("\nprocess:\n");
 	empty_dir(out_dir);
 
 	// get image
@@ -201,7 +200,7 @@ void process_tests(path_t& out_dir)
 
 void cuda_tests(path_t& out_dir)
 {
-	std::cout << "\ncuda:\n";
+	printf("\ncuda:\n");
 	empty_dir(out_dir);
 
 	Image corvette_img;
@@ -380,14 +379,14 @@ void cuda_tests(path_t& out_dir)
 
 void gradient_times(path_t& out_dir)
 {
-	std::cout << "\ngradients:\n";
+	printf("\ngradients:\n");
 	empty_dir(out_dir);
 
 	u32 n_image_sizes = 2;
 	u32 image_dim_factor = 4;
 
-	u32 n_image_counts = 4;
-	u32 image_count_factor = 2;
+	u32 n_image_counts = 2;
+	u32 image_count_factor = 4;
 
 	u32 width_start = 400;
 	u32 height_start = 300;
@@ -407,16 +406,16 @@ void gradient_times(path_t& out_dir)
 	u32 height = height_start;
 	u32 image_count = image_count_start;
 
-	auto const current_pixels = [&]() { return (r64)(width) * height * image_count; };
+	auto const current_pixels = [&]() { return (u64)(width) * height * image_count; };
 
 	auto const start_pixels = current_pixels();
 
-	auto const scale = [&](auto t) { return (r32)(start_pixels / current_pixels() * t); };
-	auto const print_wh = [&]() { std::cout << "\nwidth: " << width << " height: " << height << '\n'; };
-	auto const print_count = [&]() { std::cout << "  image count: " << image_count << '\n'; };
+	auto const scale = [&](auto t) { return (r32)(start_pixels) / current_pixels() * t; };
+	auto const print_wh = [&]() { printf("\nwidth: %u height: %u\n", width, height); };
+	auto const print_count = [&]() { printf("  image count: %u\n", image_count); };
 
 	r64 t = 0;
-	auto const print_t = [&](const char* label) { std::cout << "    " << label << " time: " << scale(t) << '\n'; };
+	auto const print_t = [&](const char* label) { printf("    %s time: %f\n", label, scale(t)); };
 
 	for (u32 s = 0; s < n_image_sizes; ++s)
 	{
@@ -549,5 +548,5 @@ void empty_dir(path_t& dir)
 
 void print(img::stats_t const& stats)
 {
-	std::cout << "mean = " << (double)stats.mean << " sigma = " << (double)stats.std_dev << '\n';
+	printf("mean = %f sigma = %f\n", stats.mean, stats.std_dev);
 }
