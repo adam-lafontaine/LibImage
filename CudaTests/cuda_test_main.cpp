@@ -382,24 +382,28 @@ void gradient_times(path_t& out_dir)
 	printf("\ngradients:\n");
 	empty_dir(out_dir);
 
-	u32 n_image_sizes = 2;
+	u32 n_image_sizes = 1;
 	u32 image_dim_factor = 4;
 
-	u32 n_image_counts = 2;
+	u32 n_image_counts = 1;
 	u32 image_count_factor = 4;
 
 	u32 width_start = 400;
 	u32 height_start = 300;
-	u32 image_count_start = 100;
+	u32 image_count_start = 10;
 
 	auto green = img::to_pixel(88, 100, 29);
 	auto blue = img::to_pixel(0, 119, 182);
+	auto red = img::to_pixel(192, 40, 40);
 
 	img::multi_chart_data_t seq_times;
 	seq_times.color = green;
 
+	img::multi_chart_data_t simd_times;
+	simd_times.color = blue;
+
 	img::multi_chart_data_t gpu_times;
-	gpu_times.color = blue;
+	gpu_times.color = red;
 
 	Stopwatch sw;
 	u32 width = width_start;
@@ -422,6 +426,7 @@ void gradient_times(path_t& out_dir)
 		print_wh();
 		image_count = image_count_start;
 		std::vector<r32> seq;
+		std::vector<r32> simd;
 		std::vector<r32> gpu;
 		GrayImage src;
 		GrayImage dst;
@@ -452,7 +457,16 @@ void gradient_times(path_t& out_dir)
 			}
 			t = sw.get_time_milli();
 			seq.push_back(scale(t));
-			print_t("seq");
+			print_t(" seq");
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::simd::gradients(src, dst, tmp);
+			}
+			t = sw.get_time_milli();
+			simd.push_back(scale(t));
+			print_t("simd");
 
 			sw.start();
 			for (u32 i = 0; i < image_count; ++i)
@@ -463,7 +477,7 @@ void gradient_times(path_t& out_dir)
 			}
 			t = sw.get_time_milli();
 			gpu.push_back(scale(t));
-			print_t("gpu");
+			print_t(" gpu");
 
 			image_count *= image_count_factor;
 		}
@@ -471,6 +485,7 @@ void gradient_times(path_t& out_dir)
 		device_free(d_buffer);
 
 		seq_times.data_list.push_back(seq);
+		simd_times.data_list.push_back(simd);
 		gpu_times.data_list.push_back(gpu);
 
 		width *= image_dim_factor;

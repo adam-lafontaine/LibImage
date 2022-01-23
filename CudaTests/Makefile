@@ -378,6 +378,22 @@ transform_o    := $(build)/transform.o
 object_files   += $(transform_o)
 
 
+# SIMD
+simd_h := $(simd)/simd_def.hpp
+
+simd_alpha_blend_c  := $(simd)/simd_alpha_blend.cpp
+simd_alpha_blend_o  := $(build)/simd_alpha_blend.o
+object_files        += $(simd_alpha_blend_o)
+
+simd_convolve_c := $(simd)/simd_convolve.cpp
+simd_convolve_o := $(build)/simd_convolve.o
+object_files    += $(simd_convolve_o)
+
+simd_grayscale_c := $(simd)/simd_grayscale.cpp
+simd_grayscale_o := $(build)/simd_grayscale.o
+object_files     += $(simd_grayscale_o)
+
+
 # CUDA
 gpu_h := $(types_h)
 gpu_h += $(libimage)/rgba.hpp
@@ -400,8 +416,10 @@ gpu_process_c   := $(cuda)/process.cu
 gpu_process_o   := $(build)/gpu_process.o
 object_files    += $(gpu_process_o)
 
+# flags
+CCFLAGS := 
 
-
+GPP += -O3
 
 
 check.deps: 
@@ -466,6 +484,18 @@ $(grayscale_o): $(grayscale_c) $(libimage_h) $(proc_h)
 $(transform_o): $(transform_c) $(libimage_h) $(proc_h)
 	@echo "\n transform"
 	$(GPP) -o $@ -c $<
+
+$(simd_alpha_blend_o): $(simd_alpha_blend_c) $(libimage_h) $(proc_h) $(simd_h)
+	@echo "\n simd_alpha_blend"
+	$(GPP) $(CCFLAGS) -o $@ -c $<
+
+$(simd_convolve_o): $(simd_convolve_c) $(libimage_h) $(proc_h) $(simd_h)
+	@echo "\n simd_convolve"
+	$(GPP) $(CCFLAGS) -o $@ -c $<
+
+$(simd_grayscale_o): $(simd_grayscale_c) $(libimage_h) $(proc_h) $(simd_h)
+	@echo "\n simd_grayscale"
+	$(GPP) $(CCFLAGS) -o $@ -c $<
 
 $(gpu_device_o): $(gpu_device_c) $(gpu_h)
 	@echo "\n gpu_device"
