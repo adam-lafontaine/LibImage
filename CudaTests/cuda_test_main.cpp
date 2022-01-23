@@ -382,15 +382,15 @@ void gradient_times(path_t& out_dir)
 	printf("\ngradients:\n");
 	empty_dir(out_dir);
 
-	u32 n_image_sizes = 1;
+	u32 n_image_sizes = 2;
 	u32 image_dim_factor = 4;
 
-	u32 n_image_counts = 1;
+	u32 n_image_counts = 2;
 	u32 image_count_factor = 4;
 
 	u32 width_start = 400;
 	u32 height_start = 300;
-	u32 image_count_start = 10;
+	u32 image_count_start = 100;
 
 	auto green = img::to_pixel(88, 100, 29);
 	auto blue = img::to_pixel(0, 119, 182);
