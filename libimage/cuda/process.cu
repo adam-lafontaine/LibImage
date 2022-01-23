@@ -425,7 +425,42 @@ namespace libimage
         assert(proc);
 
         return proc;
-    }   
+    }
+
+
+    bool edges(gray::device_image_t const& src, gray::device_image_t const& dst, u8 threshold)
+    {
+        assert(src.data);
+        assert(src.width);
+        assert(src.height);
+        assert(dst.data);
+        assert(dst.width == src.width);
+        assert(dst.height == src.height);
+
+        u32 n_elements = src.width * src.height;
+        int threads_per_block = THREADS_PER_BLOCK;
+        int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
+
+        bool proc;
+
+        proc = cuda_no_errors();
+        assert(proc);
+
+        proc &= cuda_no_errors();
+        assert(proc);
+
+        gpu_edges<<<blocks, threads_per_block>>>(
+            src.data,
+            dst.data,
+            src.width,
+            src.height,
+            threshold);
+
+        proc &= cuda_launch_success();
+        assert(proc);
+
+        return proc;
+    }
 
 
     bool gradients(gray::device_image_t const& src, gray::device_image_t const& dst, gray::device_image_t const& temp)
@@ -463,6 +498,40 @@ namespace libimage
 
         gpu_gradients<<<blocks, threads_per_block>>>(
             temp.data,
+            dst.data,
+            src.width,
+            src.height);
+
+        proc &= cuda_launch_success();
+        assert(proc);
+
+        return proc;
+    }
+
+
+    bool gradients(gray::device_image_t const& src, gray::device_image_t const& dst)
+    {
+        assert(src.data);
+        assert(src.width);
+        assert(src.height);
+        assert(dst.data);
+        assert(dst.width == src.width);
+        assert(dst.height == src.height);
+
+        u32 n_elements = src.width * src.height;
+        int threads_per_block = THREADS_PER_BLOCK;
+        int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
+
+        bool proc;
+
+        proc = cuda_no_errors();
+        assert(proc);
+
+        proc &= cuda_no_errors();
+        assert(proc);
+
+        gpu_gradients<<<blocks, threads_per_block>>>(
+            src.data,
             dst.data,
             src.width,
             src.height);
