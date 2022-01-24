@@ -19,12 +19,14 @@ Raspberry Pi 3B+
 * Sequential and parallel processing (std::execution)
 * SIMD ARM Neon 128 bit
 * See /RPiTests/rpi_tests_main.cpp for demonstration
+* Makefile in /RPiTests/
 * "make setup" to create build directory
-* "make build" or make run
+* "make build" or "make run"
 
 CUDA
 * Typesafe wrapper for preallocating memory on the GPU
 * Developed on the Jetson Nano.  C++14
 * See /CudaTests/cuda_test_main.cpp for demonstration
+* Makefile in /CudaTests/
 * "make setup" to create build directory
-* "make build" or make run
+* "make build" or "make run"
