@@ -9,15 +9,6 @@
 #endif // !LIBIMAGE_NO_PARALLEL
 
 
-
-
-
-
-
-
-
-
-
 namespace libimage
 {
 #ifndef LIBIMAGE_NO_PARALLEL

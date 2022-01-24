@@ -24,7 +24,11 @@ namespace libimage
 
 	bool edges(gray::device_image_t const& src, gray::device_image_t const& dst, u8 threshold, gray::device_image_t const& temp);
 
+	bool edges(gray::device_image_t const& src, gray::device_image_t const& dst, u8 threshold);
+
 	bool gradients(gray::device_image_t const& src, gray::device_image_t const& dst, gray::device_image_t const& temp);
+
+	bool gradients(gray::device_image_t const& src, gray::device_image_t const& dst);
 
 	bool contrast(gray::device_image_t const& src, gray::device_image_t const& dst, u8 src_low, u8 src_high);
 

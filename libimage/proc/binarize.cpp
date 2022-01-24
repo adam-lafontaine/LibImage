@@ -100,17 +100,4 @@ namespace libimage
 #endif // !LIBIMAGE_NO_GRAYSCALE
 	}
 
-
-#ifndef LIBIMAGE_NO_SIMD
-
-	namespace simd
-	{
-#ifndef LIBIMAGE_NO_GRAYSCALE
-
-
-
-#endif // !LIBIMAGE_NO_GRAYSCALE
-	}
-
-#endif // !LIBIMAGE_NO_SIMD
 }

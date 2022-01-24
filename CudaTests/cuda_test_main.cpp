@@ -6,7 +6,6 @@
 #include "./utils/stopwatch.hpp"
 
 #include <cstdio>
-#include <iostream>
 #include <string>
 #include <array>
 
@@ -27,12 +26,11 @@ using CudaGrayImage = img::gray::device_image_t;
 constexpr auto PIXEL_SZ = sizeof(Pixel);
 constexpr auto G_PIXEL_SZ = sizeof(GrayPixel);
 
-//constexpr auto ROOT_DIR = "~/Repos/LibImage/CudaTests";
+// make sure these files exist
 constexpr auto ROOT_DIR = "/home/adam/Repos/LibImage/CudaTests/";
 
 const auto ROOT_PATH = std::string(ROOT_DIR);
 
-// make sure these files exist
 const auto CORVETTE_PATH = ROOT_PATH + "in_files/corvette.png";
 const auto CADILLAC_PATH = ROOT_PATH + "in_files/cadillac.png";
 
@@ -66,7 +64,7 @@ void process_tests(path_t& out_dir)
 	// C++17 not available on Jetson Nano.
 	// No stl parallel algorithms
 
-	std::cout << "\nprocess:\n";
+	printf("\nprocess:\n");
 	empty_dir(out_dir);
 
 	// get image
@@ -106,7 +104,7 @@ void process_tests(path_t& out_dir)
 
 	// grayscale
 	img::seq::grayscale(corvette_img, dst_gray_img);
-	img::write_image(dst_gray_img, out_dir + "convert_grayscale.png");
+	img::write_image(dst_gray_img, out_dir + "grayscale.png");
 
 	// stats
 	auto gray_stats = img::calc_stats(dst_gray_img);
@@ -202,7 +200,7 @@ void process_tests(path_t& out_dir)
 
 void cuda_tests(path_t& out_dir)
 {
-	std::cout << "\ncuda:\n";
+	printf("\ncuda:\n");
 	empty_dir(out_dir);
 
 	Image corvette_img;
@@ -381,14 +379,14 @@ void cuda_tests(path_t& out_dir)
 
 void gradient_times(path_t& out_dir)
 {
-	std::cout << "\ngradients:\n";
+	printf("\ngradients:\n");
 	empty_dir(out_dir);
 
 	u32 n_image_sizes = 2;
 	u32 image_dim_factor = 4;
 
-	u32 n_image_counts = 4;
-	u32 image_count_factor = 2;
+	u32 n_image_counts = 2;
+	u32 image_count_factor = 4;
 
 	u32 width_start = 400;
 	u32 height_start = 300;
@@ -396,34 +394,39 @@ void gradient_times(path_t& out_dir)
 
 	auto green = img::to_pixel(88, 100, 29);
 	auto blue = img::to_pixel(0, 119, 182);
+	auto red = img::to_pixel(192, 40, 40);
 
 	img::multi_chart_data_t seq_times;
 	seq_times.color = green;
 
+	img::multi_chart_data_t simd_times;
+	simd_times.color = blue;
+
 	img::multi_chart_data_t gpu_times;
-	gpu_times.color = blue;
+	gpu_times.color = red;
 
 	Stopwatch sw;
 	u32 width = width_start;
 	u32 height = height_start;
 	u32 image_count = image_count_start;
 
-	auto const current_pixels = [&]() { return (r64)(width) * height * image_count; };
+	auto const current_pixels = [&]() { return (u64)(width) * height * image_count; };
 
 	auto const start_pixels = current_pixels();
 
-	auto const scale = [&](auto t) { return (r32)(start_pixels / current_pixels() * t); };
-	auto const print_wh = [&]() { std::cout << "\nwidth: " << width << " height: " << height << '\n'; };
-	auto const print_count = [&]() { std::cout << "  image count: " << image_count << '\n'; };
+	auto const scale = [&](auto t) { return (r32)(start_pixels) / current_pixels() * t; };
+	auto const print_wh = [&]() { printf("\nwidth: %u height: %u\n", width, height); };
+	auto const print_count = [&]() { printf("  image count: %u\n", image_count); };
 
 	r64 t = 0;
-	auto const print_t = [&](const char* label) { std::cout << "    " << label << " time: " << scale(t) << '\n'; };
+	auto const print_t = [&](const char* label) { printf("    %s time: %f\n", label, scale(t)); };
 
 	for (u32 s = 0; s < n_image_sizes; ++s)
 	{
 		print_wh();
 		image_count = image_count_start;
 		std::vector<r32> seq;
+		std::vector<r32> simd;
 		std::vector<r32> gpu;
 		GrayImage src;
 		GrayImage dst;
@@ -454,7 +457,16 @@ void gradient_times(path_t& out_dir)
 			}
 			t = sw.get_time_milli();
 			seq.push_back(scale(t));
-			print_t("seq");
+			print_t(" seq");
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::simd::gradients(src, dst, tmp);
+			}
+			t = sw.get_time_milli();
+			simd.push_back(scale(t));
+			print_t("simd");
 
 			sw.start();
 			for (u32 i = 0; i < image_count; ++i)
@@ -465,7 +477,7 @@ void gradient_times(path_t& out_dir)
 			}
 			t = sw.get_time_milli();
 			gpu.push_back(scale(t));
-			print_t("gpu");
+			print_t(" gpu");
 
 			image_count *= image_count_factor;
 		}
@@ -473,6 +485,7 @@ void gradient_times(path_t& out_dir)
 		device_free(d_buffer);
 
 		seq_times.data_list.push_back(seq);
+		simd_times.data_list.push_back(simd);
 		gpu_times.data_list.push_back(gpu);
 
 		width *= image_dim_factor;
@@ -550,5 +563,5 @@ void empty_dir(path_t& dir)
 
 void print(img::stats_t const& stats)
 {
-	std::cout << "mean = " << (double)stats.mean << " sigma = " << (double)stats.std_dev << '\n';
+	printf("mean = %f sigma = %f\n", stats.mean, stats.std_dev);
 }
