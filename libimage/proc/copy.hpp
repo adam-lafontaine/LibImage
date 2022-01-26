@@ -5,6 +5,22 @@
 
 namespace libimage
 {
+#ifndef LIBIMAGE_NO_COLOR	
+
+	void copy(image_soa const& src, image_t const& dst);
+
+	void copy(image_t const& src, image_soa const& dst);
+
+	void copy(image_soa const& src, view_t const& dst);	
+
+	void copy(view_t const& src, image_soa const& dst);
+
+	void copy(image_soa const& src, image_soa const& dst);
+
+
+#endif // !LIBIMAGE_NO_COLOR
+
+
 	/*** copy parallel ***/
 
 #ifndef LIBIMAGE_NO_PARALLEL
