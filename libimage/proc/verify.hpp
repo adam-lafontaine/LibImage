@@ -42,6 +42,18 @@ namespace libimage
 	}
 
 
+	inline bool verify(image_soa const& src, gray::image_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(image_soa const& src, gray::view_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
 	inline bool verify(view_t const& view)
 	{
 		return view.image_data && view.width && view.height;
