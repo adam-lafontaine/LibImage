@@ -359,10 +359,10 @@ void planar_tests(fs::path const& out_dir)
 	empty_dir(out_dir);
 
 	// get image
-	Image corvette_image;
-	img::read_image_from_file(CORVETTE_PATH, corvette_image);
-	auto const width = corvette_image.width;
-	auto const height = corvette_image.height;
+	Image corvette;
+	img::read_image_from_file(CORVETTE_PATH, corvette);
+	auto const width = corvette.width;
+	auto const height = corvette.height;
 
 	// get another image for blending
 	// make sure it is the same size
@@ -380,12 +380,15 @@ void planar_tests(fs::path const& out_dir)
 	GrayImage dst_gray_image;
 	img::make_image(dst_gray_image, width, height);
 
+	Planar pl_dst;
+	img::make_planar(pl_dst, width, height);
+
 	
 	// copy
-	Planar pl_src;
-	img::make_planar(pl_src, width, height);
-	img::copy(corvette_image, pl_src);
-	img::copy(pl_src, dst_image);
+	Planar pl_corvette;
+	img::make_planar(pl_corvette, width, height);
+	img::copy(corvette, pl_corvette);
+	img::copy(pl_corvette, dst_image);
 	img::write_image(dst_image, out_dir / "copy_image.png");
 
 	// copy part of an image
@@ -404,12 +407,16 @@ void planar_tests(fs::path const& out_dir)
 	img::write_image(dst_image, out_dir / "copy_view.png");
 
 
+	// alpha blending
+	Planar pl_caddy;
+	img::make_planar(pl_caddy, width, height);
+	img::transform_alpha(caddy, [](auto const& p) { return 0; });
+	img::copy(caddy, pl_caddy);
 
-
-	//// alpha blending
-	//img::transform_alpha(caddy, [](auto const& p) { return 128; });
-	//img::simd::alpha_blend(caddy, corvette, dst_image);
-	//img::write_image(dst_image, out_dir / "alpha_blend.png");
+	img::alpha_blend(pl_caddy, pl_corvette, pl_dst);
+	img::copy(pl_dst, dst_image);
+	img::write_image(dst_image, out_dir / "alpha_blend.png");
+	
 
 	//img::copy(corvette_view, dst_image);
 	//img::simd::alpha_blend(caddy_view, dst_image);
@@ -418,14 +425,6 @@ void planar_tests(fs::path const& out_dir)
 	//// grayscale
 	//img::simd::grayscale(corvette_view, dst_gray_image);
 	//img::write_image(dst_gray_image, out_dir / "grayscale.png");
-
-	corvette_image.dispose();
-	caddy.dispose();
-	caddy_read.dispose();
-	dst_image.dispose();
-	dst_gray_image.dispose();
-	pl_src.dispose();
-	pl_center.dispose();
 }
 
 

@@ -20,7 +20,7 @@ namespace libimage
 		auto sf = (r32)(src);
 		auto cf = (r32)(current);
 
-		auto blended = a * cf + (1.0f - a) * sf;
+		auto blended = a * sf + (1.0f - a) * cf;
 
 		return (u8)(blended);
 	}
@@ -37,6 +37,7 @@ namespace libimage
 			dst.red[i] = alpha_blend_linear_soa(src.red[i], current.red[i], src.alpha[i]);
 			dst.green[i] = alpha_blend_linear_soa(src.green[i], current.green[i], src.alpha[i]);
 			dst.blue[i] = alpha_blend_linear_soa(src.blue[i], current.blue[i], src.alpha[i]);
+			dst.alpha[i] = 255;
 		}
 	}
 
@@ -60,7 +61,7 @@ namespace libimage
 			auto sf = (r32)(s);
 			auto cf = (r32)(c);
 
-			auto blended = a * cf + (1.0f - a) * sf;
+			auto blended = a * sf + (1.0f - a) * cf;
 
 			return (u8)(blended);
 		};
