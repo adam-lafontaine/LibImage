@@ -5,6 +5,16 @@
 
 namespace libimage
 {
+#ifndef LIBIMAGE_NO_COLOR
+
+
+	void alpha_blend(image_soa const& src, image_soa const& current, image_soa const& dst);
+
+	void alpha_blend(image_soa const& src, image_soa const& current_dst);
+
+
+#endif // !LIBIMAGE_NO_COLOR
+
 #ifndef LIBIMAGE_NO_PARALLEL
 
 	/*** alpha blend parallel ***/

@@ -11,6 +11,46 @@
 
 namespace libimage
 {
+#ifndef LIBIMAGE_NO_COLOR
+
+	static u8 alpha_blend_linear_soa(u8 src, u8 current, u8 alpha)
+	{
+		auto const a = alpha / 255.0f;
+
+		auto sf = (r32)(src);
+		auto cf = (r32)(current);
+
+		auto blended = a * cf + (1.0f - a) * sf;
+
+		return (u8)(blended);
+	}
+
+
+
+	void alpha_blend(image_soa const& src, image_soa const& current, image_soa const& dst)
+	{
+		assert(verify(src, current));
+		assert(verify(src, dst));
+
+		for (u32 i = 0; i < src.width * src.height; ++i)
+		{			
+			dst.red[i] = alpha_blend_linear_soa(src.red[i], current.red[i], src.alpha[i]);
+			dst.green[i] = alpha_blend_linear_soa(src.green[i], current.green[i], src.alpha[i]);
+			dst.blue[i] = alpha_blend_linear_soa(src.blue[i], current.blue[i], src.alpha[i]);
+		}
+	}
+
+
+	void alpha_blend(image_soa const& src, image_soa const& current_dst)
+	{
+		alpha_blend(src, current_dst, current_dst);
+	}
+
+
+#endif // !LIBIMAGE_NO_COLOR
+
+
+
 	static pixel_t alpha_blend_linear(pixel_t const& src, pixel_t const& current)
 	{
 		auto const a = (r32)(src.alpha) / 255.0f;
