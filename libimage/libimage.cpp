@@ -262,7 +262,7 @@ namespace libimage
 		dst.red = dst.data;
 		dst.green = dst.red + image_sz;
 		dst.blue = dst.green + image_sz;
-		dst.alpha = dst.alpha + image_sz;
+		dst.alpha = dst.blue + image_sz;
 	}
 
 

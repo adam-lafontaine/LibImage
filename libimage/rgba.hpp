@@ -419,12 +419,18 @@ namespace libimage
 		u8* blue;
 		u8* alpha;
 
-		~RGBAPlanar()
+		void dispose()
 		{
 			if (data)
 			{
 				free(data);
+				data = nullptr;
 			}
+		}
+
+		~RGBAPlanar()
+		{
+			dispose();
 		}
 	};
 
