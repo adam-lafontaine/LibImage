@@ -410,21 +410,17 @@ void planar_tests(fs::path const& out_dir)
 	// alpha blending
 	Planar pl_caddy;
 	img::make_planar(pl_caddy, width, height);
-	img::transform_alpha(caddy, [](auto const& p) { return 0; });
+	img::transform_alpha(caddy, [](auto const& p) { return 128; });
 	img::copy(caddy, pl_caddy);
 
 	img::alpha_blend(pl_caddy, pl_corvette, pl_dst);
 	img::copy(pl_dst, dst_image);
 	img::write_image(dst_image, out_dir / "alpha_blend.png");
-	
 
-	//img::copy(corvette_view, dst_image);
-	//img::simd::alpha_blend(caddy_view, dst_image);
-	//img::write_image(dst_image, out_dir / "alpha_blend_src_dst.png");
 
-	//// grayscale
-	//img::simd::grayscale(corvette_view, dst_gray_image);
-	//img::write_image(dst_gray_image, out_dir / "grayscale.png");
+	// grayscale
+	img::grayscale(pl_caddy, dst_gray_image);
+	img::write_image(dst_gray_image, out_dir / "grayscale.png");
 }
 
 
