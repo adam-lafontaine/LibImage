@@ -223,6 +223,78 @@ namespace libimage
 				alpha_blend_row(src.row_begin(y), current_dst.row_begin(y), current_dst.row_begin(y), src.width);
 			}
 		}
+
+
+		void alpha_blend(image_soa const& src, image_soa const& cur, image_soa const& dst)
+		{
+			constexpr u32 N = VEC_LEN;
+			constexpr u32 STEP = N;
+
+			r32 one = 1.0f;
+			r32 u8max = 255.0f;
+
+			auto const do_simd = [&](u32 i)
+			{
+				PixelPlanar src_mem{};
+				PixelPlanar cur_mem{};
+				PixelPlanar dst_mem{};
+
+				for (u32 j = 0; j < N; ++j)
+				{
+					src_mem.red[j]   = (r32)(src.red + i)[j];
+					src_mem.green[j] = (r32)(src.green + i)[j];
+					src_mem.blue[j]  = (r32)(src.blue + i)[j];
+					src_mem.alpha[j] = (r32)(src.alpha + i)[j];
+
+					cur_mem.red[j]   = (r32)(cur.red + i)[j];
+					cur_mem.green[j] = (r32)(cur.green + i)[j];
+					cur_mem.blue[j]  = (r32)(cur.blue + i)[j];
+					cur_mem.alpha[j] = (r32)(cur.alpha + i)[j];
+
+					dst_mem.red[j]   = (r32)(dst.red + i)[j];
+					dst_mem.green[j] = (r32)(dst.green + i)[j];
+					dst_mem.blue[j]  = (r32)(dst.blue + i)[j];
+				}
+
+				auto one_vec = simd_load_broadcast(&one);
+				auto u8max_vec = simd_load_broadcast(&u8max);
+
+				auto src_a_vec = simd_divide(simd_load(src_mem.alpha), u8max_vec);
+				auto cur_a_vec = simd_subtract(one_vec, src_a_vec);
+
+				auto dst_vec = simd_fmadd(src_a_vec, simd_load(src_mem.red), simd_multiply(cur_a_vec, simd_load(cur_mem.red)));
+				simd_store(dst_mem.red, dst_vec);
+
+				dst_vec = simd_fmadd(src_a_vec, simd_load(src_mem.green), simd_multiply(cur_a_vec, simd_load(cur_mem.green)));
+				simd_store(dst_mem.green, dst_vec);
+
+				dst_vec = simd_fmadd(src_a_vec, simd_load(src_mem.blue), simd_multiply(cur_a_vec, simd_load(cur_mem.blue)));
+				simd_store(dst_mem.blue, dst_vec);
+
+				for (u32 j = 0; j < N; ++j)
+				{
+					(dst.red + i)[j]   = (u8)dst_mem.red[j];
+					(dst.green + i)[j] = (u8)dst_mem.green[j];
+					(dst.blue + i)[j]  = (u8)dst_mem.blue[j];
+					(dst.alpha + i)[j] = 255;
+				}
+			};
+
+			auto length = src.width * src.height;
+
+			for (u32 i = 0; i < length - STEP; i += STEP)
+			{
+				do_simd(i);
+			}
+
+			do_simd(length - STEP);
+		}
+
+
+		void alpha_blend(image_soa const& src, image_soa const& current_dst)
+		{
+			simd::alpha_blend(src, current_dst, current_dst);
+		}
 	}
 }
 

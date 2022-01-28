@@ -119,6 +119,11 @@ namespace libimage
 
 		void alpha_blend(view_t const& src, view_t const& current_dst);
 
+
+		void alpha_blend(image_soa const& src, image_soa const& current, image_soa const& dst);
+
+		void alpha_blend(image_soa const& src, image_soa const& current_dst);
+
 #endif // !LIBIMAGE_NO_COLOR
 	}
 

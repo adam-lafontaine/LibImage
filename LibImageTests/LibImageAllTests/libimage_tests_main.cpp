@@ -419,6 +419,12 @@ void planar_tests(fs::path const& out_dir)
 	img::copy(pl_dst, dst_image);
 	img::write_image(dst_image, out_dir / "alpha_blend.png");
 
+	img::simd::alpha_blend(pl_caddy, pl_corvette, pl_dst);
+	img::copy(pl_dst, dst_image);
+	img::write_image(dst_image, out_dir / "alpha_blend_simd.png");
+
+
+
 
 	// grayscale
 	img::grayscale(pl_caddy, dst_gray_image);
@@ -1016,6 +1022,14 @@ void alpha_blend_times(fs::path const& out_dir)
 			}
 			t = sw.get_time_milli();
 			print_t("planar");
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::simd::alpha_blend(pl_src, pl_dst);
+			}
+			t = sw.get_time_milli();
+			print_t("simd p");
 
 			image_count *= image_count_factor;
 		}			
