@@ -57,6 +57,7 @@ void transform_times(fs::path const& out_dir);
 void gradient_times(fs::path const& out_dir);
 void alpha_blend_times(fs::path const& out_dir);
 void grayscale_times(fs::path const& out_dir);
+void read_times();
 
 
 int main()
@@ -88,6 +89,7 @@ int main()
 
 	alpha_blend_times(timing_dir);
 	grayscale_times(timing_dir);
+	read_times();
 
 	printf("\nDone.\n");
 }
@@ -293,13 +295,13 @@ void process_tests(fs::path const& out_dir)
 	img::copy(dst_gray_image, src_gray_image);
 
 	// contrast
-	auto shade_min = static_cast<u8>(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
-	auto shade_max = static_cast<u8>(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
+	auto shade_min = (u8)(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
+	auto shade_max = (u8)(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
 	img::contrast(src_gray_image, dst_gray_image, shade_min, shade_max);
 	img::write_image(dst_gray_image, out_dir / "contrast.png");
 
 	// binarize
-	auto const is_white = [&](u8 p) { return static_cast<r32>(p) > gray_stats.mean; };
+	auto const is_white = [&](u8 p) { return (r32)(p) > gray_stats.mean; };
 	img::binarize(src_gray_image, dst_gray_image, is_white);
 	img::write_image(dst_gray_image, out_dir / "binarize.png");
 
@@ -424,8 +426,6 @@ void planar_tests(fs::path const& out_dir)
 	img::write_image(dst_image, out_dir / "alpha_blend_simd.png");
 
 
-
-
 	// grayscale
 	img::grayscale(pl_caddy, dst_gray_image);
 	img::write_image(dst_gray_image, out_dir / "grayscale.png");
@@ -440,18 +440,18 @@ void planar_tests(fs::path const& out_dir)
 
 Pixel alpha_blend_linear(Pixel const& src, Pixel const& current)
 {
-	auto const to_r32 = [](u8 c) { return static_cast<r32>(c) / 255.0f; };
+	auto const to_r32 = [](u8 c) { return (r32)(c) / 255.0f; };
 
 	auto a = to_r32(src.alpha);
 
 	auto const blend = [&](u8 s, u8 c) 
 	{
-		auto sf = static_cast<r32>(s);
-		auto cf = static_cast<r32>(c);
+		auto sf = (r32)(s);
+		auto cf = (r32)(c);
 		
 		auto blended = a * cf + (1.0f - a) * sf;
 
-		return static_cast<u8>(blended);
+		return (u8)(blended);
 	};
 
 	auto red = blend(src.red, current.red);
@@ -476,7 +476,7 @@ void for_each_times(fs::path const& out_dir)
 
 		for (u32 i = 0; i < 4; ++i)
 		{
-			p.channels[i] = static_cast<u8>(dist(reng));
+			p.channels[i] = (u8)(dist(reng));
 		}
 
 		return p;
@@ -526,7 +526,7 @@ void for_each_times(fs::path const& out_dir)
 	u32 height = height_start;
 	u32 image_count = image_count_start;
 
-	auto const current_pixels = [&]() { return static_cast<r64>(width) * height * image_count; };
+	auto const current_pixels = [&]() { return (r64)(width) * height * image_count; };
 
 	auto const start_pixels = current_pixels();
 
@@ -652,7 +652,7 @@ void transform_times(fs::path const& out_dir)
 
 		for (u32 i = 0; i < 4; ++i)
 		{
-			p.channels[i] = static_cast<u8>(dist(reng));
+			p.channels[i] = (u8)(dist(reng));
 		}
 
 		return p;
@@ -696,7 +696,7 @@ void transform_times(fs::path const& out_dir)
 	u32 height = height_start;
 	u32 image_count = image_count_start;
 
-	auto const current_pixels = [&]() { return static_cast<r64>(width) * height * image_count; };
+	auto const current_pixels = [&]() { return (r64)(width) * height * image_count; };
 
 	auto const start_pixels = current_pixels();
 
@@ -828,7 +828,7 @@ void gradient_times(fs::path const& out_dir)
 	u32 height = height_start;
 	u32 image_count = image_count_start;
 
-	auto const current_pixels = [&]() { return static_cast<r64>(width) * height * image_count; };
+	auto const current_pixels = [&]() { return (r64)(width) * height * image_count; };
 
 	auto const start_pixels = current_pixels();
 
@@ -962,7 +962,7 @@ void alpha_blend_times(fs::path const& out_dir)
 	u32 height = height_start;
 	u32 image_count = image_count_start;
 
-	auto const current_pixels = [&]() { return static_cast<r64>(width) * height * image_count; };
+	auto const current_pixels = [&]() { return (r64)(width) * height * image_count; };
 
 	auto const start_pixels = current_pixels();
 
@@ -1044,7 +1044,6 @@ void alpha_blend_times(fs::path const& out_dir)
 void grayscale_times(fs::path const& out_dir)
 {
 	printf("\ngrayscale:\n");
-	empty_dir(out_dir);
 
 	u32 n_image_sizes = 2;
 	u32 image_dim_factor = 4;
@@ -1061,7 +1060,7 @@ void grayscale_times(fs::path const& out_dir)
 	u32 height = height_start;
 	u32 image_count = image_count_start;
 
-	auto const current_pixels = [&]() { return static_cast<r64>(width) * height * image_count; };
+	auto const current_pixels = [&]() { return (r64)(width) * height * image_count; };
 
 	auto const start_pixels = current_pixels();
 
@@ -1133,6 +1132,66 @@ void grayscale_times(fs::path const& out_dir)
 
 		width *= image_dim_factor;
 		height *= image_dim_factor;
+	}
+}
+
+
+void read_times()
+{
+	printf("\nread:\n");
+
+	u32 n_image_counts = 2;
+	u32 image_count_factor = 4;
+	u32 image_count_start = 50;
+
+	Image corvette;
+	img::read_image_from_file(CORVETTE_PATH, corvette);
+	auto const width = corvette.width;
+	auto const height = corvette.height;
+
+	Stopwatch sw;
+	u32 image_count = image_count_start;
+
+	auto const current_pixels = [&]() { return (r64)(width) * height * image_count; };
+
+	auto const start_pixels = current_pixels();
+
+	auto const scale = [&](auto t) { return (r32)(10'000'000.0 / current_pixels() * t); };
+	auto const print_wh = [&]() { printf("\nwidth: %u height: %u\n", width, height); };
+	auto const print_count = [&]() { printf("  image count: %u\n", image_count); };
+
+	r64 t = 0;
+	auto const print_t = [&](const char* label) { printf("    %s time: %f\n", label, scale(t)); };
+
+	for (u32 c = 0; c < n_image_counts; ++c)
+	{
+		print_count();
+
+		t = 0.0;
+		for (u32 i = 0; i < image_count; ++i)
+		{
+			sw.start();
+			Image img;
+			img::read_image_from_file(CORVETTE_PATH, img);
+			t += sw.get_time_milli();
+		}
+		print_t("  read");
+
+		t = 0.0;
+		for (u32 i = 0; i < image_count; ++i)
+		{
+			sw.start();
+			Image im;			
+			img::read_image_from_file(CORVETTE_PATH, im);
+
+			Planar pl;
+			img::make_planar(pl, im.width, im.height);
+			img::copy(im, pl);			
+			t += sw.get_time_milli();
+		}
+		print_t("planar");
+
+		image_count *= image_count_factor;
 	}
 }
 
