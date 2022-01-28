@@ -423,6 +423,11 @@ void planar_tests(fs::path const& out_dir)
 	// grayscale
 	img::grayscale(pl_caddy, dst_gray_image);
 	img::write_image(dst_gray_image, out_dir / "grayscale.png");
+
+	img::simd::grayscale(pl_caddy, dst_gray_image);
+	img::write_image(dst_gray_image, out_dir / "grayscale_simd.png");
+
+
 }
 
 
@@ -1007,9 +1012,7 @@ void alpha_blend_times(fs::path const& out_dir)
 			sw.start();
 			for (u32 i = 0; i < image_count; ++i)
 			{
-				img::copy(im_src, pl_src);
 				img::alpha_blend(pl_src, pl_dst);
-				img::copy(pl_dst, im_dst);
 			}
 			t = sw.get_time_milli();
 			print_t("planar");
@@ -1097,12 +1100,19 @@ void grayscale_times(fs::path const& out_dir)
 
 			sw.start();
 			for (u32 i = 0; i < image_count; ++i)
-			{
-				img::copy(im_src, pl_src);
+			{				
 				img::grayscale(pl_src, gr_dst);
 			}
 			t = sw.get_time_milli();
 			print_t("planar");
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{				
+				img::simd::grayscale(pl_src, gr_dst);
+			}
+			t = sw.get_time_milli();
+			print_t("simd p");
 
 			image_count *= image_count_factor;
 		}

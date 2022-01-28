@@ -1,6 +1,10 @@
 #include "process.hpp"
 #include "verify.hpp"
 
+#include <array>
+#include <functional>
+#include <execution>
+
 
 constexpr r32 COEFF_RED = 0.299f;
 constexpr r32 COEFF_GREEN = 0.587f;
@@ -17,6 +21,15 @@ namespace libimage
 {
 #ifndef LIBIMAGE_NO_COLOR
 #ifndef LIBIMAGE_NO_GRAYSCALE
+
+
+	static void grayscale(u8* dst, u8* red, u8* blue, u8* green, u32 length)
+	{
+		for (u32 i = 0; i < length; ++i)
+		{
+			dst[i] = rgb_grayscale_standard(red[i], green[i], blue[i]);
+		}
+	}
 
 
 	void grayscale(image_soa const& src, gray::image_t const& dst)
