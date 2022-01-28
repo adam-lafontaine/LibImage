@@ -55,7 +55,8 @@ void planar_tests(fs::path const& out_dir);
 void for_each_times(fs::path const& out_dir);
 void transform_times(fs::path const& out_dir);
 void gradient_times(fs::path const& out_dir);
-void planar_times(fs::path const& out_dir);
+void alpha_blend_times(fs::path const& out_dir);
+void grayscale_times(fs::path const& out_dir);
 
 
 int main()
@@ -85,7 +86,8 @@ int main()
 
 	gradient_times(timing_dir);*/
 
-	//planar_times(timing_dir);
+	alpha_blend_times(timing_dir);
+	grayscale_times(timing_dir);
 
 	printf("\nDone.\n");
 }
@@ -929,9 +931,9 @@ void gradient_times(fs::path const& out_dir)
 }
 
 
-void planar_times(fs::path const& out_dir)
+void alpha_blend_times(fs::path const& out_dir)
 {
-	printf("\nplanar:\n");
+	printf("\nalpha blend:\n");
 	empty_dir(out_dir);
 
 	u32 n_image_sizes = 2;
@@ -953,7 +955,7 @@ void planar_times(fs::path const& out_dir)
 
 	auto const start_pixels = current_pixels();
 
-	auto const scale = [&](auto t) { return (r32)(start_pixels / current_pixels() * t); };
+	auto const scale = [&](auto t) { return (r32)(10'000'000.0 / current_pixels() * t); };
 	auto const print_wh = [&]() { printf("\nwidth: %u height: %u\n", width, height); };
 	auto const print_count = [&]() { printf("  image count: %u\n", image_count); };
 
@@ -962,22 +964,152 @@ void planar_times(fs::path const& out_dir)
 
 	for (u32 s = 0; s < n_image_sizes; ++s)
 	{
-		print_count();
+		print_wh();
+		image_count = image_count_start;
 
-		Image gr_src;
-		GrayImage gr_dst;
+		Image im_src;
+		img::make_image(im_src, width, height);
+		Image im_dst;
+		img::make_image(im_dst, width, height);
+		Planar pl_src;
+		img::make_planar(pl_src, width, height);
+		Planar pl_dst;
+		img::make_planar(pl_dst, width, height);
 
-		sw.start();
-		for (u32 i = 0; i < image_count; ++i)
+		for (u32 c = 0; c < n_image_counts; ++c)
 		{
-			
-		}
-		t = sw.get_time_milli();
-		print_t(" seq image");
+			print_count();
 
-		image_count *= image_count_factor;
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::seq::alpha_blend(im_src, im_dst);
+			}
+			t = sw.get_time_milli();
+			print_t("   seq");
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::alpha_blend(im_src, im_dst);
+			}
+			t = sw.get_time_milli();
+			print_t("   par");
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::simd::alpha_blend(im_src, im_dst);
+			}
+			t = sw.get_time_milli();
+			print_t("  simd");
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::copy(im_src, pl_src);
+				img::alpha_blend(pl_src, pl_dst);
+				img::copy(pl_dst, im_dst);
+			}
+			t = sw.get_time_milli();
+			print_t("planar");
+
+			image_count *= image_count_factor;
+		}			
+
+		width *= image_dim_factor;
+		height *= image_dim_factor;
 	}
 
+}
+
+
+void grayscale_times(fs::path const& out_dir)
+{
+	printf("\ngrayscale:\n");
+	empty_dir(out_dir);
+
+	u32 n_image_sizes = 2;
+	u32 image_dim_factor = 4;
+
+	u32 n_image_counts = 2;
+	u32 image_count_factor = 4;
+
+	u32 width_start = 400;
+	u32 height_start = 300;
+	u32 image_count_start = 50;
+
+	Stopwatch sw;
+	u32 width = width_start;
+	u32 height = height_start;
+	u32 image_count = image_count_start;
+
+	auto const current_pixels = [&]() { return static_cast<r64>(width) * height * image_count; };
+
+	auto const start_pixels = current_pixels();
+
+	auto const scale = [&](auto t) { return (r32)(10'000'000.0 / current_pixels() * t); };
+	auto const print_wh = [&]() { printf("\nwidth: %u height: %u\n", width, height); };
+	auto const print_count = [&]() { printf("  image count: %u\n", image_count); };
+
+	r64 t = 0;
+	auto const print_t = [&](const char* label) { printf("    %s time: %f\n", label, scale(t)); };
+
+	for (u32 s = 0; s < n_image_sizes; ++s)
+	{
+		print_wh();
+		image_count = image_count_start;
+
+		Image im_src;
+		img::make_image(im_src, width, height);
+		GrayImage gr_dst;
+		img::make_image(gr_dst, width, height);
+		Planar pl_src;
+		img::make_planar(pl_src, width, height);
+
+		for (u32 c = 0; c < n_image_counts; ++c)
+		{
+			print_count();
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::seq::grayscale(im_src, gr_dst);
+			}
+			t = sw.get_time_milli();
+			print_t("   seq");
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::grayscale(im_src, gr_dst);
+			}
+			t = sw.get_time_milli();
+			print_t("   par");
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::simd::grayscale(im_src, gr_dst);
+			}
+			t = sw.get_time_milli();
+			print_t("  simd");
+
+			sw.start();
+			for (u32 i = 0; i < image_count; ++i)
+			{
+				img::copy(im_src, pl_src);
+				img::grayscale(pl_src, gr_dst);
+			}
+			t = sw.get_time_milli();
+			print_t("planar");
+
+			image_count *= image_count_factor;
+		}
+
+		width *= image_dim_factor;
+		height *= image_dim_factor;
+	}
 }
 
 
