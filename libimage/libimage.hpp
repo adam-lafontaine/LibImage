@@ -54,6 +54,9 @@ namespace libimage
 	void for_each_xy(image_t const& image, std::function<void(u32 x, u32 y)> const& func);
 
 	void for_each_xy(view_t const& view, std::function<void(u32 x, u32 y)> const& func);
+
+
+	void make_planar(image_soa& dst, u32 width, u32 height);
 	
 
 #ifndef LIBIMAGE_NO_WRITE

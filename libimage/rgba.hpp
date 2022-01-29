@@ -404,4 +404,36 @@ namespace libimage
 	using view_t = RGBAImageView;
 	using row_view_t = RGBAImageRowView;
 	using column_view_t = RGBAImageColumnView;
+
+
+	class RGBAPlanar
+	{
+	public:
+		u32 width;
+		u32 height;
+
+		u8* data;
+
+		u8* red;
+		u8* green;
+		u8* blue;
+		u8* alpha;
+
+		void dispose()
+		{
+			if (data)
+			{
+				free(data);
+				data = nullptr;
+			}
+		}
+
+		~RGBAPlanar()
+		{
+			dispose();
+		}
+	};
+
+
+	using image_soa = RGBAPlanar;
 }

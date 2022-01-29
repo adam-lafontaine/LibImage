@@ -19,6 +19,12 @@ namespace libimage
 	}
 
 
+	inline bool verify(image_soa const& img)
+	{
+		return img.data && img.width && img.height;
+	}
+
+
 	inline bool verify(image_t const& src, image_t const& dst)
 	{
 		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
@@ -38,6 +44,36 @@ namespace libimage
 
 
 	inline bool verify(view_t const& src, view_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(image_soa const& src, image_soa const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(image_t const& src, image_soa const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(image_soa const& src, image_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(view_t const& src, image_soa const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(image_soa const& src, view_t const& dst)
 	{
 		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
 	}
@@ -79,6 +115,18 @@ namespace libimage
 
 
 	inline bool verify(gray::view_t const& src, gray::view_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(image_soa const& src, gray::image_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(image_soa const& src, gray::view_t const& dst)
 	{
 		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
 	}

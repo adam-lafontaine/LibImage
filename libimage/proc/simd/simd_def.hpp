@@ -226,9 +226,9 @@ static inline vec_t simd_sqrt(vec_t const& a)
 class PixelPlanar
 {
 public:
-	r32 red[VEC_LEN] = { 0 };
+	r32 red[VEC_LEN]   = { 0 };
 	r32 green[VEC_LEN] = { 0 };
-	r32 blue[VEC_LEN] = { 0 };
+	r32 blue[VEC_LEN]  = { 0 };
 	r32 alpha[VEC_LEN] = { 0 };
 };
 
@@ -265,20 +265,22 @@ static inline void copy_vec_len(libimage::pixel_t* src, PixelPlanar& dst)
 {
 	for (u32 i = 0; i < VEC_LEN; ++i)
 	{
-		dst.red[i] = src[i].red;
-		dst.green[i] = src[i].green;
-		dst.blue[i] = src[i].blue;
-		dst.alpha[i] = src[i].alpha;
+		dst.red[i] = (r32)src[i].red;
+		dst.green[i] = (r32)src[i].green;
+		dst.blue[i] = (r32)src[i].blue;
+		dst.alpha[i] = (r32)src[i].alpha;
 	}
 }
 
 
-template <typename SRC_T, typename DST_T>
-static inline void copy_vec_len(SRC_T* src, DST_T* dst)
+static inline void copy_vec_len(u8* red, u8* green, u8* blue, PixelPlanar& dst)
 {
 	for (u32 i = 0; i < VEC_LEN; ++i)
 	{
-		dst[i] = (DST_T)src[i];
+		dst.red[i] = (r32)red[i];
+		dst.green[i] = (r32)green[i];
+		dst.blue[i] = (r32)blue[i];
+		dst.alpha[i] = 255.0f;
 	}
 }
 

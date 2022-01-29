@@ -242,6 +242,30 @@ namespace libimage
 		}
 	}
 
+
+	void make_planar(image_soa& dst, u32 width, u32 height)
+	{
+		assert(!dst.data);
+
+		size_t image_sz = (size_t)width * height;
+
+		dst.data = (u8*)malloc(4 * image_sz);
+
+		if (!dst.data)
+		{
+			return;
+		}
+
+		dst.width = width;
+		dst.height = height;
+
+		dst.red = dst.data;
+		dst.green = dst.red + image_sz;
+		dst.blue = dst.green + image_sz;
+		dst.alpha = dst.blue + image_sz;
+	}
+
+
 #endif // !LIBIMAGE_NO_COLOR
 
 #ifndef LIBIMAGE_NO_GRAYSCALE

@@ -107,6 +107,8 @@ namespace libimage
 		make_image(view_src, image);
 
 		write_image(image, file_path_dst);
+
+		image.dispose();
 	}
 
 #endif // !LIBIMAGE_NO_WRITE
@@ -134,7 +136,10 @@ namespace libimage
 
 		int result = 0;
 
-		image_dst.data = (pixel_t*)malloc(sizeof(pixel_t) * image_dst.width * image_dst.height);
+		if (!image_dst.data)
+		{
+			image_dst.data = (pixel_t*)malloc(sizeof(pixel_t) * image_dst.width * image_dst.height);
+		}		
 
 		result = stbir_resize_uint8(
 			(u8*)image_src.data, width_src, height_src, stride_bytes_src,
@@ -225,6 +230,8 @@ namespace libimage
 		make_image(view_src, image);
 
 		write_image(image, file_path_dst);
+
+		image.dispose();
 	}
 
 #endif // !LIBIMAGE_NO_WRITE
@@ -252,7 +259,10 @@ namespace libimage
 
 		int result = 0;
 
-		image_dst.data = (gray::pixel_t*)malloc(sizeof(gray::pixel_t) * image_dst.width * image_dst.height);
+		if (!image_dst.data)
+		{
+			image_dst.data = (gray::pixel_t*)malloc(sizeof(gray::pixel_t) * image_dst.width * image_dst.height);
+		}
 
 		result = stbir_resize_uint8(
 			(u8*)image_src.data, width_src, height_src, stride_bytes_src,
