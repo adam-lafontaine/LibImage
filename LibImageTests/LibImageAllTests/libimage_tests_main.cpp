@@ -55,8 +55,8 @@ void planar_tests(fs::path const& out_dir);
 void for_each_times(fs::path const& out_dir);
 void transform_times(fs::path const& out_dir);
 void gradient_times(fs::path const& out_dir);
-void alpha_blend_times(fs::path const& out_dir);
-void grayscale_times(fs::path const& out_dir);
+void alpha_blend_times();
+void grayscale_times();
 void read_times();
 
 
@@ -72,23 +72,23 @@ int main()
 
 	auto dst_root = fs::path(DST_IMAGE_ROOT);	
 
-	/*basic_tests(dst_root / "basic");
+	basic_tests(dst_root / "basic");
 	math_tests(dst_root / "math");
 
-	process_tests(dst_root / "process");*/
+	process_tests(dst_root / "process");
 
 	planar_tests(dst_root / "planar");
 
 	auto timing_dir = dst_root / "timing";
 	empty_dir(timing_dir);
 
-	/*for_each_times(timing_dir);
+	for_each_times(timing_dir);
 	transform_times(timing_dir);
 
-	gradient_times(timing_dir);*/
+	gradient_times(timing_dir);
 
-	alpha_blend_times(timing_dir);
-	grayscale_times(timing_dir);
+	alpha_blend_times();
+	grayscale_times();
 	read_times();
 
 	printf("\nDone.\n");
@@ -942,10 +942,9 @@ void gradient_times(fs::path const& out_dir)
 }
 
 
-void alpha_blend_times(fs::path const& out_dir)
+void alpha_blend_times()
 {
 	printf("\nalpha blend:\n");
-	empty_dir(out_dir);
 
 	u32 n_image_sizes = 2;
 	u32 image_dim_factor = 4;
@@ -1041,7 +1040,7 @@ void alpha_blend_times(fs::path const& out_dir)
 }
 
 
-void grayscale_times(fs::path const& out_dir)
+void grayscale_times()
 {
 	printf("\ngrayscale:\n");
 
