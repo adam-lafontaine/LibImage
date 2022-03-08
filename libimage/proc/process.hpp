@@ -9,6 +9,7 @@
 #include "gradients.hpp"
 #include "grayscale.hpp"
 #include "transform.hpp"
+#include "rotate.hpp"
 
 
 namespace libimage

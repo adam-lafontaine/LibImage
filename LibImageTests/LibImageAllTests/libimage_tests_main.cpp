@@ -72,14 +72,14 @@ int main()
 
 	auto dst_root = fs::path(DST_IMAGE_ROOT);	
 
-	basic_tests(dst_root / "basic");
-	math_tests(dst_root / "math");
+	//basic_tests(dst_root / "basic");
+	//math_tests(dst_root / "math");
 
 	process_tests(dst_root / "process");
 
-	planar_tests(dst_root / "planar");
+	//planar_tests(dst_root / "planar");
 
-	auto timing_dir = dst_root / "timing";
+	/*auto timing_dir = dst_root / "timing";
 	empty_dir(timing_dir);
 
 	for_each_times(timing_dir);
@@ -89,7 +89,7 @@ int main()
 
 	alpha_blend_times();
 	grayscale_times();
-	read_times();
+	read_times();*/
 
 	printf("\nDone.\n");
 }
@@ -288,6 +288,13 @@ void process_tests(fs::path const& out_dir)
 	img::draw_histogram(alpha_stats.hist, alpha_stats_image);
 	img::write_image(alpha_stats_image, out_dir / "alpha_stats.png");
 	print(alpha_stats);
+
+	img::transform_alpha(caddy, [](auto const& p) { return 255; });
+
+	// rotate
+	r32 theta = 0.125f * 2 * 3.14159f;
+	img::rotate(caddy, dst_image, width / 2, height / 2, theta);
+	img::write_image(dst_image, out_dir / "rotate.png");
 
 	// create a new grayscale source
 	GrayImage src_gray_image;

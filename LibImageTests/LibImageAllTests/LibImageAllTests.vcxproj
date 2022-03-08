@@ -155,6 +155,7 @@
     <ClCompile Include="..\..\libimage\proc\copy.cpp" />
     <ClCompile Include="..\..\libimage\proc\edges_gradients.cpp" />
     <ClCompile Include="..\..\libimage\proc\grayscale.cpp" />
+    <ClCompile Include="..\..\libimage\proc\rotate.cpp" />
     <ClCompile Include="..\..\libimage\proc\simd\simd_alpha_blend.cpp" />
     <ClCompile Include="..\..\libimage\proc\simd\simd_convolve.cpp" />
     <ClCompile Include="..\..\libimage\proc\simd\simd_grayscale.cpp" />
@@ -178,6 +179,7 @@
     <ClInclude Include="..\..\libimage\proc\gradients.hpp" />
     <ClInclude Include="..\..\libimage\proc\grayscale.hpp" />
     <ClInclude Include="..\..\libimage\proc\proc_def.hpp" />
+    <ClInclude Include="..\..\libimage\proc\rotate.hpp" />
     <ClInclude Include="..\..\libimage\proc\simd\simd_def.hpp" />
     <ClInclude Include="..\..\libimage\proc\transform.hpp" />
     <ClInclude Include="..\..\libimage\proc\verify.hpp" />

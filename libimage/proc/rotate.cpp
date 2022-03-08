@@ -2,10 +2,7 @@
 #include "verify.hpp"
 #include "index_range.hpp"
 
-#include <algorithm>
 #include <cmath>
-
-#include "proc_def.hpp"
 
 class Point2Du32
 {
@@ -23,10 +20,10 @@ public:
 };
 
 
-static Point2Dr32 find_rotation_src(Point2Du32 const& pt_dst, Point2Du32 const& origin, r32 theta_rotate)
+static Point2Dr32 find_rotation_src(Point2Du32 const& pt, Point2Du32 const& origin, r32 theta_rotate)
 {
-	auto dx_dst = (r32)pt_dst.x - (r32)origin.x;
-	auto dy_dst = (r32)pt_dst.y - (r32)origin.y;
+	auto dx_dst = (r32)pt.x - (r32)origin.x;
+	auto dy_dst = (r32)pt.y - (r32)origin.y;
 
 	auto radius = std::hypotf(dx_dst, dy_dst);
 
@@ -49,20 +46,8 @@ static Point2Dr32 find_rotation_src(Point2Du32 const& pt_dst, Point2Du32 const& 
 
 namespace libimage
 {
-	static u8 blend4(u8 cxy, u8 cx1y, u8 cxy1, u8 cx1y1, r32 fx, r32 fy)
-	{
-		auto gx = 1.0f - fx;
-		auto gy = 1.0f - fy;
 
-		auto blend =
-			gx * gy * cxy +
-			fx * gy * cx1y +
-			gx * fy * cxy1 +
-			fx * fy * cx1y1;
-
-		return (u8)roundf(blend);
-	}
-
+#ifndef LIBIMAGE_NO_COLOR
 
 	static pixel_t get_color(image_t const& src_image, Point2Dr32 location)
 	{
@@ -78,43 +63,28 @@ namespace libimage
 			return to_pixel(0, 0, 0);
 		}
 
-		auto floorx = floorf(x);
-		auto floory = floorf(y);
-
-		auto fx = x - floorx;
-		auto fy = y = floory;
-
-		auto x0 = (u32)floorx;
-		auto x1 = x0 + 1;
-		auto y0 = (u32)floory;
-		auto y1 = y0 + 1;		
-
-		auto pxy = src_image.xy_at(x0, y0);
-		auto px1y = src_image.xy_at(x1, y0);
-		auto pxy1 = src_image.xy_at(x0, y1);
-		auto px1y1 = src_image.xy_at(x1, y1);
-
-		auto r = blend4(pxy->red, px1y->red, pxy1->red, px1y1->red, fx, fy);
-		auto g = blend4(pxy->green, px1y->green, pxy1->green, px1y1->green, fx, fy);
-		auto b = blend4(pxy->blue, px1y->blue, pxy1->blue, px1y1->blue, fx, fy);
-
-		return to_pixel(r, g, b);
+		return *src_image.xy_at((u32)floorf(x), (u32)floorf(y));
 	}
 
+#endif // !LIBIMAGE_NO_COLOR
 
-	void rotate(image_t const& src, image_t const& dst, u32 origin_x, u32 origin_y, r32 rad)
+#ifndef LIBIMAGE_NO_COLOR
+
+	void rotate(image_t const& src, image_t const& dst, u32 origin_x, u32 origin_y, r32 theta)
 	{
 		assert(verify(src));
 		assert(verify(dst));
 
 		Point2Du32 origin = { origin_x, origin_y };
 
-		auto const func = [&](u32 x, u32 y) 
+		auto const func = [&](u32 x, u32 y)
 		{
-			auto src_pt = find_rotation_src({ x, y }, origin, rad);
+			auto src_pt = find_rotation_src({ x, y }, origin, theta);
 			*dst.xy_at(x, y) = get_color(src, src_pt);
 		};
 
 		for_each_xy(dst, func);
 	}
+
+#endif // !LIBIMAGE_NO_COLOR
 }
