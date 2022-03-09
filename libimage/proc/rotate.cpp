@@ -3,6 +3,11 @@
 #include "index_range.hpp"
 
 #include <cmath>
+#include <algorithm>
+
+#ifndef LIBIMAGE_NO_PARALLEL
+#include <execution>
+#endif // !LIBIMAGE_NO_PARALLEL
 
 class Point2Du32
 {
@@ -49,7 +54,9 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR
 
-	static pixel_t get_color(image_t const& src_image, Point2Dr32 location)
+
+	template <typename IMG_T>
+	static pixel_t get_color(IMG_T const& src_image, Point2Dr32 location)
 	{
 		auto zero = 0.0f;
 		auto width = (r32)src_image.width;
@@ -66,25 +73,127 @@ namespace libimage
 		return *src_image.xy_at((u32)floorf(x), (u32)floorf(y));
 	}
 
-#endif // !LIBIMAGE_NO_COLOR
 
-#ifndef LIBIMAGE_NO_COLOR
+	template <typename IMG_SRC_T, typename IMG_DST_T>
+	static void rotate_par(IMG_SRC_T const& src, IMG_DST_T const& dst, u32 origin_x, u32 origin_y, r32 theta)
+	{
+		Point2Du32 origin = { origin_x, origin_y };
+
+		u32_range_t range(dst.width * dst.height);
+
+		auto const func = [&](u32 i)
+		{
+			auto y = i / dst.width;
+			auto x = i - y * dst.width;
+			auto src_pt = find_rotation_src({ x, y }, origin, theta);
+			*dst.xy_at(x, y) = get_color(src, src_pt);
+		};
+
+		std::for_each(std::execution::par, range.begin(), range.end(), func);
+	}
+
 
 	void rotate(image_t const& src, image_t const& dst, u32 origin_x, u32 origin_y, r32 theta)
 	{
 		assert(verify(src));
 		assert(verify(dst));
 
-		Point2Du32 origin = { origin_x, origin_y };
-
-		auto const func = [&](u32 x, u32 y)
-		{
-			auto src_pt = find_rotation_src({ x, y }, origin, theta);
-			*dst.xy_at(x, y) = get_color(src, src_pt);
-		};
-
-		for_each_xy(dst, func);
+		rotate_par(src, dst, origin_x, origin_y, theta);
 	}
 
+
+	void rotate(image_t const& src, view_t const& dst, u32 origin_x, u32 origin_y, r32 theta)
+	{
+		assert(verify(src));
+		assert(verify(dst));
+
+		rotate_par(src, dst, origin_x, origin_y, theta);
+	}
+
+
+	void rotate(view_t const& src, image_t const& dst, u32 origin_x, u32 origin_y, r32 theta)
+	{
+		assert(verify(src));
+		assert(verify(dst));
+
+		rotate_par(src, dst, origin_x, origin_y, theta);
+	}
+
+
+	void rotate(view_t const& src, view_t const& dst, u32 origin_x, u32 origin_y, r32 theta)
+	{
+		assert(verify(src));
+		assert(verify(dst));
+
+		rotate_par(src, dst, origin_x, origin_y, theta);
+	}
+
+
 #endif // !LIBIMAGE_NO_COLOR
+
+
+	namespace seq
+	{
+#ifndef LIBIMAGE_NO_COLOR
+
+
+		template <typename IMG_SRC_T, typename IMG_DST_T>
+		static void rotate_seq(IMG_SRC_T const& src, IMG_DST_T const& dst, u32 origin_x, u32 origin_y, r32 theta)
+		{
+			Point2Du32 origin = { origin_x, origin_y };
+
+			auto const func = [&](u32 x, u32 y)
+			{
+				auto src_pt = find_rotation_src({ x, y }, origin, theta);
+				*dst.xy_at(x, y) = get_color(src, src_pt);
+			};
+
+			for_each_xy(dst, func);
+		}
+
+
+		void rotate(image_t const& src, image_t const& dst, u32 origin_x, u32 origin_y, r32 theta)
+		{
+			assert(verify(src));
+			assert(verify(dst));
+
+			rotate_seq(src, dst, origin_x, origin_y, theta);
+		}
+
+
+		void rotate(image_t const& src, view_t const& dst, u32 origin_x, u32 origin_y, r32 theta)
+		{
+			assert(verify(src));
+			assert(verify(dst));
+
+			rotate_seq(src, dst, origin_x, origin_y, theta);
+		}
+
+
+		void rotate(view_t const& src, image_t const& dst, u32 origin_x, u32 origin_y, r32 theta)
+		{
+			assert(verify(src));
+			assert(verify(dst));
+
+			rotate_seq(src, dst, origin_x, origin_y, theta);
+		}
+
+
+		void rotate(view_t const& src, view_t const& dst, u32 origin_x, u32 origin_y, r32 theta)
+		{
+			assert(verify(src));
+			assert(verify(dst));
+
+			rotate_seq(src, dst, origin_x, origin_y, theta);
+		}
+
+
+#endif // !LIBIMAGE_NO_COLOR
+	}
+
+
+	namespace simd
+	{
+
+	}
 }

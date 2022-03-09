@@ -282,7 +282,7 @@ void process_tests(fs::path const& out_dir)
 	print(gray_stats);
 
 	// alpha grayscale
-	img::simd::alpha_grayscale(corvette_view);
+	img::alpha_grayscale(corvette_view);
 	auto alpha_stats = img::calc_stats(corvette_image, img::Channel::Alpha);
 	GrayImage alpha_stats_image;
 	img::draw_histogram(alpha_stats.hist, alpha_stats_image);
@@ -292,8 +292,8 @@ void process_tests(fs::path const& out_dir)
 	img::transform_alpha(caddy, [](auto const& p) { return 255; });
 
 	// rotate
-	r32 theta = 0.125f * 2 * 3.14159f;
-	img::rotate(caddy, dst_image, width / 2, height / 2, theta);
+	r32 theta = 0.6f * 2 * 3.14159f;
+	img::seq::rotate(caddy, dst_image, width / 2, height / 2, theta);
 	img::write_image(dst_image, out_dir / "rotate.png");
 
 	// create a new grayscale source
