@@ -334,10 +334,4 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 	}
-
-
-	namespace simd
-	{
-
-	}
 }
