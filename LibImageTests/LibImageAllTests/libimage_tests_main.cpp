@@ -291,15 +291,18 @@ void process_tests(fs::path const& out_dir)
 
 	img::transform_alpha(caddy, [](auto const& p) { return 255; });
 
+	// create a new grayscale source
+	GrayImage src_gray_image;
+	img::make_image(src_gray_image, width, height);
+	img::copy(dst_gray_image, src_gray_image);
+
 	// rotate
 	r32 theta = 0.6f * 2 * 3.14159f;
 	img::seq::rotate(caddy, dst_image, width / 2, height / 2, theta);
 	img::write_image(dst_image, out_dir / "rotate.png");
 
-	// create a new grayscale source
-	GrayImage src_gray_image;
-	img::make_image(src_gray_image, width, height);
-	img::copy(dst_gray_image, src_gray_image);
+	img::rotate(src_gray_image, dst_gray_image, width / 2, height / 2, theta);
+	img::write_image(dst_gray_image, out_dir / "rotate_gray.png");
 
 	// contrast
 	auto shade_min = (u8)(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
