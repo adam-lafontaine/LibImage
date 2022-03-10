@@ -16,8 +16,8 @@
 
 
 //#define INTEL_CPU
-#define RPI_3B_PLUS
-//#define JETSON_NANO
+//#define RPI_3B_PLUS
+#define JETSON_NANO
 
 
 #ifndef LIBIMAGE_NO_SIMD

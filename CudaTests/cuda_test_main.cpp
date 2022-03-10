@@ -50,10 +50,10 @@ int main()
     process_tests(dst_proc);
 
 	auto dst_cuda = dst_root + "cuda/";
-	cuda_tests(dst_cuda);
+	//cuda_tests(dst_cuda);
 
 	auto dst_timing = dst_root + "timing/";
-	gradient_times(dst_timing);
+	//gradient_times(dst_timing);
 
     printf("\nDone.\n");
 }
@@ -125,6 +125,16 @@ void process_tests(path_t& out_dir)
 	GrayImage src_gray_img;
 	img::make_image(src_gray_img, width, height);
 	img::seq::copy(dst_gray_img, src_gray_img);
+
+	img::seq::transform_alpha(caddy_img, [](auto const& p) { return 255; });
+
+	// rotate
+	r32 theta = 0.6f * 2 * 3.14159f;
+	img::seq::rotate(caddy_img, dst_img, width / 2, height / 2, theta);
+	img::write_image(dst_img, out_dir + "rotate.png");
+
+	img::seq::rotate(src_gray_img, dst_gray_img, width / 2, height / 2, theta);
+	img::write_image(dst_gray_img, out_dir + "rotate_gray.png");
 
 	// contrast
 	auto shade_min = (u8)(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
