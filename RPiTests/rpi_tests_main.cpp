@@ -42,11 +42,11 @@ int main()
 	//auto dst_basic = dst_root + "basic/";
     //basic_tests(dst_basic);
 
-	//auto dst_process = dst_root + "process/";
-	//process_tests(dst_process);
+	auto dst_process = dst_root + "process/";
+	process_tests(dst_process);
 
-	auto dst_gradients = dst_root + "gradients/";
-	gradient_times(dst_gradients);
+	//auto dst_gradients = dst_root + "gradients/";
+	//gradient_times(dst_gradients);
 }
 
 
@@ -160,9 +160,9 @@ void process_tests(path_t& out_dir)
 	img::make_image(dst_gray_img, width, height);
 
 	// alpha blending
-	img::transform_alpha(caddy_img, [](auto const& p) { return 128; });
+	img::seq::transform_alpha(caddy_img, [](auto const& p) { return 128; });
 
-	img::alpha_blend(caddy_img, corvette_img, dst_img);
+	img::seq::alpha_blend(caddy_img, corvette_img, dst_img);
 	img::write_image(dst_img, out_dir + "alpha_blend.png");
 
 	img::seq::alpha_blend(caddy_img, corvette_img, dst_img);
@@ -171,9 +171,9 @@ void process_tests(path_t& out_dir)
 	img::simd::alpha_blend(caddy_img, corvette_img, dst_img);
 	img::write_image(dst_img, out_dir + "alpha_blend_simd.png");
 
-	img::copy(corvette_img, dst_img);
+	img::seq::copy(corvette_img, dst_img);
 
-	img::alpha_blend(caddy_img, dst_img);
+	img::seq::alpha_blend(caddy_img, dst_img);
 	img::write_image(dst_img, out_dir + "alpha_blend_src_dst.png");
 
 	img::seq::alpha_blend(caddy_img, dst_img);
@@ -184,7 +184,7 @@ void process_tests(path_t& out_dir)
 
 
 	// grayscale
-	img::grayscale(corvette_img, dst_gray_img);
+	img::seq::grayscale(corvette_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "grayscale.png");
 
 	img::seq::grayscale(corvette_img, dst_gray_img);
@@ -202,7 +202,7 @@ void process_tests(path_t& out_dir)
 
 	// alpha grayscale
 	GrayImage alpha_stats_img;
-	img::alpha_grayscale(corvette_img);
+	img::seq::alpha_grayscale(corvette_img);
 	auto alpha_stats = img::calc_stats(corvette_img, img::Channel::Alpha);
 	
 	img::draw_histogram(alpha_stats.hist, alpha_stats_img);
@@ -222,18 +222,28 @@ void process_tests(path_t& out_dir)
 	img::draw_histogram(alpha_stats.hist, alpha_stats_simd_img);
 	img::write_image(alpha_stats_img, out_dir + "gray_stats_alpha_simd.png");
 
+	img::seq::transform_alpha(caddy_img, [](auto const& p) { return 255; });
+
 
 	// create a new grayscale source
 	GrayImage src_gray_img;
 	img::make_image(src_gray_img, width, height);
-	img::copy(dst_gray_img, src_gray_img);
+	img::seq::copy(dst_gray_img, src_gray_img);
+
+	// rotate
+	r32 theta = 0.6f * 2 * 3.14159f;
+	img::seq::rotate(caddy_img, dst_img, width / 2, height / 2, theta);
+	img::write_image(dst_img, out_dir + "rotate.png");
+
+	img::seq::rotate(src_gray_img, dst_gray_img, width / 2, height / 2, theta);
+	img::write_image(dst_gray_img, out_dir + "rotate_gray.png");
 
 
 	// contrast
 	auto shade_min = (u8)(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
 	auto shade_max = (u8)(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
 
-	img::contrast(src_gray_img, dst_gray_img, shade_min, shade_max);
+	img::seq::contrast(src_gray_img, dst_gray_img, shade_min, shade_max);
 	img::write_image(dst_gray_img, out_dir + "contrast.png");
 
 	img::seq::contrast(src_gray_img, dst_gray_img, shade_min, shade_max);
@@ -243,7 +253,7 @@ void process_tests(path_t& out_dir)
 	// binarize
 	auto const is_white = [&](u8 p) { return (r32)(p) > gray_stats.mean; };
 
-	img::binarize(src_gray_img, dst_gray_img, is_white);
+	img::seq::binarize(src_gray_img, dst_gray_img, is_white);
 	img::write_image(dst_gray_img, out_dir + "binarize.png");
 
 	img::seq::binarize(src_gray_img, dst_gray_img, is_white);
@@ -251,7 +261,7 @@ void process_tests(path_t& out_dir)
 
 
 	//blur
-	img::blur(src_gray_img, dst_gray_img);
+	img::seq::blur(src_gray_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "blur.png");
 
 	img::seq::blur(src_gray_img, dst_gray_img);
@@ -264,7 +274,7 @@ void process_tests(path_t& out_dir)
 	// edge detection
 	auto const threshold = [](u8 g) { return g >= 100; };
 
-	img::edges(src_gray_img, dst_gray_img, threshold);
+	img::seq::edges(src_gray_img, dst_gray_img, threshold);
 	img::write_image(dst_gray_img, out_dir + "edges.png");
 
 	img::seq::edges(src_gray_img, dst_gray_img, threshold);
@@ -275,7 +285,7 @@ void process_tests(path_t& out_dir)
 
 
 	// gradient
-	img::gradients(src_gray_img, dst_gray_img);
+	img::seq::gradients(src_gray_img, dst_gray_img);
 	img::write_image(dst_gray_img, out_dir + "gradient.png");
 
 	img::seq::gradients(src_gray_img, dst_gray_img);
@@ -296,14 +306,14 @@ void process_tests(path_t& out_dir)
 	range.y_end = height / 2;
 	auto src_sub = img::sub_view(src_gray_img, range);
 	auto dst_sub = img::sub_view(dst_gray_img, range);
-	img::gradients(src_sub, dst_sub);
+	img::seq::gradients(src_sub, dst_sub);
 	
 
 	range.x_begin = width / 2;
 	range.x_end = width;
 	src_sub = img::sub_view(src_gray_img, range);
 	dst_sub = img::sub_view(dst_gray_img, range);	
-	img::contrast(src_sub, dst_sub, shade_min, shade_max);
+	img::seq::contrast(src_sub, dst_sub, shade_min, shade_max);
 
 	range.x_begin = 0;
 	range.x_end = width / 2;
@@ -311,13 +321,13 @@ void process_tests(path_t& out_dir)
 	range.y_end = height;
 	src_sub = img::sub_view(src_gray_img, range);
 	dst_sub = img::sub_view(dst_gray_img, range);
-	img::blur(src_sub, dst_sub);	
+	img::seq::blur(src_sub, dst_sub);	
 
 	range.x_begin = width / 2;
 	range.x_end = width;
 	src_sub = img::sub_view(src_gray_img, range);
 	dst_sub = img::sub_view(dst_gray_img, range);
-	img::binarize(src_sub, dst_sub, is_white);	
+	img::seq::binarize(src_sub, dst_sub, is_white);	
 
 	range.x_begin = width / 4;
 	range.x_end = range.x_begin + width / 2;
@@ -325,7 +335,7 @@ void process_tests(path_t& out_dir)
 	range.y_end = range.y_begin + height / 2;
 	src_sub = img::sub_view(src_gray_img, range);
 	dst_sub = img::sub_view(dst_gray_img, range);
-	img::edges(src_sub, dst_sub, threshold);
+	img::seq::edges(src_sub, dst_sub, threshold);
 
 	img::write_image(dst_gray_img, out_dir + "combo.png");
 
@@ -443,7 +453,7 @@ void gradient_times(path_t& out_dir)
 			sw.start();
 			for (u32 i = 0; i < image_count; ++i)
 			{
-				img::gradients(src, dst, tmp);
+				img::seq::gradients(src, dst, tmp);
 			}
 			t = sw.get_time_milli();
 			par_image.push_back(scale(t));
@@ -452,7 +462,7 @@ void gradient_times(path_t& out_dir)
 			sw.start();
 			for (u32 i = 0; i < image_count; ++i)
 			{
-				img::gradients(src_v, dst_v, tmp);
+				img::seq::gradients(src_v, dst_v, tmp);
 			}
 			t = sw.get_time_milli();
 			par_view.push_back(scale(t));
@@ -515,8 +525,8 @@ void empty_dir(path_t& dir)
 	}
 
 	std::string command = std::string("mkdir -p ") + dir;
-	system(command.c_str());
+	auto c = system(command.c_str());
 
 	command = std::string("rm -rfv ") + dir + '*';
-	system(command.c_str());	
+	c =system(command.c_str());	
 }

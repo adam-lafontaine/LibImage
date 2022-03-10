@@ -72,14 +72,14 @@ int main()
 
 	auto dst_root = fs::path(DST_IMAGE_ROOT);	
 
-	//basic_tests(dst_root / "basic");
-	//math_tests(dst_root / "math");
+	basic_tests(dst_root / "basic");
+	math_tests(dst_root / "math");
 
 	process_tests(dst_root / "process");
 
-	//planar_tests(dst_root / "planar");
+	planar_tests(dst_root / "planar");
 
-	/*auto timing_dir = dst_root / "timing";
+	auto timing_dir = dst_root / "timing";
 	empty_dir(timing_dir);
 
 	for_each_times(timing_dir);
@@ -89,7 +89,7 @@ int main()
 
 	alpha_blend_times();
 	grayscale_times();
-	read_times();*/
+	read_times();
 
 	printf("\nDone.\n");
 }

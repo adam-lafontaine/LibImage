@@ -3,7 +3,11 @@
 
 #include <array>
 #include <functional>
+
+
+#ifndef LIBIMAGE_NO_PARALLEL
 #include <execution>
+#endif // !LIBIMAGE_NO_PARALLEL
 
 
 constexpr r32 COEFF_RED = 0.299f;

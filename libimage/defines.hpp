@@ -15,8 +15,8 @@
 
 
 
-#define INTEL_CPU
-//#define RPI_3B_PLUS
+//#define INTEL_CPU
+#define RPI_3B_PLUS
 //#define JETSON_NANO
 
 
@@ -32,8 +32,9 @@
 #ifdef RPI_3B_PLUS
 
 #define SIMD_ARM_NEON
+#define LIBIMAGE_NO_CPP17
 
-#endif
+#endif // RPI_3B_PLUS
 
 #ifdef JETSON_NANO
 
