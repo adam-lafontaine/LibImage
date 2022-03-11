@@ -50,7 +50,7 @@ int main()
     process_tests(dst_proc);
 
 	auto dst_cuda = dst_root + "cuda/";
-	//cuda_tests(dst_cuda);
+	cuda_tests(dst_cuda);
 
 	auto dst_timing = dst_root + "timing/";
 	//gradient_times(dst_timing);
@@ -281,6 +281,16 @@ void cuda_tests(path_t& out_dir)
 	img::copy_to_device(corvette_img, d_dst_img);
 	img::alpha_blend(d_src_img, d_dst_img);
 	img::write_image(dst_img, out_dir + "alpha_blend_src_dst.png");
+
+
+	// rotate
+	img::copy_to_device(caddy_img, d_src_img);
+	auto origin_x = d_src_img.width / 2;
+	auto origin_y = d_src_img.height / 2;
+	r32 theta = 0.6f * 2 * 3.14159f;
+	img::rotate(d_src_img, d_dst_img, origin_x, origin_y, theta);
+	img::copy_to_host(d_dst_img, dst_img);
+	img::write_image(dst_img, out_dir + "rotate.png");
 
 
 	// grayscale

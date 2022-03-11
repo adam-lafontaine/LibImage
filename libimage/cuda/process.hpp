@@ -14,6 +14,9 @@ namespace libimage
 	bool alpha_blend(device_image_t const& src, device_image_t const& current_dst);
 
 
+	bool rotate(device_image_t const& src, device_image_t const& dst, u32 origin_x, u32 origin_y, r32 theta);
+
+
 #endif // !LIBIMAGE_NO_COLOR	
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
