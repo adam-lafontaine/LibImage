@@ -35,6 +35,9 @@ namespace libimage
 
 	bool contrast(gray::device_image_t const& src, gray::device_image_t const& dst, u8 src_low, u8 src_high);
 
+
+	bool rotate(gray::device_image_t const& src, gray::device_image_t const& dst, u32 origin_x, u32 origin_y, r32 theta);
+
 	        
 
 #endif // !LIBIMAGE_NO_GRAYSCALE

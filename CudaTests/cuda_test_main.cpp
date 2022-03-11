@@ -328,6 +328,12 @@ void cuda_tests(path_t& out_dir)
 	img::write_image(dst_gray_img, out_dir + "gradients.png");
 
 
+	// rotate
+	img::rotate(d_src_gray_img, d_dst_gray_img, origin_x, origin_y, theta);
+	img::copy_to_host(d_dst_gray_img, dst_gray_img);
+	img::write_image(dst_gray_img, out_dir + "rotate_gray.png");
+
+
 	// recycle memory
 	DeviceBuffer sub_buffer;
 	sub_buffer.data = d_tmp_gray_img.data;
