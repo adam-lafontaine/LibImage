@@ -606,9 +606,6 @@ namespace libimage
 
         bool proc;
 
-        proc = cuda_no_errors();
-        assert(proc);
-
         proc &= cuda_no_errors();
         assert(proc);
 
