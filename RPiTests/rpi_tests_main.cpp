@@ -311,9 +311,6 @@ void combine_views_test(GrayImage const& src, GrayImage const& dst, path_t const
 
 void process_tests(path_t& out_dir)
 {
-	// C++17 not available on Jetson Nano.
-	// No stl parallel algorithms
-
 	printf("\nprocess:\n");
 	empty_dir(out_dir);
 

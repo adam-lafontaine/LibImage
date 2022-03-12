@@ -7,7 +7,6 @@
 
 #include <cstdio>
 #include <string>
-#include <array>
 
 namespace img = libimage;
 using path_t = std::string;
