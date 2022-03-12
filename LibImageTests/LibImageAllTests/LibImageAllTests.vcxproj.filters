@@ -108,6 +108,9 @@
     <ClCompile Include="..\..\libimage\proc\simd\simd_convolve.cpp">
       <Filter>Source Files\libimage\proc\simd</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\libimage\proc\rotate.cpp">
+      <Filter>Source Files\libimage\proc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\libimage\libimage.hpp">
@@ -187,6 +190,9 @@
     </ClInclude>
     <ClInclude Include="..\..\libimage\proc\simd\simd_def.hpp">
       <Filter>Header Files\libimage\proc\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage\proc\rotate.hpp">
+      <Filter>Header Files\libimage\proc</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

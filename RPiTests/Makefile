@@ -66,6 +66,7 @@ proc_h += $(proc)/gradients.hpp
 proc_h += $(proc)/grayscale.hpp
 proc_h += $(proc)/transform.hpp
 proc_h += $(proc)/verify.hpp
+proc_h += $(proc)/rotate.hpp
 
 proc_h += $(proc)/index_range.hpp # TODO: utils
 
@@ -104,6 +105,10 @@ object_files   += $(grayscale_o)
 transform_c    := $(proc)/transform.cpp
 transform_o    := $(build)/transform.o
 object_files   += $(transform_o)
+
+rotate_c    := $(proc)/rotate.cpp
+rotate_o    := $(build)/rotate.o
+object_files   += $(rotate_o)
 
 # SIMD
 simd_h := $(simd)/simd_def.hpp
@@ -185,6 +190,10 @@ $(grayscale_o): $(grayscale_c) $(libimage_h) $(proc_h)
 
 $(transform_o): $(transform_c) $(libimage_h) $(proc_h)
 	@echo "\n transform"
+	$(GPP) -o $@ -c $<
+
+$(rotate_o): $(rotate_c) $(libimage_h) $(proc_h)
+	@echo "\n rotate"
 	$(GPP) -o $@ -c $<
 
 $(simd_alpha_blend_o): $(simd_alpha_blend_c) $(libimage_h) $(proc_h) $(simd_h)

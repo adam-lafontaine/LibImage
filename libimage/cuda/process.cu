@@ -6,10 +6,39 @@
 
 constexpr int THREADS_PER_BLOCK = 1024;
 
+
+class Point2Du32
+{
+public:
+	u32 x;
+	u32 y;
+};
+
+
+class Point2Dr32
+{
+public:
+	r32 x;
+	r32 y;
+};
+
+
 namespace libimage
 {
     
 #ifndef LIBIMAGE_NO_COLOR
+
+namespace gpu
+{
+/*******************************/
+
+
+GPU_FUNCTION
+static u8 rgb_grayscale_standard(u8 red, u8 green, u8 blue)
+{
+    return (u8)(0.299f * red + 0.587f * green + 0.114f * blue);
+}
+
 
 GPU_FUNCTION
 static u8 blend_linear(u8 s, u8 c, r32 a)
@@ -24,6 +53,72 @@ static u8 blend_linear(u8 s, u8 c, r32 a)
 }
 
 
+GPU_FUNCTION
+static pixel_t to_pixel(u8 r, u8 g, u8 b)
+{
+    pixel_t p{};
+
+    p.red = r;
+    p.green = g;
+    p.blue = b;
+    p.alpha = 255;
+
+    return p;
+}
+
+
+GPU_FUNCTION
+static u8 lerp_clamp(u8 src_low, u8 src_high, u8 dst_low, u8 dst_high, u8 val)
+{
+    if (val < src_low)
+    {
+        return dst_low;
+    }
+    else if (val > src_high)
+    {
+        return dst_high;
+    }
+
+    auto const ratio = ((r64)(val) - src_low) / (src_high - src_low);
+
+    assert(ratio >= 0.0);
+    assert(ratio <= 1.0);
+
+    auto const diff = ratio * (dst_high - dst_low);
+
+    return dst_low + (u8)(diff);
+}
+
+
+GPU_FUNCTION
+static Point2Dr32 find_rotation_src(Point2Du32 const& pt, Point2Du32 const& origin, r32 theta_rotate)
+{
+	auto dx_dst = (r32)pt.x - (r32)origin.x;
+	auto dy_dst = (r32)pt.y - (r32)origin.y;
+
+	auto radius = hypotf(dx_dst, dy_dst);
+
+	auto theta_dst = atan2f(dy_dst, dx_dst);
+	auto theta_src = theta_dst - theta_rotate;
+
+	auto dx_src = radius * cosf(theta_src);
+	auto dy_src = radius * sinf(theta_src);
+
+	Point2Dr32 pt_src{};
+	pt_src.x = (r32)origin.x + dx_src;
+	pt_src.y = (r32)origin.y + dy_src;
+
+	return pt_src;
+}
+
+
+
+/*******************************/
+}
+
+
+
+
 GPU_KERNAL
 static void gpu_alpha_blend_linear(pixel_t* src, pixel_t* current, pixel_t* dst, u32 n_elements)
 {
@@ -34,11 +129,49 @@ static void gpu_alpha_blend_linear(pixel_t* src, pixel_t* current, pixel_t* dst,
     }
 
     auto const a = (r32)(src[i].alpha) / 255.0f;
-    auto red = blend_linear(src[i].red, current[i].red, a);
-    auto green = blend_linear(src[i].green, current[i].green, a);
-    auto blue = blend_linear(src[i].blue, current[i].blue, a);
+    auto red = gpu::blend_linear(src[i].red, current[i].red, a);
+    auto green = gpu::blend_linear(src[i].green, current[i].green, a);
+    auto blue = gpu::blend_linear(src[i].blue, current[i].blue, a);
 
     dst[i] = { red, green, blue, 255 };
+}
+
+
+GPU_KERNAL
+static void gpu_rotate(device_image_t src, device_image_t dst, Point2Du32 origin, r32 theta_rotate, u32 n_elements)
+{
+    int i = blockDim.x * blockIdx.x + threadIdx.x;
+    if (i >= n_elements)
+    {
+        return;
+    }
+
+    auto dst_pixel_offset = (u32)i;
+
+    assert(dst_pixel_offset < dst.width * dst.height);
+
+    Point2Du32 pt{};
+    pt.y = dst_pixel_offset / dst.width;
+    pt.x = dst_pixel_offset - pt.y * dst.width;
+
+    auto pt_src = gpu::find_rotation_src(pt, origin, theta_rotate);
+
+    auto zero = 0.0f;
+    auto width = (r32)src.width;
+    auto height = (r32)src.height;
+
+    if (pt_src.x < zero || pt_src.x >= width || pt_src.y < zero || pt_src.y >= height)
+    {
+        dst.data[dst_pixel_offset] = gpu::to_pixel(0, 0, 0);
+    }
+    else
+    {
+        auto ix = __float2int_rd(pt_src.x);
+        auto iy = __float2int_rd(pt_src.y);
+        auto row_begin = src.data + (size_t)(iy * src.width);
+
+        dst.data[dst_pixel_offset] = row_begin[ix];
+    }
 }
 
 
@@ -173,29 +306,6 @@ static void gpu_gradients(u8* src, u8* dst, u32 width, u32 height)
 }
 
 
-GPU_FUNCTION
-static u8 lerp_clamp(u8 src_low, u8 src_high, u8 dst_low, u8 dst_high, u8 val)
-{
-    if (val < src_low)
-    {
-        return dst_low;
-    }
-    else if (val > src_high)
-    {
-        return dst_high;
-    }
-
-    auto const ratio = ((r64)(val) - src_low) / (src_high - src_low);
-
-    assert(ratio >= 0.0);
-    assert(ratio <= 1.0);
-
-    auto const diff = ratio * (dst_high - dst_low);
-
-    return dst_low + (u8)(diff);
-}
-
-
 GPU_KERNAL
 static void gpu_transform_contrast(u8* src, u8* dst, u8 src_low, u8 src_high, u32 n_elements)
 {
@@ -208,19 +318,51 @@ static void gpu_transform_contrast(u8* src, u8* dst, u8 src_low, u8 src_high, u3
     u8 dst_low = 0;
 	u8 dst_high = 255;
 
-    dst[i] = lerp_clamp(src_low, src_high, dst_low, dst_high, src[i]);
+    dst[i] = gpu::lerp_clamp(src_low, src_high, dst_low, dst_high, src[i]);
+}
+
+
+GPU_KERNAL
+static void gpu_rotate(gray::device_image_t src, gray::device_image_t dst, Point2Du32 origin, r32 theta_rotate, u32 n_elements)
+{
+    int i = blockDim.x * blockIdx.x + threadIdx.x;
+    if (i >= n_elements)
+    {
+        return;
+    }
+
+    auto dst_pixel_offset = (u32)i;
+
+    assert(dst_pixel_offset < dst.width * dst.height);
+
+    Point2Du32 pt{};
+    pt.y = dst_pixel_offset / dst.width;
+    pt.x = dst_pixel_offset - pt.y * dst.width;
+
+    auto pt_src = gpu::find_rotation_src(pt, origin, theta_rotate);
+
+    auto zero = 0.0f;
+    auto width = (r32)src.width;
+    auto height = (r32)src.height;
+
+    if (pt_src.x < zero || pt_src.x >= width || pt_src.y < zero || pt_src.y >= height)
+    {
+        dst.data[dst_pixel_offset] = 0;
+    }
+    else
+    {
+        auto ix = __float2int_rd(pt_src.x);
+        auto iy = __float2int_rd(pt_src.y);
+        auto row_begin = src.data + (size_t)(iy * src.width);
+
+        dst.data[dst_pixel_offset] = row_begin[ix];
+    }
 }
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
 #ifndef LIBIMAGE_NO_COLOR
 #ifndef LIBIMAGE_NO_GRAYSCALE
-
-GPU_FUNCTION
-static u8 rgb_grayscale_standard(u8 red, u8 green, u8 blue)
-{
-    return (u8)(0.299f * red + 0.587f * green + 0.114f * blue);
-}
 
 
 GPU_KERNAL
@@ -236,7 +378,7 @@ static void gpu_transform_grayscale(pixel_t* src, u8* dst, u32 n_elements)
     u8 g = src[i].green;
     u8 b = src[i].blue;
 
-    dst[i] = rgb_grayscale_standard(r, g, b);
+    dst[i] = gpu::rgb_grayscale_standard(r, g, b);
 }
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
@@ -307,6 +449,27 @@ namespace libimage
             current_dst.data, 
             current_dst.data, 
             n_elements);
+
+        proc &= cuda_launch_success();
+        assert(proc);
+
+        return proc;
+    }
+
+
+    bool rotate(device_image_t const& src, device_image_t const& dst, u32 origin_x, u32 origin_y, r32 theta)
+    {
+        Point2Du32 origin = { origin_x, origin_y };
+        u32 n_elements = dst.width * dst.height;
+        int threads_per_block = THREADS_PER_BLOCK;
+        int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
+
+        bool proc;
+
+        proc = cuda_no_errors();
+        assert(proc);
+
+        gpu_rotate<<<blocks, threads_per_block>>>(src, dst, origin, theta, n_elements);
 
         proc &= cuda_launch_success();
         assert(proc);
@@ -443,9 +606,6 @@ namespace libimage
 
         bool proc;
 
-        proc = cuda_no_errors();
-        assert(proc);
-
         proc &= cuda_no_errors();
         assert(proc);
 
@@ -567,6 +727,27 @@ namespace libimage
             src_low,
             src_high,
             n_elements);
+
+        proc &= cuda_launch_success();
+        assert(proc);
+
+        return proc;
+    }
+
+
+    bool rotate(gray::device_image_t const& src, gray::device_image_t const& dst, u32 origin_x, u32 origin_y, r32 theta)
+    {
+        Point2Du32 origin = { origin_x, origin_y };
+        u32 n_elements = dst.width * dst.height;
+        int threads_per_block = THREADS_PER_BLOCK;
+        int blocks = (n_elements + threads_per_block - 1) / threads_per_block;
+
+        bool proc;
+
+        proc = cuda_no_errors();
+        assert(proc);
+
+        gpu_rotate<<<blocks, threads_per_block>>>(src, dst, origin, theta, n_elements);
 
         proc &= cuda_launch_success();
         assert(proc);
