@@ -62,13 +62,20 @@ int main()
 void alpha_blend_test(Image const& src, Image const& cur, Image const& dst, path_t const& out_dir)
 {
 	img::seq::transform_alpha(src, [](auto const& p) { return 128; });
+
 	img::seq::alpha_blend(src, cur, dst);
 	img::write_image(dst, out_dir + "alpha_blend.png");
 
+	img::simd::alpha_blend(src, cur, dst);
+	img::write_image(dst, out_dir + "simd_alpha_blend.png");
+
 	img::seq::copy(cur, dst);
 	img::seq::alpha_blend(src, dst);
-	//img::simd::alpha_blend(src, dst);
 	img::write_image(dst, out_dir + "alpha_blend_src_dst.png");
+
+	img::seq::copy(cur, dst);
+	img::simd::alpha_blend(src, dst);
+	img::write_image(dst, out_dir + "simd_alpha_blend_src_dst.png");
 
 	img::seq::transform_alpha(src, [](auto const& p) { return 255; });
 }
@@ -76,9 +83,11 @@ void alpha_blend_test(Image const& src, Image const& cur, Image const& dst, path
 
 void grayscale_test(Image const& src, GrayImage const& dst, path_t const& out_dir)
 {
-	img::seq::grayscale(src, dst);
-	//img::simd::grayscale(src, dst);
+	img::seq::grayscale(src, dst);	
 	img::write_image(dst, out_dir + "grayscale.png");
+
+	img::simd::grayscale(src, dst);
+	img::write_image(dst, out_dir + "simd_grayscale.png");
 }
 
 
@@ -149,14 +158,21 @@ void blur_test(GrayImage const& src, GrayImage const& dst, path_t const& out_dir
 {
 	img::seq::blur(src, dst);
 	img::write_image(dst, out_dir + "blur.png");
+
+	img::simd::blur(src, dst);
+	img::write_image(dst, out_dir + "simd_blur.png");
 }
 
 
 void edges_test(GrayImage const& src, GrayImage const& dst, path_t const& out_dir)
 {
 	auto const threshold = [](u8 g) { return g >= 100; };
+
 	img::seq::edges(src, dst, threshold);
 	img::write_image(dst, out_dir + "edges.png");
+
+	img::simd::edges(src, dst, threshold);
+	img::write_image(dst, out_dir + "simd_edges.png");
 }
 
 
@@ -164,6 +180,9 @@ void gradients_test(GrayImage const& src, GrayImage const& dst, path_t const& ou
 {
 	img::seq::gradients(src, dst);
 	img::write_image(dst, out_dir + "gradient.png");
+
+	img::simd::gradients(src, dst);
+	img::write_image(dst, out_dir + "simd_gradient.png");
 }
 
 
