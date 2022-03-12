@@ -30,6 +30,8 @@ const auto DST_IMAGE_ROOT = ROOT_PATH + "out_files/";
 
 
 void empty_dir(path_t& dir);
+void print(img::stats_t const& stats);
+
 void basic_tests(path_t& out_dir);
 void process_tests(path_t& out_dir);
 void gradient_times(path_t& out_dir);
@@ -127,232 +129,246 @@ void basic_tests(path_t& out_dir)
 }
 
 
-void process_tests(path_t& out_dir)
+void alpha_blend_test(Image const& src, Image const& cur, Image const& dst, path_t const& out_dir)
 {
-	printf("\nprocess:\n");
-	empty_dir(out_dir);
+	img::seq::transform_alpha(src, [](auto const& p) { return 128; });
 
-	Stopwatch sw;
-	sw.start();
+	img::seq::alpha_blend(src, cur, dst);
+	img::write_image(dst, out_dir + "alpha_blend.png");
 
-	// get image
-	Image corvette_img;
-	img::read_image_from_file(CORVETTE_PATH, corvette_img);
-	img::write_image(corvette_img, out_dir + "vette.png");
+	img::simd::alpha_blend(src, cur, dst);
+	img::write_image(dst, out_dir + "simd_alpha_blend.png");
 
-	auto const width = corvette_img.width;
-	auto const height = corvette_img.height;	
+	img::seq::copy(cur, dst);
+	img::seq::alpha_blend(src, dst);
+	img::write_image(dst, out_dir + "alpha_blend_src_dst.png");
 
-	// get another image for blending
-	// make sure it is the same size
-	Image caddy_read;
-	img::read_image_from_file(CADILLAC_PATH, caddy_read);
-	Image caddy_img;
-	caddy_img.width = width;
-	caddy_img.height = height;
-	img::resize_image(caddy_read, caddy_img);
-	img::write_image(caddy_img, out_dir + "caddy.png");
+	img::seq::copy(cur, dst);
+	img::simd::alpha_blend(src, dst);
+	img::write_image(dst, out_dir + "simd_alpha_blend_src_dst.png");
 
-	Image dst_img;
-	img::make_image(dst_img, width, height);
-
-	GrayImage dst_gray_img;
-	img::make_image(dst_gray_img, width, height);
-
-	// alpha blending
-	img::seq::transform_alpha(caddy_img, [](auto const& p) { return 128; });
-
-	img::seq::alpha_blend(caddy_img, corvette_img, dst_img);
-	img::write_image(dst_img, out_dir + "alpha_blend.png");
-
-	img::seq::alpha_blend(caddy_img, corvette_img, dst_img);
-	img::write_image(dst_img, out_dir + "alpha_blend_seq.png");
-
-	img::simd::alpha_blend(caddy_img, corvette_img, dst_img);
-	img::write_image(dst_img, out_dir + "alpha_blend_simd.png");
-
-	img::seq::copy(corvette_img, dst_img);
-
-	img::seq::alpha_blend(caddy_img, dst_img);
-	img::write_image(dst_img, out_dir + "alpha_blend_src_dst.png");
-
-	img::seq::alpha_blend(caddy_img, dst_img);
-	img::write_image(dst_img, out_dir + "alpha_blend_src_dst_seq.png");
-
-	img::simd::alpha_blend(caddy_img, dst_img);
-	img::write_image(dst_img, out_dir + "alpha_blend_src_dst_simd.png");
+	img::seq::transform_alpha(src, [](auto const& p) { return 255; });
+}
 
 
-	// grayscale
-	img::seq::grayscale(corvette_img, dst_gray_img);
-	img::write_image(dst_gray_img, out_dir + "grayscale.png");
+void grayscale_test(Image const& src, GrayImage const& dst, path_t const& out_dir)
+{
+	img::seq::grayscale(src, dst);	
+	img::write_image(dst, out_dir + "grayscale.png");
 
-	img::seq::grayscale(corvette_img, dst_gray_img);
-	img::write_image(dst_gray_img, out_dir + "grayscale_seq.png");
+	img::simd::grayscale(src, dst);
+	img::write_image(dst, out_dir + "simd_grayscale.png");
+}
 
-	img::simd::grayscale(corvette_img, dst_gray_img);
-	img::write_image(dst_gray_img, out_dir + "grayscale_simd.png");
 
-	// stats
-	auto gray_stats = img::calc_stats(dst_gray_img);
+void rotate_test(Image const& src, Image const& dst, path_t const& out_dir)
+{
+	r32 theta = 0.6f * 2 * 3.14159f;
+	img::seq::rotate(src, dst, src.width / 2, src.height / 2, theta);
+	img::write_image(dst, out_dir + "rotate.png");
+}
+
+
+void rotate_gray_test(GrayImage const& src, GrayImage const& dst, path_t const& out_dir)
+{
+	r32 theta = 0.6f * 2 * 3.14159f;
+	img::seq::rotate(src, dst, src.width / 2, src.height / 2, theta);
+	img::write_image(dst, out_dir + "rotate_gray.png");
+}
+
+
+void stats_test(GrayImage const& src, path_t const& out_dir)
+{
+	auto gray_stats = img::calc_stats(src);
 	GrayImage gray_stats_img;
 	img::draw_histogram(gray_stats.hist, gray_stats_img);
 	img::write_image(gray_stats_img, out_dir + "gray_stats.png");
+	print(gray_stats);
+
+	gray_stats_img.dispose();
+}
 
 
-	// alpha grayscale
+void alpha_grayscale_test(Image const& src, path_t const& out_dir)
+{
+	img::seq::alpha_grayscale(src);
+	auto alpha_stats = img::calc_stats(src, img::Channel::Alpha);
 	GrayImage alpha_stats_img;
-	img::seq::alpha_grayscale(corvette_img);
-	auto alpha_stats = img::calc_stats(corvette_img, img::Channel::Alpha);
-	
 	img::draw_histogram(alpha_stats.hist, alpha_stats_img);
-	img::write_image(alpha_stats_img, out_dir + "gray_stats_alpha.png");
+	img::write_image(alpha_stats_img, out_dir + "alpha_stats.png");
+	print(alpha_stats);
 
-	GrayImage alpha_stats_seq_img;
-	img::seq::alpha_grayscale(corvette_img);
-	alpha_stats = img::calc_stats(corvette_img, img::Channel::Alpha);
-	
-	img::draw_histogram(alpha_stats.hist, alpha_stats_seq_img);
-	img::write_image(alpha_stats_img, out_dir + "gray_stats_alpha_seq.png");
-
-	GrayImage alpha_stats_simd_img;
-	img::simd::alpha_grayscale(corvette_img);
-	alpha_stats = img::calc_stats(corvette_img, img::Channel::Alpha);
-	
-	img::draw_histogram(alpha_stats.hist, alpha_stats_simd_img);
-	img::write_image(alpha_stats_img, out_dir + "gray_stats_alpha_simd.png");
-
-	img::seq::transform_alpha(caddy_img, [](auto const& p) { return 255; });
+	alpha_stats_img.dispose();
+	img::seq::transform_alpha(src, [](auto const& p) { return 255; });
+}
 
 
-	// create a new grayscale source
-	GrayImage src_gray_img;
-	img::make_image(src_gray_img, width, height);
-	img::seq::copy(dst_gray_img, src_gray_img);
-
-	// rotate
-	r32 theta = 0.6f * 2 * 3.14159f;
-	img::seq::rotate(caddy_img, dst_img, width / 2, height / 2, theta);
-	img::write_image(dst_img, out_dir + "rotate.png");
-
-	img::seq::rotate(src_gray_img, dst_gray_img, width / 2, height / 2, theta);
-	img::write_image(dst_gray_img, out_dir + "rotate_gray.png");
-
-
-	// contrast
+void contrast_test(GrayImage const& src, GrayImage const& dst, path_t const& out_dir)
+{
+	auto gray_stats = img::calc_stats(src);
 	auto shade_min = (u8)(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
 	auto shade_max = (u8)(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
 
-	img::seq::contrast(src_gray_img, dst_gray_img, shade_min, shade_max);
-	img::write_image(dst_gray_img, out_dir + "contrast.png");
-
-	img::seq::contrast(src_gray_img, dst_gray_img, shade_min, shade_max);
-	img::write_image(dst_gray_img, out_dir + "contrast_seq.png");
+	img::seq::contrast(src, dst, shade_min, shade_max);
+	img::write_image(dst, out_dir + "contrast.png");
+}
 
 
-	// binarize
+void binarize_test(GrayImage const& src, GrayImage const& dst, path_t const& out_dir)
+{
+	auto gray_stats = img::calc_stats(src);
 	auto const is_white = [&](u8 p) { return (r32)(p) > gray_stats.mean; };
 
-	img::seq::binarize(src_gray_img, dst_gray_img, is_white);
-	img::write_image(dst_gray_img, out_dir + "binarize.png");
-
-	img::seq::binarize(src_gray_img, dst_gray_img, is_white);
-	img::write_image(dst_gray_img, out_dir + "binarize_seq.png");
+	img::seq::binarize(src, dst, is_white);
+	img::write_image(dst, out_dir + "binarize.png");
+}
 
 
-	//blur
-	img::seq::blur(src_gray_img, dst_gray_img);
-	img::write_image(dst_gray_img, out_dir + "blur.png");
+void blur_test(GrayImage const& src, GrayImage const& dst, path_t const& out_dir)
+{
+	img::seq::blur(src, dst);
+	img::write_image(dst, out_dir + "blur.png");
 
-	img::seq::blur(src_gray_img, dst_gray_img);
-	img::write_image(dst_gray_img, out_dir + "blur_seq.png");
-
-	img::simd::blur(src_gray_img, dst_gray_img);
-	img::write_image(dst_gray_img, out_dir + "blur_simd.png");
+	img::simd::blur(src, dst);
+	img::write_image(dst, out_dir + "simd_blur.png");
+}
 
 
-	// edge detection
+void edges_test(GrayImage const& src, GrayImage const& dst, path_t const& out_dir)
+{
 	auto const threshold = [](u8 g) { return g >= 100; };
 
-	img::seq::edges(src_gray_img, dst_gray_img, threshold);
-	img::write_image(dst_gray_img, out_dir + "edges.png");
+	img::seq::edges(src, dst, threshold);
+	img::write_image(dst, out_dir + "edges.png");
 
-	img::seq::edges(src_gray_img, dst_gray_img, threshold);
-	img::write_image(dst_gray_img, out_dir + "edges_seq.png");
-
-	img::simd::edges(src_gray_img, dst_gray_img, threshold);
-	img::write_image(dst_gray_img, out_dir + "edges_simd.png");
+	img::simd::edges(src, dst, threshold);
+	img::write_image(dst, out_dir + "simd_edges.png");
+}
 
 
-	// gradient
-	img::seq::gradients(src_gray_img, dst_gray_img);
-	img::write_image(dst_gray_img, out_dir + "gradient.png");
+void gradients_test(GrayImage const& src, GrayImage const& dst, path_t const& out_dir)
+{
+	img::seq::gradients(src, dst);
+	img::write_image(dst, out_dir + "gradient.png");
 
-	img::seq::gradients(src_gray_img, dst_gray_img);
-	img::write_image(dst_gray_img, out_dir + "gradient_seq.png");
-
-	img::simd::gradients(src_gray_img, dst_gray_img);
-	img::write_image(dst_gray_img, out_dir + "gradient_simd.png");
+	img::simd::gradients(src, dst);
+	img::write_image(dst, out_dir + "simd_gradient.png");
+}
 
 
-	// combine transformations in the same image
-	// regular grayscale to start
-	img::seq::copy(src_gray_img, dst_gray_img);
+void combine_views_test(GrayImage const& src, GrayImage const& dst, path_t const& out_dir)
+{
+	auto width = src.width;
+	auto height = src.height;
+
+	auto gray_stats = img::calc_stats(src);
+	auto shade_min = (u8)(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
+	auto shade_max = (u8)(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
+
+	auto const is_white = [&](u8 p) { return (r32)(p) > gray_stats.mean; };
+	auto const threshold = [](u8 g) { return g >= 100; };
 
 	img::pixel_range_t range;
 	range.x_begin = 0;
 	range.x_end = width / 2;
 	range.y_begin = 0;
 	range.y_end = height / 2;
-	auto src_sub = img::sub_view(src_gray_img, range);
-	auto dst_sub = img::sub_view(dst_gray_img, range);
-	img::seq::gradients(src_sub, dst_sub);
-	
+	auto src_sub = img::sub_view(src, range);
+	auto dst_sub = img::sub_view(dst, range);
+	img::seq::gradients(src_sub, dst_sub);	
 
 	range.x_begin = width / 2;
 	range.x_end = width;
-	src_sub = img::sub_view(src_gray_img, range);
-	dst_sub = img::sub_view(dst_gray_img, range);	
+	src_sub = img::sub_view(src, range);
+	dst_sub = img::sub_view(dst, range);
 	img::seq::contrast(src_sub, dst_sub, shade_min, shade_max);
 
 	range.x_begin = 0;
 	range.x_end = width / 2;
 	range.y_begin = height / 2;
 	range.y_end = height;
-	src_sub = img::sub_view(src_gray_img, range);
-	dst_sub = img::sub_view(dst_gray_img, range);
+	src_sub = img::sub_view(src, range);
+	dst_sub = img::sub_view(dst, range);
 	img::seq::blur(src_sub, dst_sub);	
 
 	range.x_begin = width / 2;
 	range.x_end = width;
-	src_sub = img::sub_view(src_gray_img, range);
-	dst_sub = img::sub_view(dst_gray_img, range);
+	src_sub = img::sub_view(src, range);
+	dst_sub = img::sub_view(dst, range);
 	img::seq::binarize(src_sub, dst_sub, is_white);	
 
 	range.x_begin = width / 4;
 	range.x_end = range.x_begin + width / 2;
 	range.y_begin = height / 4;
 	range.y_end = range.y_begin + height / 2;
-	src_sub = img::sub_view(src_gray_img, range);
-	dst_sub = img::sub_view(dst_gray_img, range);
+	src_sub = img::sub_view(src, range);
+	dst_sub = img::sub_view(dst, range);
 	img::seq::edges(src_sub, dst_sub, threshold);
 
-	img::write_image(dst_gray_img, out_dir + "combo.png");
+	img::write_image(dst, out_dir + "combo.png");
+}
 
-	corvette_img.dispose();
-	caddy_read.dispose();
-	caddy_img.dispose();
-	dst_img.dispose();
-	dst_gray_img.dispose();
-	gray_stats_img.dispose();
-	alpha_stats_img.dispose();
-	alpha_stats_seq_img.dispose();
-	alpha_stats_simd_img.dispose();
-	src_gray_img.dispose();
 
-	auto time = sw.get_time_sec();
+void process_tests(path_t& out_dir)
+{
+	// C++17 not available on Jetson Nano.
+	// No stl parallel algorithms
 
-	printf("Done %f seconds\n", time);
+	printf("\nprocess:\n");
+	empty_dir(out_dir);
+
+	// get image
+	Image corvette;
+	img::read_image_from_file(CORVETTE_PATH, corvette);
+
+	auto const width = corvette.width;
+	auto const height = corvette.height;	
+
+	// get another image for blending
+	// make sure it is the same size
+	Image caddy_read;
+	img::read_image_from_file(CADILLAC_PATH, caddy_read);
+	Image caddy;
+	caddy.width = width;
+	caddy.height = height;
+	img::resize_image(caddy_read, caddy);
+	img::write_image(caddy, out_dir + "caddy.png");
+
+	// read a grayscale image
+	GrayImage src_gray;
+	img::read_image_from_file(CORVETTE_PATH, src_gray);
+
+
+	Image dst_img;
+	img::make_image(dst_img, width, height);
+
+	GrayImage dst_gray;
+	img::make_image(dst_gray, width, height);
+
+
+	alpha_blend_test(caddy, corvette, dst_img, out_dir);	
+
+	grayscale_test(corvette, dst_gray, out_dir);
+
+	rotate_test(caddy, dst_img, out_dir);
+
+	rotate_gray_test(src_gray, dst_gray, out_dir);
+
+	stats_test(src_gray, out_dir);
+
+	alpha_grayscale_test(corvette, out_dir);
+
+	contrast_test(src_gray, dst_gray, out_dir);
+
+	binarize_test(src_gray, dst_gray, out_dir);
+
+	blur_test(src_gray, dst_gray, out_dir);
+
+	edges_test(src_gray, dst_gray, out_dir);
+
+	gradients_test(src_gray, dst_gray, out_dir);
+	
+	combine_views_test(src_gray, dst_gray, out_dir);
 }
 
 
@@ -529,4 +545,10 @@ void empty_dir(path_t& dir)
 
 	command = std::string("rm -rfv ") + dir + '*';
 	c =system(command.c_str());	
+}
+
+
+void print(img::stats_t const& stats)
+{
+	printf("mean = %f sigma = %f\n", stats.mean, stats.std_dev);
 }
