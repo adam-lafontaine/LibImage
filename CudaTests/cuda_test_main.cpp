@@ -67,6 +67,7 @@ void alpha_blend_test(Image const& src, Image const& cur, Image const& dst, path
 
 	img::seq::copy(cur, dst);
 	img::seq::alpha_blend(src, dst);
+	//img::simd::alpha_blend(src, dst);
 	img::write_image(dst, out_dir + "alpha_blend_src_dst.png");
 
 	img::seq::transform_alpha(src, [](auto const& p) { return 255; });
@@ -76,6 +77,7 @@ void alpha_blend_test(Image const& src, Image const& cur, Image const& dst, path
 void grayscale_test(Image const& src, GrayImage const& dst, path_t const& out_dir)
 {
 	img::seq::grayscale(src, dst);
+	//img::simd::grayscale(src, dst);
 	img::write_image(dst, out_dir + "grayscale.png");
 }
 
@@ -286,8 +288,7 @@ void cuda_alpha_blend_test(
 	CudaImage const& d_src, CudaImage const& d_cur, CudaImage const& d_dst, 
 	path_t const& out_dir
 	)
-{
-	
+{	
 	img::seq::transform_alpha(src, [](auto& p){ return 128; });
 
 	img::copy_to_device(src, d_src);
