@@ -28,6 +28,8 @@ using GrayView = img::gray::view_t;
 using Pixel = img::pixel_t;
 using Planar = img::image_soa;
 
+using path_t = fs::path;
+
 
 // set this directory for your system
 constexpr auto ROOT_DIR = "C:/D_Data/repos/LibImage/LibImageTests/LibImageAllTests";
@@ -49,15 +51,11 @@ void print(img::stats_t const& stats);
 
 void basic_tests(fs::path const& out_dir);
 void math_tests(fs::path const& out_dir);
-void process_tests(fs::path const& out_dir);
+void process_tests(path_t const& out_dir);
 void planar_tests(fs::path const& out_dir);
 
-void for_each_times(fs::path const& out_dir);
-void transform_times(fs::path const& out_dir);
 void gradient_times(fs::path const& out_dir);
-void alpha_blend_times();
-void grayscale_times();
-void read_times();
+//void read_times();
 
 
 int main()
@@ -82,14 +80,9 @@ int main()
 	auto timing_dir = dst_root / "timing";
 	empty_dir(timing_dir);
 
-	for_each_times(timing_dir);
-	transform_times(timing_dir);
-
 	gradient_times(timing_dir);
 
-	alpha_blend_times();
-	grayscale_times();
-	read_times();
+	//read_times();
 
 	printf("\nDone.\n");
 }
@@ -232,17 +225,226 @@ void math_tests(fs::path const& out_dir)
 }
 
 
-void process_tests(fs::path const& out_dir)
+void alpha_blend_test(Image const& src, Image const& cur, Image const& dst, path_t const& out_dir)
+{
+	img::seq::transform_alpha(src, [](auto const& p) { return 128; });
+
+	img::alpha_blend(src, cur, dst);
+	img::write_image(dst, out_dir / "alpha_blend.png");
+
+	img::seq::alpha_blend(src, cur, dst);
+	img::write_image(dst, out_dir / "seq_alpha_blend.png");
+
+	img::simd::alpha_blend(src, cur, dst);
+	img::write_image(dst, out_dir / "simd_alpha_blend.png");
+
+	img::seq::copy(cur, dst);
+	img::alpha_blend(src, dst);
+	img::write_image(dst, out_dir / "alpha_blend_src_dst.png");
+
+	img::seq::copy(cur, dst);
+	img::seq::alpha_blend(src, dst);
+	img::write_image(dst, out_dir / "seq_alpha_blend_src_dst.png");
+
+	img::seq::copy(cur, dst);
+	img::simd::alpha_blend(src, dst);
+	img::write_image(dst, out_dir / "simd_alpha_blend_src_dst.png");
+
+	img::seq::transform_alpha(src, [](auto const& p) { return 255; });
+}
+
+
+void grayscale_test(Image const& src, GrayImage const& dst, path_t const& out_dir)
+{
+	img::grayscale(src, dst);
+	img::write_image(dst, out_dir / "grayscale.png");
+
+	img::seq::grayscale(src, dst);
+	img::write_image(dst, out_dir / "seq_grayscale.png");
+
+	img::simd::grayscale(src, dst);
+	img::write_image(dst, out_dir / "simd_grayscale.png");
+}
+
+
+void rotate_test(Image const& src, Image const& dst, path_t const& out_dir)
+{
+	r32 theta = 0.6f * 2 * 3.14159f;
+	img::seq::rotate(src, dst, src.width / 2, src.height / 2, theta);
+	img::write_image(dst, out_dir / "rotate.png");
+}
+
+
+void rotate_gray_test(GrayImage const& src, GrayImage const& dst, path_t const& out_dir)
+{
+	r32 theta = 0.6f * 2 * 3.14159f;
+
+	img::rotate(src, dst, src.width / 2, src.height / 2, theta);
+	img::write_image(dst, out_dir / "rotate_gray.png");
+
+	img::seq::rotate(src, dst, src.width / 2, src.height / 2, theta);
+	img::write_image(dst, out_dir / "seq_rotate_gray.png");
+}
+
+
+void stats_test(GrayImage const& src, path_t const& out_dir)
+{
+	auto gray_stats = img::calc_stats(src);
+	GrayImage gray_stats_img;
+	img::draw_histogram(gray_stats.hist, gray_stats_img);
+	img::write_image(gray_stats_img, out_dir / "gray_stats.png");
+	print(gray_stats);
+
+	gray_stats_img.dispose();
+}
+
+
+void alpha_grayscale_test(Image const& src, path_t const& out_dir)
+{
+	img::alpha_grayscale(src);
+	auto alpha_stats = img::calc_stats(src, img::Channel::Alpha);
+	GrayImage alpha_stats_img;
+	img::draw_histogram(alpha_stats.hist, alpha_stats_img);
+	img::write_image(alpha_stats_img, out_dir / "alpha_stats.png");
+	print(alpha_stats);
+
+	alpha_stats_img.dispose();
+	img::seq::transform_alpha(src, [](auto const& p) { return 255; });
+}
+
+
+void contrast_test(GrayImage const& src, GrayImage const& dst, path_t const& out_dir)
+{
+	auto gray_stats = img::calc_stats(src);
+	auto shade_min = (u8)(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
+	auto shade_max = (u8)(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
+
+	img::contrast(src, dst, shade_min, shade_max);
+	img::write_image(dst, out_dir / "contrast.png");
+
+	img::seq::contrast(src, dst, shade_min, shade_max);
+	img::write_image(dst, out_dir / "seq_contrast.png");
+}
+
+
+void binarize_test(GrayImage const& src, GrayImage const& dst, path_t const& out_dir)
+{
+	auto gray_stats = img::calc_stats(src);
+	auto const is_white = [&](u8 p) { return (r32)(p) > gray_stats.mean; };
+
+	img::binarize(src, dst, is_white);
+	img::write_image(dst, out_dir / "binarize.png");
+
+	img::seq::binarize(src, dst, is_white);
+	img::write_image(dst, out_dir / "seq_binarize.png");
+}
+
+
+void blur_test(GrayImage const& src, GrayImage const& dst, path_t const& out_dir)
+{
+	img::blur(src, dst);
+	img::write_image(dst, out_dir / "blur.png");
+
+	img::seq::blur(src, dst);
+	img::write_image(dst, out_dir / "seq_blur.png");
+
+	img::simd::blur(src, dst);
+	img::write_image(dst, out_dir / "simd_blur.png");
+}
+
+
+void edges_test(GrayImage const& src, GrayImage const& dst, path_t const& out_dir)
+{
+	auto const threshold = [](u8 g) { return g >= 100; };
+
+	img::edges(src, dst, threshold);
+	img::write_image(dst, out_dir / "edges.png");
+
+	img::seq::edges(src, dst, threshold);
+	img::write_image(dst, out_dir / "seq_edges.png");
+
+	img::simd::edges(src, dst, threshold);
+	img::write_image(dst, out_dir / "simd_edges.png");
+}
+
+
+void gradients_test(GrayImage const& src, GrayImage const& dst, path_t const& out_dir)
+{
+	img::gradients(src, dst);
+	img::write_image(dst, out_dir / "gradient.png");
+
+	img::seq::gradients(src, dst);
+	img::write_image(dst, out_dir / "seq_gradient.png");
+
+	img::simd::gradients(src, dst);
+	img::write_image(dst, out_dir / "simd_gradient.png");
+}
+
+
+void combine_views_test(GrayImage const& src, GrayImage const& dst, path_t const& out_dir)
+{
+	auto width = src.width;
+	auto height = src.height;
+
+	auto gray_stats = img::calc_stats(src);
+	auto shade_min = (u8)(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
+	auto shade_max = (u8)(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
+
+	auto const is_white = [&](u8 p) { return (r32)(p) > gray_stats.mean; };
+	auto const threshold = [](u8 g) { return g >= 100; };
+
+	img::pixel_range_t range;
+	range.x_begin = 0;
+	range.x_end = width / 2;
+	range.y_begin = 0;
+	range.y_end = height / 2;
+	auto src_sub = img::sub_view(src, range);
+	auto dst_sub = img::sub_view(dst, range);
+	img::seq::gradients(src_sub, dst_sub);
+
+	range.x_begin = width / 2;
+	range.x_end = width;
+	src_sub = img::sub_view(src, range);
+	dst_sub = img::sub_view(dst, range);
+	img::seq::contrast(src_sub, dst_sub, shade_min, shade_max);
+
+	range.x_begin = 0;
+	range.x_end = width / 2;
+	range.y_begin = height / 2;
+	range.y_end = height;
+	src_sub = img::sub_view(src, range);
+	dst_sub = img::sub_view(dst, range);
+	img::seq::blur(src_sub, dst_sub);
+
+	range.x_begin = width / 2;
+	range.x_end = width;
+	src_sub = img::sub_view(src, range);
+	dst_sub = img::sub_view(dst, range);
+	img::seq::binarize(src_sub, dst_sub, is_white);
+
+	range.x_begin = width / 4;
+	range.x_end = range.x_begin + width / 2;
+	range.y_begin = height / 4;
+	range.y_end = range.y_begin + height / 2;
+	src_sub = img::sub_view(src, range);
+	dst_sub = img::sub_view(dst, range);
+	img::seq::edges(src_sub, dst_sub, threshold);
+
+	img::write_image(dst, out_dir / "combo.png");
+}
+
+
+void process_tests(path_t const& out_dir)
 {
 	printf("\nprocess:\n");
 	empty_dir(out_dir);
 
 	// get image
-	Image corvette_image;
-	img::read_image_from_file(CORVETTE_PATH, corvette_image);
-	auto const width = corvette_image.width;
-	auto const height = corvette_image.height;
-	auto corvette_view = img::make_view(corvette_image);	
+	Image corvette;
+	img::read_image_from_file(CORVETTE_PATH, corvette);
+
+	auto const width = corvette.width;
+	auto const height = corvette.height;
 
 	// get another image for blending
 	// make sure it is the same size
@@ -252,118 +454,43 @@ void process_tests(fs::path const& out_dir)
 	caddy.width = width;
 	caddy.height = height;
 	img::resize_image(caddy_read, caddy);
-	auto caddy_view = make_view(caddy);
+	img::write_image(caddy, out_dir / "caddy.png");
 
-	// make destination images
-	Image dst_image;
-	img::make_image(dst_image, width, height);
+	// read a grayscale image
+	GrayImage src_gray;
+	img::read_image_from_file(CORVETTE_PATH, src_gray);
 
-	GrayImage dst_gray_image;
-	img::make_image(dst_gray_image, width, height);
 
-	// alpha blending
-	img::transform_alpha(caddy_view, [](auto const& p) { return 128; });
-	img::simd::alpha_blend(caddy_view, corvette_view, dst_image);
-	img::write_image(dst_image, out_dir / "alpha_blend.png");
+	Image dst_img;
+	img::make_image(dst_img, width, height);
 
-	img::copy(corvette_view, dst_image);
-	img::simd::alpha_blend(caddy_view, dst_image);
-	img::write_image(dst_image, out_dir / "alpha_blend_src_dst.png");
+	GrayImage dst_gray;
+	img::make_image(dst_gray, width, height);
 
-	// grayscale
-	img::simd::grayscale(corvette_view, dst_gray_image);
-	img::write_image(dst_gray_image, out_dir / "grayscale.png");
 
-	// stats
-	auto gray_stats = img::calc_stats(dst_gray_image);
-	GrayImage gray_stats_image;
-	img::draw_histogram(gray_stats.hist, gray_stats_image);
-	img::write_image(gray_stats_image, out_dir / "gray_stats.png");
-	print(gray_stats);
+	alpha_blend_test(caddy, corvette, dst_img, out_dir);
 
-	// alpha grayscale
-	img::alpha_grayscale(corvette_view);
-	auto alpha_stats = img::calc_stats(corvette_image, img::Channel::Alpha);
-	GrayImage alpha_stats_image;
-	img::draw_histogram(alpha_stats.hist, alpha_stats_image);
-	img::write_image(alpha_stats_image, out_dir / "alpha_stats.png");
-	print(alpha_stats);
+	grayscale_test(corvette, dst_gray, out_dir);
 
-	img::transform_alpha(caddy, [](auto const& p) { return 255; });
+	rotate_test(caddy, dst_img, out_dir);
 
-	// create a new grayscale source
-	GrayImage src_gray_image;
-	img::make_image(src_gray_image, width, height);
-	img::copy(dst_gray_image, src_gray_image);
+	rotate_gray_test(src_gray, dst_gray, out_dir);
 
-	// rotate
-	r32 theta = 0.6f * 2 * 3.14159f;
-	img::seq::rotate(caddy, dst_image, width / 2, height / 2, theta);
-	img::write_image(dst_image, out_dir / "rotate.png");
+	stats_test(src_gray, out_dir);
 
-	img::rotate(src_gray_image, dst_gray_image, width / 2, height / 2, theta);
-	img::write_image(dst_gray_image, out_dir / "rotate_gray.png");
+	alpha_grayscale_test(corvette, out_dir);
 
-	// contrast
-	auto shade_min = (u8)(std::max(0.0f, gray_stats.mean - gray_stats.std_dev));
-	auto shade_max = (u8)(std::min(255.0f, gray_stats.mean + gray_stats.std_dev));
-	img::contrast(src_gray_image, dst_gray_image, shade_min, shade_max);
-	img::write_image(dst_gray_image, out_dir / "contrast.png");
+	contrast_test(src_gray, dst_gray, out_dir);
 
-	// binarize
-	auto const is_white = [&](u8 p) { return (r32)(p) > gray_stats.mean; };
-	img::binarize(src_gray_image, dst_gray_image, is_white);
-	img::write_image(dst_gray_image, out_dir / "binarize.png");
+	binarize_test(src_gray, dst_gray, out_dir);
 
-	//blur
-	img::simd::blur(src_gray_image, dst_gray_image);
-	img::write_image(dst_gray_image, out_dir / "blur.png");
+	blur_test(src_gray, dst_gray, out_dir);
 
-	GrayImage gray_temp;
-	img::make_image(gray_temp, width, height);
+	edges_test(src_gray, dst_gray, out_dir);
 
-	// edge detection
-	img::simd::edges(src_gray_image, dst_gray_image, gray_temp, [](u8 g) { return g >= 100; });
-	img::write_image(dst_gray_image, out_dir / "edges.png");
+	gradients_test(src_gray, dst_gray, out_dir);
 
-	// gradient
-	img::simd::gradients(src_gray_image, dst_gray_image, gray_temp);
-	img::write_image(dst_gray_image, out_dir / "gradient.png");
-
-	// combine transformations in the same image
-	// regular grayscale to start
-	img::copy(src_gray_image, dst_gray_image);
-
-	img::pixel_range_t range;
-	range.x_begin = 0;
-	range.x_end = width / 2;
-	range.y_begin = 0;
-	range.y_end = height / 2;
-	auto src_sub = img::sub_view(src_gray_image, range);
-	auto dst_sub = img::sub_view(dst_gray_image, range);
-	img::binarize(src_sub, dst_sub, is_white);
-
-	range.x_begin = width / 2;
-	range.x_end = width;
-	src_sub = img::sub_view(src_gray_image, range);
-	dst_sub = img::sub_view(dst_gray_image, range);
-	img::contrast(src_sub, dst_sub, shade_min, shade_max);
-
-	range.x_begin = 0;
-	range.x_end = width / 2;
-	range.y_begin = height / 2;
-	range.y_end = height;
-	src_sub = img::sub_view(src_gray_image, range);
-	dst_sub = img::sub_view(dst_gray_image, range);
-	img::blur(src_sub, dst_sub);
-
-	range.x_begin = width / 2;
-	range.x_end = width;
-	src_sub = img::sub_view(src_gray_image, range);
-	dst_sub = img::sub_view(dst_gray_image, range);
-	img::gradients(src_sub, dst_sub);
-
-	img::write_image(dst_gray_image, out_dir / "combo.png");
+	combine_views_test(src_gray, dst_gray, out_dir);
 }
 
 
@@ -444,357 +571,6 @@ void planar_tests(fs::path const& out_dir)
 	img::write_image(dst_gray_image, out_dir / "grayscale_simd.png");
 
 
-}
-
-
-
-Pixel alpha_blend_linear(Pixel const& src, Pixel const& current)
-{
-	auto const to_r32 = [](u8 c) { return (r32)(c) / 255.0f; };
-
-	auto a = to_r32(src.alpha);
-
-	auto const blend = [&](u8 s, u8 c) 
-	{
-		auto sf = (r32)(s);
-		auto cf = (r32)(c);
-		
-		auto blended = a * cf + (1.0f - a) * sf;
-
-		return (u8)(blended);
-	};
-
-	auto red = blend(src.red, current.red);
-	auto green = blend(src.green, current.green);
-	auto blue = blend(src.blue, current.blue);
-
-	return img::to_pixel(red, green, blue);
-}
-
-
-void for_each_times(fs::path const& out_dir)
-{
-	printf("\nfor_each:\n");
-
-	std::random_device rd;
-	std::default_random_engine reng(rd());
-	std::uniform_int_distribution<int> dist(0, 255);
-
-	auto const random_pixel = [&]() 
-	{
-		Pixel p;
-
-		for (u32 i = 0; i < 4; ++i)
-		{
-			p.channels[i] = (u8)(dist(reng));
-		}
-
-		return p;
-	};
-
-	auto const random_blended_pixel = [&](Pixel& p) 
-	{
-		Pixel src = img::to_pixel(0);// random_pixel();
-
-		p = alpha_blend_linear(src, p);
-	};
-
-	u32 n_image_sizes = 2;
-	u32 image_dim_factor = 4;
-
-	u32 n_image_counts = 3;
-	u32 image_count_factor = 2;
-
-	u32 width_start = 400;
-	u32 height_start = 300;
-	u32 image_count_start = 50;
-
-	auto green = img::to_pixel(88, 100, 29);
-	auto blue = img::to_pixel(0, 119, 182);
-
-	img::multi_chart_data_t loop_image_times;
-	loop_image_times.color = green;
-
-	img::multi_chart_data_t loop_view_times;
-	loop_view_times.color = blue;
-
-	img::multi_chart_data_t stl_image_times;
-	stl_image_times.color = green;
-
-	img::multi_chart_data_t stl_view_times;
-	stl_view_times.color = blue;
-
-	img::multi_chart_data_t par_image_times;
-	par_image_times.color = green;
-
-	img::multi_chart_data_t par_view_times;
-	par_view_times.color = blue;
-
-
-	Stopwatch sw;
-	u32 width = width_start;
-	u32 height = height_start;
-	u32 image_count = image_count_start;
-
-	auto const current_pixels = [&]() { return (r64)(width) * height * image_count; };
-
-	auto const start_pixels = current_pixels();
-
-	auto const scale = [&](auto t) { return (r32)(start_pixels / current_pixels() * t); };
-	auto const print_wh = [&]() { printf("\nwidth: %u height: %u\n", width, height); };
-	auto const print_count = [&]() { printf("  image count: %u\n", image_count); };
-
-	r64 t = 0;
-	auto const print_t = [&](const char* label) { printf("    %s time: %f\n", label, scale(t)); };
-
-	for (u32 s = 0; s < n_image_sizes; ++s)
-	{
-		print_wh();
-		image_count = image_count_start;
-
-		Image image;
-		img::make_image(image, width, height);
-		auto view = img::make_view(image);
-
-		std::vector<r32> loop_image;
-		std::vector<r32> loop_view;
-		std::vector<r32> stl_image;
-		std::vector<r32> stl_view;
-		std::vector<r32> par_image;
-		std::vector<r32> par_view;
-
-		for (u32 c = 0; c < n_image_counts; ++c)
-		{
-			print_count();			
-
-			sw.start();
-			for (u32 i = 0; i < image_count; ++i)
-			{
-				img::for_each_pixel(image, random_blended_pixel);
-			}			
-			t = sw.get_time_milli();
-			loop_image.push_back(scale(t));
-			print_t("loop image");
-
-			sw.start();
-			for (u32 i = 0; i < image_count; ++i)
-			{
-				img::for_each_pixel(view, random_blended_pixel);
-			}			
-			t = sw.get_time_milli();
-			loop_view.push_back(scale(t));
-			print_t(" loop view");
-
-			sw.start();
-			for (u32 i = 0; i < image_count; ++i)
-			{
-				std::for_each(image.begin(), image.end(), random_blended_pixel);
-			}
-			t = sw.get_time_milli();
-			stl_image.push_back(scale(t));
-			print_t(" stl image");
-
-			sw.start();
-			for (u32 i = 0; i < image_count; ++i)
-			{
-				std::for_each(view.begin(), view.end(), random_blended_pixel);
-			}
-			t = sw.get_time_milli();
-			stl_view.push_back(scale(t));
-			print_t("  stl view");
-
-			sw.start();
-			for (u32 i = 0; i < image_count; ++i)
-			{
-				std::for_each(std::execution::par, image.begin(), image.end(), random_blended_pixel);
-			}
-			t = sw.get_time_milli();
-			par_image.push_back(scale(t));
-			print_t(" par image");
-
-			sw.start();
-			for (u32 i = 0; i < image_count; ++i)
-			{
-				std::for_each(std::execution::par, view.begin(), view.end(), random_blended_pixel);
-			}
-			t = sw.get_time_milli();
-			par_view.push_back(scale(t));
-			print_t("  par view");
-
-			image_count *= image_count_factor;
-		}
-
-		loop_image_times.data_list.push_back(loop_image);
-		loop_view_times.data_list.push_back(loop_view);
-		stl_image_times.data_list.push_back(stl_image);
-		stl_view_times.data_list.push_back(stl_view);
-		par_image_times.data_list.push_back(par_image);
-		par_view_times.data_list.push_back(par_view);
-
-		width *= image_dim_factor;
-		height *= image_dim_factor;
-	}	
-
-	Image chart;
-	img::grouped_multi_chart_data_t chart_data
-	{
-		loop_image_times, loop_view_times,
-		stl_image_times, stl_view_times,
-		par_image_times, par_view_times,
-	};
-
-	img::draw_bar_multi_chart_grouped(chart_data, chart);
-	img::write_image(chart, out_dir / "for_each.bmp");
-}
-
-
-void transform_times(fs::path const& out_dir)
-{
-	printf("\ntransform:\n");
-
-	std::random_device rd;
-	std::default_random_engine reng(rd());
-	std::uniform_int_distribution<int> dist(0, 255);
-
-	auto const random_pixel = [&]()
-	{
-		Pixel p;
-
-		for (u32 i = 0; i < 4; ++i)
-		{
-			p.channels[i] = (u8)(dist(reng));
-		}
-
-		return p;
-	};
-
-	auto const random_blended_pixel = [&](Pixel const& p)
-	{
-		Pixel src = img::to_pixel(0);// random_pixel();
-
-		return alpha_blend_linear(src, p);
-	};
-
-	u32 n_image_sizes = 2;
-	u32 image_dim_factor = 4;
-
-	u32 n_image_counts = 3;
-	u32 image_count_factor = 2;
-
-	u32 width_start = 400;
-	u32 height_start = 300;
-	u32 image_count_start = 50;
-
-	auto green = img::to_pixel(88, 100, 29);
-	auto blue = img::to_pixel(0, 119, 182);
-
-	img::multi_chart_data_t stl_image_times;
-	stl_image_times.color = green;
-
-	img::multi_chart_data_t stl_view_times;
-	stl_view_times.color = blue;
-
-	img::multi_chart_data_t par_image_times;
-	par_image_times.color = green;
-
-	img::multi_chart_data_t par_view_times;
-	par_view_times.color = blue;
-
-
-	Stopwatch sw;
-	u32 width = width_start;
-	u32 height = height_start;
-	u32 image_count = image_count_start;
-
-	auto const current_pixels = [&]() { return (r64)(width) * height * image_count; };
-
-	auto const start_pixels = current_pixels();
-
-	auto const scale = [&](auto t) { return (r32)(start_pixels / current_pixels() * t); };
-	auto const print_wh = [&]() { printf("\nwidth: %u height: %u\n", width, height); };
-	auto const print_count = [&]() { printf("  image count: %u\n", image_count); };
-
-	r64 t = 0;
-	auto const print_t = [&](const char* label) { printf("    %s time: %f\n", label, scale(t)); };
-
-	for (u32 s = 0; s < n_image_sizes; ++s)
-	{
-		print_wh();
-		image_count = image_count_start;
-
-		Image image;
-		img::make_image(image, width, height);
-		auto view = img::make_view(image);
-
-		Image dst;
-		img::make_image(dst, width, height);
-
-		std::vector<r32> stl_image;
-		std::vector<r32> stl_view;
-		std::vector<r32> par_image;
-		std::vector<r32> par_view;
-
-		for (u32 c = 0; c < n_image_counts; ++c)
-		{
-			print_count();
-
-			sw.start();
-			for (u32 i = 0; i < image_count; ++i)
-			{
-				std::transform(image.begin(), image.end(), dst.begin(), random_blended_pixel);
-			}
-			t = sw.get_time_milli();
-			stl_image.push_back(scale(t));
-			print_t("stl image");
-
-			sw.start();
-			for (u32 i = 0; i < image_count; ++i)
-			{
-				std::transform(view.begin(), view.end(), dst.begin(), random_blended_pixel);
-			}
-			t = sw.get_time_milli();
-			stl_view.push_back(scale(t));
-			print_t(" stl view");
-
-			sw.start();
-			for (u32 i = 0; i < image_count; ++i)
-			{
-				std::transform(std::execution::par, image.begin(), image.end(), dst.begin(), random_blended_pixel);
-			}
-			t = sw.get_time_milli();
-			par_image.push_back(scale(t));
-			print_t("par image");
-
-			sw.start();
-			for (u32 i = 0; i < image_count; ++i)
-			{
-				std::transform(std::execution::par, view.begin(), view.end(), dst.begin(), random_blended_pixel);
-			}
-			t = sw.get_time_milli();
-			par_view.push_back(scale(t));
-			print_t(" par view");
-
-			image_count *= image_count_factor;
-		}
-
-		stl_image_times.data_list.push_back(stl_image);
-		stl_view_times.data_list.push_back(stl_view);
-		par_image_times.data_list.push_back(par_image);
-		par_view_times.data_list.push_back(par_view);
-
-		width *= image_dim_factor;
-		height *= image_dim_factor;
-	}
-
-	Image chart;
-	img::grouped_multi_chart_data_t chart_data
-	{
-		stl_image_times, stl_view_times,
-		par_image_times, par_view_times,
-	};
-
-	img::draw_bar_multi_chart_grouped(chart_data, chart);
-	img::write_image(chart, out_dir / "transform.bmp");
 }
 
 
@@ -952,257 +728,64 @@ void gradient_times(fs::path const& out_dir)
 }
 
 
-void alpha_blend_times()
-{
-	printf("\nalpha blend:\n");
-
-	u32 n_image_sizes = 2;
-	u32 image_dim_factor = 4;
-
-	u32 n_image_counts = 2;
-	u32 image_count_factor = 4;
-
-	u32 width_start = 400;
-	u32 height_start = 300;
-	u32 image_count_start = 50;
-
-	Stopwatch sw;
-	u32 width = width_start;
-	u32 height = height_start;
-	u32 image_count = image_count_start;
-
-	auto const current_pixels = [&]() { return (r64)(width) * height * image_count; };
-
-	auto const start_pixels = current_pixels();
-
-	auto const scale = [&](auto t) { return (r32)(10'000'000.0 / current_pixels() * t); };
-	auto const print_wh = [&]() { printf("\nwidth: %u height: %u\n", width, height); };
-	auto const print_count = [&]() { printf("  image count: %u\n", image_count); };
-
-	r64 t = 0;
-	auto const print_t = [&](const char* label) { printf("    %s time: %f\n", label, scale(t)); };
-
-	for (u32 s = 0; s < n_image_sizes; ++s)
-	{
-		print_wh();
-		image_count = image_count_start;
-
-		Image im_src;
-		img::make_image(im_src, width, height);
-		Image im_dst;
-		img::make_image(im_dst, width, height);
-		Planar pl_src;
-		img::make_planar(pl_src, width, height);
-		Planar pl_dst;
-		img::make_planar(pl_dst, width, height);
-
-		for (u32 c = 0; c < n_image_counts; ++c)
-		{
-			print_count();
-
-			sw.start();
-			for (u32 i = 0; i < image_count; ++i)
-			{
-				img::seq::alpha_blend(im_src, im_dst);
-			}
-			t = sw.get_time_milli();
-			print_t("   seq");
-
-			sw.start();
-			for (u32 i = 0; i < image_count; ++i)
-			{
-				img::alpha_blend(im_src, im_dst);
-			}
-			t = sw.get_time_milli();
-			print_t("   par");
-
-			sw.start();
-			for (u32 i = 0; i < image_count; ++i)
-			{
-				img::simd::alpha_blend(im_src, im_dst);
-			}
-			t = sw.get_time_milli();
-			print_t("  simd");
-
-			sw.start();
-			for (u32 i = 0; i < image_count; ++i)
-			{
-				img::alpha_blend(pl_src, pl_dst);
-			}
-			t = sw.get_time_milli();
-			print_t("planar");
-
-			sw.start();
-			for (u32 i = 0; i < image_count; ++i)
-			{
-				img::simd::alpha_blend(pl_src, pl_dst);
-			}
-			t = sw.get_time_milli();
-			print_t("simd p");
-
-			image_count *= image_count_factor;
-		}			
-
-		width *= image_dim_factor;
-		height *= image_dim_factor;
-	}
-
-}
-
-
-void grayscale_times()
-{
-	printf("\ngrayscale:\n");
-
-	u32 n_image_sizes = 2;
-	u32 image_dim_factor = 4;
-
-	u32 n_image_counts = 2;
-	u32 image_count_factor = 4;
-
-	u32 width_start = 400;
-	u32 height_start = 300;
-	u32 image_count_start = 50;
-
-	Stopwatch sw;
-	u32 width = width_start;
-	u32 height = height_start;
-	u32 image_count = image_count_start;
-
-	auto const current_pixels = [&]() { return (r64)(width) * height * image_count; };
-
-	auto const start_pixels = current_pixels();
-
-	auto const scale = [&](auto t) { return (r32)(10'000'000.0 / current_pixels() * t); };
-	auto const print_wh = [&]() { printf("\nwidth: %u height: %u\n", width, height); };
-	auto const print_count = [&]() { printf("  image count: %u\n", image_count); };
-
-	r64 t = 0;
-	auto const print_t = [&](const char* label) { printf("    %s time: %f\n", label, scale(t)); };
-
-	for (u32 s = 0; s < n_image_sizes; ++s)
-	{
-		print_wh();
-		image_count = image_count_start;
-
-		Image im_src;
-		img::make_image(im_src, width, height);
-		GrayImage gr_dst;
-		img::make_image(gr_dst, width, height);
-		Planar pl_src;
-		img::make_planar(pl_src, width, height);
-
-		for (u32 c = 0; c < n_image_counts; ++c)
-		{
-			print_count();
-
-			sw.start();
-			for (u32 i = 0; i < image_count; ++i)
-			{
-				img::seq::grayscale(im_src, gr_dst);
-			}
-			t = sw.get_time_milli();
-			print_t("   seq");
-
-			sw.start();
-			for (u32 i = 0; i < image_count; ++i)
-			{
-				img::grayscale(im_src, gr_dst);
-			}
-			t = sw.get_time_milli();
-			print_t("   par");
-
-			sw.start();
-			for (u32 i = 0; i < image_count; ++i)
-			{
-				img::simd::grayscale(im_src, gr_dst);
-			}
-			t = sw.get_time_milli();
-			print_t("  simd");
-
-			sw.start();
-			for (u32 i = 0; i < image_count; ++i)
-			{				
-				img::grayscale(pl_src, gr_dst);
-			}
-			t = sw.get_time_milli();
-			print_t("planar");
-
-			sw.start();
-			for (u32 i = 0; i < image_count; ++i)
-			{				
-				img::simd::grayscale(pl_src, gr_dst);
-			}
-			t = sw.get_time_milli();
-			print_t("simd p");
-
-			image_count *= image_count_factor;
-		}
-
-		width *= image_dim_factor;
-		height *= image_dim_factor;
-	}
-}
-
-
-void read_times()
-{
-	printf("\nread:\n");
-
-	u32 n_image_counts = 2;
-	u32 image_count_factor = 4;
-	u32 image_count_start = 50;
-
-	Image corvette;
-	img::read_image_from_file(CORVETTE_PATH, corvette);
-	auto const width = corvette.width;
-	auto const height = corvette.height;
-
-	Stopwatch sw;
-	u32 image_count = image_count_start;
-
-	auto const current_pixels = [&]() { return (r64)(width) * height * image_count; };
-
-	auto const start_pixels = current_pixels();
-
-	auto const scale = [&](auto t) { return (r32)(10'000'000.0 / current_pixels() * t); };
-	auto const print_wh = [&]() { printf("\nwidth: %u height: %u\n", width, height); };
-	auto const print_count = [&]() { printf("  image count: %u\n", image_count); };
-
-	r64 t = 0;
-	auto const print_t = [&](const char* label) { printf("    %s time: %f\n", label, scale(t)); };
-
-	for (u32 c = 0; c < n_image_counts; ++c)
-	{
-		print_count();
-
-		t = 0.0;
-		for (u32 i = 0; i < image_count; ++i)
-		{
-			sw.start();
-			Image img;
-			img::read_image_from_file(CORVETTE_PATH, img);
-			t += sw.get_time_milli();
-		}
-		print_t("  read");
-
-		t = 0.0;
-		for (u32 i = 0; i < image_count; ++i)
-		{
-			sw.start();
-			Image im;			
-			img::read_image_from_file(CORVETTE_PATH, im);
-
-			Planar pl;
-			img::make_planar(pl, im.width, im.height);
-			img::copy(im, pl);			
-			t += sw.get_time_milli();
-		}
-		print_t("planar");
-
-		image_count *= image_count_factor;
-	}
-}
+//void read_times()
+//{
+//	printf("\nread:\n");
+//
+//	u32 n_image_counts = 2;
+//	u32 image_count_factor = 4;
+//	u32 image_count_start = 50;
+//
+//	Image corvette;
+//	img::read_image_from_file(CORVETTE_PATH, corvette);
+//	auto const width = corvette.width;
+//	auto const height = corvette.height;
+//
+//	Stopwatch sw;
+//	u32 image_count = image_count_start;
+//
+//	auto const current_pixels = [&]() { return (r64)(width) * height * image_count; };
+//
+//	auto const start_pixels = current_pixels();
+//
+//	auto const scale = [&](auto t) { return (r32)(10'000'000.0 / current_pixels() * t); };
+//	auto const print_wh = [&]() { printf("\nwidth: %u height: %u\n", width, height); };
+//	auto const print_count = [&]() { printf("  image count: %u\n", image_count); };
+//
+//	r64 t = 0;
+//	auto const print_t = [&](const char* label) { printf("    %s time: %f\n", label, scale(t)); };
+//
+//	for (u32 c = 0; c < n_image_counts; ++c)
+//	{
+//		print_count();
+//
+//		t = 0.0;
+//		for (u32 i = 0; i < image_count; ++i)
+//		{
+//			sw.start();
+//			Image img;
+//			img::read_image_from_file(CORVETTE_PATH, img);
+//			t += sw.get_time_milli();
+//		}
+//		print_t("  read");
+//
+//		t = 0.0;
+//		for (u32 i = 0; i < image_count; ++i)
+//		{
+//			sw.start();
+//			Image im;			
+//			img::read_image_from_file(CORVETTE_PATH, im);
+//
+//			Planar pl;
+//			img::make_planar(pl, im.width, im.height);
+//			img::copy(im, pl);			
+//			t += sw.get_time_milli();
+//		}
+//		print_t("planar");
+//
+//		image_count *= image_count_factor;
+//	}
+//}
 
 
 void empty_dir(fs::path const& dir)
