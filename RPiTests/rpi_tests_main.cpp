@@ -41,14 +41,14 @@ int main()
 {	
 	auto dst_root = DST_IMAGE_ROOT;
 
-	//auto dst_basic = dst_root + "basic/";
-    //basic_tests(dst_basic);
+	auto dst_basic = dst_root + "basic/";
+    basic_tests(dst_basic);
 
 	auto dst_process = dst_root + "process/";
 	process_tests(dst_process);
 
-	//auto dst_gradients = dst_root + "gradients/";
-	//gradient_times(dst_gradients);
+	auto dst_gradients = dst_root + "gradients/";
+	gradient_times(dst_gradients);
 }
 
 
@@ -394,12 +394,6 @@ void gradient_times(path_t& out_dir)
 	img::multi_chart_data_t seq_view_times;
 	seq_view_times.color = blue;
 
-	img::multi_chart_data_t par_image_times;
-	par_image_times.color = green;
-
-	img::multi_chart_data_t par_view_times;
-	par_view_times.color = blue;
-
 	img::multi_chart_data_t simd_image_times;
 	simd_image_times.color = green;
 
@@ -428,8 +422,6 @@ void gradient_times(path_t& out_dir)
 		image_count = image_count_start;
 		std::vector<r32> seq_image;
 		std::vector<r32> seq_view;
-		std::vector<r32> par_image;
-		std::vector<r32> par_view;
 		std::vector<r32> simd_image;
 		std::vector<r32> simd_view;
 		GrayImage src;
@@ -466,24 +458,6 @@ void gradient_times(path_t& out_dir)
 			sw.start();
 			for (u32 i = 0; i < image_count; ++i)
 			{
-				img::seq::gradients(src, dst, tmp);
-			}
-			t = sw.get_time_milli();
-			par_image.push_back(scale(t));
-			print_t(" par image");
-
-			sw.start();
-			for (u32 i = 0; i < image_count; ++i)
-			{
-				img::seq::gradients(src_v, dst_v, tmp);
-			}
-			t = sw.get_time_milli();
-			par_view.push_back(scale(t));
-			print_t("  par view");
-
-			sw.start();
-			for (u32 i = 0; i < image_count; ++i)
-			{
 				img::simd::gradients(src, dst, tmp);
 			}
 			t = sw.get_time_milli();
@@ -504,8 +478,6 @@ void gradient_times(path_t& out_dir)
 
 		seq_image_times.data_list.push_back(seq_image);
 		seq_view_times.data_list.push_back(seq_view);
-		par_image_times.data_list.push_back(par_image);
-		par_view_times.data_list.push_back(par_view);
 		simd_image_times.data_list.push_back(simd_image);
 		simd_view_times.data_list.push_back(simd_view);
 
@@ -516,7 +488,6 @@ void gradient_times(path_t& out_dir)
 	img::grouped_multi_chart_data_t chart_data
 	{ 
 		seq_image_times, seq_view_times,
-		par_image_times, par_view_times,
 		simd_image_times, simd_view_times
 	};
 	Image chart;
