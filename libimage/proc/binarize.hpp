@@ -22,6 +22,19 @@ namespace libimage
 
 	void binarize_self(gray::view_t const& src_dst, u8_to_bool_f const& func);
 
+
+#ifndef LIBIMAGE_NO_COLOR
+
+	void binarize(image_t const& src, gray::image_t const& dst, pixel_to_bool_f const& cond);
+
+	void binarize(image_t const& src, gray::view_t const& dst, pixel_to_bool_f const& cond);
+
+	void binarize(view_t const& src, gray::image_t const& dst, pixel_to_bool_f const& cond);
+
+	void binarize(view_t const& src, gray::view_t const& dst, pixel_to_bool_f const& cond);
+
+#endif // !LIBIMAGE_NO_COLOR
+
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
 #endif // !LIBIMAGE_NO_PARALLEL
