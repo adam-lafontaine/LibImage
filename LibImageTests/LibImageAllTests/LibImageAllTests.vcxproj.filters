@@ -194,5 +194,8 @@
     <ClInclude Include="..\..\libimage\proc\rotate.hpp">
       <Filter>Header Files\libimage\proc</Filter>
     </ClInclude>
+    <ClInclude Include="centroid.hpp">
+      <Filter>Header Files\libimage\proc</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

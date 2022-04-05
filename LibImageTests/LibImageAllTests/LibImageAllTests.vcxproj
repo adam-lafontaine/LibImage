@@ -191,6 +191,7 @@
     <ClInclude Include="..\..\libimage\stb_wrapper\stb_include.hpp" />
     <ClInclude Include="..\utils\stopwatch.hpp" />
     <ClInclude Include="..\utils\win32_leak_check.h" />
+    <ClInclude Include="centroid.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
