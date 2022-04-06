@@ -9,21 +9,6 @@
 #include <execution>
 #endif // !LIBIMAGE_NO_PARALLEL
 
-class Point2Du32
-{
-public:
-	u32 x;
-	u32 y;
-};
-
-
-class Point2Dr32
-{
-public:
-	r32 x;
-	r32 y;
-};
-
 
 static Point2Dr32 find_rotation_src(Point2Du32 const& pt, Point2Du32 const& origin, r32 theta_rotate)
 {

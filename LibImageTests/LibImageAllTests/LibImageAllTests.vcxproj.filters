@@ -111,6 +111,9 @@
     <ClCompile Include="..\..\libimage\proc\rotate.cpp">
       <Filter>Source Files\libimage\proc</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\libimage\proc\centroid.cpp">
+      <Filter>Source Files\libimage\proc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\libimage\libimage.hpp">
@@ -194,7 +197,7 @@
     <ClInclude Include="..\..\libimage\proc\rotate.hpp">
       <Filter>Header Files\libimage\proc</Filter>
     </ClInclude>
-    <ClInclude Include="centroid.hpp">
+    <ClInclude Include="..\..\libimage\proc\centroid.hpp">
       <Filter>Header Files\libimage\proc</Filter>
     </ClInclude>
   </ItemGroup>

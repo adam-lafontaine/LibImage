@@ -16,17 +16,9 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-	Point2Du32 centroid(gray::image_t const& src)
+	template <class IMG_T>
+	Point2Du32 do_centroid(IMG_T const& src, u8_to_bool_f const& func)
 	{
-		auto const func = [](u8 p) { return p > 0; };
-		return centroid(src, func);
-	}
-
-
-	Point2Du32 centroid(gray::image_t const& src, u8_to_bool_f const& func)
-	{
-		assert(verify(src));
-
 		u32 const n_threads = 10;
 		u32 h = src.height / n_threads;
 
@@ -34,7 +26,7 @@ namespace libimage
 		u32 x_total = 0;
 		u32 y_total = 0;
 
-		auto const func = [&](u32 i)
+		auto const xy_func = [&](u32 i)
 		{
 			auto y_begin = i * h;
 			auto y_end = (i + 1) * h;
@@ -55,7 +47,7 @@ namespace libimage
 
 		u32_range_t ids(n_threads);
 
-		std::for_each(std::execution::par, ids.begin(), ids.end(), func);
+		std::for_each(std::execution::par, ids.begin(), ids.end(), xy_func);
 
 		Point2Du32 pt{};
 
@@ -74,6 +66,38 @@ namespace libimage
 	}
 
 
+	Point2Du32 centroid(gray::image_t const& src)
+	{
+		assert(verify(src));
+
+		auto const func = [](u8 p) { return p > 0; };
+		return do_centroid(src, func);
+	}
+
+
+	Point2Du32 centroid(gray::image_t const& src, u8_to_bool_f const& func)
+	{
+		assert(verify(src));
+
+		return do_centroid(src, func);
+	}
+
+
+	Point2Du32 centroid(gray::view_t const& src)
+	{
+		auto const func = [](u8 p) { return p > 0; };
+		return do_centroid(src, func);
+	}
+
+
+	Point2Du32 centroid(gray::view_t const& src, u8_to_bool_f const& func)
+	{
+		assert(verify(src));
+
+		return do_centroid(src, func);
+	}
+
+
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
@@ -84,17 +108,9 @@ namespace libimage
 	{
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-		Point2Du32 centroid(gray::image_t const& src)
+		template <class IMG_T>
+		Point2Du32 do_centroid(IMG_T const& src, u8_to_bool_f const& func)
 		{
-			auto const func = [](u8 p) { return p > 0; };
-			return centroid(src, func);
-		}
-
-
-		Point2Du32 centroid(gray::image_t const& src, u8_to_bool_f const& func)
-		{
-			assert(verify(src));
-
 			u32 total = 0;
 			u32 x_total = 0;
 			u32 y_total = 0;
@@ -124,6 +140,40 @@ namespace libimage
 			}
 
 			return pt;
+		}
+
+
+		Point2Du32 centroid(gray::image_t const& src)
+		{
+			assert(verify(src));
+
+			auto const func = [](u8 p) { return p > 0; };
+			return seq::do_centroid(src, func);
+		}
+
+
+		Point2Du32 centroid(gray::image_t const& src, u8_to_bool_f const& func)
+		{
+			assert(verify(src));
+
+			return seq::do_centroid(src, func);
+		}
+
+
+		Point2Du32 centroid(gray::view_t const& src)
+		{
+			assert(verify(src));
+
+			auto const func = [](u8 p) { return p > 0; };
+			return seq::do_centroid(src, func);
+		}
+
+
+		Point2Du32 centroid(gray::view_t const& src, u8_to_bool_f const& func)
+		{
+			assert(verify(src));
+
+			return seq::do_centroid(src, func);
 		}
 
 #endif // !LIBIMAGE_NO_GRAYSCALE

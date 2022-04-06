@@ -11,6 +11,22 @@ using r32 = float;
 using r64 = double;
 using i32 = int32_t;
 
+
+class Point2Du32
+{
+public:
+	u32 x;
+	u32 y;
+};
+
+
+class Point2Dr32
+{
+public:
+	r32 x;
+	r32 y;
+};
+
 namespace libimage
 {
 	// region of interest in an image
