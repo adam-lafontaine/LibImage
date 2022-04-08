@@ -148,9 +148,8 @@
     <ClCompile Include="..\..\libimage\math\charts.cpp" />
     <ClCompile Include="..\..\libimage\math\math.cpp" />
     <ClCompile Include="..\..\libimage\proc\alpha_blend.cpp" />
-    <ClCompile Include="..\..\libimage\proc\binarize.cpp" />
+    <ClCompile Include="..\..\libimage\proc\binary.cpp" />
     <ClCompile Include="..\..\libimage\proc\blur.cpp" />
-    <ClCompile Include="..\..\libimage\proc\centroid.cpp" />
     <ClCompile Include="..\..\libimage\proc\contrast.cpp" />
     <ClCompile Include="..\..\libimage\proc\convolve.cpp" />
     <ClCompile Include="..\..\libimage\proc\copy.cpp" />
@@ -172,9 +171,8 @@
     <ClInclude Include="..\..\libimage\math\charts.hpp" />
     <ClInclude Include="..\..\libimage\math\math.hpp" />
     <ClInclude Include="..\..\libimage\proc\alpha_blend.hpp" />
-    <ClInclude Include="..\..\libimage\proc\binarize.hpp" />
+    <ClInclude Include="..\..\libimage\proc\binary.hpp" />
     <ClInclude Include="..\..\libimage\proc\blur.hpp" />
-    <ClInclude Include="..\..\libimage\proc\centroid.hpp" />
     <ClInclude Include="..\..\libimage\proc\contrast.hpp" />
     <ClInclude Include="..\..\libimage\proc\copy.hpp" />
     <ClInclude Include="..\..\libimage\proc\edges.hpp" />

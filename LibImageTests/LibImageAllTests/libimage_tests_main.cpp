@@ -728,6 +728,11 @@ void gradient_times(fs::path const& out_dir)
 }
 
 
+void binary_tests(fs::path const& out_dir)
+{
+
+}
+
 //void read_times()
 //{
 //	printf("\nread:\n");

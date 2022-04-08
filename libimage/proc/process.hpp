@@ -1,9 +1,8 @@
 #pragma once
 
 #include "alpha_blend.hpp"
-#include "binarize.hpp"
+#include "binary.hpp"
 #include "blur.hpp"
-#include "centroid.hpp"
 #include "contrast.hpp"
 #include "copy.hpp"
 #include "edges.hpp"

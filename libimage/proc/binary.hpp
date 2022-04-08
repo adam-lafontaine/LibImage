@@ -35,6 +35,17 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_COLOR
 
+
+	Point2Du32 centroid(gray::image_t const& src);
+
+	Point2Du32 centroid(gray::image_t const& src, u8_to_bool_f const& func);
+
+
+	Point2Du32 centroid(gray::view_t const& src);
+
+	Point2Du32 centroid(gray::view_t const& src, u8_to_bool_f const& func);
+
+
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
 #endif // !LIBIMAGE_NO_PARALLEL
@@ -70,6 +81,26 @@ namespace libimage
 
 
 #endif // !LIBIMAGE_NO_COLOR
+
+
+		Point2Du32 centroid(gray::image_t const& src);
+
+		Point2Du32 centroid(gray::image_t const& src, u8_to_bool_f const& func);
+
+
+		Point2Du32 centroid(gray::view_t const& src);
+
+		Point2Du32 centroid(gray::view_t const& src, u8_to_bool_f const& func);
+
+
+		void thin_objects(gray::image_t const& src, gray::image_t const& dst, gray::image_t const& temp);
+
+		void thin_objects(gray::image_t const& src, gray::view_t const& dst, gray::image_t const& temp);
+
+		void thin_objects(gray::view_t const& src, gray::image_t const& dst, gray::image_t const& temp);
+
+		void thin_objects(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp);
+
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 	}
