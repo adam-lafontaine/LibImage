@@ -1,7 +1,13 @@
 #include "process.hpp"
 #include "verify.hpp"
+#include "index_range.hpp"
 
 #include <array>
+#include <algorithm>
+
+#ifndef LIBIMAGE_NO_PARALLEL
+#include <execution>
+#endif // !LIBIMAGE_NO_PARALLEL
 
 
 namespace libimage
@@ -368,7 +374,7 @@ namespace libimage
 			//                                              0  1  2  3  4  5  6  7  8  9  10  11  12  13  14  15
 			constexpr std::array<u32, 16> value_results = { 0, 0, 0, 1, 0, 0, 1, 1, 0, 1,  0,  1,  1,  1,  1,  1 };
 
-			u32 const n_neighbors = x_neighbors.size();
+			auto const n_neighbors = x_neighbors.size();
 			int value_total = 0;
 
 			for (u32 i = 0; i < n_neighbors; ++i)
