@@ -4,6 +4,7 @@
 
 #include <array>
 #include <algorithm>
+#include <numeric>
 
 #ifndef LIBIMAGE_NO_PARALLEL
 #include <execution>
@@ -95,35 +96,56 @@ namespace libimage
 	template <class GRAY_IMG_T>
 	Point2Du32 do_centroid(GRAY_IMG_T const& src, u8_to_bool_f const& func)
 	{
-		u32 const n_threads = 10;
+		constexpr u32 n_threads = 20;
 		u32 h = src.height / n_threads;
+
+		std::array<u32, n_threads> thread_totals = { 0 };
+		std::array<u32, n_threads> thread_x_totals = { 0 };
+		std::array<u32, n_threads> thread_y_totals = { 0 };
 
 		u32 total = 0;
 		u32 x_total = 0;
 		u32 y_total = 0;
 
-		auto const xy_func = [&](u32 i)
+		auto const row_func = [&](u32 y) 
 		{
-			auto y_begin = i * h;
-			auto y_end = (i + 1) * h;
-
-			for (u32 y = y_begin; y < src.height && y < y_end; ++y)
+			if (y >= src.height)
 			{
-				auto row = src.row_begin(y);
-				for (u32 x = 0; x < src.width; ++x)
-				{
-					u32 val = func(*src.xy_at(x, y)) ? 1 : 0;
+				return;
+			}
 
-					total += val;
-					x_total += x * val;
-					y_total += y * val;
-				}
+			auto thread_id = y - n_threads * (y / n_threads);
+
+			assert(thread_id < n_threads);
+
+			auto row = src.row_begin(y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				u32 val = func(row[x]) ? 1 : 0;
+
+				thread_totals[thread_id] += val;
+				thread_x_totals[thread_id] += x * val;
+				thread_y_totals[thread_id] += y * val;
 			}
 		};
 
-		u32_range_t ids(n_threads);
+		for (u32 y_begin = 0; y_begin < src.height; y_begin += n_threads)
+		{
+			thread_totals = { 0 };
+			thread_x_totals = { 0 };
+			thread_y_totals = { 0 };
 
-		std::for_each(std::execution::par, ids.begin(), ids.end(), xy_func);
+			u32_range_t rows(y_begin, y_begin + n_threads);
+
+			std::for_each(std::execution::par, rows.begin(), rows.end(), row_func);
+
+			for (u32 i = 0; i < n_threads; ++i)
+			{
+				total += thread_totals[i];
+				x_total += thread_x_totals[i];
+				y_total += thread_y_totals[i];
+			}
+		}
 
 		Point2Du32 pt{};
 
