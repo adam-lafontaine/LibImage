@@ -25,6 +25,9 @@ namespace libimage
 
 			pixel_t* row_begin(u32 y) const
 			{
+				assert(width);
+				assert(height);
+				assert(data);
 				assert(y < height);
 
 				auto offset = y * width;
@@ -37,8 +40,12 @@ namespace libimage
 
 			pixel_t* xy_at(u32 x, u32 y) const
 			{
+				assert(width);
+				assert(height);
+				assert(data);
 				assert(y < height);
 				assert(x < width);
+
 				return row_begin(y) + x;
 			}
 

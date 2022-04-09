@@ -93,13 +93,13 @@ namespace libimage
 		Point2Du32 centroid(gray::view_t const& src, u8_to_bool_f const& func);
 
 
-		void thin_objects(gray::image_t const& src, gray::image_t const& dst, gray::image_t const& temp);
+		void thin_objects(gray::image_t const& src, gray::image_t const& dst);
 
-		void thin_objects(gray::image_t const& src, gray::view_t const& dst, gray::image_t const& temp);
+		void thin_objects(gray::image_t const& src, gray::view_t const& dst);
 
-		void thin_objects(gray::view_t const& src, gray::image_t const& dst, gray::image_t const& temp);
+		void thin_objects(gray::view_t const& src, gray::image_t const& dst);
 
-		void thin_objects(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp);
+		void thin_objects(gray::view_t const& src, gray::view_t const& dst);
 
 
 #endif // !LIBIMAGE_NO_GRAYSCALE

@@ -348,150 +348,196 @@ namespace libimage
 		}
 
 
-		template<class GRAY_IMG_T>
-		static void zero_top_bottom(GRAY_IMG_T const& dst)
-		{
-			u32 x_first = 0;
-			u32 y_first = 0;
-			u32 x_last = dst.width - 1;
-			u32 y_last = dst.height - 1;
-			auto dst_top = dst.row_begin(y_first);
-			auto dst_bottom = dst.row_begin(y_last);
-			for (u32 x = x_first; x <= x_last; ++x)
-			{
-				dst_top[x] = 0;
-				dst_bottom[x] = 0;
-			}
-		}
-
-
-		template<class GRAY_IMG_T>
-		static void zero_left_right(GRAY_IMG_T const& dst)
-		{
-			u32 x_first = 0;
-			u32 y_first = 1;
-			u32 x_last = dst.width - 1;
-			u32 y_last = dst.height - 2;
-			for (u32 y = y_first; y <= y_last; ++y)
-			{
-				auto dst_row = dst.row_begin(y);
-				dst_row[x_first] = 0;
-				dst_row[x_last] = 0;
-			}
-		}
-
-
 		template <class GRAY_IMG_T>
-		static bool neighbors_connected(GRAY_IMG_T const& img, u32 x, u32 y)
+		static bool do_neighbors(GRAY_IMG_T const& img, u32 x, u32 y)
 		{
 			assert(x >= 1);
 			assert(x < img.width);
 			assert(y >= 1);
 			assert(y < img.height);
 
-			constexpr std::array<int, 4> x_neighbors = { 0, 1, 0, -1 };
-			constexpr std::array<int, 4> y_neighbors = { -1, 0, 1,  0 };
-			constexpr std::array<int, 4> values = { 1, 2, 4, 8 };
+			constexpr std::array<int, 8> x_neighbors = { -1,  0,  1,  1,  1,  0, -1, -1 };
+			constexpr std::array<int, 8> y_neighbors = { -1, -1, -1,  0,  1,  1,  1,  0 };
 
-			//                                              0  1  2  3  4  5  6  7  8  9  10  11  12  13  14  15
-			constexpr std::array<u32, 16> value_results = { 0, 0, 0, 1, 0, 0, 1, 1, 0, 1,  0,  1,  1,  1,  1,  1 };
-
-			auto const n_neighbors = x_neighbors.size();
+			constexpr auto n_neighbors = x_neighbors.size();
 			int value_total = 0;
+			u32 value_count = 0;
+			u32 flip = 0;
+
+			auto xi = (u32)(x + x_neighbors[n_neighbors - 1]);
+			auto yi = (u32)(y + y_neighbors[n_neighbors - 1]);
+			auto val = *img.xy_at(xi, yi);
+			bool is_on = val != 0;
 
 			for (u32 i = 0; i < n_neighbors; ++i)
 			{
-				auto xi = (u32)(x + x_neighbors[i]);
-				auto yi = (u32)(y + y_neighbors[i]);
+				xi = (u32)(x + x_neighbors[i]);
+				yi = (u32)(y + y_neighbors[i]);
 
-				auto val = *img.xy_at(xi, yi);
-				if (val > 0)
+				val = *img.xy_at(xi, yi);
+				flip += (val != 0) != is_on;
+
+				is_on = val != 0;
+				value_count += is_on;
+			}
+
+			return value_count > 1 && value_count < 7 && flip == 2;
+		}
+
+
+		template <class GRAY_IMG_T>
+		static u32 thin_once(GRAY_IMG_T const& img)
+		{
+			u32 pixel_count = 0;
+
+			auto width = img.width;
+			auto height = img.height;
+
+			auto const xy_func = [&](u32 x, u32 y) 
+			{				
+				auto& p = *img.xy_at(x, y);
+				if (p == 0)
 				{
-					value_total += values[i];
+					return;
 				}
-			}
 
-			if (value_total < 0 || value_total > 15)
+				if (do_neighbors(img, x, y))
+				{
+					p = 0;
+				}
+
+				pixel_count += p > 0;
+			};
+
+			u32 x_begin = 1;
+			u32 x_end = width - 1;
+			u32 y_begin = 1;
+			u32 y_end = height - 2;
+			u32 x = 0;
+			u32 y = 0;
+
+			auto const done = [&]() { return !(x_begin < x_end && y_begin < y_end); };
+
+			while (!done())
 			{
-				value_total = 0;
+				// iterate clockwise
+				y = y_begin;
+				x = x_begin;
+				for (; x < x_end; ++x)
+				{
+					xy_func(x, y);
+				}
+				--x;
+				
+				for (++y; y < y_end; ++y)
+				{
+					xy_func(x, y);
+				}
+				--y;
+
+				for (--x; x >= x_begin; --x)
+				{
+					xy_func(x, y);
+				}
+				++x;
+
+				for (--y; y > y_begin; --y)
+				{
+					xy_func(x, y);
+				}
+				++y;
+				
+				++x_begin;
+				++y_begin;
+				--x_end;
+				--y_end;
+
+				if (done())
+				{
+					break;
+				}
+
+				// iterate counter clockwise
+				for (++x; y < y_end; ++y)
+				{
+					xy_func(x, y);
+				}
+				--y;
+
+				for (++x; x < x_end; ++x)
+				{
+					xy_func(x, y);
+				}
+				--x;
+
+				for (--y; y >= y_begin; --y)
+				{
+					xy_func(x, y);
+				}
+				++y;
+
+				for (--x; x >= x_begin; --x)
+				{
+					xy_func(x, y);
+				}
+				++x;
+
+				++x_begin;
+				++y_begin;
+				--x_end;
+				--y_end;
 			}
 
-			return value_results[value_total] > 0;
+			return pixel_count;
 		}
 
 
 		template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-		static bool thin_once(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+		static void do_thin(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 		{
-			bool equal = true;
+			seq::copy(src, dst);
 
-			zero_top_bottom(dst);
-			zero_left_right(dst);
+			u32 current_count = 0;
+			u32 pixel_count = thin_once(dst);
+			u32 max_iter = 100; // src.width / 2;
 
-			for (u32 y = 1; y < src.height - 1; ++y)
+			for (u32 i = 1; pixel_count != current_count && i < max_iter; ++i)
 			{
-				auto src_row = src.row_begin(y);
-				auto dst_row = dst.row_begin(y);
-				for (u32 x = 1; x < src.width - 1; ++x)
-				{
-					auto p = src_row[x];
-					dst_row[x] = (p == 0 || neighbors_connected(src, x, y)) ? 0 : p;
-
-					equal &= dst_row[x] == p;
-				}
-			}
-
-			return equal;
-		}
-
-
-		template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-		static void do_thin(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst, gray::image_t const& temp)
-		{
-			bool equal = thin_once(src, dst);
-			u32 max_iter = src.width;
-
-			for (u32 i = 0; !equal && i < max_iter; ++i)
-			{
-				thin_once(dst, temp);
-				equal = thin_once(temp, dst);
+				current_count = pixel_count;
+				pixel_count = thin_once(dst);
 			}
 		}
 
 
-		void thin_objects(gray::image_t const& src, gray::image_t const& dst, gray::image_t const& temp)
+		void thin_objects(gray::image_t const& src, gray::image_t const& dst)
 		{
 			assert(verify(src, dst));
-			assert(verify(src, temp));
 
-			do_thin(src, dst, temp);
+			do_thin(src, dst);
 		}
 
 
-		void thin_objects(gray::image_t const& src, gray::view_t const& dst, gray::image_t const& temp)
+		void thin_objects(gray::image_t const& src, gray::view_t const& dst)
 		{
 			assert(verify(src, dst));
-			assert(verify(src, temp));
 
-			do_thin(src, dst, temp);
+			do_thin(src, dst);
 		}
 
 
-		void thin_objects(gray::view_t const& src, gray::image_t const& dst, gray::image_t const& temp)
+		void thin_objects(gray::view_t const& src, gray::image_t const& dst)
 		{
 			assert(verify(src, dst));
-			assert(verify(src, temp));
 
-			do_thin(src, dst, temp);
+			do_thin(src, dst);
 		}
 
 
-		void thin_objects(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp)
+		void thin_objects(gray::view_t const& src, gray::view_t const& dst)
 		{
 			assert(verify(src, dst));
-			assert(verify(src, temp));
 
-			do_thin(src, dst, temp);
+			do_thin(src, dst);
 		}
 
 
