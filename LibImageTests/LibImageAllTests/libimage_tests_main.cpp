@@ -751,7 +751,7 @@ void binary_tests(fs::path const& out_dir)
 
 	auto const is_white = [](Pixel p) 
 	{ 
-		return ((r32)p.red + (r32)p.blue + (r32)p.green) / 3.0f < 250;
+		return ((r32)p.red + (r32)p.blue + (r32)p.green) / 3.0f < 190;
 	};
 
 	img::binarize(weed, binary_src, is_white);
@@ -776,9 +776,6 @@ void binary_tests(fs::path const& out_dir)
 	// thin the object
 	img::seq::thin_objects(binary_src, binary_dst);
 	img::write_image(binary_dst, out_dir / "thin.bmp");
-
-	
-
 }
 
 //void read_times()
