@@ -72,17 +72,17 @@ int main()
 
 	auto dst_root = fs::path(DST_IMAGE_ROOT);	
 
-	/*basic_tests(dst_root / "basic");
+	basic_tests(dst_root / "basic");
 	math_tests(dst_root / "math");
 	process_tests(dst_root / "process");
-	planar_tests(dst_root / "planar");*/
+	planar_tests(dst_root / "planar");
 
 	binary_tests(dst_root / "binary");
 
 
-	/*auto timing_dir = dst_root / "timing";
+	auto timing_dir = dst_root / "timing";
 	empty_dir(timing_dir);
-	gradient_times(timing_dir);*/
+	gradient_times(timing_dir);
 
 	//read_times();
 
