@@ -81,7 +81,7 @@
     <ClCompile Include="..\..\libimage\proc\alpha_blend.cpp">
       <Filter>Source Files\libimage\proc</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\libimage\proc\binarize.cpp">
+    <ClCompile Include="..\..\libimage\proc\binary.cpp">
       <Filter>Source Files\libimage\proc</Filter>
     </ClCompile>
     <ClCompile Include="..\..\libimage\proc\blur.cpp">
@@ -170,7 +170,7 @@
     <ClInclude Include="..\..\libimage\proc\contrast.hpp">
       <Filter>Header Files\libimage\proc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\libimage\proc\binarize.hpp">
+    <ClInclude Include="..\..\libimage\proc\binary.hpp">
       <Filter>Header Files\libimage\proc</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libimage\proc\proc_def.hpp">

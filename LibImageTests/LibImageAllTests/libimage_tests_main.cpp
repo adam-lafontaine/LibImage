@@ -40,6 +40,7 @@ const auto ROOT_PATH = fs::path(ROOT_DIR);
 const auto CORVETTE_PATH = ROOT_PATH / "in_files/png/corvette.png";
 const auto CADILLAC_PATH = ROOT_PATH / "in_files/png/cadillac.png";
 const auto RED_PATH = ROOT_PATH / "in_files/bmp/red.bmp";
+const auto WEED_PATH = ROOT_PATH / "in_files/png/weed.png";
 
 const auto SRC_IMAGE_PATH = CORVETTE_PATH;
 const auto DST_IMAGE_ROOT = ROOT_PATH / "out_files";
@@ -53,6 +54,7 @@ void basic_tests(fs::path const& out_dir);
 void math_tests(fs::path const& out_dir);
 void process_tests(path_t const& out_dir);
 void planar_tests(fs::path const& out_dir);
+void binary_tests(fs::path const& out_dir);
 
 void gradient_times(fs::path const& out_dir);
 //void read_times();
@@ -72,14 +74,14 @@ int main()
 
 	basic_tests(dst_root / "basic");
 	math_tests(dst_root / "math");
-
 	process_tests(dst_root / "process");
-
 	planar_tests(dst_root / "planar");
+
+	binary_tests(dst_root / "binary");
+
 
 	auto timing_dir = dst_root / "timing";
 	empty_dir(timing_dir);
-
 	gradient_times(timing_dir);
 
 	//read_times();
@@ -727,6 +729,54 @@ void gradient_times(fs::path const& out_dir)
 	img::write_image(chart, out_dir / "gradients.bmp");
 }
 
+
+void binary_tests(fs::path const& out_dir)
+{
+	printf("\nbinary:\n");
+	empty_dir(out_dir);
+
+	Image weed;
+	img::read_image_from_file(WEED_PATH, weed);
+	auto width = weed.width;
+	auto height = weed.height;
+
+	GrayImage binary_src;
+	img::make_image(binary_src, width, height);
+
+	GrayImage binary_dst;
+	img::make_image(binary_dst, width, height);
+
+	GrayImage temp;
+	img::make_image(temp, width, height);
+
+	auto const is_white = [](Pixel p) 
+	{ 
+		return ((r32)p.red + (r32)p.blue + (r32)p.green) / 3.0f < 190;
+	};
+
+	img::binarize(weed, binary_src, is_white);
+	img::write_image(binary_src, out_dir / "weed.bmp");
+
+	// centroid point
+	auto pt = img::centroid(binary_src);
+
+	// region around centroid
+	img::pixel_range_t c{};
+	c.x_begin = pt.x - 10;
+	c.x_end = pt.x + 10;
+	c.y_begin = pt.y - 10;
+	c.y_end = pt.y + 10;	
+
+	// draw binary image with centroid region
+	img::copy(binary_src, binary_dst);	
+	auto c_view = img::sub_view(binary_dst, c);
+	std::fill(c_view.begin(), c_view.end(), 0);
+	img::write_image(binary_dst, out_dir / "centroid.bmp");
+
+	// thin the object
+	img::seq::thin_objects(binary_src, binary_dst);
+	img::write_image(binary_dst, out_dir / "thin.bmp");
+}
 
 //void read_times()
 //{

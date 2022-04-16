@@ -1,7 +1,7 @@
 #pragma once
 
 #include "alpha_blend.hpp"
-#include "binarize.hpp"
+#include "binary.hpp"
 #include "blur.hpp"
 #include "contrast.hpp"
 #include "copy.hpp"
