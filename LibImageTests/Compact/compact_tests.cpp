@@ -83,6 +83,7 @@ void read_write_image_test();
 void resize_test();
 void view_test();
 void alpha_blend_test();
+void grayscale_test();
 
 
 int main()
@@ -104,6 +105,7 @@ int main()
 	resize_test();
 	view_test();
 	alpha_blend_test();
+	grayscale_test();
 }
 
 
@@ -252,6 +254,32 @@ void alpha_blend_test()
 	img::simd::alpha_blend(src, dst);
 	img::write_image(dst, out_dir / "simd_alpha_blend_src_dst.png");*/
 
+}
+
+
+void grayscale_test()
+{
+	auto title = "grayscale_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+
+	Image src;
+	img::read_image_from_file(CORVETTE_PATH, src);
+	auto width = src.width;
+	auto height = src.height;
+
+	GrayImage dst;
+	img::make_image(dst, width, height);
+
+	img::grayscale(src, dst);
+	img::write_image(dst, out_dir / "grayscale.png");
+
+	img::seq::grayscale(src, dst);
+	img::write_image(dst, out_dir / "seq_grayscale.png");
+
+	/*img::simd::grayscale(src, dst);
+	img::write_image(dst, out_dir / "simd_grayscale.png");*/
 }
 
 
