@@ -84,6 +84,7 @@ void resize_test();
 void view_test();
 void alpha_blend_test();
 void grayscale_test();
+void binary_test();
 
 
 int main()
@@ -106,6 +107,7 @@ int main()
 	view_test();
 	alpha_blend_test();
 	grayscale_test();
+	binary_test();
 }
 
 
@@ -280,6 +282,72 @@ void grayscale_test()
 
 	/*img::simd::grayscale(src, dst);
 	img::write_image(dst, out_dir / "simd_grayscale.png");*/
+}
+
+
+void binary_test()
+{
+	auto title = "binary_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+
+	Image caddy;
+	img::read_image_from_file(CADILLAC_PATH, caddy);
+
+	GrayImage caddy_gray;
+	img::make_image(caddy_gray, caddy.width, caddy.height);
+
+	img::grayscale(caddy, caddy_gray);
+	img::write_image(caddy_gray, out_dir / "caddy_gray.png");
+
+	GrayImage caddy_binary;
+	img::make_image(caddy_binary, caddy.width, caddy.height);
+
+	img::binarize_th(caddy_gray, caddy_binary, 128);
+	img::write_image(caddy_binary, out_dir / "caddy_binary.png");
+
+	Image weed;
+	img::read_image_from_file(WEED_PATH, weed);
+	auto width = weed.width;
+	auto height = weed.height;
+
+	GrayImage binary_src;
+	img::make_image(binary_src, width, height);
+
+	GrayImage binary_dst;
+	img::make_image(binary_dst, width, height);
+
+	GrayImage temp;
+	img::make_image(temp, width, height);
+
+	auto const is_white = [](Pixel p)
+	{
+		return ((r32)p.red + (r32)p.blue + (r32)p.green) / 3.0f < 190;
+	};
+
+	img::binarize(weed, binary_src, is_white);
+	img::write_image(binary_src, out_dir / "weed.bmp");
+
+	// centroid point
+	auto pt = img::centroid(binary_src);
+
+	// region around centroid
+	img::pixel_range_t c{};
+	c.x_begin = pt.x - 10;
+	c.x_end = pt.x + 10;
+	c.y_begin = pt.y - 10;
+	c.y_end = pt.y + 10;
+
+	// draw binary image with centroid region
+	img::copy(binary_src, binary_dst);
+	auto c_view = img::sub_view(binary_dst, c);
+	std::fill(c_view.begin(), c_view.end(), 0);
+	img::write_image(binary_dst, out_dir / "centroid.bmp");
+
+	// thin the object
+	img::seq::thin_objects(binary_src, binary_dst);
+	img::write_image(binary_dst, out_dir / "thin.bmp");
 }
 
 
