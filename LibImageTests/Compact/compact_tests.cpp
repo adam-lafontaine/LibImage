@@ -93,6 +93,7 @@ void contrast_test();
 void blur_test();
 void gradients_test();
 void edges_test();
+void rotate_test();
 
 
 int main()
@@ -121,6 +122,7 @@ int main()
 	blur_test();
 	gradients_test();
 	edges_test();
+	rotate_test();
 }
 
 
@@ -514,6 +516,38 @@ void edges_test()
 
 	/*img::simd::edges(src, dst, threshold);
 	img::write_image(dst, out_dir / "simd_edges.png");*/
+}
+
+
+void rotate_test()
+{
+	auto title = "rotate_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+
+	Image src;
+	img::read_image_from_file(CADILLAC_PATH, src);
+
+	Image dst;
+	img::make_image(dst, src.width, src.height);
+
+	Point2Du32 origin = { src.width / 2, src.height / 2 };
+
+	r32 theta = 0.6f * 2 * 3.14159f;
+	img::seq::rotate(src, dst, origin, theta);
+	img::write_image(dst, out_dir / "rotate.png");
+
+	GrayImage src_gray;
+	img::read_image_from_file(CORVETTE_PATH, src_gray);
+
+	GrayImage dst_gray;
+	img::make_image(dst_gray, src_gray.width, src_gray.height);
+
+	origin = { src_gray.width / 2, src_gray.height / 2 };
+
+	img::seq::rotate(src_gray, dst_gray, origin, theta);
+	img::write_image(dst_gray, out_dir / "rotate_gray.png");
 }
 
 

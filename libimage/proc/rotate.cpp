@@ -31,9 +31,6 @@ static Point2Dr32 find_rotation_src(Point2Du32 const& pt, Point2Du32 const& orig
 }
 
 
-
-
-
 namespace libimage
 {
 
@@ -142,6 +139,42 @@ namespace libimage
 	}
 
 
+	void rotate(image_t const& src, image_t const& dst, Point2Du32 origin, r32 theta)
+	{
+		assert(verify(src));
+		assert(verify(dst));
+
+		rotate_par(src, dst, origin.x, origin.y, theta);
+	}
+
+
+	void rotate(image_t const& src, view_t const& dst, Point2Du32 origin, r32 theta)
+	{
+		assert(verify(src));
+		assert(verify(dst));
+
+		rotate_par(src, dst, origin.x, origin.y, theta);
+	}
+
+
+	void rotate(view_t const& src, image_t const& dst, Point2Du32 origin, r32 theta)
+	{
+		assert(verify(src));
+		assert(verify(dst));
+
+		rotate_par(src, dst, origin.x, origin.y, theta);
+	}
+
+
+	void rotate(view_t const& src, view_t const& dst, Point2Du32 origin, r32 theta)
+	{
+		assert(verify(src));
+		assert(verify(dst));
+
+		rotate_par(src, dst, origin.x, origin.y, theta);
+	}
+
+
 #endif // !LIBIMAGE_NO_COLOR
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
@@ -198,6 +231,42 @@ namespace libimage
 		assert(verify(dst));
 
 		rotate_par_gray(src, dst, origin_x, origin_y, theta);
+	}
+
+
+	void rotate(gray::image_t const& src, gray::image_t const& dst, Point2Du32 origin, r32 theta)
+	{
+		assert(verify(src));
+		assert(verify(dst));
+
+		rotate_par_gray(src, dst, origin.x, origin.y, theta);
+	}
+
+
+	void rotate(gray::image_t const& src, gray::view_t const& dst, Point2Du32 origin, r32 theta)
+	{
+		assert(verify(src));
+		assert(verify(dst));
+
+		rotate_par_gray(src, dst, origin.x, origin.y, theta);
+	}
+
+
+	void rotate(gray::view_t const& src, gray::image_t const& dst, Point2Du32 origin, r32 theta)
+	{
+		assert(verify(src));
+		assert(verify(dst));
+
+		rotate_par_gray(src, dst, origin.x, origin.y, theta);
+	}
+
+
+	void rotate(gray::view_t const& src, gray::view_t const& dst, Point2Du32 origin, r32 theta)
+	{
+		assert(verify(src));
+		assert(verify(dst));
+
+		rotate_par_gray(src, dst, origin.x, origin.y, theta);
 	}
 
 
@@ -262,6 +331,42 @@ namespace libimage
 		}
 
 
+		void rotate(image_t const& src, image_t const& dst, Point2Du32 origin, r32 theta)
+		{
+			assert(verify(src));
+			assert(verify(dst));
+
+			rotate_seq(src, dst, origin.x, origin.y, theta);
+		}
+
+
+		void rotate(image_t const& src, view_t const& dst, Point2Du32 origin, r32 theta)
+		{
+			assert(verify(src));
+			assert(verify(dst));
+
+			rotate_seq(src, dst, origin.x, origin.y, theta);
+		}
+
+
+		void rotate(view_t const& src, image_t const& dst, Point2Du32 origin, r32 theta)
+		{
+			assert(verify(src));
+			assert(verify(dst));
+
+			rotate_seq(src, dst, origin.x, origin.y, theta);
+		}
+
+
+		void rotate(view_t const& src, view_t const& dst, Point2Du32 origin, r32 theta)
+		{
+			assert(verify(src));
+			assert(verify(dst));
+
+			rotate_seq(src, dst, origin.x, origin.y, theta);
+		}
+
+
 #endif // !LIBIMAGE_NO_COLOR
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
@@ -314,6 +419,42 @@ namespace libimage
 			assert(verify(dst));
 
 			rotate_seq_gray(src, dst, origin_x, origin_y, theta);
+		}
+
+
+		void rotate(gray::image_t const& src, gray::image_t const& dst, Point2Du32 origin, r32 theta)
+		{
+			assert(verify(src));
+			assert(verify(dst));
+
+			rotate_seq_gray(src, dst, origin.x, origin.y, theta);
+		}
+
+
+		void rotate(gray::image_t const& src, gray::view_t const& dst, Point2Du32 origin, r32 theta)
+		{
+			assert(verify(src));
+			assert(verify(dst));
+
+			rotate_seq_gray(src, dst, origin.x, origin.y, theta);
+		}
+
+
+		void rotate(gray::view_t const& src, gray::image_t const& dst, Point2Du32 origin, r32 theta)
+		{
+			assert(verify(src));
+			assert(verify(dst));
+
+			rotate_seq_gray(src, dst, origin.x, origin.y, theta);
+		}
+
+
+		void rotate(gray::view_t const& src, gray::view_t const& dst, Point2Du32 origin, r32 theta)
+		{
+			assert(verify(src));
+			assert(verify(dst));
+
+			rotate_seq_gray(src, dst, origin.x, origin.y, theta);
 		}
 
 
