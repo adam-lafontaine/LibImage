@@ -9,6 +9,7 @@
 #endif
 
 #include <cstdio>
+#include <algorithm>
 
 namespace img = libimage;
 
@@ -78,10 +79,13 @@ bool directory_files_test()
 
 
 void empty_dir(path_t const& dir);
+void clear_image(Image const& img);
+void clear_image(GrayImage const& img);
 
 void read_write_image_test();
 void resize_test();
 void view_test();
+void transform_test();
 void alpha_blend_test();
 void grayscale_test();
 void binary_test();
@@ -109,6 +113,7 @@ int main()
 	read_write_image_test();
 	resize_test();
 	view_test();
+	transform_test();
 	alpha_blend_test();
 	grayscale_test();
 	binary_test();
@@ -218,6 +223,55 @@ void view_test()
 }
 
 
+void transform_test()
+{
+	auto title = "transform_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+
+	Image image;
+	img::read_image_from_file(CORVETTE_PATH, image);
+	img::write_image(image, out_dir / "vette.png");
+
+	Image dst;
+	img::make_image(dst, image.width, image.height);
+
+	auto const invert = [](u8 p) { return 255 - p; };
+
+	auto const invert_rgb = [&](Pixel p) 
+	{ 
+		auto r = invert(p.red);
+		auto g = invert(p.green);
+		auto b = invert(p.blue);
+		return img::to_pixel(r, g, b);	
+	};
+
+	img::transform(image, dst, invert_rgb);
+	img::write_image(dst, out_dir / "transform.png");
+
+	clear_image(dst);
+
+	img::seq::transform(image, dst, invert_rgb);
+	img::write_image(dst, out_dir / "seq_transform.png");
+
+	GrayImage gray;
+	img::read_image_from_file(CADILLAC_PATH, gray);
+	img::write_image(gray, out_dir / "caddy.png");
+
+	GrayImage dst_gray;
+	img::make_image(dst_gray, gray.width, gray.height);
+
+	img::transform(gray, dst_gray, invert);
+	img::write_image(dst_gray, out_dir / "transform_gray.png");
+
+	clear_image(dst_gray);
+
+	img::seq::transform(gray, dst_gray, invert);
+	img::write_image(dst_gray, out_dir / "seq_transform_gray.png");
+}
+
+
 void alpha_blend_test()
 {
 	auto title = "alpha_blend_test";
@@ -245,6 +299,8 @@ void alpha_blend_test()
 
 	img::alpha_blend(src, cur, dst);
 	img::write_image(dst, out_dir / "alpha_blend.png");
+
+	clear_image(dst);
 
 	img::seq::alpha_blend(src, cur, dst);
 	img::write_image(dst, out_dir / "seq_alpha_blend.png");
@@ -284,6 +340,8 @@ void grayscale_test()
 
 	img::grayscale(src, dst);
 	img::write_image(dst, out_dir / "grayscale.png");
+
+	clear_image(dst);
 
 	img::seq::grayscale(src, dst);
 	img::write_image(dst, out_dir / "seq_grayscale.png");
@@ -371,6 +429,8 @@ void contrast_test()
 	img::contrast(src, dst, 0, 128);
 	img::write_image(dst, out_dir / "contrast.png");
 
+	clear_image(dst);
+
 	img::seq::contrast(src, dst, 0, 128);
 	img::write_image(dst, out_dir / "seq_contrast.png");
 }
@@ -418,6 +478,8 @@ void gradients_test()
 	img::gradients(src, dst);
 	img::write_image(dst, out_dir / "gradient.png");
 
+	clear_image(dst);
+
 	img::seq::gradients(src, dst);
 	img::write_image(dst, out_dir / "seq_gradient.png");
 
@@ -445,6 +507,8 @@ void edges_test()
 	img::edges(src, dst, threshold);
 	img::write_image(dst, out_dir / "edges.png");
 
+	clear_image(dst);
+
 	img::seq::edges(src, dst, threshold);
 	img::write_image(dst, out_dir / "seq_edges.png");
 
@@ -461,4 +525,17 @@ void empty_dir(path_t const& dir)
 	{
 		fs::remove_all(entry);
 	}
+}
+
+
+void clear_image(Image const& img)
+{
+	constexpr auto black = img::to_pixel(0, 0, 0);
+	std::fill(img.begin(), img.end(), black);
+}
+
+
+void clear_image(GrayImage const& img)
+{
+	std::fill(img.begin(), img.end(), 0);
 }
