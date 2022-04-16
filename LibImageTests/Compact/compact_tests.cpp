@@ -136,12 +136,10 @@ void read_write_image_test()
 	Image image;
 	img::read_image_from_file(CORVETTE_PATH, image);
 	img::write_image(image, out_dir / "corvette.bmp");
-	img::write_image(image, out_dir / "corvette.png");
 
 	GrayImage gray;
 	img::read_image_from_file(CADILLAC_PATH, gray);
 	img::write_image(gray, out_dir / "cadillac_gray.bmp");
-	img::write_image(gray, out_dir / "cadillac_gray.png");
 }
 
 
@@ -161,13 +159,13 @@ void resize_test()
 	vertical.width = width / 2;
 	vertical.height = height * 2;
 	img::resize_image(image, vertical);
-	img::write_image(vertical, out_dir / "vertical.png");
+	img::write_image(vertical, out_dir / "vertical.bmp");
 
 	Image horizontal;
 	horizontal.width = width * 2;
 	horizontal.height = height / 2;
 	img::resize_image(image, horizontal);
-	img::write_image(horizontal, out_dir / "horizontal.png");
+	img::write_image(horizontal, out_dir / "horizontal.bmp");
 
 	GrayImage gray;
 	img::read_image_from_file(CADILLAC_PATH, gray);
@@ -178,13 +176,13 @@ void resize_test()
 	vertical_gray.width = width / 2;
 	vertical_gray.height = height * 2;
 	img::resize_image(gray, vertical_gray);
-	img::write_image(vertical_gray, out_dir / "vertical_gray.png");
+	img::write_image(vertical_gray, out_dir / "vertical_gray.bmp");
 
 	GrayImage horizontal_gray;
 	horizontal_gray.width = width * 2;
 	horizontal_gray.height = height / 2;
 	img::resize_image(gray, horizontal_gray);
-	img::write_image(horizontal_gray, out_dir / "horizontal_gray.png");		 
+	img::write_image(horizontal_gray, out_dir / "horizontal_gray.bmp");		 
 }
 
 
@@ -208,7 +206,7 @@ void view_test()
 	r.y_end = r.y_begin + height / 2;
 
 	auto view = img::sub_view(image, r);
-	img::write_view(view, out_dir / "view.png");
+	img::write_view(view, out_dir / "view.bmp");
 
 	GrayImage gray;
 	img::read_image_from_file(CADILLAC_PATH, gray);
@@ -221,7 +219,7 @@ void view_test()
 	r.y_end = r.y_begin + height / 2;
 
 	auto view_gray = img::sub_view(gray, r);
-	img::write_view(view_gray, out_dir / "view_gray.png");
+	img::write_view(view_gray, out_dir / "view_gray.bmp");
 }
 
 
@@ -234,7 +232,7 @@ void transform_test()
 
 	Image image;
 	img::read_image_from_file(CORVETTE_PATH, image);
-	img::write_image(image, out_dir / "vette.png");
+	img::write_image(image, out_dir / "vette.bmp");
 
 	Image dst;
 	img::make_image(dst, image.width, image.height);
@@ -250,27 +248,27 @@ void transform_test()
 	};
 
 	img::transform(image, dst, invert_rgb);
-	img::write_image(dst, out_dir / "transform.png");
+	img::write_image(dst, out_dir / "transform.bmp");
 
 	clear_image(dst);
 
 	img::seq::transform(image, dst, invert_rgb);
-	img::write_image(dst, out_dir / "seq_transform.png");
+	img::write_image(dst, out_dir / "seq_transform.bmp");
 
 	GrayImage gray;
 	img::read_image_from_file(CADILLAC_PATH, gray);
-	img::write_image(gray, out_dir / "caddy.png");
+	img::write_image(gray, out_dir / "caddy.bmp");
 
 	GrayImage dst_gray;
 	img::make_image(dst_gray, gray.width, gray.height);
 
 	img::transform(gray, dst_gray, invert);
-	img::write_image(dst_gray, out_dir / "transform_gray.png");
+	img::write_image(dst_gray, out_dir / "transform_gray.bmp");
 
 	clear_image(dst_gray);
 
 	img::seq::transform(gray, dst_gray, invert);
-	img::write_image(dst_gray, out_dir / "seq_transform_gray.png");
+	img::write_image(dst_gray, out_dir / "seq_transform_gray.bmp");
 }
 
 
@@ -300,27 +298,27 @@ void alpha_blend_test()
 	img::seq::transform_alpha(src, [](auto const& p) { return 128; });
 
 	img::alpha_blend(src, cur, dst);
-	img::write_image(dst, out_dir / "alpha_blend.png");
+	img::write_image(dst, out_dir / "alpha_blend.bmp");
 
 	clear_image(dst);
 
 	img::seq::alpha_blend(src, cur, dst);
-	img::write_image(dst, out_dir / "seq_alpha_blend.png");
+	img::write_image(dst, out_dir / "seq_alpha_blend.bmp");
 
 	/*img::simd::alpha_blend(src, cur, dst);
-	img::write_image(dst, out_dir / "simd_alpha_blend.png");*/
+	img::write_image(dst, out_dir / "simd_alpha_blend.bmp");*/
 
 	img::seq::copy(cur, dst);
 	img::alpha_blend(src, dst);
-	img::write_image(dst, out_dir / "alpha_blend_src_dst.png");
+	img::write_image(dst, out_dir / "alpha_blend_src_dst.bmp");
 
 	img::seq::copy(cur, dst);
 	img::seq::alpha_blend(src, dst);
-	img::write_image(dst, out_dir / "seq_alpha_blend_src_dst.png");
+	img::write_image(dst, out_dir / "seq_alpha_blend_src_dst.bmp");
 
 	/*img::seq::copy(cur, dst);
 	img::simd::alpha_blend(src, dst);
-	img::write_image(dst, out_dir / "simd_alpha_blend_src_dst.png");*/
+	img::write_image(dst, out_dir / "simd_alpha_blend_src_dst.bmp");*/
 
 }
 
@@ -341,15 +339,15 @@ void grayscale_test()
 	img::make_image(dst, width, height);
 
 	img::grayscale(src, dst);
-	img::write_image(dst, out_dir / "grayscale.png");
+	img::write_image(dst, out_dir / "grayscale.bmp");
 
 	clear_image(dst);
 
 	img::seq::grayscale(src, dst);
-	img::write_image(dst, out_dir / "seq_grayscale.png");
+	img::write_image(dst, out_dir / "seq_grayscale.bmp");
 
 	/*img::simd::grayscale(src, dst);
-	img::write_image(dst, out_dir / "simd_grayscale.png");*/
+	img::write_image(dst, out_dir / "simd_grayscale.bmp");*/
 }
 
 
@@ -362,13 +360,13 @@ void binary_test()
 
 	GrayImage caddy;
 	img::read_image_from_file(CADILLAC_PATH, caddy);
-	img::write_image(caddy, out_dir / "caddy.png");
+	img::write_image(caddy, out_dir / "caddy.bmp");
 
 	GrayImage caddy_binary;
 	img::make_image(caddy_binary, caddy.width, caddy.height);
 
 	img::binarize_th(caddy, caddy_binary, 128);
-	img::write_image(caddy_binary, out_dir / "caddy_binary.png");
+	img::write_image(caddy_binary, out_dir / "caddy_binary.bmp");
 
 	Image weed;
 	img::read_image_from_file(WEED_PATH, weed);
@@ -423,18 +421,18 @@ void contrast_test()
 
 	GrayImage src;
 	img::read_image_from_file(CORVETTE_PATH, src);
-	img::write_image(src, out_dir / "vette.png");
+	img::write_image(src, out_dir / "vette.bmp");
 
 	GrayImage dst;
 	img::make_image(dst, src.width, src.height);
 
 	img::contrast(src, dst, 0, 128);
-	img::write_image(dst, out_dir / "contrast.png");
+	img::write_image(dst, out_dir / "contrast.bmp");
 
 	clear_image(dst);
 
 	img::seq::contrast(src, dst, 0, 128);
-	img::write_image(dst, out_dir / "seq_contrast.png");
+	img::write_image(dst, out_dir / "seq_contrast.bmp");
 }
 
 
@@ -447,19 +445,19 @@ void blur_test()
 
 	GrayImage src;
 	img::read_image_from_file(CORVETTE_PATH, src);
-	img::write_image(src, out_dir / "vette.png");
+	img::write_image(src, out_dir / "vette.bmp");
 
 	GrayImage dst;
 	img::make_image(dst, src.width, src.height);
 
 	img::blur(src, dst);
-	img::write_image(dst, out_dir / "blur.png");
+	img::write_image(dst, out_dir / "blur.bmp");
 
 	img::seq::blur(src, dst);
-	img::write_image(dst, out_dir / "seq_blur.png");
+	img::write_image(dst, out_dir / "seq_blur.bmp");
 
 	/*img::simd::blur(src, dst);
-	img::write_image(dst, out_dir / "simd_blur.png");*/
+	img::write_image(dst, out_dir / "simd_blur.bmp");*/
 }
 
 
@@ -472,21 +470,21 @@ void gradients_test()
 
 	GrayImage src;
 	img::read_image_from_file(CORVETTE_PATH, src);
-	img::write_image(src, out_dir / "vette.png");
+	img::write_image(src, out_dir / "vette.bmp");
 
 	GrayImage dst;
 	img::make_image(dst, src.width, src.height);
 
 	img::gradients(src, dst);
-	img::write_image(dst, out_dir / "gradient.png");
+	img::write_image(dst, out_dir / "gradient.bmp");
 
 	clear_image(dst);
 
 	img::seq::gradients(src, dst);
-	img::write_image(dst, out_dir / "seq_gradient.png");
+	img::write_image(dst, out_dir / "seq_gradient.bmp");
 
 	/*img::simd::gradients(src, dst);
-	img::write_image(dst, out_dir / "simd_gradient.png");*/
+	img::write_image(dst, out_dir / "simd_gradient.bmp");*/
 }
 
 
@@ -499,7 +497,7 @@ void edges_test()
 
 	GrayImage src;
 	img::read_image_from_file(CORVETTE_PATH, src);
-	img::write_image(src, out_dir / "vette.png");
+	img::write_image(src, out_dir / "vette.bmp");
 
 	GrayImage dst;
 	img::make_image(dst, src.width, src.height);
@@ -507,15 +505,15 @@ void edges_test()
 	auto const threshold = [](u8 g) { return g >= 100; };
 
 	img::edges(src, dst, threshold);
-	img::write_image(dst, out_dir / "edges.png");
+	img::write_image(dst, out_dir / "edges.bmp");
 
 	clear_image(dst);
 
 	img::seq::edges(src, dst, threshold);
-	img::write_image(dst, out_dir / "seq_edges.png");
+	img::write_image(dst, out_dir / "seq_edges.bmp");
 
 	/*img::simd::edges(src, dst, threshold);
-	img::write_image(dst, out_dir / "simd_edges.png");*/
+	img::write_image(dst, out_dir / "simd_edges.bmp");*/
 }
 
 
@@ -536,7 +534,7 @@ void rotate_test()
 
 	r32 theta = 0.6f * 2 * 3.14159f;
 	img::seq::rotate(src, dst, origin, theta);
-	img::write_image(dst, out_dir / "rotate.png");
+	img::write_image(dst, out_dir / "rotate.bmp");
 
 	GrayImage src_gray;
 	img::read_image_from_file(CORVETTE_PATH, src_gray);
@@ -547,7 +545,7 @@ void rotate_test()
 	origin = { src_gray.width / 2, src_gray.height / 2 };
 
 	img::seq::rotate(src_gray, dst_gray, origin, theta);
-	img::write_image(dst_gray, out_dir / "rotate_gray.png");
+	img::write_image(dst_gray, out_dir / "rotate_gray.bmp");
 }
 
 
