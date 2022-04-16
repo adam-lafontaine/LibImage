@@ -40,7 +40,8 @@ const auto WEED_PATH = IMAGE_IN_PATH / "weed.png";
 
 bool directory_files_test()
 {
-	printf("\ndirectory_files_test:\n");
+	auto title = "directory_files_test";
+	printf("\n%s:\n", title);
 
 	auto const test_dir = [](path_t const& dir)
 	{
@@ -78,7 +79,8 @@ bool directory_files_test()
 
 void empty_dir(path_t const& dir);
 
-void read_write_test(path_t const& out_dir);
+void read_write_image_test();
+void resize_test();
 
 
 
@@ -97,14 +99,71 @@ int main()
 		return EXIT_FAILURE;
 	}
 
-	//read_write_test(IMAGE_OUT_PATH / "read_write");
+	read_write_image_test();
+	resize_test();
 
 }
 
 
-void read_write_test(path_t const& out_dir)
+void read_write_image_test()
 {
+	auto title = "read_write_image_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
+
+	Image image;
+	img::read_image_from_file(CORVETTE_PATH, image);
+	img::write_image(image, out_dir / "corvette.bmp");
+	img::write_image(image, out_dir / "corvette.png");
+
+	GrayImage gray;
+	img::read_image_from_file(CADILLAC_PATH, gray);
+	img::write_image(gray, out_dir / "cadillac_gray.bmp");
+	img::write_image(gray, out_dir / "cadillac_gray.png");
+}
+
+
+void resize_test()
+{
+	auto title = "resize_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+
+	Image image;
+	img::read_image_from_file(CORVETTE_PATH, image);
+	auto width = image.width;
+	auto height = image.height;
+
+	Image vertical;
+	vertical.width = width / 2;
+	vertical.height = height * 2;
+	img::resize_image(image, vertical);
+	img::write_image(vertical, out_dir / "vertical.png");
+
+	Image horizontal;
+	horizontal.width = width * 2;
+	horizontal.height = height / 2;
+	img::resize_image(image, horizontal);
+	img::write_image(horizontal, out_dir / "horizontal.png");
+
+	GrayImage gray;
+	img::read_image_from_file(CADILLAC_PATH, gray);
+	width = gray.width;
+	height = gray.height;
+
+	GrayImage vertical_gray;
+	vertical_gray.width = width / 2;
+	vertical_gray.height = height * 2;
+	img::resize_image(gray, vertical_gray);
+	img::write_image(vertical_gray, out_dir / "vertical_gray.png");
+
+	GrayImage horizontal_gray;
+	horizontal_gray.width = width * 2;
+	horizontal_gray.height = height / 2;
+	img::resize_image(gray, horizontal_gray);
+	img::write_image(horizontal_gray, out_dir / "horizontal_gray.png");		 
 }
 
 
