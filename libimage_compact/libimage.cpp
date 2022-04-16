@@ -1,5 +1,11 @@
 #include "libimage.hpp"
 
+#ifndef LIBIMAGE_NO_PARALLEL
+#include <execution>
+#endif // !LIBIMAGE_NO_PARALLEL
+
+#include <algorithm>
+
 
 /*  libimage.cpp  */
 
@@ -514,5 +520,1176 @@ namespace libimage
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
 }
+
+
+/*  verify.hpp  */
+
+namespace libimage
+{
+#ifndef LIBIMAGE_NO_COLOR
+
+
+	inline bool verify(view_t const& view)
+	{
+		return view.image_data && view.width && view.height;
+	}
+
+
+	inline bool verify(image_t const& img)
+	{
+		return img.data && img.width && img.height;
+	}
+
+
+	inline bool verify(image_soa const& img)
+	{
+		return img.data && img.width && img.height;
+	}
+
+
+	inline bool verify(image_t const& src, image_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(image_t const& src, view_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(view_t const& src, image_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(view_t const& src, view_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(image_soa const& src, image_soa const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(image_t const& src, image_soa const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(image_soa const& src, image_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(view_t const& src, image_soa const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(image_soa const& src, view_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+#endif // !LIBIMAGE_NO_COLOR
+
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	inline bool verify(gray::image_t const& img)
+	{
+		return img.data && img.width && img.height;
+	}
+
+
+	inline bool verify(gray::view_t const& view)
+	{
+		return view.image_data && view.width && view.height;
+	}
+
+
+	inline bool verify(gray::image_t const& src, gray::image_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(gray::image_t const& src, gray::view_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(gray::view_t const& src, gray::image_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(gray::view_t const& src, gray::view_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(image_soa const& src, gray::image_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(image_soa const& src, gray::view_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+
+
+#ifndef LIBIMAGE_NO_COLOR
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	inline bool verify(image_t const& src, gray::image_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(image_t const& src, gray::view_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(view_t const& src, gray::image_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+
+	inline bool verify(view_t const& src, gray::view_t const& dst)
+	{
+		return verify(src) && verify(dst) && dst.width == src.width && dst.height == src.height;
+	}
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+#endif // !LIBIMAGE_NO_COLOR
+}
+
+
+/*  index_range.hpp  */
+
+#define INDEX_RANGE_IMPL
+#ifdef INDEX_RANGE_IMPL
+
+template<typename UINT>
+class UnsignedRange
+{
+public:
+
+	using index_type = UINT;
+
+	class iterator
+	{
+	public:
+		using iterator_category = std::forward_iterator_tag;
+		using value_type = index_type;
+		using difference_type = std::ptrdiff_t;
+		using pointer = const value_type*;
+		using reference = value_type;
+
+		value_type m_val;
+
+		explicit iterator() : m_val(0) {}
+
+		explicit iterator(value_type val) : m_val(val) {}
+
+		reference operator*() const { return m_val; }
+		iterator& operator++() { ++m_val; return *this; }
+		iterator operator++(int) { iterator retval = *this; ++(*this); return retval; }
+		bool operator==(iterator other) const { return m_val == other.m_val; }
+		bool operator!=(iterator other) const { return !(*this == other); }
+	};
+
+private:
+
+	index_type m_min = 0;
+	index_type m_max = 1;
+
+	template<typename INT_T>
+	index_type to_min(INT_T val) { return val < 0 ? 0 : static_cast<index_type>(val); }
+
+	template<typename INT_T>
+	index_type to_max(INT_T val) { return val < 1 ? 0 : static_cast<index_type>(val - 1); }
+
+public:
+
+	template<typename INT_T>
+	UnsignedRange(INT_T size) : m_max(to_max(size)) {}
+
+	template<typename INT_T>
+	UnsignedRange(INT_T begin, INT_T end)
+	{
+		if (end >= begin)
+		{
+			m_min = to_min(begin);
+			m_max = to_max(end);
+		}
+		else
+		{
+			m_min = to_min(end);
+			m_max = to_max(begin);
+		}
+	}
+
+	iterator begin() { return iterator(m_min); }
+	iterator end() { return iterator(m_max + 1); }
+};
+
+using u32_range_t = UnsignedRange<unsigned>;
+
+
+#endif // INDEX_RANGE_IMPL
+
+
+/*  copy.cpp  */
+
+namespace libimage
+{
+
+#ifndef LIBIMAGE_NO_COLOR
+
+	void copy(image_soa const& src, image_t const& dst)
+	{
+		assert(verify(src, dst));
+
+		for (u32 i = 0; i < src.width * src.height; ++i)
+		{
+			auto& p = dst.data[i];
+			p.red = src.red[i];
+			p.green = src.green[i];
+			p.blue = src.blue[i];
+			p.alpha = src.alpha[i];
+		}
+	}
+
+
+	void copy(image_t const& src, image_soa const& dst)
+	{
+		assert(verify(src, dst));
+
+		for (u32 i = 0; i < src.width * src.height; ++i)
+		{
+			auto& p = src.data[i];
+			dst.red[i] = p.red;
+			dst.green[i] = p.green;
+			dst.blue[i] = p.blue;
+			dst.alpha[i] = p.alpha;
+		}
+	}
+
+
+	void copy(image_soa const& src, view_t const& dst)
+	{
+		auto dst_it = dst.begin();
+		for (u32 i = 0; i < src.width * src.height; ++i)
+		{
+			auto& p = *dst_it;
+			p.red = src.red[i];
+			p.green = src.green[i];
+			p.blue = src.blue[i];
+			p.alpha = src.alpha[i];
+
+			++dst_it;
+		}
+	}
+
+
+	void copy(view_t const& src, image_soa const& dst)
+	{
+		auto src_it = src.begin();
+		for (u32 i = 0; i < src.width * src.height; ++i)
+		{
+			auto& p = *src_it;
+			dst.red[i] = p.red;
+			dst.green[i] = p.green;
+			dst.blue[i] = p.blue;
+			dst.alpha[i] = p.alpha;
+
+			++src_it;
+		}
+	}
+
+
+	void copy(image_soa const& src, image_soa const& dst)
+	{
+		for (u32 i = 0; i < src.width * src.height; ++i)
+		{
+			dst.red[i] = src.red[i];
+			dst.green[i] = src.green[i];
+			dst.blue[i] = src.blue[i];
+			dst.alpha[i] = src.alpha[i];
+		}
+	}
+
+
+#endif // !LIBIMAGE_NO_COLOR
+
+
+#ifndef LIBIMAGE_NO_PARALLEL
+
+
+#ifndef LIBIMAGE_NO_COLOR
+
+	void copy(image_t const& src, image_t const& dst)
+	{
+		assert(verify(src, dst));
+		std::copy(std::execution::par, src.begin(), src.end(), dst.begin());
+	}
+
+
+	void copy(image_t const& src, view_t const& dst)
+	{
+		assert(verify(src, dst));
+		std::copy(std::execution::par, src.begin(), src.end(), dst.begin());
+	}
+
+
+	void copy(view_t const& src, image_t const& dst)
+	{
+		assert(verify(src, dst));
+		std::copy(std::execution::par, src.begin(), src.end(), dst.begin());
+	}
+
+
+	void copy(view_t const& src, view_t const& dst)
+	{
+		assert(verify(src, dst));
+		std::copy(std::execution::par, src.begin(), src.end(), dst.begin());
+	}
+
+
+#endif // !LIBIMAGE_NO_COLOR
+
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	void copy(gray::image_t const& src, gray::image_t const& dst)
+	{
+		assert(verify(src, dst));
+		std::copy(std::execution::par, src.begin(), src.end(), dst.begin());
+	}
+
+
+	void copy(gray::image_t const& src, gray::view_t const& dst)
+	{
+		assert(verify(src, dst));
+		std::copy(std::execution::par, src.begin(), src.end(), dst.begin());
+	}
+
+
+	void copy(gray::view_t const& src, gray::image_t const& dst)
+	{
+		assert(verify(src, dst));
+		std::copy(std::execution::par, src.begin(), src.end(), dst.begin());
+	}
+
+
+	void copy(gray::view_t const& src, gray::view_t const& dst)
+	{
+		assert(verify(src, dst));
+		std::copy(std::execution::par, src.begin(), src.end(), dst.begin());
+	}
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+
+#endif // !LIBIMAGE_NO_PARALLEL
+
+
+
+
+	namespace seq
+	{
+
+#ifndef LIBIMAGE_NO_COLOR
+
+		void copy(image_t const& src, image_t const& dst)
+		{
+			assert(verify(src, dst));
+			std::copy(src.begin(), src.end(), dst.begin());
+		}
+
+
+		void copy(image_t const& src, view_t const& dst)
+		{
+			assert(verify(src, dst));
+			std::copy(src.begin(), src.end(), dst.begin());
+		}
+
+
+		void copy(view_t const& src, image_t const& dst)
+		{
+			assert(verify(src, dst));
+			std::copy(src.begin(), src.end(), dst.begin());
+		}
+
+
+		void copy(view_t const& src, view_t const& dst)
+		{
+			assert(verify(src, dst));
+			std::copy(src.begin(), src.end(), dst.begin());
+		}
+
+#endif // !LIBIMAGE_NO_COLOR
+
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+
+		void copy(gray::image_t const& src, gray::image_t const& dst)
+		{
+			assert(verify(src, dst));
+			std::copy(src.begin(), src.end(), dst.begin());
+		}
+
+
+		void copy(gray::image_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+			std::copy(src.begin(), src.end(), dst.begin());
+		}
+
+
+		void copy(gray::view_t const& src, gray::image_t const& dst)
+		{
+			assert(verify(src, dst));
+			std::copy(src.begin(), src.end(), dst.begin());
+		}
+
+
+		void copy(gray::view_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+			std::copy(src.begin(), src.end(), dst.begin());
+		}
+
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+	}
+
+
+}
+
+
+
+/*  transform.cpp  */
+
+namespace libimage
+{
+#ifndef LIBIMAGE_NO_PARALLEL
+
+#ifndef LIBIMAGE_NO_COLOR
+
+
+	void transform(image_t const& src, image_t const& dst, pixel_to_pixel_f const& func)
+	{
+		assert(verify(src, dst));
+		std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
+	}
+
+
+	void transform(image_t const& src, view_t const& dst, pixel_to_pixel_f const& func)
+	{
+		assert(verify(src, dst));
+		std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
+	}
+
+
+	void transform(view_t const& src, image_t const& dst, pixel_to_pixel_f const& func)
+	{
+		assert(verify(src, dst));
+		std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
+	}
+
+
+	void transform(view_t const& src, view_t const& dst, pixel_to_pixel_f const& func)
+	{
+		assert(verify(src, dst));
+		std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
+	}
+
+
+	void transform_self(image_t const& src_dst, pixel_to_pixel_f const& func)
+	{
+		assert(verify(src_dst));
+		auto const update = [&](pixel_t& p) { p = func(p); };
+		std::for_each(std::execution::par, src_dst.begin(), src_dst.end(), update);
+	}
+
+
+	void transform_self(view_t const& src_dst, pixel_to_pixel_f const& func)
+	{
+		assert(verify(src_dst));
+		auto const update = [&](pixel_t& p) { p = func(p); };
+		std::for_each(std::execution::par, src_dst.begin(), src_dst.end(), update);
+	}
+
+
+	void transform_alpha(image_t const& src_dst, pixel_to_u8_f const& func)
+	{
+		assert(verify(src_dst));
+		auto const update = [&](pixel_t& p) { p.alpha = func(p); };
+		std::for_each(std::execution::par, src_dst.begin(), src_dst.end(), update);
+	}
+
+
+	void transform_alpha(view_t const& src_dst, pixel_to_u8_f const& func)
+	{
+		assert(verify(src_dst));
+		auto const update = [&](pixel_t& p) { p.alpha = func(p); };
+		std::for_each(std::execution::par, src_dst.begin(), src_dst.end(), update);
+	}
+
+
+#endif // !LIBIMAGE_NO_COLOR
+
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	lookup_table_t to_lookup_table(u8_to_u8_f const& func)
+	{
+		lookup_table_t lut = { 0 };
+
+		u32_range_t ids(0u, 256u);
+
+		std::for_each(std::execution::par, ids.begin(), ids.end(), [&](u32 id) { lut[id] = func(id); });
+
+		return lut;
+	}
+
+
+	void transform(gray::image_t const& src, gray::image_t const& dst, lookup_table_t const& lut)
+	{
+		assert(verify(src, dst));
+		auto const conv = [&lut](u8 p) { return lut[p]; };
+		std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), conv);
+	}
+
+
+	void transform(gray::image_t const& src, gray::view_t const& dst, lookup_table_t const& lut)
+	{
+		assert(verify(src, dst));
+		auto const conv = [&lut](u8 p) { return lut[p]; };
+		std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), conv);
+	}
+
+
+	void transform(gray::view_t const& src, gray::image_t const& dst, lookup_table_t const& lut)
+	{
+		assert(verify(src, dst));
+		auto const conv = [&lut](u8 p) { return lut[p]; };
+		std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), conv);
+	}
+
+
+	void transform(gray::view_t const& src, gray::view_t const& dst, lookup_table_t const& lut)
+	{
+		assert(verify(src, dst));
+		auto const conv = [&lut](u8 p) { return lut[p]; };
+		std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), conv);
+	}
+
+
+	void transform(gray::image_t const& src, gray::image_t const& dst, u8_to_u8_f const& func)
+	{
+		assert(verify(src, dst));
+		auto const lut = to_lookup_table(func);
+		transform(src, dst, lut);
+	}
+
+
+	void transform(gray::image_t const& src, gray::view_t const& dst, u8_to_u8_f const& func)
+	{
+		assert(verify(src, dst));
+		auto const lut = to_lookup_table(func);
+		transform(src, dst, lut);
+	}
+
+
+	void transform(gray::view_t const& src, gray::image_t const& dst, u8_to_u8_f const& func)
+	{
+		assert(verify(src, dst));
+		auto const lut = to_lookup_table(func);
+		transform(src, dst, lut);
+	}
+
+
+	void transform(gray::view_t const& src, gray::view_t const& dst, u8_to_u8_f const& func)
+	{
+		assert(verify(src, dst));
+		auto const lut = to_lookup_table(func);
+		transform(src, dst, lut);
+	}
+
+
+	void transform_self(gray::image_t const& src_dst, lookup_table_t const& lut)
+	{
+		assert(verify(src_dst));
+		auto const conv = [&lut](u8& p) { p = lut[p]; };
+		std::for_each(std::execution::par, src_dst.begin(), src_dst.end(), conv);
+	}
+
+	void transform_self(gray::view_t const& src_dst, lookup_table_t const& lut)
+	{
+		assert(verify(src_dst));
+		auto const conv = [&lut](u8& p) { p = lut[p]; };
+		std::for_each(std::execution::par, src_dst.begin(), src_dst.end(), conv);
+	}
+
+
+	void transform_self(gray::image_t const& src_dst, u8_to_u8_f const& func)
+	{
+		assert(verify(src_dst));
+		auto const lut = to_lookup_table(func);
+		transform_self(src_dst, lut);
+	}
+
+
+	void transform_self(gray::view_t const& src_dst, u8_to_u8_f const& func)
+	{
+		assert(verify(src_dst));
+		auto const lut = to_lookup_table(func);
+		transform_self(src_dst, lut);
+	}
+
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+
+
+#ifndef LIBIMAGE_NO_COLOR
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	void transform(image_t const& src, gray::image_t const& dst, pixel_to_u8_f const& func)
+	{
+		assert(verify(src, dst));
+		std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
+	}
+
+
+	void transform(image_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
+	{
+		assert(verify(src, dst));
+		std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
+	}
+
+
+	void transform(view_t const& src, gray::image_t const& dst, pixel_to_u8_f const& func)
+	{
+		assert(verify(src, dst));
+		std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
+	}
+
+
+	void transform(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
+	{
+		assert(verify(src, dst));
+		std::transform(std::execution::par, src.begin(), src.end(), dst.begin(), func);
+	}
+
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+#endif // !LIBIMAGE_NO_COLOR
+
+
+#endif // !LIBIMAGE_NO_PARALLEL
+
+
+	namespace seq
+	{
+
+#ifndef LIBIMAGE_NO_COLOR
+
+
+		void transform(image_t const& src, image_t const& dst, pixel_to_pixel_f const& func)
+		{
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), dst.begin(), func);
+		}
+
+
+		void transform(image_t const& src, view_t const& dst, pixel_to_pixel_f const& func)
+		{
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), dst.begin(), func);
+		}
+
+
+		void transform(view_t const& src, image_t const& dst, pixel_to_pixel_f const& func)
+		{
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), dst.begin(), func);
+		}
+
+
+		void transform(view_t const& src, view_t const& dst, pixel_to_pixel_f const& func)
+		{
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), dst.begin(), func);
+		}
+
+
+		void transform_self(image_t const& src_dst, pixel_to_pixel_f const& func)
+		{
+			assert(verify(src_dst));
+			auto const update = [&](pixel_t& p) { p = func(p); };
+			std::for_each(src_dst.begin(), src_dst.end(), update);
+		}
+
+
+		void transform_self(view_t const& src_dst, pixel_to_pixel_f const& func)
+		{
+			assert(verify(src_dst));
+			auto const update = [&](pixel_t& p) { p = func(p); };
+			std::for_each(src_dst.begin(), src_dst.end(), update);
+		}
+
+
+		void transform_alpha(image_t const& src_dst, pixel_to_u8_f const& func)
+		{
+			assert(verify(src_dst));
+			auto const conv = [&](pixel_t& p) { p.alpha = func(p); };
+			std::for_each(src_dst.begin(), src_dst.end(), conv);
+		}
+
+
+		void transform_alpha(view_t const& src_dst, pixel_to_u8_f const& func)
+		{
+			assert(verify(src_dst));
+			auto const conv = [&](pixel_t& p) { p.alpha = func(p); };
+			std::for_each(src_dst.begin(), src_dst.end(), conv);
+		}
+
+#endif // !LIBIMAGE_NO_COLOR
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+		lookup_table_t to_lookup_table(u8_to_u8_f const& func)
+		{
+			lookup_table_t lut = { 0 };
+
+			u32_range_t ids(0u, 256u);
+
+			std::for_each(ids.begin(), ids.end(), [&](u32 id) { lut[id] = func(id); });
+
+			return lut;
+		}
+
+
+		void transform(gray::image_t const& src, gray::image_t const& dst, lookup_table_t const& lut)
+		{
+			assert(verify(src, dst));
+			auto const conv = [&lut](u8 p) { return lut[p]; };
+			std::transform(src.begin(), src.end(), dst.begin(), conv);
+		}
+
+
+		void transform(gray::image_t const& src, gray::view_t const& dst, lookup_table_t const& lut)
+		{
+			assert(verify(src, dst));
+			auto const conv = [&lut](u8 p) { return lut[p]; };
+			std::transform(src.begin(), src.end(), dst.begin(), conv);
+		}
+
+
+		void transform(gray::view_t const& src, gray::image_t const& dst, lookup_table_t const& lut)
+		{
+			assert(verify(src, dst));
+			auto const conv = [&lut](u8 p) { return lut[p]; };
+			std::transform(src.begin(), src.end(), dst.begin(), conv);
+		}
+
+
+		void transform(gray::view_t const& src, gray::view_t const& dst, lookup_table_t const& lut)
+		{
+			assert(verify(src, dst));
+			auto const conv = [&lut](u8 p) { return lut[p]; };
+			std::transform(src.begin(), src.end(), dst.begin(), conv);
+		}
+
+
+		void transform(gray::image_t const& src, gray::image_t const& dst, u8_to_u8_f const& func)
+		{
+			assert(verify(src, dst));
+			auto const lut = seq::to_lookup_table(func);
+			auto const conv = [&lut](u8 p) { return lut[p]; };
+			std::transform(src.begin(), src.end(), dst.begin(), conv);
+		}
+
+
+		void transform(gray::image_t const& src, gray::view_t const& dst, u8_to_u8_f const& func)
+		{
+			assert(verify(src, dst));
+			auto const lut = seq::to_lookup_table(func);
+			auto const conv = [&lut](u8 p) { return lut[p]; };
+			std::transform(src.begin(), src.end(), dst.begin(), conv);
+		}
+
+
+		void transform(gray::view_t const& src, gray::image_t const& dst, u8_to_u8_f const& func)
+		{
+			assert(verify(src, dst));
+			auto const lut = seq::to_lookup_table(func);
+			auto const conv = [&lut](u8 p) { return lut[p]; };
+			std::transform(src.begin(), src.end(), dst.begin(), conv);
+		}
+
+
+		void transform(gray::view_t const& src, gray::view_t const& dst, u8_to_u8_f const& func)
+		{
+			assert(verify(src, dst));
+			auto const lut = seq::to_lookup_table(func);
+			auto const conv = [&lut](u8 p) { return lut[p]; };
+			std::transform(src.begin(), src.end(), dst.begin(), conv);
+		}
+
+
+		void transform_self(gray::image_t const& src_dst, lookup_table_t const& lut)
+		{
+			assert(verify(src_dst));
+			auto const conv = [&lut](u8& p) { p = lut[p]; };
+			std::for_each(src_dst.begin(), src_dst.end(), conv);
+		}
+
+		void transform_self(gray::view_t const& src_dst, lookup_table_t const& lut)
+		{
+			assert(verify(src_dst));
+			auto const conv = [&lut](u8& p) { p = lut[p]; };
+			std::for_each(src_dst.begin(), src_dst.end(), conv);
+		}
+
+
+		void transform_self(gray::image_t const& src_dst, u8_to_u8_f const& func)
+		{
+			assert(verify(src_dst));
+			auto const lut = to_lookup_table(func);
+			seq::transform_self(src_dst, lut);
+		}
+
+
+		void transform_self(gray::view_t const& src_dst, u8_to_u8_f const& func)
+		{
+			assert(verify(src_dst));
+			auto const lut = to_lookup_table(func);
+			seq::transform_self(src_dst, lut);
+		}
+
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+
+
+#ifndef LIBIMAGE_NO_COLOR
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+
+		void transform(image_t const& src, gray::image_t const& dst, pixel_to_u8_f const& func)
+		{
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), dst.begin(), func);
+		}
+
+
+		void transform(image_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
+		{
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), dst.begin(), func);
+		}
+
+
+		void transform(view_t const& src, gray::image_t const& dst, pixel_to_u8_f const& func)
+		{
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), dst.begin(), func);
+		}
+
+
+		void transform(view_t const& src, gray::view_t const& dst, pixel_to_u8_f const& func)
+		{
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), dst.begin(), func);
+		}
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+#endif // !LIBIMAGE_NO_COLOR
+	}
+
+}
+
+
+/*  alpha_blend.cpp  */
+
+#ifndef LIBIMAGE_NO_COLOR
+
+namespace libimage
+{
+	static u8 alpha_blend_linear_soa(u8 src, u8 current, u8 alpha)
+	{
+		auto const a = alpha / 255.0f;
+
+		auto sf = (r32)(src);
+		auto cf = (r32)(current);
+
+		auto blended = a * sf + (1.0f - a) * cf;
+
+		return (u8)(blended);
+	}
+
+
+
+	void alpha_blend(image_soa const& src, image_soa const& current, image_soa const& dst)
+	{
+		assert(verify(src, current));
+		assert(verify(src, dst));
+
+		for (u32 i = 0; i < src.width * src.height; ++i)
+		{
+			dst.red[i] = alpha_blend_linear_soa(src.red[i], current.red[i], src.alpha[i]);
+			dst.green[i] = alpha_blend_linear_soa(src.green[i], current.green[i], src.alpha[i]);
+			dst.blue[i] = alpha_blend_linear_soa(src.blue[i], current.blue[i], src.alpha[i]);
+			dst.alpha[i] = 255;
+		}
+	}
+
+
+	void alpha_blend(image_soa const& src, image_soa const& current_dst)
+	{
+		alpha_blend(src, current_dst, current_dst);
+	}
+
+
+	static pixel_t alpha_blend_linear(pixel_t const& src, pixel_t const& current)
+	{
+		auto const a = (r32)(src.alpha) / 255.0f;
+
+		auto const blend = [&](u8 s, u8 c)
+		{
+			auto sf = (r32)(s);
+			auto cf = (r32)(c);
+
+			auto blended = a * sf + (1.0f - a) * cf;
+
+			return (u8)(blended);
+		};
+
+		auto red = blend(src.red, current.red);
+		auto green = blend(src.green, current.green);
+		auto blue = blend(src.blue, current.blue);
+
+		return to_pixel(red, green, blue);
+	}
+
+
+#ifndef LIBIMAGE_NO_PARALLEL
+
+	void alpha_blend(image_t const& src, image_t const& current, image_t const& dst)
+	{
+		assert(verify(src, current));
+		assert(verify(src, dst));
+		std::transform(std::execution::par, src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+	}
+
+
+	void alpha_blend(image_t const& src, image_t const& current, view_t const& dst)
+	{
+		assert(verify(src, current));
+		assert(verify(src, dst));
+		std::transform(std::execution::par, src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+	}
+
+
+	void alpha_blend(image_t const& src, view_t const& current, image_t const& dst)
+	{
+		assert(verify(src, current));
+		assert(verify(src, dst));
+		std::transform(std::execution::par, src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+	}
+
+
+	void alpha_blend(image_t const& src, view_t const& current, view_t const& dst)
+	{
+		assert(verify(src, current));
+		assert(verify(src, dst));
+		std::transform(std::execution::par, src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+	}
+
+
+	void alpha_blend(view_t const& src, image_t const& current, image_t const& dst)
+	{
+		assert(verify(src, current));
+		assert(verify(src, dst));
+		std::transform(std::execution::par, src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+	}
+
+
+	void alpha_blend(view_t const& src, image_t const& current, view_t const& dst)
+	{
+		assert(verify(src, current));
+		assert(verify(src, dst));
+		std::transform(std::execution::par, src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+	}
+
+
+	void alpha_blend(view_t const& src, view_t const& current, image_t const& dst)
+	{
+		assert(verify(src, current));
+		assert(verify(src, dst));
+		std::transform(std::execution::par, src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+	}
+
+
+	void alpha_blend(view_t const& src, view_t const& current, view_t const& dst)
+	{
+		assert(verify(src, current));
+		assert(verify(src, dst));
+		std::transform(std::execution::par, src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+	}
+
+
+	void alpha_blend(image_t const& src, image_t const& current_dst)
+	{
+		assert(verify(src, current_dst));
+		std::transform(std::execution::par, src.begin(), src.end(), current_dst.begin(), current_dst.begin(), alpha_blend_linear);
+	}
+
+
+	void alpha_blend(image_t const& src, view_t const& current_dst)
+	{
+		assert(verify(src, current_dst));
+		std::transform(std::execution::par, src.begin(), src.end(), current_dst.begin(), current_dst.begin(), alpha_blend_linear);
+	}
+
+
+	void alpha_blend(view_t const& src, image_t const& current_dst)
+	{
+		assert(verify(src, current_dst));
+		std::transform(std::execution::par, src.begin(), src.end(), current_dst.begin(), current_dst.begin(), alpha_blend_linear);
+	}
+
+
+	void alpha_blend(view_t const& src, view_t const& current_dst)
+	{
+		assert(verify(src, current_dst));
+		std::transform(std::execution::par, src.begin(), src.end(), current_dst.begin(), current_dst.begin(), alpha_blend_linear);
+	}
+
+#endif // !LIBIMAGE_NO_PARALLEL
+	namespace seq
+	{
+		void alpha_blend(image_t const& src, image_t const& current, image_t const& dst)
+		{
+			assert(verify(src, current));
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+		}
+
+
+		void alpha_blend(image_t const& src, image_t const& current, view_t const& dst)
+		{
+			assert(verify(src, current));
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+		}
+
+
+		void alpha_blend(image_t const& src, view_t const& current, image_t const& dst)
+		{
+			assert(verify(src, current));
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+		}
+
+
+		void alpha_blend(image_t const& src, view_t const& current, view_t const& dst)
+		{
+			assert(verify(src, current));
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+		}
+
+
+		void alpha_blend(view_t const& src, image_t const& current, image_t const& dst)
+		{
+			assert(verify(src, current));
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+		}
+
+
+		void alpha_blend(view_t const& src, image_t const& current, view_t const& dst)
+		{
+			assert(verify(src, current));
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+		}
+
+
+		void alpha_blend(view_t const& src, view_t const& current, image_t const& dst)
+		{
+			assert(verify(src, current));
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+		}
+
+
+		void alpha_blend(view_t const& src, view_t const& current, view_t const& dst)
+		{
+			assert(verify(src, current));
+			assert(verify(src, dst));
+			std::transform(src.begin(), src.end(), current.begin(), dst.begin(), alpha_blend_linear);
+		}
+
+
+		void alpha_blend(image_t const& src, image_t const& current_dst)
+		{
+			assert(verify(src, current_dst));
+			std::transform(src.begin(), src.end(), current_dst.begin(), current_dst.begin(), alpha_blend_linear);
+		}
+
+
+		void alpha_blend(image_t const& src, view_t const& current_dst)
+		{
+			assert(verify(src, current_dst));
+			std::transform(src.begin(), src.end(), current_dst.begin(), current_dst.begin(), alpha_blend_linear);
+		}
+
+
+		void alpha_blend(view_t const& src, image_t const& current_dst)
+		{
+			assert(verify(src, current_dst));
+			std::transform(src.begin(), src.end(), current_dst.begin(), current_dst.begin(), alpha_blend_linear);
+		}
+
+
+		void alpha_blend(view_t const& src, view_t const& current_dst)
+		{
+			assert(verify(src, current_dst));
+			std::transform(src.begin(), src.end(), current_dst.begin(), current_dst.begin(), alpha_blend_linear);
+		}
+	}
+
+
+}
+
+#endif // !LIBIMAGE_NO_COLOR
 
 

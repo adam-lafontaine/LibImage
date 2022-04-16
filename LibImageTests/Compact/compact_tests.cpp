@@ -82,6 +82,7 @@ void empty_dir(path_t const& dir);
 void read_write_image_test();
 void resize_test();
 void view_test();
+void alpha_blend_test();
 
 
 int main()
@@ -102,6 +103,7 @@ int main()
 	read_write_image_test();
 	resize_test();
 	view_test();
+	alpha_blend_test();
 }
 
 
@@ -201,6 +203,55 @@ void view_test()
 
 	auto view_gray = img::sub_view(gray, r);
 	img::write_view(view_gray, out_dir / "view_gray.png");
+}
+
+
+void alpha_blend_test()
+{
+	auto title = "alpha_blend_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+
+	Image src;
+	img::read_image_from_file(CORVETTE_PATH, src);
+	auto width = src.width;
+	auto height = src.height;
+
+	Image caddy;
+	img::read_image_from_file(CADILLAC_PATH, caddy);
+
+	Image cur;
+	cur.width = width;
+	cur.height = height;
+	img::resize_image(caddy, cur);
+
+	Image dst;
+	img::make_image(dst, width, height);
+
+	img::seq::transform_alpha(src, [](auto const& p) { return 128; });
+
+	img::alpha_blend(src, cur, dst);
+	img::write_image(dst, out_dir / "alpha_blend.png");
+
+	img::seq::alpha_blend(src, cur, dst);
+	img::write_image(dst, out_dir / "seq_alpha_blend.png");
+
+	/*img::simd::alpha_blend(src, cur, dst);
+	img::write_image(dst, out_dir / "simd_alpha_blend.png");*/
+
+	img::seq::copy(cur, dst);
+	img::alpha_blend(src, dst);
+	img::write_image(dst, out_dir / "alpha_blend_src_dst.png");
+
+	img::seq::copy(cur, dst);
+	img::seq::alpha_blend(src, dst);
+	img::write_image(dst, out_dir / "seq_alpha_blend_src_dst.png");
+
+	/*img::seq::copy(cur, dst);
+	img::simd::alpha_blend(src, dst);
+	img::write_image(dst, out_dir / "simd_alpha_blend_src_dst.png");*/
+
 }
 
 
