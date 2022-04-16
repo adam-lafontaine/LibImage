@@ -81,7 +81,7 @@ void empty_dir(path_t const& dir);
 
 void read_write_image_test();
 void resize_test();
-
+void view_test();
 
 
 int main()
@@ -101,7 +101,7 @@ int main()
 
 	read_write_image_test();
 	resize_test();
-
+	view_test();
 }
 
 
@@ -164,6 +164,43 @@ void resize_test()
 	horizontal_gray.height = height / 2;
 	img::resize_image(gray, horizontal_gray);
 	img::write_image(horizontal_gray, out_dir / "horizontal_gray.png");		 
+}
+
+
+void view_test()
+{
+	auto title = "view_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+
+	img::pixel_range_t r{};
+
+	Image image;
+	img::read_image_from_file(CORVETTE_PATH, image);
+	auto width = image.width;
+	auto height = image.height;
+
+	r.x_begin = width / 4;
+	r.x_end = r.x_begin + width / 2;
+	r.y_begin = height / 4;
+	r.y_end = r.y_begin + height / 2;
+
+	auto view = img::sub_view(image, r);
+	img::write_view(view, out_dir / "view.png");
+
+	GrayImage gray;
+	img::read_image_from_file(CADILLAC_PATH, gray);
+	width = gray.width;
+	height = gray.height;
+
+	r.x_begin = width / 4;
+	r.x_end = r.x_begin + width / 2;
+	r.y_begin = height / 4;
+	r.y_end = r.y_begin + height / 2;
+
+	auto view_gray = img::sub_view(gray, r);
+	img::write_view(view_gray, out_dir / "view_gray.png");
 }
 
 
