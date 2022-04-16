@@ -85,6 +85,10 @@ void view_test();
 void alpha_blend_test();
 void grayscale_test();
 void binary_test();
+void contrast_test();
+void blur_test();
+void gradients_test();
+void edges_test();
 
 
 int main()
@@ -108,6 +112,10 @@ int main()
 	alpha_blend_test();
 	grayscale_test();
 	binary_test();
+	contrast_test();
+	blur_test();
+	gradients_test();
+	edges_test();
 }
 
 
@@ -292,19 +300,14 @@ void binary_test()
 	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
 
-	Image caddy;
+	GrayImage caddy;
 	img::read_image_from_file(CADILLAC_PATH, caddy);
-
-	GrayImage caddy_gray;
-	img::make_image(caddy_gray, caddy.width, caddy.height);
-
-	img::grayscale(caddy, caddy_gray);
-	img::write_image(caddy_gray, out_dir / "caddy_gray.png");
+	img::write_image(caddy, out_dir / "caddy.png");
 
 	GrayImage caddy_binary;
 	img::make_image(caddy_binary, caddy.width, caddy.height);
 
-	img::binarize_th(caddy_gray, caddy_binary, 128);
+	img::binarize_th(caddy, caddy_binary, 128);
 	img::write_image(caddy_binary, out_dir / "caddy_binary.png");
 
 	Image weed;
@@ -348,6 +351,105 @@ void binary_test()
 	// thin the object
 	img::seq::thin_objects(binary_src, binary_dst);
 	img::write_image(binary_dst, out_dir / "thin.bmp");
+}
+
+
+void contrast_test()
+{
+	auto title = "contrast_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+
+	GrayImage src;
+	img::read_image_from_file(CORVETTE_PATH, src);
+	img::write_image(src, out_dir / "vette.png");
+
+	GrayImage dst;
+	img::make_image(dst, src.width, src.height);
+
+	img::contrast(src, dst, 0, 128);
+	img::write_image(dst, out_dir / "contrast.png");
+
+	img::seq::contrast(src, dst, 0, 128);
+	img::write_image(dst, out_dir / "seq_contrast.png");
+}
+
+
+void blur_test()
+{
+	auto title = "blur_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+
+	GrayImage src;
+	img::read_image_from_file(CORVETTE_PATH, src);
+	img::write_image(src, out_dir / "vette.png");
+
+	GrayImage dst;
+	img::make_image(dst, src.width, src.height);
+
+	img::blur(src, dst);
+	img::write_image(dst, out_dir / "blur.png");
+
+	img::seq::blur(src, dst);
+	img::write_image(dst, out_dir / "seq_blur.png");
+
+	/*img::simd::blur(src, dst);
+	img::write_image(dst, out_dir / "simd_blur.png");*/
+}
+
+
+void gradients_test()
+{
+	auto title = "gradients_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+
+	GrayImage src;
+	img::read_image_from_file(CORVETTE_PATH, src);
+	img::write_image(src, out_dir / "vette.png");
+
+	GrayImage dst;
+	img::make_image(dst, src.width, src.height);
+
+	img::gradients(src, dst);
+	img::write_image(dst, out_dir / "gradient.png");
+
+	img::seq::gradients(src, dst);
+	img::write_image(dst, out_dir / "seq_gradient.png");
+
+	/*img::simd::gradients(src, dst);
+	img::write_image(dst, out_dir / "simd_gradient.png");*/
+}
+
+
+void edges_test()
+{
+	auto title = "edges_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+
+	GrayImage src;
+	img::read_image_from_file(CORVETTE_PATH, src);
+	img::write_image(src, out_dir / "vette.png");
+
+	GrayImage dst;
+	img::make_image(dst, src.width, src.height);
+
+	auto const threshold = [](u8 g) { return g >= 100; };
+
+	img::edges(src, dst, threshold);
+	img::write_image(dst, out_dir / "edges.png");
+
+	img::seq::edges(src, dst, threshold);
+	img::write_image(dst, out_dir / "seq_edges.png");
+
+	/*img::simd::edges(src, dst, threshold);
+	img::write_image(dst, out_dir / "simd_edges.png");*/
 }
 
 

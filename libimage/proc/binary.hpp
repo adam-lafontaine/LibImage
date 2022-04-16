@@ -102,6 +102,8 @@ namespace libimage
 // threshold overloads
 namespace libimage
 {
+#ifndef LIBIMAGE_NO_PARALLEL
+
 	inline void binarize_th(gray::image_t const& src, gray::image_t const& dst, u8 th) { binarize(src, dst, [&th](u8 p) { return p >= th; }); }
 
 	inline void binarize_th(gray::image_t const& src, gray::view_t const& dst, u8 th) { binarize(src, dst, [&th](u8 p) { return p >= th; }); }
@@ -109,6 +111,8 @@ namespace libimage
 	inline void binarize_th(gray::view_t const& src, gray::image_t const& dst, u8 th) { binarize(src, dst, [&th](u8 p) { return p >= th; }); }
 
 	inline void binarize_th(gray::view_t const& src, gray::view_t const& dst, u8 th) { binarize(src, dst, [&th](u8 p) { return p >= th; }); }
+
+#endif // !LIBIMAGE_NO_PARALLEL
 
 	namespace seq
 	{

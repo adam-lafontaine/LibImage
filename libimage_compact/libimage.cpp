@@ -2367,4 +2367,1690 @@ namespace libimage
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
 
+/*  contrast.cpp  */
+
+constexpr u8 U8_MIN = 0;
+constexpr u8 U8_MAX = 255;
+
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+static constexpr u8 lerp_clamp(u8 src_low, u8 src_high, u8 dst_low, u8 dst_high, u8 val)
+{
+	if (val < src_low)
+	{
+		return dst_low;
+	}
+	else if (val > src_high)
+	{
+		return dst_high;
+	}
+
+	auto const ratio = (static_cast<r64>(val) - src_low) / (src_high - src_low);
+
+	assert(ratio >= 0.0);
+	assert(ratio <= 1.0);
+
+	auto const diff = ratio * (dst_high - dst_low);
+
+	return dst_low + static_cast<u8>(diff);
+}
+
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+
+
+namespace libimage
+{
+#ifndef LIBIMAGE_NO_PARALLEL
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	void contrast(gray::image_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high)
+	{
+		assert(src_low < src_high);
+		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
+		transform(src, dst, conv);
+	}
+
+
+	void contrast(gray::image_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high)
+	{
+		assert(src_low < src_high);
+		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
+		transform(src, dst, conv);
+	}
+
+
+	void contrast(gray::view_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high)
+	{
+		assert(src_low < src_high);
+		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
+		transform(src, dst, conv);
+	}
+
+
+
+	void contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high)
+	{
+		assert(src_low < src_high);
+		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
+		transform(src, dst, conv);
+	}
+
+
+	void contrast_self(gray::image_t const& src_dst, u8 src_low, u8 src_high)
+	{
+		assert(src_low < src_high);
+		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
+		transform_self(src_dst, conv);
+	}
+
+
+	void contrast_self(gray::view_t const& src_dst, u8 src_low, u8 src_high)
+	{
+		assert(src_low < src_high);
+		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
+		transform_self(src_dst, conv);
+	}
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+
+#endif // !LIBIMAGE_NO_PARALLEL
+
+
+
+	namespace seq
+	{
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+		void contrast(gray::image_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high)
+		{
+			assert(src_low < src_high);
+			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
+			seq::transform(src, dst, conv);
+		}
+
+
+		void contrast(gray::image_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high)
+		{
+			assert(src_low < src_high);
+			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
+			seq::transform(src, dst, conv);
+		}
+
+
+		void contrast(gray::view_t const& src, gray::image_t const& dst, u8 src_low, u8 src_high)
+		{
+			assert(src_low < src_high);
+			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
+			seq::transform(src, dst, conv);
+		}
+
+
+		void contrast(gray::view_t const& src, gray::view_t const& dst, u8 src_low, u8 src_high)
+		{
+			assert(src_low < src_high);
+			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
+			seq::transform(src, dst, conv);
+		}
+
+
+		void contrast_self(gray::image_t const& src_dst, u8 src_low, u8 src_high)
+		{
+			assert(src_low < src_high);
+			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
+			seq::transform_self(src_dst, conv);
+		}
+
+
+		void contrast_self(gray::view_t const& src_dst, u8 src_low, u8 src_high)
+		{
+			assert(src_low < src_high);
+			auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
+			seq::transform_self(src_dst, conv);
+		}
+
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+	}
+
+}
+
+
+/*  convolve.cpp  */
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+namespace libimage
+{
+	static inline void left_2_wide(pixel_range_t& range, u32 x, u32 width)
+	{
+		// left (2 wide)
+		assert(x <= width - 2);
+		range.x_begin = x;
+		range.x_end = x + 2;
+	}
+
+
+	static inline void right_2_wide(pixel_range_t& range, u32 x, u32 width)
+	{
+		// right (2 wide)
+		assert(x >= 1);
+		assert(x <= width - 1);
+		range.x_begin = x - 1;
+		range.x_end = x + 1;
+	}
+
+
+	static inline void top_2_high(pixel_range_t& range, u32 y, u32 height)
+	{
+		// top (2 high)
+		assert(y <= height - 2);
+		range.y_begin = y;
+		range.y_end = y + 2;
+	}
+
+
+	static inline void bottom_2_high(pixel_range_t& range, u32 y, u32 height)
+	{
+		// bottom (2 high)
+		assert(y >= 1);
+		assert(y <= height - 1);
+		range.y_begin = y - 1;
+		range.y_end = y + 1;
+	}
+
+
+	static inline void top_or_bottom_3_high(pixel_range_t& range, u32 y, u32 height)
+	{
+		// top or bottom (3 high)
+		assert(y >= 1);
+		assert(y <= height - 2);
+		range.y_begin = y - 1;
+		range.y_end = y + 2;
+	}
+
+
+	static inline void left_or_right_3_wide(pixel_range_t& range, u32 x, u32 width)
+	{
+		// left or right (3 wide)
+		assert(x >= 1);
+		assert(x <= width - 2);
+		range.x_begin = x - 1;
+		range.x_end = x + 2;
+	}
+
+
+	static inline void top_or_bottom_5_high(pixel_range_t& range, u32 y, u32 height)
+	{
+		// top or bottom (5 high)
+		assert(y >= 2);
+		assert(y <= height - 3);
+		range.y_begin = y - 2;
+		range.y_end = y + 3;
+	}
+
+
+	static inline void left_or_right_5_wide(pixel_range_t& range, u32 x, u32 width)
+	{
+		// left or right (5 wide)
+		assert(x >= 2);
+		assert(x <= width - 3);
+		range.x_begin = x - 2;
+		range.x_end = x + 3;
+	}
+
+
+	template<size_t N>
+	static r32 apply_weights(gray::view_t const& view, std::array<r32, N> const& weights)
+	{
+		assert((size_t)(view.width) * view.height == weights.size());
+
+		u32 w = 0;
+		r32 total = 0.0f;
+
+		auto const add_weight = [&](u8 p)
+		{
+			total += weights[w++] * p;
+		};
+
+		for_each_pixel(view, add_weight);
+
+		return total;
+	}
+
+
+	template<class GRAY_IMAGE_T>
+	static r32 weighted_center(GRAY_IMAGE_T const& img, u32 x, u32 y, std::array<r32, 9> const& weights)
+	{
+		pixel_range_t range = {};
+
+		top_or_bottom_3_high(range, y, img.height);
+
+		left_or_right_3_wide(range, x, img.width);
+
+		return apply_weights(sub_view(img, range), weights);
+	}
+
+
+	template<class GRAY_IMAGE_T>
+	static r32 weighted_center(GRAY_IMAGE_T const& img, u32 x, u32 y, std::array<r32, 25> const& weights)
+	{
+		pixel_range_t range = {};
+
+		top_or_bottom_5_high(range, y, img.height);
+
+		left_or_right_5_wide(range, x, img.width);
+
+		return apply_weights(sub_view(img, range), weights);
+	}
+
+
+	template<class GRAY_IMAGE_T>
+	static r32 weighted_top_left(GRAY_IMAGE_T const& img, u32 x, u32 y, std::array<r32, 4> const& weights)
+	{
+		pixel_range_t range = {};
+
+		top_2_high(range, y, img.height);
+
+		left_2_wide(range, x, img.width);
+
+		return apply_weights(sub_view(img, range), weights);
+	}
+
+
+	template<class GRAY_IMAGE_T>
+	static r32 weighted_top_right(GRAY_IMAGE_T const& img, u32 x, u32 y, std::array<r32, 4> const& weights)
+	{
+		pixel_range_t range = {};
+
+		top_2_high(range, y, img.height);
+
+		right_2_wide(range, x, img.width);
+
+		return apply_weights(sub_view(img, range), weights);
+	}
+
+
+	template<class GRAY_IMAGE_T>
+	static r32 weighted_bottom_left(GRAY_IMAGE_T const& img, u32 x, u32 y, std::array<r32, 4> const& weights)
+	{
+		pixel_range_t range = {};
+
+		bottom_2_high(range, y, img.width);
+
+		left_2_wide(range, x, img.width);
+
+		return apply_weights(sub_view(img, range), weights);
+	}
+
+
+	template<class GRAY_IMAGE_T>
+	static r32 weighted_bottom_right(GRAY_IMAGE_T const& img, u32 x, u32 y, std::array<r32, 4> const& weights)
+	{
+		pixel_range_t range = {};
+
+		bottom_2_high(range, y, img.width);
+
+		right_2_wide(range, x, img.width);
+
+		return apply_weights(sub_view(img, range), weights);
+	}
+
+
+	template<class GRAY_IMAGE_T>
+	static r32 weighted_top(GRAY_IMAGE_T const& img, u32 x, u32 y, std::array<r32, 6> const& weights)
+	{
+		pixel_range_t range = {};
+
+		top_2_high(range, y, img.height);
+
+		left_or_right_3_wide(range, x, img.width);
+
+		return apply_weights(sub_view(img, range), weights);
+	}
+
+
+	template<class GRAY_IMAGE_T>
+	static r32 weighted_bottom(GRAY_IMAGE_T const& img, u32 x, u32 y, std::array<r32, 6> const& weights)
+	{
+		pixel_range_t range = {};
+
+		bottom_2_high(range, y, img.width);
+
+		left_or_right_3_wide(range, x, img.width);
+
+		return apply_weights(sub_view(img, range), weights);
+	}
+
+
+	template<class GRAY_IMAGE_T>
+	static r32 weighted_left(GRAY_IMAGE_T const& img, u32 x, u32 y, std::array<r32, 6> const& weights)
+	{
+		pixel_range_t range = {};
+
+		top_or_bottom_3_high(range, y, img.height);
+
+		left_2_wide(range, x, img.width);
+
+		return apply_weights(sub_view(img, range), weights);
+	}
+
+
+	template<class GRAY_IMAGE_T>
+	static r32 weighted_right(GRAY_IMAGE_T const& img, u32 x, u32 y, std::array<r32, 6> const& weights)
+	{
+		pixel_range_t range = {};
+
+		top_or_bottom_3_high(range, y, img.height);
+
+		right_2_wide(range, x, img.width);
+
+		return apply_weights(sub_view(img, range), weights);
+	}
+
+
+	constexpr r32 D3 = 16.0f;
+	constexpr std::array<r32, 9> GAUSS_3X3
+	{
+		(1 / D3), (2 / D3), (1 / D3),
+		(2 / D3), (4 / D3), (2 / D3),
+		(1 / D3), (2 / D3), (1 / D3),
+	};
+
+	constexpr r32 D5 = 256.0f;
+	constexpr std::array<r32, 25> GAUSS_5X5
+	{
+		(1 / D5), (4 / D5),  (6 / D5),  (4 / D5),  (1 / D5),
+		(4 / D5), (16 / D5), (24 / D5), (16 / D5), (4 / D5),
+		(6 / D5), (24 / D5), (36 / D5), (24 / D5), (6 / D5),
+		(4 / D5), (16 / D5), (24 / D5), (16 / D5), (4 / D5),
+		(1 / D5), (4 / D5),  (6 / D5),  (4 / D5),  (1 / D5),
+	};
+
+
+	constexpr std::array<r32, 9> GRAD_X_3X3
+	{
+		1.0f, 0.0f, -1.0f,
+		2.0f, 0.0f, -2.0f,
+		1.0f, 0.0f, -1.0f,
+	};
+	constexpr std::array<r32, 9> GRAD_Y_3X3
+	{
+		1.0f,  2.0f,  1.0f,
+		0.0f,  0.0f,  0.0f,
+		-1.0f, -2.0f, -1.0f,
+	};
+
+
+	u8 gauss3(gray::image_t const& img, u32 x, u32 y)
+	{
+		auto p = weighted_center(img, x, y, GAUSS_3X3);
+
+		assert(p >= 0.0f);
+		assert(p <= 255.0f);
+
+		return (u8)(p);
+	}
+
+
+	u8 gauss3(gray::view_t const& view, u32 x, u32 y)
+	{
+		auto p = weighted_center(view, x, y, GAUSS_3X3);
+
+		assert(p >= 0.0f);
+		assert(p <= 255.0f);
+
+		return (u8)(p);
+	}
+
+
+	u8 gauss5(gray::image_t const& img, u32 x, u32 y)
+	{
+		auto p = weighted_center(img, x, y, GAUSS_5X5);
+
+		assert(p >= 0.0f);
+		assert(p <= 255.0f);
+
+		return (u8)(p);
+	}
+
+
+	u8 gauss5(gray::view_t const& view, u32 x, u32 y)
+	{
+		auto p = weighted_center(view, x, y, GAUSS_5X5);
+
+		assert(p >= 0.0f);
+		assert(p <= 255.0f);
+
+		return (u8)(p);
+	}
+
+
+	r32 x_gradient(gray::image_t const& img, u32 x, u32 y)
+	{
+		return weighted_center(img, x, y, GRAD_X_3X3);
+	}
+
+
+	r32 x_gradient(gray::view_t const& view, u32 x, u32 y)
+	{
+		return weighted_center(view, x, y, GRAD_X_3X3);
+	}
+
+
+	r32 y_gradient(gray::image_t const& img, u32 x, u32 y)
+	{
+		return weighted_center(img, x, y, GRAD_Y_3X3);
+	}
+
+
+	r32 y_gradient(gray::view_t const& view, u32 x, u32 y)
+	{
+		return weighted_center(view, x, y, GRAD_Y_3X3);
+	}
+
+
+#ifndef LIBIMAGE_NO_SIMD
+
+
+
+#endif // !LIBIMAGE_NO_SIMD
+}
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+
+
+/*  blur.cpp  */
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+namespace libimage
+{
+#ifndef LIBIMAGE_NO_PARALLEL
+
+
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void copy_top(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	{
+		auto src_top = row_view(src, 0);
+		auto dst_top = row_view(dst, 0);
+
+		copy(src_top, dst_top);
+	}
+
+
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void copy_bottom(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	{
+		auto src_bottom = row_view(src, src.height - 1);
+		auto dst_bottom = row_view(dst, src.height - 1);
+
+		copy(src_bottom, dst_bottom);
+	}
+
+
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void copy_left(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	{
+		pixel_range_t r = {};
+		r.x_begin = 0;
+		r.x_end = 1;
+		r.y_begin = 1;
+		r.y_end = src.height - 1;
+
+		auto src_left = sub_view(src, r);
+		auto dst_left = sub_view(dst, r);
+
+		copy(src_left, dst_left);
+	}
+
+
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void copy_right(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	{
+		pixel_range_t r = {};
+		r.x_begin = src.width - 1;
+		r.x_end = src.width;
+		r.y_begin = 1;
+		r.y_end = src.height - 1;
+
+		auto src_right = sub_view(src, r);
+		auto dst_right = sub_view(dst, r);
+
+		copy(src_right, dst_right);
+	}
+
+
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void gauss_inner_top(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	{
+		u32 const x_begin = 1;
+		u32 const x_end = src.width - 1;
+		u32 const y = 1;
+
+		auto dst_top = dst.row_begin(y);
+
+		u32_range_t x_ids(x_begin, x_end);
+
+		auto const gauss = [&](u32 x)
+		{
+			dst_top[x] = gauss3(src, x, y);
+		};
+
+		std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), gauss);
+	}
+
+
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void gauss_inner_bottom(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	{
+		u32 const x_begin = 1;
+		u32 const x_end = src.width - 1;
+		u32 const y = src.height - 2;
+
+		auto dst_bottom = dst.row_begin(y);
+
+		u32_range_t x_ids(x_begin, x_end);
+
+		auto const gauss = [&](u32 x)
+		{
+			dst_bottom[x] = gauss3(src, x, y);
+		};
+
+		std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), gauss);
+	}
+
+
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void gauss_inner_left(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	{
+		u32 const y_begin = 2;
+		u32 const y_end = src.height - 2;
+		u32 const x = 1;
+
+		u32_range_t y_ids(y_begin, y_end);
+
+		auto const gauss = [&](u32 y)
+		{
+			auto dst_row = dst.row_begin(y);
+			dst_row[x] = gauss3(src, x, y);
+		};
+
+		std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), gauss);
+	}
+
+
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void gauss_inner_right(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	{
+		u32 const y_begin = 2;
+		u32 const y_end = src.height - 2;
+		u32 const x = src.width - 2;
+
+		u32_range_t y_ids(y_begin, y_end);
+
+		auto const gauss = [&](u32 y)
+		{
+			auto dst_row = dst.row_begin(y);
+			dst_row[x] = gauss3(src, x, y);
+		};
+
+		std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), gauss);
+	}
+
+
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void inner_gauss(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	{
+		u32 const x_begin = 2;
+		u32 const x_end = src.width - 2;
+		u32_range_t x_ids(x_begin, x_end);
+
+		auto const gauss_row = [&](u32 y)
+		{
+			auto dst_row = dst.row_begin(y);
+
+			auto const gauss_x = [&](u32 x)
+			{
+				dst_row[x] = gauss5(src, x, y);
+			};
+
+			std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), gauss_x);
+		};
+
+		u32 const y_begin = 2;
+		u32 const y_end = src.height - 2;
+
+		u32_range_t y_ids(y_begin, y_end);
+
+		std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), gauss_row);
+	}
+
+
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void do_blur(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	{
+		// lambdas in an array
+		std::array<std::function<void()>, 9> f_list =
+		{
+			[&]() { copy_top(src, dst); },
+			[&]() { copy_bottom(src, dst); } ,
+			[&]() { copy_left(src, dst); } ,
+			[&]() { copy_right(src, dst); },
+			[&]() { gauss_inner_top(src, dst); },
+			[&]() { gauss_inner_bottom(src, dst); },
+			[&]() { gauss_inner_left(src, dst); },
+			[&]() { gauss_inner_right(src, dst); },
+			[&]() { inner_gauss(src, dst); }
+		};
+
+		// execute everything
+		std::for_each(std::execution::par, f_list.begin(), f_list.end(), [](auto const& f) { f(); });
+	}
+
+
+	void blur(gray::image_t const& src, gray::image_t const& dst)
+	{
+		assert(verify(src, dst));
+		auto const width = src.width;
+		auto const height = src.height;
+
+		assert(width >= VIEW_MIN_DIM);
+		assert(height >= VIEW_MIN_DIM);
+
+		do_blur(src, dst);
+	}
+
+
+	void blur(gray::image_t const& src, gray::view_t const& dst)
+	{
+		assert(verify(src, dst));
+		auto const width = src.width;
+		auto const height = src.height;
+
+		assert(width >= VIEW_MIN_DIM);
+		assert(height >= VIEW_MIN_DIM);
+
+		do_blur(src, dst);
+	}
+
+
+	void blur(gray::view_t const& src, gray::image_t const& dst)
+	{
+		assert(verify(src, dst));
+		auto const width = src.width;
+		auto const height = src.height;
+
+		assert(width >= VIEW_MIN_DIM);
+		assert(height >= VIEW_MIN_DIM);
+
+		do_blur(src, dst);
+	}
+
+
+	void blur(gray::view_t const& src, gray::view_t const& dst)
+	{
+		assert(verify(src, dst));
+		auto const width = src.width;
+		auto const height = src.height;
+
+		assert(width >= VIEW_MIN_DIM);
+		assert(height >= VIEW_MIN_DIM);
+
+		do_blur(src, dst);
+	}
+
+
+#endif // !LIBIMAGE_NO_PARALLEL
+
+
+	namespace seq
+	{
+		template<class SRC_GRAY_IMG_T, class DST_GRAY_IMG_T>
+		static void copy_top_bottom(SRC_GRAY_IMG_T const& src, DST_GRAY_IMG_T const& dst)
+		{
+			u32 x_first = 0;
+			u32 y_first = 0;
+			u32 x_last = src.width - 1;
+			u32 y_last = src.height - 1;
+			auto src_top = src.row_begin(y_first);
+			auto src_bottom = src.row_begin(y_last);
+			auto dst_top = dst.row_begin(y_first);
+			auto dst_bottom = dst.row_begin(y_last);
+			for (u32 x = x_first; x <= x_last; ++x)
+			{
+				dst_top[x] = src_top[x];
+				dst_bottom[x] = src_bottom[x];
+			}
+		}
+
+
+		template<class SRC_GRAY_IMG_T, class DST_GRAY_IMG_T>
+		static void copy_left_right(SRC_GRAY_IMG_T const& src, DST_GRAY_IMG_T const& dst)
+		{
+			u32 x_first = 0;
+			u32 y_first = 1;
+			u32 x_last = src.width - 1;
+			u32 y_last = src.height - 2;
+			for (u32 y = y_first; y <= y_last; ++y)
+			{
+				auto src_row = src.row_begin(y);
+				auto dst_row = dst.row_begin(y);
+				dst_row[x_first] = src_row[x_first];
+				dst_row[x_last] = src_row[x_last];
+			}
+		}
+
+
+		template<class SRC_GRAY_IMG_T, class DST_GRAY_IMG_T>
+		static void gauss_inner_top_bottom(SRC_GRAY_IMG_T const& src, DST_GRAY_IMG_T const& dst)
+		{
+			u32 x_first = 1;
+			u32 y_first = 1;
+			u32 x_last = src.width - 2;
+			u32 y_last = src.height - 2;
+			auto dst_top = dst.row_begin(y_first);
+			auto dst_bottom = dst.row_begin(y_last);
+			for (u32 x = x_first; x <= x_last; ++x)
+			{
+				dst_top[x] = gauss3(src, x, y_first);
+				dst_bottom[x] = gauss3(src, x, y_last);
+			}
+		}
+
+
+		template<class SRC_GRAY_IMG_T, class DST_GRAY_IMG_T>
+		static void gauss_inner_left_right(SRC_GRAY_IMG_T const& src, DST_GRAY_IMG_T const& dst)
+		{
+			u32 x_first = 1;
+			u32 y_first = 2;
+			u32 x_last = src.width - 2;
+			u32 y_last = src.height - 3;
+			for (u32 y = y_first; y <= y_last; ++y)
+			{
+				auto dst_row = dst.row_begin(y);
+				dst_row[x_first] = gauss3(src, x_first, y);
+				dst_row[x_last] = gauss3(src, x_last, y);
+			}
+		}
+
+
+		template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+		static void inner_gauss(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+		{
+			u32 x_first = 2;
+			u32 y_first = 2;
+			u32 x_last = src.width - 3;
+			u32 y_last = src.height - 3;
+			for (u32 y = y_first; y <= y_last; ++y)
+			{
+				auto dst_row = dst.row_begin(y);
+
+				for (u32 x = x_first; x <= x_last; ++x)
+				{
+					dst_row[x] = gauss5(src, x, y);
+				}
+			}
+		}
+
+
+		void blur(gray::image_t const& src, gray::image_t const& dst)
+		{
+			assert(verify(src, dst));
+			assert(src.width >= VIEW_MIN_DIM);
+			assert(src.height >= VIEW_MIN_DIM);
+
+			seq::copy_top_bottom(src, dst);
+			seq::copy_left_right(src, dst);
+			seq::gauss_inner_top_bottom(src, dst);
+			seq::gauss_inner_left_right(src, dst);
+			seq::inner_gauss(src, dst);
+		}
+
+
+		void blur(gray::image_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+			assert(src.width >= VIEW_MIN_DIM);
+			assert(src.height >= VIEW_MIN_DIM);
+
+			seq::copy_top_bottom(src, dst);
+			seq::copy_left_right(src, dst);
+			seq::gauss_inner_top_bottom(src, dst);
+			seq::gauss_inner_left_right(src, dst);
+			seq::inner_gauss(src, dst);
+		}
+
+
+		void blur(gray::view_t const& src, gray::image_t const& dst)
+		{
+			assert(verify(src, dst));
+			assert(src.width >= VIEW_MIN_DIM);
+			assert(src.height >= VIEW_MIN_DIM);
+
+			seq::copy_top_bottom(src, dst);
+			seq::copy_left_right(src, dst);
+			seq::gauss_inner_top_bottom(src, dst);
+			seq::gauss_inner_left_right(src, dst);
+			seq::inner_gauss(src, dst);
+		}
+
+
+		void blur(gray::view_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+			assert(src.width >= VIEW_MIN_DIM);
+			assert(src.height >= VIEW_MIN_DIM);
+
+			seq::copy_top_bottom(src, dst);
+			seq::copy_left_right(src, dst);
+			seq::gauss_inner_top_bottom(src, dst);
+			seq::gauss_inner_left_right(src, dst);
+			seq::inner_gauss(src, dst);
+		}
+	}
+
+#ifndef LIBIMAGE_NO_SIMD
+
+	namespace simd
+	{
+		void blur(gray::image_t const& src, gray::image_t const& dst)
+		{
+			assert(verify(src, dst));
+			assert(src.width >= VIEW_MIN_DIM);
+			assert(src.height >= VIEW_MIN_DIM);
+
+			seq::copy_top_bottom(src, dst);
+			seq::copy_left_right(src, dst);
+			seq::gauss_inner_top_bottom(src, dst);
+			seq::gauss_inner_left_right(src, dst);
+			simd::inner_gauss(src, dst);
+		}
+
+
+		void blur(gray::image_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+			assert(src.width >= VIEW_MIN_DIM);
+			assert(src.height >= VIEW_MIN_DIM);
+
+			seq::copy_top_bottom(src, dst);
+			seq::copy_left_right(src, dst);
+			seq::gauss_inner_top_bottom(src, dst);
+			seq::gauss_inner_left_right(src, dst);
+			simd::inner_gauss(src, dst);
+		}
+
+
+		void blur(gray::view_t const& src, gray::image_t const& dst)
+		{
+			assert(verify(src, dst));
+			assert(src.width >= VIEW_MIN_DIM);
+			assert(src.height >= VIEW_MIN_DIM);
+
+			seq::copy_top_bottom(src, dst);
+			seq::copy_left_right(src, dst);
+			seq::gauss_inner_top_bottom(src, dst);
+			seq::gauss_inner_left_right(src, dst);
+			simd::inner_gauss(src, dst);
+		}
+
+
+		void blur(gray::view_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+			assert(src.width >= VIEW_MIN_DIM);
+			assert(src.height >= VIEW_MIN_DIM);
+
+			seq::copy_top_bottom(src, dst);
+			seq::copy_left_right(src, dst);
+			seq::gauss_inner_top_bottom(src, dst);
+			seq::gauss_inner_left_right(src, dst);
+			simd::inner_gauss(src, dst);
+		}
+	}
+
+#endif // !LIBIMAGE_NO_SIMD
+
+}
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+
+
+/*  edges_gradients.cpp  */
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+namespace libimage
+{
+#ifndef LIBIMAGE_NO_PARALLEL
+
+
+	template<class GRAY_IMG_T>
+	static void fill_zero(GRAY_IMG_T const& view)
+	{
+		std::fill(std::execution::par, view.begin(), view.end(), 0);
+	}
+
+
+	template<class GRAY_IMG_T>
+	static void zero_top(GRAY_IMG_T const& dst)
+	{
+		auto dst_top = row_view(dst, 0);
+
+		fill_zero(dst_top);
+	}
+
+
+	template<class GRAY_IMG_T>
+	static void zero_bottom(GRAY_IMG_T const& dst)
+	{
+		auto dst_bottom = row_view(dst, dst.height - 1);
+
+		fill_zero(dst_bottom);
+	}
+
+
+	template<class GRAY_IMG_T>
+	static void zero_left(GRAY_IMG_T const& dst)
+	{
+		pixel_range_t r = {};
+		r.x_begin = 0;
+		r.x_end = 1;
+		r.y_begin = 1;
+		r.y_end = dst.height - 1;
+		auto dst_left = sub_view(dst, r);
+
+		fill_zero(dst_left);
+	}
+
+
+	template<class GRAY_IMG_T>
+	static void zero_right(GRAY_IMG_T const& dst)
+	{
+		pixel_range_t r = {};
+		r.x_begin = dst.width - 1;
+		r.x_end = dst.width;
+		r.y_begin = 1;
+		r.y_end = dst.height - 1;
+		auto dst_right = sub_view(dst, r);
+
+		fill_zero(dst_right);
+	}
+
+
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void edges_inner(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst, u8_to_bool_f const& cond)
+	{
+		u32 const x_begin = 1;
+		u32 const x_end = src.width - 1;
+		u32_range_t x_ids(x_begin, x_end);
+
+		u32 const y_begin = 1;
+		u32 const y_end = src.height - 1;
+		u32_range_t y_ids(y_begin, y_end);
+
+		auto const grad_row = [&](u32 y)
+		{
+			auto dst_row = dst.row_begin(y);
+
+			auto const grad_x = [&](u32 x)
+			{
+				auto gx = x_gradient(src, x, y);
+				auto gy = y_gradient(src, x, y);
+				auto g = (u8)(std::hypot(gx, gy));
+				dst_row[x] = cond(g) ? 255 : 0;
+			};
+
+			std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), grad_x);
+		};
+
+		std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), grad_row);
+	}
+
+
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void do_edges(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst, u8_to_bool_f const& cond)
+	{
+		std::array<std::function<void()>, 5> f_list
+		{
+			[&]() { zero_top(dst); },
+			[&]() { zero_bottom(dst); },
+			[&]() { zero_left(dst); },
+			[&]() { zero_right(dst); },
+			[&]() { edges_inner(src, dst, cond); }
+		};
+
+		std::for_each(std::execution::par, f_list.begin(), f_list.end(), [](auto const& f) { f(); });
+	}
+
+
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void gradients_inner(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	{
+		u32 const x_begin = 1;
+		u32 const x_end = src.width - 1;
+		u32_range_t x_ids(x_begin, x_end);
+
+		u32 const y_begin = 1;
+		u32 const y_end = src.height - 1;
+		u32_range_t y_ids(y_begin, y_end);
+
+		auto const grad_row = [&](u32 y)
+		{
+			auto dst_row = dst.row_begin(y);
+
+			auto const grad_x = [&](u32 x)
+			{
+				auto gx = x_gradient(src, x, y);
+				auto gy = y_gradient(src, x, y);
+				auto g = std::hypot(gx, gy);
+				dst_row[x] = (u8)(g);
+			};
+
+			std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), grad_x);
+		};
+
+		std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), grad_row);
+	}
+
+
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void do_gradients(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	{
+		std::array<std::function<void()>, 5> f_list
+		{
+			[&]() { zero_top(dst); },
+			[&]() { zero_bottom(dst); },
+			[&]() { zero_left(dst); },
+			[&]() { zero_right(dst); },
+			[&]() { gradients_inner(src, dst); }
+		};
+
+		std::for_each(std::execution::par, f_list.begin(), f_list.end(), [](auto const& f) { f(); });
+	}
+
+
+	void edges(gray::image_t const& src, gray::image_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond)
+	{
+		assert(verify(src, dst));
+		assert(verify(src, temp));
+
+		blur(src, temp);
+
+		do_edges(temp, dst, cond);
+	}
+
+
+	void edges(gray::image_t const& src, gray::view_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond)
+	{
+		assert(verify(src, dst));
+		assert(verify(src, temp));
+
+		blur(src, temp);
+
+		do_edges(temp, dst, cond);
+	}
+
+
+	void edges(gray::view_t const& src, gray::image_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond)
+	{
+		assert(verify(src, dst));
+		assert(verify(src, temp));
+
+		blur(src, temp);
+
+		do_edges(temp, dst, cond);
+	}
+
+
+	void edges(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond)
+	{
+		assert(verify(src, dst));
+		assert(verify(src, temp));
+
+		blur(src, temp);
+
+		do_edges(temp, dst, cond);
+	}
+
+
+	void edges(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond)
+	{
+		assert(verify(src, dst));
+
+		do_edges(src, dst, cond);
+	}
+
+
+	void edges(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond)
+	{
+		assert(verify(src, dst));
+
+		do_edges(src, dst, cond);
+	}
+
+
+	void edges(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond)
+	{
+		assert(verify(src, dst));
+
+		do_edges(src, dst, cond);
+	}
+
+
+	void edges(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond)
+	{
+		assert(verify(src, dst));
+
+		do_edges(src, dst, cond);
+	}
+
+
+	void gradients(gray::image_t const& src, gray::image_t const& dst, gray::image_t const& temp)
+	{
+		assert(verify(src, dst));
+		assert(verify(src, temp));
+
+		blur(src, temp);
+
+		do_gradients(temp, dst);
+	}
+
+
+	void gradients(gray::image_t const& src, gray::view_t const& dst, gray::image_t const& temp)
+	{
+		assert(verify(src, dst));
+		assert(verify(src, temp));
+
+		blur(src, temp);
+
+		do_gradients(temp, dst);
+	}
+
+
+	void gradients(gray::view_t const& src, gray::image_t const& dst, gray::image_t const& temp)
+	{
+		assert(verify(src, dst));
+		assert(verify(src, temp));
+
+		blur(src, temp);
+
+		do_gradients(temp, dst);
+	}
+
+
+	void gradients(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp)
+	{
+		assert(verify(src, dst));
+		assert(verify(src, temp));
+
+		blur(src, temp);
+
+		do_gradients(temp, dst);
+	}
+
+
+	void gradients(gray::image_t const& src, gray::image_t const& dst)
+	{
+		assert(verify(src, dst));
+
+		do_gradients(src, dst);
+	}
+
+
+	void gradients(gray::image_t const& src, gray::view_t const& dst)
+	{
+		assert(verify(src, dst));
+
+		do_gradients(src, dst);
+	}
+
+
+	void gradients(gray::view_t const& src, gray::image_t const& dst)
+	{
+		assert(verify(src, dst));
+
+		do_gradients(src, dst);
+	}
+
+
+	void gradients(gray::view_t const& src, gray::view_t const& dst)
+	{
+		assert(verify(src, dst));
+
+		do_gradients(src, dst);
+	}
+
+
+#endif // !LIBIMAGE_NO_PARALLEL
+
+	namespace seq
+	{
+		template<class GRAY_IMG_T>
+		static void zero_top_bottom(GRAY_IMG_T const& dst)
+		{
+			u32 x_first = 0;
+			u32 y_first = 0;
+			u32 x_last = dst.width - 1;
+			u32 y_last = dst.height - 1;
+			auto dst_top = dst.row_begin(y_first);
+			auto dst_bottom = dst.row_begin(y_last);
+			for (u32 x = x_first; x <= x_last; ++x)
+			{
+				dst_top[x] = 0;
+				dst_bottom[x] = 0;
+			}
+		}
+
+
+		template<class GRAY_IMG_T>
+		static void zero_left_right(GRAY_IMG_T const& dst)
+		{
+			u32 x_first = 0;
+			u32 y_first = 1;
+			u32 x_last = dst.width - 1;
+			u32 y_last = dst.height - 2;
+			for (u32 y = y_first; y <= y_last; ++y)
+			{
+				auto dst_row = dst.row_begin(y);
+				dst_row[x_first] = 0;
+				dst_row[x_last] = 0;
+			}
+		}
+
+
+		template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+		static void edges_inner(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst, u8_to_bool_f const& cond)
+		{
+			u32 x_first = 1;
+			u32 y_first = 1;
+			u32 x_last = dst.width - 2;
+			u32 y_last = dst.height - 2;
+			for (u32 y = y_first; y <= y_last; ++y)
+			{
+				auto dst_row = dst.row_begin(y);
+				for (u32 x = x_first; x <= x_last; ++x)
+				{
+					auto gx = x_gradient(src, x, y);
+					auto gy = y_gradient(src, x, y);
+					auto g = (u8)(std::hypot(gx, gy));
+					dst_row[x] = cond(g) ? 255 : 0;
+				}
+			}
+		}
+
+
+		template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+		static void do_edges(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst, u8_to_bool_f const& cond)
+		{
+			zero_top_bottom(dst);
+			zero_left_right(dst);
+
+			seq::edges_inner(src, dst, cond);
+		}
+
+
+		template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+		static void gradients_inner(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+		{
+			u32 x_first = 1;
+			u32 y_first = 1;
+			u32 x_last = dst.width - 2;
+			u32 y_last = dst.height - 2;
+			for (u32 y = y_first; y <= y_last; ++y)
+			{
+				auto dst_row = dst.row_begin(y);
+				for (u32 x = x_first; x <= x_last; ++x)
+				{
+					auto gx = x_gradient(src, x, y);
+					auto gy = y_gradient(src, x, y);
+					auto g = std::hypot(gx, gy);
+					dst_row[x] = (u8)(g);
+				}
+			}
+		}
+
+
+		template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+		static void do_gradients(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+		{
+			seq::zero_top_bottom(dst);
+			seq::zero_left_right(dst);
+
+			seq::gradients_inner(src, dst);
+		}
+
+
+		void edges(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond)
+		{
+			assert(verify(src, dst));
+
+			seq::do_edges(src, dst, cond);
+		}
+
+
+		void edges(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond)
+		{
+			assert(verify(src, dst));
+
+			seq::do_edges(src, dst, cond);
+		}
+
+
+		void edges(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond)
+		{
+			assert(verify(src, dst));
+
+			seq::do_edges(src, dst, cond);
+		}
+
+
+		void edges(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond)
+		{
+			assert(verify(src, dst));
+
+			seq::do_edges(src, dst, cond);
+		}
+
+
+		void edges(gray::image_t const& src, gray::image_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			seq::blur(src, temp);
+
+			seq::do_edges(temp, dst, cond);
+		}
+
+
+		void edges(gray::image_t const& src, gray::view_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			seq::blur(src, temp);
+
+			seq::do_edges(temp, dst, cond);
+		}
+
+
+		void edges(gray::view_t const& src, gray::image_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			seq::blur(src, temp);
+
+			seq::do_edges(temp, dst, cond);
+		}
+
+
+		void edges(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			seq::blur(src, temp);
+
+			seq::do_edges(temp, dst, cond);
+		}
+
+
+		void gradients(gray::image_t const& src, gray::image_t const& dst)
+		{
+			assert(verify(src, dst));
+
+			seq::do_gradients(src, dst);
+		}
+
+
+		void gradients(gray::image_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+
+			seq::do_gradients(src, dst);
+		}
+
+
+		void gradients(gray::view_t const& src, gray::image_t const& dst)
+		{
+			assert(verify(src, dst));
+
+			seq::do_gradients(src, dst);
+		}
+
+
+		void gradients(gray::view_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+
+			seq::do_gradients(src, dst);
+		}
+
+
+		void gradients(gray::image_t const& src, gray::image_t const& dst, gray::image_t const& temp)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			seq::blur(src, temp);
+
+			seq::do_gradients(temp, dst);
+		}
+
+
+		void gradients(gray::image_t const& src, gray::view_t const& dst, gray::image_t const& temp)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			seq::blur(src, temp);
+
+			seq::do_gradients(temp, dst);
+		}
+
+
+		void gradients(gray::view_t const& src, gray::image_t const& dst, gray::image_t const& temp)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			seq::blur(src, temp);
+
+			seq::do_gradients(temp, dst);
+		}
+
+
+		void gradients(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			seq::blur(src, temp);
+
+			seq::do_gradients(temp, dst);
+		}
+	}
+
+
+#ifndef LIBIMAGE_NO_SIMD
+
+	namespace simd
+	{
+
+		template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+		static void do_edges(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst, u8_to_bool_f const& cond)
+		{
+			seq::zero_top_bottom(dst);
+			seq::zero_left_right(dst);
+
+			simd::inner_edges(src, dst, cond);
+		}
+
+
+		template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+		static void do_gradients(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+		{
+			seq::zero_top_bottom(dst);
+			seq::zero_left_right(dst);
+
+			simd::inner_gradients(src, dst);
+		}
+
+
+		void edges(gray::image_t const& src, gray::image_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			simd::blur(src, temp);
+			simd::do_edges(temp, dst, cond);
+		}
+
+
+		void edges(gray::image_t const& src, gray::view_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			simd::blur(src, temp);
+			simd::do_edges(temp, dst, cond);
+		}
+
+
+		void edges(gray::view_t const& src, gray::image_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			simd::blur(src, temp);
+			simd::do_edges(temp, dst, cond);
+		}
+
+
+		void edges(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp, u8_to_bool_f const& cond)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			simd::blur(src, temp);
+			simd::do_edges(temp, dst, cond);
+		}
+
+
+		void edges(gray::image_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond)
+		{
+			assert(verify(src, dst));
+
+			simd::do_edges(src, dst, cond);
+		}
+
+
+		void edges(gray::image_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond)
+		{
+			assert(verify(src, dst));
+
+			simd::do_edges(src, dst, cond);
+		}
+
+
+		void edges(gray::view_t const& src, gray::image_t const& dst, u8_to_bool_f const& cond)
+		{
+			assert(verify(src, dst));
+
+			simd::do_edges(src, dst, cond);
+		}
+
+
+		void edges(gray::view_t const& src, gray::view_t const& dst, u8_to_bool_f const& cond)
+		{
+			assert(verify(src, dst));
+
+			simd::do_edges(src, dst, cond);
+		}
+
+
+		void gradients(gray::image_t const& src, gray::image_t const& dst, gray::image_t const& temp)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			simd::blur(src, temp);
+			simd::do_gradients(temp, dst);
+		}
+
+
+		void gradients(gray::image_t const& src, gray::view_t const& dst, gray::image_t const& temp)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			simd::blur(src, temp);
+			simd::do_gradients(temp, dst);
+		}
+
+
+		void gradients(gray::view_t const& src, gray::image_t const& dst, gray::image_t const& temp)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			simd::blur(src, temp);
+			simd::do_gradients(temp, dst);
+		}
+
+
+
+		void gradients(gray::view_t const& src, gray::view_t const& dst, gray::image_t const& temp)
+		{
+			assert(verify(src, dst));
+			assert(verify(src, temp));
+
+			simd::blur(src, temp);
+			simd::do_gradients(temp, dst);
+		}
+
+
+		void gradients(gray::image_t const& src, gray::image_t const& dst)
+		{
+			assert(verify(src, dst));
+
+			simd::do_gradients(src, dst);
+		}
+
+
+		void gradients(gray::image_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+
+			simd::do_gradients(src, dst);
+		}
+
+
+		void gradients(gray::view_t const& src, gray::image_t const& dst)
+		{
+			assert(verify(src, dst));
+
+			simd::do_gradients(src, dst);
+		}
+
+
+		void gradients(gray::view_t const& src, gray::view_t const& dst)
+		{
+			assert(verify(src, dst));
+
+			simd::do_gradients(src, dst);
+		}
+
+	}
+
+#endif // !LIBIMAGE_NO_SIMD
+
+}
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
 
