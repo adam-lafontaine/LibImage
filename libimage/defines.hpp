@@ -13,7 +13,7 @@
 //#define LIBIMAGE_NO_CPP17
 //#define LIBIMAGE_NO_SIMD
 
-
+//#define LIBIMAGE_NO_RAII
 
 #define INTEL_CPU
 //#define RPI_3B_PLUS

@@ -10,9 +10,6 @@
 #include "defines.hpp"
 
 
-// TODO: LIBIMAGE_NO_RAII !!!
-
-
 /*  types.hpp  */
 
 using u8 = uint8_t;
@@ -212,10 +209,14 @@ namespace libimage
 			}
 		}
 
+#ifndef LIBIMAGE_NO_RAII
+
 		~RGBAImage()
 		{
 			dispose();
 		}
+
+#endif
 
 		rgba_pixel_t* begin() { return data; }
 		rgba_pixel_t* end() { return data + (u64)(width) * (u64)(height); }
@@ -514,11 +515,15 @@ namespace libimage
 			}
 		}
 
+#ifndef LIBIMAGE_NO_RAII
+
 		~RGBAPlanar()
 		{
 			dispose();
 		}
 	};
+
+#endif
 
 
 	using image_soa = RGBAPlanar;
@@ -583,12 +588,14 @@ namespace libimage
 				}
 			}
 
+#ifndef LIBIMAGE_NO_RAII
+
 			~Image()
 			{
 				dispose();
 			}
 
-
+#endif
 
 			pixel_t* begin() { return data; }
 

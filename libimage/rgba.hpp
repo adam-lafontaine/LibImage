@@ -126,10 +126,14 @@ namespace libimage
 			}
 		}
 
+#ifndef LIBIMAGE_NO_RAII
+
 		~RGBAImage()
 		{
 			dispose();
 		}
+
+#endif
 
 		rgba_pixel_t* begin() { return data; }
 		rgba_pixel_t* end() { return data + (u64)(width) * (u64)(height); }
@@ -428,11 +432,15 @@ namespace libimage
 			}
 		}
 
+#ifndef LIBIMAGE_NO_RAII
+
 		~RGBAPlanar()
 		{
 			dispose();
 		}
 	};
+
+#endif
 
 
 	using image_soa = RGBAPlanar;
