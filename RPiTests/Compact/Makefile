@@ -34,6 +34,7 @@ stb_libimage_c := $(stb)/stb_libimage.cpp
 stb_libimage_o := $(build)/stb_libimage.o
 object_files   += $(stb_libimage_o)
 
+
 # flags
 INCLUDES  :=
 LIBRARIES :=
@@ -44,7 +45,7 @@ GPP += -O3
 
 # build rules
 
-$(main_o): $(main_c) $(libimage_h) $(proc_h) $(math_h) $(charts_h)
+$(main_o): $(main_c) $(libimage_h)
 	@echo "\n main"
 	$(GPP) -o $@ -c $<
 
