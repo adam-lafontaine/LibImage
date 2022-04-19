@@ -89,6 +89,7 @@ void contrast_test();
 void blur_test();
 void gradients_test();
 void edges_test();
+void combo_view_test();
 void rotate_test();
 
 
@@ -110,6 +111,7 @@ int main()
 	blur_test();
 	gradients_test();
 	edges_test();
+    combo_view_test();
 	rotate_test();
 }
 
@@ -208,6 +210,8 @@ void view_test()
 
 	auto view_gray = img::sub_view(gray, r);
 	img::write_view(view_gray, out_dir / "view_gray.bmp");
+
+
 }
 
 
@@ -502,6 +506,64 @@ void edges_test()
 
 	/*img::simd::edges(src, dst, threshold);
 	img::write_image(dst, out_dir / "simd_edges.bmp");*/
+}
+
+
+void combo_view_test()
+{
+    auto title = "combo_view_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+
+    GrayImage src;
+	img::read_image_from_file(CORVETTE_PATH, src);
+    auto width = src.width;
+    auto height = src.height;
+
+    GrayImage dst;
+    img::make_image(dst, width, height);
+
+    // top left
+    img::pixel_range_t range{};
+    range.x_begin = 0;
+	range.x_end = width / 2;
+	range.y_begin = 0;
+	range.y_end = height / 2;
+    auto src_sub = img::sub_view(src, range);
+	auto dst_sub = img::sub_view(dst, range);
+
+	img::seq::gradients(src_sub, dst_sub);
+
+    // top right
+    range.x_begin = width / 2;
+	range.x_end = width;
+	src_sub = img::sub_view(src, range);
+	dst_sub = img::sub_view(dst, range);
+
+    auto const invert = [](u8 p) { return 255 - p; };
+    img::transform(src_sub, dst_sub, invert);
+
+    // bottom left
+    range.x_begin = 0;
+	range.x_end = width / 2;
+	range.y_begin = height / 2;
+	range.y_end = height;
+	src_sub = img::sub_view(src, range);
+	dst_sub = img::sub_view(dst, range);
+
+    img::seq::binarize_th(src_sub, dst_sub, 75);
+
+    // bottom right
+    range.x_begin = width / 2;
+	range.x_end = width;
+	src_sub = img::sub_view(src, range);
+	dst_sub = img::sub_view(dst, range);
+
+    auto const threshold = [](u8 g) { return g >= 100; };
+    img::seq::edges(src_sub, dst_sub, threshold);
+
+    img::write_image(dst, out_dir / "combo.bmp");
 }
 
 

@@ -9,6 +9,9 @@
 
 #include "defines.hpp"
 
+// TODO !!!
+#define LIBIMAGE_NO_SIMD
+
 
 /*  types.hpp  */
 
