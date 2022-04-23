@@ -112,6 +112,7 @@ namespace device
         check_error(err);
 
         bool result = err == cudaSuccess;
+        //bool result = cuda_device_malloc((void**)&(buffer.data), n_bytes);
 
         if(result)
         {
@@ -127,10 +128,15 @@ namespace device
         buffer.capacity = 0;
         buffer.offset = 0;
 
-        cudaError_t err = cudaFree(buffer.data);
-        check_error(err);
+        if(buffer.data)
+        {
+            cudaError_t err = cudaFree(buffer.data);
+            check_error(err);
 
-        return err == cudaSuccess;
+            return err == cudaSuccess;
+        }
+
+        return true;
     }
 
 
@@ -146,9 +152,11 @@ namespace device
             return nullptr;
         }
 
+        auto data = buffer.data + buffer.offset;
+
         buffer.offset += n_bytes;
 
-        return buffer.data + buffer.offset;
+        return data;
     }
 
 

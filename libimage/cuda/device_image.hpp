@@ -13,10 +13,10 @@ namespace libimage
     {
     public:
 
-        u32 width;
-        u32 height;
+        u32 width = 0;
+        u32 height = 0;
 
-        pixel_t* data;
+        pixel_t* data = nullptr;
     };
 
     using device_image_t = DeviceRGBAImage;
@@ -42,10 +42,10 @@ namespace libimage
         class DeviceGrayImage
         {
         public:
-            u32 width;
-            u32 height;
+            u32 width = 0;
+            u32 height = 0;
 
-            pixel_t* data;
+            pixel_t* data = nullptr;
         };
 
         using device_image_t = DeviceGrayImage;

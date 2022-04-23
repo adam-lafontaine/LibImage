@@ -46,13 +46,13 @@ int main()
 	auto dst_root = DST_IMAGE_ROOT;
 
 	auto dst_proc = dst_root + "proc/";
-    process_tests(dst_proc);
+    //process_tests(dst_proc);
 
 	auto dst_cuda = dst_root + "cuda/";
 	cuda_tests(dst_cuda);
 
 	auto dst_timing = dst_root + "timing/";
-	gradient_times(dst_timing);
+	//gradient_times(dst_timing);
 
     printf("\nDone.\n");
 }
@@ -311,12 +311,16 @@ void cuda_alpha_blend_test(
 
 	img::copy_to_device(src, d_src);
 	img::copy_to_device(cur, d_cur);
+
 	img::alpha_blend(d_src, d_cur, d_dst);
+
 	img::copy_to_host(d_dst, dst);
 	img::write_image(dst, out_dir + "alpha_blend.png");
 
 	img::copy_to_device(cur, d_dst);
+
 	img::alpha_blend(d_src, d_dst);
+
 	img::copy_to_host(d_dst, dst);
 	img::write_image(dst, out_dir + "alpha_blend_src_dst.png");
 
@@ -521,37 +525,64 @@ void cuda_tests(path_t& out_dir)
 
 	GrayImage dst_gray_img;
 	img::make_image(dst_gray_img, width, height);
+
+
 	
 	
 	// setup device memory for color images
-	DeviceBuffer color_buffer;
+	//DeviceBuffer color_buffer;
 	auto color_bytes = 3 * width * height * PIXEL_SZ;
-	device_malloc(color_buffer, color_bytes);
+	//device_malloc(color_buffer, color_bytes);
 
 	CudaImage d_src_img;
-	img::make_image(d_src_img, width, height, color_buffer);
+	//img::make_image(d_src_img, width, height, color_buffer);
 
 	CudaImage d_src2_img;
-	img::make_image(d_src2_img, width, height, color_buffer);
+	//img::make_image(d_src2_img, width, height, color_buffer);
 
 	CudaImage d_dst_img;
-	img::make_image(d_dst_img, width, height, color_buffer);
+	//img::make_image(d_dst_img, width, height, color_buffer);
 
 
 	// setup device memory for gray images
-	DeviceBuffer gray_buffer;
+	//DeviceBuffer gray_buffer;
 	auto gray_bytes = 3 * width * height * G_PIXEL_SZ;
-	device_malloc(gray_buffer, gray_bytes);
+	//device_malloc(gray_buffer, gray_bytes);
 
 	CudaGrayImage d_src_gray_img;
-	img::make_image(d_src_gray_img, width, height, gray_buffer);
+	//img::make_image(d_src_gray_img, width, height, gray_buffer);
 
 	CudaGrayImage d_dst_gray_img;
-	img::make_image(d_dst_gray_img, width, height, gray_buffer);
+	//img::make_image(d_dst_gray_img, width, height, gray_buffer);
 
 	CudaGrayImage d_tmp_gray_img;
-	img::make_image(d_tmp_gray_img, width, height, gray_buffer);
+	//img::make_image(d_tmp_gray_img, width, height, gray_buffer);
 
+
+	device::MemoryBuffer d_buffer{};
+	bool alloc = 
+		device::malloc(d_buffer, color_bytes + gray_bytes);
+
+	bool push =	
+		device::push(d_buffer, d_src_img, width, height) &&
+		device::push(d_buffer, d_src2_img, width, height) &&
+		device::push(d_buffer, d_dst_img, width, height) &&
+		device::push(d_buffer, d_src_gray_img, width, height) &&
+		device::push(d_buffer, d_dst_gray_img, width, height) &&
+		device::push(d_buffer, d_tmp_gray_img, width, height);
+
+	if(!alloc)
+	{
+		printf("Error allocating\n");
+		return;
+	}
+
+	if(!push)
+	{
+		device::free(d_buffer);
+		printf("Error push\n");
+		return;
+	}
 
 	cuda_alpha_blend_test(caddy, corvette, dst_img, d_src_img, d_src2_img, d_dst_img, out_dir);
 
@@ -577,8 +608,10 @@ void cuda_tests(path_t& out_dir)
 
 	cuda_combine_views_test(src_gray, dst_gray_img, sub_buffer, out_dir);	
 
-	device_free(color_buffer);
-	device_free(gray_buffer);
+	//device_free(color_buffer);
+	//device_free(gray_buffer);
+
+	device::free(d_buffer);
 }
 
 
