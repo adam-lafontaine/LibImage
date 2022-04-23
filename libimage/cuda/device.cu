@@ -80,33 +80,13 @@ bool cuda_launch_success()
 }
 
 
-bool device_malloc(DeviceBuffer& buffer, size_t n_bytes)
-{
-    bool result = cuda_device_malloc((void**)&(buffer.data), n_bytes);
-    if(result)
-    {
-        buffer.total_bytes = n_bytes;
-    }
-
-    return result;
-}
-
-
-bool device_free(DeviceBuffer& buffer)
-{
-    buffer.total_bytes = 0;
-    buffer.offset = 0;
-    return cuda_device_free(buffer.data);
-}
-
-
 namespace device
 {
     bool malloc(MemoryBuffer& buffer, size_t n_bytes)
     {
         assert(!buffer.data);
 
-        buffer.offset = 0;
+        buffer.size = 0;
 
         cudaError_t err = cudaMalloc((void**)&(buffer.data), n_bytes);
         check_error(err);
@@ -126,7 +106,7 @@ namespace device
     bool free(MemoryBuffer& buffer)
     {
         buffer.capacity = 0;
-        buffer.offset = 0;
+        buffer.size = 0;
 
         if(buffer.data)
         {
@@ -144,7 +124,7 @@ namespace device
     {
         assert(is_valid(buffer));
 
-        auto bytes_available = buffer.capacity - buffer.offset;
+        auto bytes_available = buffer.capacity - buffer.size;
         assert(bytes_available >= n_bytes);
 
         if(!is_valid(buffer) || n_bytes > bytes_available)
@@ -152,11 +132,36 @@ namespace device
             return nullptr;
         }
 
-        auto data = buffer.data + buffer.offset;
+        auto data = buffer.data + buffer.size;
 
-        buffer.offset += n_bytes;
+        buffer.size += n_bytes;
 
         return data;
+    }
+
+
+    bool pop(MemoryBuffer& buffer, size_t n_bytes)
+    {
+        assert(buffer.data);
+        assert(buffer.capacity);
+        assert(buffer.size <= buffer.capacity);
+        assert(n_bytes <= buffer.capacity);
+        assert(n_bytes <= buffer.size);
+
+        auto is_valid = 
+            buffer.data &&
+            buffer.capacity &&
+            buffer.size <= buffer.capacity &&
+            n_bytes <= buffer.capacity &&
+            n_bytes <= buffer.size;
+
+        if(is_valid)
+        {
+            buffer.size -= n_bytes;
+            return true;
+        }
+
+        return false;
     }
 
 
@@ -165,6 +170,6 @@ namespace device
         return 
             buffer.data &&
             buffer.capacity &&
-            buffer.offset < buffer.capacity;
+            buffer.size < buffer.capacity;
     }
 }

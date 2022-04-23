@@ -22,9 +22,6 @@ namespace libimage
     using device_image_t = DeviceRGBAImage;
 
 
-    bool make_image(device_image_t& image, u32 width, u32 height, DeviceBuffer& buffer);
-
-
     bool copy_to_device(image_t const& src, device_image_t const& dst);
 
     bool copy_to_host(device_image_t const& src, image_t const& dst);
@@ -50,9 +47,6 @@ namespace libimage
 
         using device_image_t = DeviceGrayImage;
     }
-
-
-    bool make_image(gray::device_image_t& image, u32 width, u32 height, DeviceBuffer& buffer);
     
 
     bool copy_to_device(gray::image_t const& src, gray::device_image_t const& dst);
@@ -73,11 +67,15 @@ namespace device
 
     bool push(MemoryBuffer& buffer, libimage::device_image_t& image, u32 width, u32 height);
 
+    bool push(MemoryBuffer& buffer, libimage::device_image_t& image);
+
 #endif // !LIBIMAGE_NO_COLOR
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
     bool push(MemoryBuffer& buffer, libimage::gray::device_image_t& image, u32 width, u32 height);
+
+    bool push(MemoryBuffer& buffer, libimage::gray::device_image_t& image);
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 }
