@@ -11,8 +11,6 @@
 
 namespace libimage
 {
-#ifndef LIBIMAGE_NO_COLOR
-
 	static u8 alpha_blend_linear_soa(u8 src, u8 current, u8 alpha)
 	{
 		auto const a = alpha / 255.0f;
@@ -46,10 +44,6 @@ namespace libimage
 	{
 		alpha_blend(src, current_dst, current_dst);
 	}
-
-
-#endif // !LIBIMAGE_NO_COLOR
-
 
 
 	static pixel_t alpha_blend_linear(pixel_t const& src, pixel_t const& current)

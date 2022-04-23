@@ -47,8 +47,8 @@ int main()
 	auto dst_process = dst_root + "process/";
 	process_tests(dst_process);
 
-	auto dst_gradients = dst_root + "gradients/";
-	gradient_times(dst_gradients);
+	//auto dst_gradients = dst_root + "gradients/";
+	//gradient_times(dst_gradients);
 }
 
 

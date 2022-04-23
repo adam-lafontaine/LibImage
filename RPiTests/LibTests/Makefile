@@ -56,7 +56,7 @@ object_files   += $(charts_o)
 # image processing
 proc_h := $(proc)/process.hpp
 proc_h += $(proc)/alpha_blend.hpp
-proc_h += $(proc)/binarize.hpp
+proc_h += $(proc)/binary.hpp
 proc_h += $(proc)/blur.hpp
 proc_h += $(proc)/contrast.hpp
 proc_h += $(proc)/convolve.hpp
@@ -74,9 +74,9 @@ alpha_blend_c  := $(proc)/alpha_blend.cpp
 alpha_blend_o  := $(build)/alpha_blend.o
 object_files   += $(alpha_blend_o)
 
-binarize_c     := $(proc)/binarize.cpp
-binarize_o     := $(build)/binarize.o
-object_files   += $(binarize_o)
+binary_c     := $(proc)/binary.cpp
+binary_o     := $(build)/binary.o
+object_files   += $(binary_o)
 
 blur_c         := $(proc)/blur.cpp
 blur_o         := $(build)/blur.o
@@ -160,7 +160,7 @@ $(alpha_blend_o): $(alpha_blend_c) $(libimage_h) $(proc_h)
 	@echo "\n alpha_blend"
 	$(GPP) -o $@ -c $<
 
-$(binarize_o): $(binarize_c) $(libimage_h) $(proc_h)
+$(binary_o): $(binary_c) $(libimage_h) $(proc_h)
 	@echo "\n binarize"
 	$(GPP) -o $@ -c $<
 

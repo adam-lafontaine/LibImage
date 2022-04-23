@@ -58,10 +58,14 @@ namespace libimage
 				}
 			}
 
+#ifndef LIBIMAGE_NO_RAII
+
 			~Image()
 			{
 				dispose();
 			}
+
+#endif
 
 
 

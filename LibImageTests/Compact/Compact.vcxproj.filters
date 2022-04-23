@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\libimage_compact">
+      <UniqueIdentifier>{5953f1de-0c24-4ede-b71f-0a1a26e636ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\libimage_compact">
+      <UniqueIdentifier>{bbc044c7-09f5-4b68-8d19-e7f813b98e64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\libimage_compact\stb_wrapper">
+      <UniqueIdentifier>{fd4124a3-1f36-44e4-a2bb-be8d2574583a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\libimage_compact\stb_wrapper">
+      <UniqueIdentifier>{5f7b8a7d-8fdc-44b0-9878-6310dd73cb84}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\util">
+      <UniqueIdentifier>{260b9bcd-9406-4ba3-ab57-e1027a25d676}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="compact_tests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libimage_compact\libimage.cpp">
+      <Filter>Source Files\libimage_compact</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libimage_compact\stb_wrapper\stb_libimage.cpp">
+      <Filter>Source Files\libimage_compact\stb_wrapper</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\libimage_compact\libimage.hpp">
+      <Filter>Header Files\libimage_compact</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage_compact\stb_wrapper\stb_include.hpp">
+      <Filter>Header Files\libimage_compact\stb_wrapper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libimage_compact\defines.hpp">
+      <Filter>Header Files\libimage_compact</Filter>
+    </ClInclude>
+    <ClInclude Include="..\utils\stopwatch.hpp">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\utils\win32_leak_check.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
