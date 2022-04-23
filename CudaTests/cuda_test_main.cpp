@@ -311,12 +311,16 @@ void cuda_alpha_blend_test(
 
 	img::copy_to_device(src, d_src);
 	img::copy_to_device(cur, d_cur);
+
 	img::alpha_blend(d_src, d_cur, d_dst);
+
 	img::copy_to_host(d_dst, dst);
 	img::write_image(dst, out_dir + "alpha_blend.png");
 
 	img::copy_to_device(cur, d_dst);
+
 	img::alpha_blend(d_src, d_dst);
+
 	img::copy_to_host(d_dst, dst);
 	img::write_image(dst, out_dir + "alpha_blend_src_dst.png");
 
@@ -428,7 +432,7 @@ void cuda_gradients_test(
 
 void cuda_combine_views_test(
 	GrayImage const& src, GrayImage const& dst,
-	DeviceBuffer sub_buffer,
+	device::MemoryBuffer& d_buffer,
 	path_t const& out_dir
 	)
 {
@@ -439,9 +443,9 @@ void cuda_combine_views_test(
 	CudaGrayImage d_src_sub;
 	CudaGrayImage d_dst_sub;
 	CudaGrayImage d_tmp_sub;
-	img::make_image(d_src_sub, width / 2, height / 2, sub_buffer);
-	img::make_image(d_dst_sub, width / 2, height / 2, sub_buffer);
-	img::make_image(d_tmp_sub, width / 2, height / 2, sub_buffer);
+	device::push(d_buffer, d_src_sub, width / 2, height / 2);
+	device::push(d_buffer, d_dst_sub, width / 2, height / 2);
+	device::push(d_buffer, d_tmp_sub, width / 2, height / 2);
 
 	img::pixel_range_t range;
 	range.x_begin = 0;
@@ -520,38 +524,45 @@ void cuda_tests(path_t& out_dir)
 	img::make_image(dst_img, width, height);
 
 	GrayImage dst_gray_img;
-	img::make_image(dst_gray_img, width, height);
-	
+	img::make_image(dst_gray_img, width, height);	
 	
 	// setup device memory for color images
-	DeviceBuffer color_buffer;
 	auto color_bytes = 3 * width * height * PIXEL_SZ;
-	device_malloc(color_buffer, color_bytes);
-
 	CudaImage d_src_img;
-	img::make_image(d_src_img, width, height, color_buffer);
-
 	CudaImage d_src2_img;
-	img::make_image(d_src2_img, width, height, color_buffer);
-
 	CudaImage d_dst_img;
-	img::make_image(d_dst_img, width, height, color_buffer);
-
 
 	// setup device memory for gray images
-	DeviceBuffer gray_buffer;
 	auto gray_bytes = 3 * width * height * G_PIXEL_SZ;
-	device_malloc(gray_buffer, gray_bytes);
-
 	CudaGrayImage d_src_gray_img;
-	img::make_image(d_src_gray_img, width, height, gray_buffer);
-
 	CudaGrayImage d_dst_gray_img;
-	img::make_image(d_dst_gray_img, width, height, gray_buffer);
-
 	CudaGrayImage d_tmp_gray_img;
-	img::make_image(d_tmp_gray_img, width, height, gray_buffer);
 
+	device::MemoryBuffer d_buffer{};
+	bool alloc = 
+		device::malloc(d_buffer, color_bytes + gray_bytes);
+
+	bool push =	
+		device::push(d_buffer, d_src_gray_img, width, height) &&
+		device::push(d_buffer, d_dst_gray_img, width, height) &&
+		device::push(d_buffer, d_tmp_gray_img, width, height) &&
+		device::push(d_buffer, d_src_img, width, height) &&
+		device::push(d_buffer, d_src2_img, width, height) &&
+		device::push(d_buffer, d_dst_img, width, height);
+		
+
+	if(!alloc)
+	{
+		printf("Error allocating\n");
+		return;
+	}
+
+	if(!push)
+	{
+		device::free(d_buffer);
+		printf("Error push\n");
+		return;
+	}
 
 	cuda_alpha_blend_test(caddy, corvette, dst_img, d_src_img, d_src2_img, d_dst_img, out_dir);
 
@@ -571,14 +582,17 @@ void cuda_tests(path_t& out_dir)
 
 
 	// recycle memory
-	DeviceBuffer sub_buffer;
-	sub_buffer.data = d_tmp_gray_img.data;
-	sub_buffer.total_bytes = width * height * G_PIXEL_SZ;
+	bool pop = device::pop_bytes(d_buffer, d_buffer.size);
+	if(!pop)
+	{
+		device::free(d_buffer);
+		printf("Error pop\n");
+		return;
+	}	
 
-	cuda_combine_views_test(src_gray, dst_gray_img, sub_buffer, out_dir);	
+	cuda_combine_views_test(src_gray, dst_gray_img, d_buffer, out_dir);
 
-	device_free(color_buffer);
-	device_free(gray_buffer);
+	device::free(d_buffer);
 }
 
 
@@ -587,15 +601,15 @@ void gradient_times(path_t& out_dir)
 	printf("\ngradients:\n");
 	empty_dir(out_dir);
 
-	u32 n_image_sizes = 2;
+	u32 n_image_sizes = 1;
 	u32 image_dim_factor = 4;
 
-	u32 n_image_counts = 2;
+	u32 n_image_counts = 1;
 	u32 image_count_factor = 4;
 
-	u32 width_start = 400;
-	u32 height_start = 300;
-	u32 image_count_start = 100;
+	u32 width_start = 1600;
+	u32 height_start = 1200;
+	u32 image_count_start = 50;
 
 	auto green = img::to_pixel(88, 100, 29);
 	auto blue = img::to_pixel(0, 119, 182);
@@ -640,16 +654,16 @@ void gradient_times(path_t& out_dir)
 		img::make_image(dst, width, height);
 		img::make_image(tmp, width, height);
 
-		DeviceBuffer d_buffer;
+		device::MemoryBuffer d_buffer;
 		auto gray_bytes = 3 * width * height * G_PIXEL_SZ;
-		device_malloc(d_buffer, gray_bytes);
+		device::malloc(d_buffer, gray_bytes);
 
 		CudaGrayImage d_src;
 		CudaGrayImage d_dst;
 		CudaGrayImage d_tmp;
-		img::make_image(d_src, width, height, d_buffer);
-		img::make_image(d_dst, width, height, d_buffer);
-		img::make_image(d_tmp, width, height, d_buffer);
+		device::push(d_buffer, d_src, width, height);
+		device::push(d_buffer, d_dst, width, height);
+		device::push(d_buffer, d_tmp, width, height);
 
 		for (u32 c = 0; c < n_image_counts; ++c)
 		{
@@ -687,7 +701,7 @@ void gradient_times(path_t& out_dir)
 			image_count *= image_count_factor;
 		}
 
-		device_free(d_buffer);
+		device::free(d_buffer);
 
 		seq_times.data_list.push_back(seq);
 		simd_times.data_list.push_back(simd);

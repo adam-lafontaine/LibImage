@@ -6,7 +6,7 @@
 
 constexpr int THREADS_PER_BLOCK = 1024;
 
-
+/*
 class Point2Du32
 {
 public:
@@ -21,6 +21,7 @@ public:
 	r32 x;
 	r32 y;
 };
+*/
 
 
 namespace libimage
@@ -606,7 +607,7 @@ namespace libimage
 
         bool proc;
 
-        proc &= cuda_no_errors();
+        proc = cuda_no_errors();
         assert(proc);
 
         gpu_edges<<<blocks, threads_per_block>>>(

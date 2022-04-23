@@ -8,24 +8,6 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR
 
-    bool make_image(device_image_t& image, u32 width, u32 height, DeviceBuffer& buffer)
-    {
-        assert(buffer.data);
-        auto bytes = width * height * sizeof(pixel_t);
-
-        bool result = buffer.total_bytes - buffer.offset >= bytes;
-        if(result)
-        {
-            image.width = width;
-            image.height = height;
-            image.data = (pixel_t*)((u8*)buffer.data + buffer.offset);
-            buffer.offset += bytes;
-        }
-
-        return result;
-    }
-
-
     bool copy_to_device(image_t const& src, device_image_t const& dst)
     {
         assert(src.data);
@@ -110,24 +92,6 @@ namespace libimage
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
 
-    bool make_image(gray::device_image_t& image, u32 width, u32 height, DeviceBuffer& buffer)
-    {
-        assert(buffer.data);
-        auto bytes = width * height * sizeof(gray::pixel_t);
-
-        bool result = buffer.total_bytes - buffer.offset >= bytes;
-        if(result)
-        {
-            image.width = width;
-            image.height = height;
-            image.data = (gray::pixel_t*)((u8*)buffer.data + buffer.offset);
-            buffer.offset += bytes;
-        }
-
-        return result;
-    }
-
-
     bool copy_to_device(gray::image_t const& src, gray::device_image_t const& dst)
     {
         assert(src.data);
@@ -209,4 +173,108 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_GRAYSCALE        
     
+}
+
+
+namespace device
+{
+#ifndef LIBIMAGE_NO_COLOR
+
+    bool push(MemoryBuffer& buffer, libimage::device_image_t& image, u32 width, u32 height)
+    {  
+        assert(width);
+        assert(height);
+        assert(!image.data);
+
+        auto n_bytes = sizeof(libimage::pixel_t) * width * height;
+
+        auto ptr = push_bytes(buffer, n_bytes);
+        if(!ptr)
+        {
+            return false;
+        }
+
+        image.width = width;
+        image.height = height;
+        image.data = (libimage::pixel_t*)ptr;
+
+        return true;
+    }
+
+
+    bool push(MemoryBuffer& buffer, libimage::device_image_t& image)
+    {
+        auto width = image.width;
+        auto height = image.height;
+
+        assert(width);
+        assert(height);
+        assert(!image.data);
+
+        auto n_bytes = sizeof(libimage::pixel_t) * width * height;
+
+        auto ptr = push_bytes(buffer, n_bytes);
+        if(!ptr)
+        {
+            return false;
+        }
+
+        image.width = width;
+        image.height = height;
+        image.data = (libimage::pixel_t*)ptr;
+
+        return true;
+    }
+
+#endif // !LIBIMAGE_NO_COLOR
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+    bool push(MemoryBuffer& buffer, libimage::gray::device_image_t& image, u32 width, u32 height)
+    {
+        assert(width);
+        assert(height);
+        assert(!image.data);
+
+        auto n_bytes = sizeof(libimage::gray::pixel_t) * width * height;
+
+        auto ptr = push_bytes(buffer, n_bytes);
+        if(!ptr)
+        {
+            return false;
+        }
+
+        image.width = width;
+        image.height = height;
+        image.data = (libimage::gray::pixel_t*)ptr;
+
+        return true;
+    }
+
+
+    bool push(MemoryBuffer& buffer, libimage::gray::device_image_t& image)
+    {
+        auto width = image.width;
+        auto height = image.height;
+
+        assert(width);
+        assert(height);
+        assert(!image.data);
+
+        auto n_bytes = sizeof(libimage::gray::pixel_t) * width * height;
+
+        auto ptr = push_bytes(buffer, n_bytes);
+        if(!ptr)
+        {
+            return false;
+        }
+
+        image.width = width;
+        image.height = height;
+        image.data = (libimage::gray::pixel_t*)ptr;
+
+        return true;
+    }
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
 }

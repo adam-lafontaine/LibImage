@@ -15,8 +15,8 @@
 
 //#define LIBIMAGE_NO_RAII
 
-//#define INTEL_CPU
-#define RPI_3B_PLUS
+#define INTEL_CPU
+//#define RPI_3B_PLUS
 //#define JETSON_NANO
 
 
