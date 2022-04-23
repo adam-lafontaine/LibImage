@@ -120,7 +120,7 @@ namespace device
     }
 
 
-    u8* push(MemoryBuffer& buffer, size_t n_bytes)
+    u8* push_bytes(MemoryBuffer& buffer, size_t n_bytes)
     {
         assert(is_valid(buffer));
 
@@ -140,7 +140,7 @@ namespace device
     }
 
 
-    bool pop(MemoryBuffer& buffer, size_t n_bytes)
+    bool pop_bytes(MemoryBuffer& buffer, size_t n_bytes)
     {
         assert(buffer.data);
         assert(buffer.capacity);

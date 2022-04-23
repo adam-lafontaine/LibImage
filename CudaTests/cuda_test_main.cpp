@@ -46,13 +46,13 @@ int main()
 	auto dst_root = DST_IMAGE_ROOT;
 
 	auto dst_proc = dst_root + "proc/";
-    //process_tests(dst_proc);
+    process_tests(dst_proc);
 
 	auto dst_cuda = dst_root + "cuda/";
 	cuda_tests(dst_cuda);
 
 	auto dst_timing = dst_root + "timing/";
-	//gradient_times(dst_timing);
+	gradient_times(dst_timing);
 
     printf("\nDone.\n");
 }
@@ -582,7 +582,7 @@ void cuda_tests(path_t& out_dir)
 
 
 	// recycle memory
-	bool pop = device::pop(d_buffer, d_buffer.size);
+	bool pop = device::pop_bytes(d_buffer, d_buffer.size);
 	if(!pop)
 	{
 		device::free(d_buffer);
@@ -601,15 +601,15 @@ void gradient_times(path_t& out_dir)
 	printf("\ngradients:\n");
 	empty_dir(out_dir);
 
-	u32 n_image_sizes = 2;
+	u32 n_image_sizes = 1;
 	u32 image_dim_factor = 4;
 
-	u32 n_image_counts = 2;
+	u32 n_image_counts = 1;
 	u32 image_count_factor = 4;
 
-	u32 width_start = 400;
-	u32 height_start = 300;
-	u32 image_count_start = 100;
+	u32 width_start = 1600;
+	u32 height_start = 1200;
+	u32 image_count_start = 50;
 
 	auto green = img::to_pixel(88, 100, 29);
 	auto blue = img::to_pixel(0, 119, 182);

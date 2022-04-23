@@ -189,7 +189,7 @@ namespace device
 
         auto n_bytes = sizeof(libimage::pixel_t) * width * height;
 
-        auto ptr = push(buffer, n_bytes);
+        auto ptr = push_bytes(buffer, n_bytes);
         if(!ptr)
         {
             return false;
@@ -215,7 +215,7 @@ namespace device
 
         auto n_bytes = sizeof(libimage::pixel_t) * width * height;
 
-        auto ptr = push(buffer, n_bytes);
+        auto ptr = push_bytes(buffer, n_bytes);
         if(!ptr)
         {
             return false;
@@ -241,7 +241,7 @@ namespace device
 
         auto n_bytes = sizeof(libimage::gray::pixel_t) * width * height;
 
-        auto ptr = push(buffer, n_bytes);
+        auto ptr = push_bytes(buffer, n_bytes);
         if(!ptr)
         {
             return false;
@@ -267,7 +267,7 @@ namespace device
 
         auto n_bytes = sizeof(libimage::gray::pixel_t) * width * height;
 
-        auto ptr = push(buffer, n_bytes);
+        auto ptr = push_bytes(buffer, n_bytes);
         if(!ptr)
         {
             return false;
