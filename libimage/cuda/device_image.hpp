@@ -65,3 +65,19 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 }
+
+
+namespace device
+{
+#ifndef LIBIMAGE_NO_COLOR
+
+    bool push(MemoryBuffer& buffer, libimage::device_image_t& image, u32 width, u32 height);
+
+#endif // !LIBIMAGE_NO_COLOR
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+    bool push(MemoryBuffer& buffer, libimage::gray::device_image_t& image, u32 width, u32 height);
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+}

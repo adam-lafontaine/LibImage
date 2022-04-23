@@ -210,3 +210,59 @@ namespace libimage
 #endif // !LIBIMAGE_NO_GRAYSCALE        
     
 }
+
+
+namespace device
+{
+#ifndef LIBIMAGE_NO_COLOR
+
+    bool push(MemoryBuffer& buffer, libimage::device_image_t& image, u32 width, u32 height)
+    {
+        assert(is_valid(buffer));        
+        assert(width);
+        assert(height);
+        assert(!image.data);
+
+        auto n_bytes = sizeof(libimage::pixel_t) * width * height;
+
+        auto ptr = push(buffer, n_bytes);
+        if(ptr)
+        {
+            return false;
+        }
+
+        image.width = width;
+        image.height = height;
+        image.data = (libimage::pixel_t*)ptr;
+
+        return true;
+    }
+
+#endif // !LIBIMAGE_NO_COLOR
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+    bool push(MemoryBuffer& buffer, libimage::gray::device_image_t& image, u32 width, u32 height)
+    {
+        assert(is_valid(buffer));        
+        assert(width);
+        assert(height);
+        assert(!image.data);
+
+        auto n_bytes = sizeof(libimage::gray::pixel_t) * width * height;
+
+        auto ptr = push(buffer, n_bytes);
+        if(ptr)
+        {
+            return false;
+        }
+
+        image.width = width;
+        image.height = height;
+        image.data = (libimage::gray::pixel_t*)ptr;
+
+        return true;
+    }
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+}

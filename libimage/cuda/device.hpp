@@ -99,3 +99,25 @@ bool copy_to_device(std::vector<T> const& src, DeviceArray<T>& dst)
 
     return cuda_memcpy_to_device(src.data(), dst.data, bytes);
 }
+
+
+
+namespace device
+{
+    class MemoryBuffer
+    {
+    public:
+        u8* data = nullptr;
+        size_t capacity = 0;
+        size_t offset = 0;
+    };
+
+
+    bool malloc(MemoryBuffer& buffer, size_t n_bytes);
+
+    bool free(MemoryBuffer& buffer);
+
+    u8* push(MemoryBuffer& buffer, size_t n_bytes);
+
+    bool is_valid(MemoryBuffer const& buffer);
+}

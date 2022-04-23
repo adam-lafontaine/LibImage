@@ -4,6 +4,7 @@
 #ifdef CUDA_PRINT_ERROR
 
 #include <cstdio>
+#include <cassert>
 
 #endif
 
@@ -96,4 +97,66 @@ bool device_free(DeviceBuffer& buffer)
     buffer.total_bytes = 0;
     buffer.offset = 0;
     return cuda_device_free(buffer.data);
+}
+
+
+namespace device
+{
+    bool malloc(MemoryBuffer& buffer, size_t n_bytes)
+    {
+        assert(!buffer.data);
+
+        buffer.offset = 0;
+
+        cudaError_t err = cudaMalloc((void**)&(buffer.data), n_bytes);
+        check_error(err);
+
+        bool result = err == cudaSuccess;
+
+        if(result)
+        {
+            buffer.capacity = n_bytes;
+        }
+        
+        return result;
+    }
+
+
+    bool free(MemoryBuffer& buffer)
+    {
+        buffer.capacity = 0;
+        buffer.offset = 0;
+
+        cudaError_t err = cudaFree(buffer.data);
+        check_error(err);
+
+        return err == cudaSuccess;
+    }
+
+
+    u8* push(MemoryBuffer& buffer, size_t n_bytes)
+    {
+        assert(is_valid(buffer));
+
+        auto bytes_available = buffer.capacity - buffer.offset;
+        assert(bytes_available >= n_bytes);
+
+        if(!is_valid(buffer) || n_bytes > bytes_available)
+        {
+            return nullptr;
+        }
+
+        buffer.offset += n_bytes;
+
+        return buffer.data + buffer.offset;
+    }
+
+
+    bool is_valid(MemoryBuffer const& buffer)
+    {
+        return 
+            buffer.data &&
+            buffer.capacity &&
+            buffer.offset < buffer.capacity;
+    }
 }
