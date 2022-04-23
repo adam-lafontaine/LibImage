@@ -71,6 +71,4 @@ namespace device
     u8* push_bytes(MemoryBuffer& buffer, size_t n_bytes);
 
     bool pop_bytes(MemoryBuffer& buffer, size_t n_bytes);
-
-    bool is_valid(MemoryBuffer const& buffer);
 }

@@ -86,13 +86,10 @@ namespace device
     {
         assert(!buffer.data);
 
-        buffer.size = 0;
-
         cudaError_t err = cudaMalloc((void**)&(buffer.data), n_bytes);
         check_error(err);
 
         bool result = err == cudaSuccess;
-        //bool result = cuda_device_malloc((void**)&(buffer.data), n_bytes);
 
         if(result)
         {
@@ -122,12 +119,19 @@ namespace device
 
     u8* push_bytes(MemoryBuffer& buffer, size_t n_bytes)
     {
-        assert(is_valid(buffer));
+        assert(buffer.data);
+        assert(buffer.capacity);
+        assert(buffer.size < buffer.capacity);
 
-        auto bytes_available = buffer.capacity - buffer.size;
-        assert(bytes_available >= n_bytes);
+        auto is_valid = 
+            buffer.data &&
+            buffer.capacity &&
+            buffer.size < buffer.capacity;
 
-        if(!is_valid(buffer) || n_bytes > bytes_available)
+        auto bytes_available = (buffer.capacity - buffer.size) >= n_bytes;
+        assert(bytes_available);
+
+        if(!is_valid || !bytes_available)
         {
             return nullptr;
         }
@@ -162,14 +166,5 @@ namespace device
         }
 
         return false;
-    }
-
-
-    bool is_valid(MemoryBuffer const& buffer)
-    {
-        return 
-            buffer.data &&
-            buffer.capacity &&
-            buffer.size < buffer.capacity;
     }
 }

@@ -181,8 +181,7 @@ namespace device
 #ifndef LIBIMAGE_NO_COLOR
 
     bool push(MemoryBuffer& buffer, libimage::device_image_t& image, u32 width, u32 height)
-    {
-        assert(is_valid(buffer));        
+    {  
         assert(width);
         assert(height);
         assert(!image.data);
@@ -208,7 +207,6 @@ namespace device
         auto width = image.width;
         auto height = image.height;
 
-        assert(is_valid(buffer));        
         assert(width);
         assert(height);
         assert(!image.data);
@@ -234,7 +232,6 @@ namespace device
 
     bool push(MemoryBuffer& buffer, libimage::gray::device_image_t& image, u32 width, u32 height)
     {
-        assert(is_valid(buffer));        
         assert(width);
         assert(height);
         assert(!image.data);
@@ -260,7 +257,6 @@ namespace device
         auto width = image.width;
         auto height = image.height;
 
-        assert(is_valid(buffer));        
         assert(width);
         assert(height);
         assert(!image.data);
