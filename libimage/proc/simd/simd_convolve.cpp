@@ -25,15 +25,17 @@ constexpr std::array<r32, 25> GAUSS_5X5
 
 constexpr std::array<r32, 9> GRAD_X_3X3
 {
-	1.0f, 0.0f, -1.0f,
-	2.0f, 0.0f, -2.0f,
-	1.0f, 0.0f, -1.0f,
+	-0.25f,  0.0f,  0.25f,
+	-0.50f,  0.0f,  0.50f,
+	-0.25f,  0.0f,  0.25f,
 };
+
+
 constexpr std::array<r32, 9> GRAD_Y_3X3
 {
-	1.0f,  2.0f,  1.0f,
-	0.0f,  0.0f,  0.0f,
-	-1.0f, -2.0f, -1.0f,
+	-0.25f, -0.50f, -0.25f,
+	 0.0f,   0.0f,   0.0f,
+	 0.25f,  0.50f,  0.25f,
 };
 
 
