@@ -72,17 +72,17 @@ int main()
 
 	auto dst_root = fs::path(DST_IMAGE_ROOT);	
 
-	//basic_tests(dst_root / "basic");
-	//math_tests(dst_root / "math");
+	basic_tests(dst_root / "basic");
+	math_tests(dst_root / "math");
 	process_tests(dst_root / "process");
-	//planar_tests(dst_root / "planar");
+	planar_tests(dst_root / "planar");
 
-	//binary_tests(dst_root / "binary");
+	binary_tests(dst_root / "binary");
 
 
 	auto timing_dir = dst_root / "timing";
-	//empty_dir(timing_dir);
-	//gradient_times(timing_dir);
+	empty_dir(timing_dir);
+	gradient_times(timing_dir);
 
 	//read_times();
 
@@ -774,8 +774,8 @@ void binary_tests(fs::path const& out_dir)
 	img::write_image(binary_dst, out_dir / "centroid.bmp");
 
 	// thin the object
-	img::seq::thin_objects(binary_src, binary_dst);
-	img::write_image(binary_dst, out_dir / "thin.bmp");
+	img::seq::skeleton(binary_src, binary_dst);
+	img::write_image(binary_dst, out_dir / "skeleton.bmp");
 }
 
 //void read_times()
