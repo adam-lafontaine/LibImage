@@ -2603,20 +2603,23 @@ namespace libimage
 	}
 
 
-	template<size_t N>
-	static r32 apply_weights(gray::view_t const& view, std::array<r32, N> const& weights)
+	template<class GRAY_IMAGE_T, size_t N>
+	static r32 apply_weights(GRAY_IMAGE_T const& img, pixel_range_t const& range, std::array<r32, N> const& weights)
 	{
-		assert((size_t)(view.width) * view.height == weights.size());
+		assert((range.y_end - range.y_begin) * (range.x_end - range.x_begin) == weights.size());
 
 		u32 w = 0;
 		r32 total = 0.0f;
 
-		auto const add_weight = [&](u8 p)
+		for (u32 y = range.y_begin; y < range.y_end; ++y)
 		{
-			total += weights[w++] * p;
-		};
+			auto row = img.row_begin(y);
 
-		for_each_pixel(view, add_weight);
+			for (u32 x = range.x_begin; x < range.x_end; ++x)
+			{
+				total += weights[w++] * row[x];
+			}
+		}
 
 		return total;
 	}
@@ -2631,7 +2634,7 @@ namespace libimage
 
 		left_or_right_3_wide(range, x, img.width);
 
-		return apply_weights(sub_view(img, range), weights);
+		return apply_weights(img, range, weights);
 	}
 
 
@@ -2644,7 +2647,7 @@ namespace libimage
 
 		left_or_right_5_wide(range, x, img.width);
 
-		return apply_weights(sub_view(img, range), weights);
+		return apply_weights(img, range, weights);
 	}
 
 
@@ -2657,7 +2660,7 @@ namespace libimage
 
 		left_2_wide(range, x, img.width);
 
-		return apply_weights(sub_view(img, range), weights);
+		return apply_weights(img, range, weights);
 	}
 
 
@@ -2670,7 +2673,7 @@ namespace libimage
 
 		right_2_wide(range, x, img.width);
 
-		return apply_weights(sub_view(img, range), weights);
+		return apply_weights(img, range, weights);
 	}
 
 
@@ -2683,7 +2686,7 @@ namespace libimage
 
 		left_2_wide(range, x, img.width);
 
-		return apply_weights(sub_view(img, range), weights);
+		return apply_weights(img, range, weights);
 	}
 
 
@@ -2696,7 +2699,7 @@ namespace libimage
 
 		right_2_wide(range, x, img.width);
 
-		return apply_weights(sub_view(img, range), weights);
+		return apply_weights(img, range, weights);
 	}
 
 
@@ -2709,7 +2712,7 @@ namespace libimage
 
 		left_or_right_3_wide(range, x, img.width);
 
-		return apply_weights(sub_view(img, range), weights);
+		return apply_weights(img, range, weights);
 	}
 
 
@@ -2722,7 +2725,7 @@ namespace libimage
 
 		left_or_right_3_wide(range, x, img.width);
 
-		return apply_weights(sub_view(img, range), weights);
+		return apply_weights(img, range, weights);
 	}
 
 
@@ -2735,7 +2738,7 @@ namespace libimage
 
 		left_2_wide(range, x, img.width);
 
-		return apply_weights(sub_view(img, range), weights);
+		return apply_weights(img, range, weights);
 	}
 
 
@@ -2748,7 +2751,7 @@ namespace libimage
 
 		right_2_wide(range, x, img.width);
 
-		return apply_weights(sub_view(img, range), weights);
+		return apply_weights(img, range, weights);
 	}
 
 
