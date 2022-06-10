@@ -381,7 +381,7 @@ namespace libimage
 
 
 		template <class GRAY_IMG_T>
-		static u32 thin_once(GRAY_IMG_T const& img)
+		static u32 skeleton_once(GRAY_IMG_T const& img)
 		{
 			u32 pixel_count = 0;
 
@@ -488,51 +488,51 @@ namespace libimage
 
 
 		template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-		static void do_thin(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+		static void do_skeleton(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 		{
 			seq::copy(src, dst);
 
 			u32 current_count = 0;
-			u32 pixel_count = thin_once(dst);
+			u32 pixel_count = skeleton_once(dst);
 			u32 max_iter = 100; // src.width / 2;
 
 			for (u32 i = 1; pixel_count != current_count && i < max_iter; ++i)
 			{
 				current_count = pixel_count;
-				pixel_count = thin_once(dst);
+				pixel_count = skeleton_once(dst);
 			}
 		}
 
 
-		void thin_objects(gray::image_t const& src, gray::image_t const& dst)
+		void skeleton(gray::image_t const& src, gray::image_t const& dst)
 		{
 			assert(verify(src, dst));
 
-			do_thin(src, dst);
+			do_skeleton(src, dst);
 		}
 
 
-		void thin_objects(gray::image_t const& src, gray::view_t const& dst)
+		void skeleton(gray::image_t const& src, gray::view_t const& dst)
 		{
 			assert(verify(src, dst));
 
-			do_thin(src, dst);
+			do_skeleton(src, dst);
 		}
 
 
-		void thin_objects(gray::view_t const& src, gray::image_t const& dst)
+		void skeleton(gray::view_t const& src, gray::image_t const& dst)
 		{
 			assert(verify(src, dst));
 
-			do_thin(src, dst);
+			do_skeleton(src, dst);
 		}
 
 
-		void thin_objects(gray::view_t const& src, gray::view_t const& dst)
+		void skeleton(gray::view_t const& src, gray::view_t const& dst)
 		{
 			assert(verify(src, dst));
 
-			do_thin(src, dst);
+			do_skeleton(src, dst);
 		}
 
 	}

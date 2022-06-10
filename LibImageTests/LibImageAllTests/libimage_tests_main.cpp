@@ -774,8 +774,8 @@ void binary_tests(fs::path const& out_dir)
 	img::write_image(binary_dst, out_dir / "centroid.bmp");
 
 	// thin the object
-	img::seq::thin_objects(binary_src, binary_dst);
-	img::write_image(binary_dst, out_dir / "thin.bmp");
+	img::seq::skeleton(binary_src, binary_dst);
+	img::write_image(binary_dst, out_dir / "skeleton.bmp");
 }
 
 //void read_times()
