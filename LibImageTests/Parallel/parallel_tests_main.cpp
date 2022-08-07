@@ -112,18 +112,18 @@ int main()
 		return EXIT_FAILURE;
 	}
 
-	read_write_image_test();
+	/*read_write_image_test();
 	resize_test();
 	view_test();
-	transform_test();
+	transform_test();*/
 	alpha_blend_test();
-	grayscale_test();
+	/*grayscale_test();
 	binary_test();
 	contrast_test();
 	blur_test();
 	gradients_test();
 	edges_test();
-	rotate_test();
+	rotate_test();*/
 }
 
 

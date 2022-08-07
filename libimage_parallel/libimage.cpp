@@ -523,6 +523,8 @@ using u32_range_t = UnsignedRange<unsigned>;
 
 #endif // INDEX_RANGE_IMPL
 
+constexpr u32 N_THREADS = 4;
+
 
 namespace libimage
 {
@@ -539,6 +541,25 @@ namespace libimage
 	template <class IMG_T, class PIXEL_F>
 	static void for_each_pixel_by_row(IMG_T const& image, PIXEL_F const& func)
 	{
+		/*std::array<std::function<void()>, N_THREADS> procs = { 0 };
+
+		for (u32 i = 0; i < N_THREADS; ++i)
+		{
+			procs[i] = [&]() 
+			{
+				auto y_begin = i * image.height / N_THREADS;
+				auto y_end = i == N_THREADS - 1 ? image.height : y_begin + image.height / N_THREADS;
+
+				for (u32 y = y_begin; y < y_end; ++y)
+				{
+					for_each_pixel_in_row(row_begin(image, y), image.width, func);
+				}
+			};
+		}
+
+		std::for_each(std::execution::par, procs.begin(), procs.end(), [](auto const& f) { f(); });*/
+
+
 		for (u32 y = 0; y < image.height; ++y)
 		{
 			for_each_pixel_in_row(row_begin(image, y), image.width, func);
@@ -558,6 +579,24 @@ namespace libimage
 	template <class IMG_T>
 	static void for_each_xy_by_row(IMG_T const& image, std::function<void(u32 x, u32 y)> const& func)
 	{
+		/*std::array<std::function<void()>, N_THREADS> procs = { 0 };
+
+		for (u32 i = 0; i < N_THREADS; ++i)
+		{
+			auto y_begin = i * image.height / N_THREADS;
+			auto y_end = i == N_THREADS - 1 ? image.height : y_begin + image.height / N_THREADS;
+
+			procs[i] = [&]()
+			{
+				for (u32 y = y_begin; y < y_end; ++y)
+				{
+					for_each_xy_in_row(y, image.width, func);
+				}
+			};
+		}
+
+		std::for_each(std::execution::par, procs.begin(), procs.end(), [](auto const& f) { f(); });*/
+
 		for (u32 y = 0; y < image.height; ++y)
 		{
 			for_each_xy_in_row(y, image.width, func);
