@@ -8,7 +8,7 @@
 
 #include <execution>
 
-constexpr u32 N_THREADS = 4;
+constexpr u32 N_THREADS = 8;
 
 static void for_each(auto& list, auto const& func)
 {
@@ -625,11 +625,12 @@ namespace libimage
 	{
 		auto const height = image.height;
 		auto const width = image.width;
+		auto const rows_per_thread = height / N_THREADS;
 
 		auto const thread_proc = [&](u32 id) 
 		{
-			auto y_begin = id * height / N_THREADS;
-			auto y_end = id == N_THREADS - 1 ? height : y_begin + height / N_THREADS;
+			auto y_begin = id * rows_per_thread;
+			auto y_end = id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread;
 
 			for (u32 y = y_begin; y < y_end; ++y)
 			{
@@ -646,11 +647,12 @@ namespace libimage
 	{
 		auto const height = image.height;
 		auto const width = image.width;
+		auto const rows_per_thread = height / N_THREADS;
 
 		auto const thread_proc = [&](u32 id) 
 		{
-			auto y_begin = id * image.height / N_THREADS;
-			auto y_end = id == N_THREADS - 1 ? height : y_begin + height / N_THREADS;
+			auto y_begin = id * rows_per_thread;
+			auto y_end = id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread;
 
 			for (u32 y = y_begin; y < y_end; ++y)
 			{
@@ -667,11 +669,12 @@ namespace libimage
 	{
 		auto const height = src.height;
 		auto const width = src.width;
+		auto const rows_per_thread = height / N_THREADS;
 
 		auto const thread_proc = [&](u32 id)
 		{
-			auto y_begin = id * src.height / N_THREADS;
-			auto y_end = id == N_THREADS - 1 ? height : y_begin + height / N_THREADS;
+			auto y_begin = id * rows_per_thread;
+			auto y_end = id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread;
 
 			for (u32 y = y_begin; y < y_end; ++y)
 			{
@@ -688,11 +691,12 @@ namespace libimage
 	{
 		auto const height = src_a.height;
 		auto const width = src_a.width;
+		auto const rows_per_thread = height / N_THREADS;
 
 		auto const thread_proc = [&](u32 id)
 		{
-			auto y_begin = id * height / N_THREADS;
-			auto y_end = id == N_THREADS - 1 ? height : y_begin + height / N_THREADS;
+			auto y_begin = id * rows_per_thread;
+			auto y_end = id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread;
 
 			for (u32 y = y_begin; y < y_end; ++y)
 			{
