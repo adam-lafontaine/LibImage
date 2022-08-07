@@ -265,7 +265,7 @@ namespace libimage
 
 	void make_image(Image& image_dst, u32 width, u32 height);
 
-	void destroy_image(Image const& image);
+	void destroy_image(Image& image);
 
 	Pixel* row_begin(Image const& image, u32 y);
 
@@ -313,7 +313,7 @@ namespace libimage
 
 	void make_image(gray::Image& image_dst, u32 width, u32 height);
 
-	void destroy_image(gray::Image const& image);
+	void destroy_image(gray::Image& image);
 
 	gray::Pixel* row_begin(gray::Image const& image, u32 y);
 
@@ -517,6 +517,24 @@ namespace libimage
 }
 
 
+namespace libimage
+{
+	void fill(Image const& image, Pixel color);
+
+	void fill(View const& view, Pixel color);
+
+
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	void fill(gray::Image const& image, u8 gray);
+
+	void fill(gray::View const& view, u8 gray);
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+}
+
+
 /*  transform.hpp  */
 
 namespace libimage
@@ -525,7 +543,7 @@ namespace libimage
 
 	/*** transform parallel ***/
 
-#ifndef LIBIMAGE_NO_PARALLEL
+
 
 #ifndef LIBIMAGE_NO_COLOR	
 
@@ -599,7 +617,7 @@ namespace libimage
 #endif // !LIBIMAGE_NO_GRAYSCALE
 #endif // !LIBIMAGE_NO_COLOR
 
-#endif // !LIBIMAGE_NO_PARALLEL
+
 }
 
 
@@ -612,7 +630,7 @@ namespace libimage
 
 	/*** copy parallel ***/
 
-#ifndef LIBIMAGE_NO_PARALLEL
+
 
 #ifndef LIBIMAGE_NO_COLOR	
 
@@ -642,7 +660,7 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
-#endif // !LIBIMAGE_NO_PARALLEL
+
 	
 }
 
@@ -655,7 +673,7 @@ namespace libimage
 {
 
 
-#ifndef LIBIMAGE_NO_PARALLEL
+
 
 	void alpha_blend(Image const& src, Image const& current, Image const& dst);
 
@@ -683,7 +701,7 @@ namespace libimage
 	void alpha_blend(View const& src, View const& current_dst);
 
 
-#endif // !LIBIMAGE_NO_PARALLEL
+
 }
 
 #endif // !LIBIMAGE_NO_COLOR
@@ -698,7 +716,7 @@ namespace libimage
 {
 
 
-#ifndef LIBIMAGE_NO_PARALLEL
+
 
 	void grayscale(Image const& src, gray::Image const& dst);
 
@@ -713,7 +731,7 @@ namespace libimage
 
 	void alpha_grayscale(View const& src);
 
-#endif // !LIBIMAGE_NO_PARALLEL
+
 }
 
 #endif // !LIBIMAGE_NO_COLOR
@@ -726,7 +744,7 @@ namespace libimage
 
 namespace libimage
 {
-#ifndef LIBIMAGE_NO_PARALLEL
+
 
 	void binarize(gray::Image const& src, gray::Image const& dst, u8_to_bool_f const& cond);
 
@@ -764,7 +782,14 @@ namespace libimage
 
 	Point2Du32 centroid(gray::View const& src, u8_to_bool_f const& func);
 
-#endif // !LIBIMAGE_NO_PARALLEL	
+	
+	void skeleton(gray::Image const& src, gray::Image const& dst);
+
+	void skeleton(gray::Image const& src, gray::View const& dst);
+
+	void skeleton(gray::View const& src, gray::Image const& dst);
+
+	void skeleton(gray::View const& src, gray::View const& dst);
 
 }
 
@@ -772,7 +797,7 @@ namespace libimage
 // threshold overloads
 namespace libimage
 {
-#ifndef LIBIMAGE_NO_PARALLEL
+
 
 	inline void binarize_th(gray::Image const& src, gray::Image const& dst, u8 th) { binarize(src, dst, [&th](u8 p) { return p >= th; }); }
 
@@ -782,7 +807,7 @@ namespace libimage
 
 	inline void binarize_th(gray::View const& src, gray::View const& dst, u8 th) { binarize(src, dst, [&th](u8 p) { return p >= th; }); }
 
-#endif // !LIBIMAGE_NO_PARALLEL
+
 }
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
@@ -792,7 +817,7 @@ namespace libimage
 
 namespace libimage
 {
-#ifndef LIBIMAGE_NO_PARALLEL
+
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
@@ -811,7 +836,7 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
-#endif // !LIBIMAGE_NO_PARALLEL
+
 }
 
 
@@ -822,7 +847,7 @@ namespace libimage
 
 namespace libimage
 {
-#ifndef LIBIMAGE_NO_PARALLEL
+
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
@@ -838,7 +863,7 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
-#endif // !LIBIMAGE_NO_PARALLEL
+
 }
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
@@ -850,7 +875,7 @@ namespace libimage
 
 namespace libimage
 {
-#ifndef LIBIMAGE_NO_PARALLEL
+
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
@@ -865,7 +890,7 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
-#endif // !LIBIMAGE_NO_PARALLEL
+
 }
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
@@ -877,7 +902,7 @@ namespace libimage
 
 namespace libimage
 {
-#ifndef LIBIMAGE_NO_PARALLEL
+
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
@@ -892,7 +917,7 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
-#endif // !LIBIMAGE_NO_PARALLEL
+
 }
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
@@ -902,7 +927,7 @@ namespace libimage
 
 namespace libimage
 {
-#ifndef LIBIMAGE_NO_PARALLEL
+
 
 #ifndef LIBIMAGE_NO_COLOR
 
@@ -947,6 +972,6 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
-#endif // !LIBIMAGE_NO_PARALLEL
+
 }
 

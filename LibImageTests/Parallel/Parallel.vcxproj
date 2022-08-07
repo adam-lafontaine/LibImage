@@ -18,6 +18,18 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\libimage_parallel\libimage.cpp" />
+    <ClCompile Include="..\..\libimage_parallel\stb_wrapper\stb_libimage.cpp" />
+    <ClCompile Include="parallel_tests_main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\libimage_parallel\defines.hpp" />
+    <ClInclude Include="..\..\libimage_parallel\libimage.hpp" />
+    <ClInclude Include="..\..\libimage_parallel\stb_wrapper\stb_include.hpp" />
+    <ClInclude Include="..\utils\stopwatch.hpp" />
+    <ClInclude Include="..\utils\win32_leak_check.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -127,15 +139,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\libimage_parallel\defines.hpp" />
-    <ClInclude Include="..\..\libimage_parallel\libimage.hpp" />
-    <ClInclude Include="..\..\libimage_parallel\stb_wrapper\stb_include.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\libimage_parallel\libimage.cpp" />
-    <ClCompile Include="..\..\libimage_parallel\stb_wrapper\stb_libimage.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

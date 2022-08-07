@@ -93,11 +93,11 @@ namespace libimage
 	}
 
 
-	static void make_image(View const& view, Image& image_dst)
+	static void make_image(View const& view_src, Image& image_dst)
 	{
-		make_image(image_dst, view.width, view.height);
+		make_image(image_dst, view_src.width, view_src.height);
 
-		std::copy(view.begin(), view.end(), image_dst.begin());
+		copy(view_src, image_dst);
 	}
 
 
@@ -220,7 +220,7 @@ namespace libimage
 	{
 		make_image(image_dst, view_src.width, view_src.height);
 
-		std::copy(view_src.begin(), view_src.end(), image_dst.begin());
+		copy(view_src, image_dst);
 	}
 
 

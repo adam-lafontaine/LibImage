@@ -526,8 +526,8 @@ using u32_range_t = UnsignedRange<unsigned>;
 
 namespace libimage
 {
-	template <class PIXEL_T>
-	static void for_each_pixel_in_row(PIXEL_T* row_begin, u32 length, std::function<void(PIXEL_T&)> const& func)
+	template <typename PIXEL_T, class PIXEL_F>
+	static void for_each_pixel_in_row(PIXEL_T* row_begin, u32 length, PIXEL_F const& func)
 	{
 		for (u32 i = 0; i < length; ++i)
 		{
@@ -565,8 +565,8 @@ namespace libimage
 	}
 
 
-	template <class SRC_PIXEL_T, class DST_PIXEL_T, class SRC_TO_DST_F>
-	static void transform_row(SRC_PIXEL_T* src_begin, SRC_PIXEL_T* dst_begin, u32 length, SRC_TO_DST_F const& func)
+	template <typename SRC_PIXEL_T, typename DST_PIXEL_T, class SRC_TO_DST_F>
+	static void transform_row(SRC_PIXEL_T* src_begin, DST_PIXEL_T* dst_begin, u32 length, SRC_TO_DST_F const& func)
 	{
 		for (u32 i = 0; i < length; ++i)
 		{
@@ -585,8 +585,8 @@ namespace libimage
 	}
 
 
-	template <class SRC_A_PIXEL_T, class SRC_B_PIXEL_T, class DST_PIXEL_T, class SRC_TO_DST_F>
-	static void transform_row(SRC_A_PIXEL_T* src_a_begin, SRC_B_PIXEL_T* src_b_begin, DST_PIXEL_T* dst_begin, u32 length, SRC_TO_DST_F const& func)
+	template <typename SRC_A_PIXEL_T, typename SRC_B_PIXEL_T, typename DST_PIXEL_T, class SRC_TO_DST_F>
+	static void transform_row2(SRC_A_PIXEL_T* src_a_begin, SRC_B_PIXEL_T* src_b_begin, DST_PIXEL_T* dst_begin, u32 length, SRC_TO_DST_F const& func)
 	{
 		for (u32 i = 0; i < length; ++i)
 		{
@@ -598,9 +598,9 @@ namespace libimage
 	template <class SRC_A_IMG_T, class SRC_B_IMG_T, class DST_IMG_T, class SRC_TO_DST_F>
 	static void transform_by_row(SRC_A_IMG_T const& src_a, SRC_B_IMG_T const& src_b, DST_IMG_T const& dst, SRC_TO_DST_F const& func)
 	{
-		for (u32 y = 0; y < src.height; ++y)
+		for (u32 y = 0; y < src_a.height; ++y)
 		{
-			transform_row(row_begin(src_a, y), row_begin(src_b, y), row_begin(dst, y), src.width, func);
+			transform_row2(row_begin(src_a, y), row_begin(src_b, y), row_begin(dst, y), src_a.width, func);
 		}
 	}
 
@@ -668,6 +668,47 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 }
+
+
+/* fill */
+
+namespace libimage
+{
+#ifndef LIBIMAGE_NO_COLOR	
+
+	void fill(Image const& image, Pixel color)
+	{
+		auto const func = [&](Pixel& p) { p = color; };
+		for_each_pixel(image, func);
+	}
+
+
+	void fill(View const& view, Pixel color)
+	{
+		auto const func = [&](Pixel& p) { p = color; };
+		for_each_pixel(view, func);
+	}
+
+#endif // !LIBIMAGE_NO_COLOR
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	void fill(gray::Image const& image, u8 gray)
+	{
+		auto const func = [&](u8& p) { p = gray; };
+		for_each_pixel(image, func);
+	}
+
+
+	void fill(gray::View const& view, u8 gray)
+	{
+		auto const func = [&](u8& p) { p = gray; };
+		for_each_pixel(view, func);
+	}
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+}
+
 
 
 /*  transform.cpp  */
@@ -1299,7 +1340,7 @@ namespace libimage
 
 			assert(thread_id < n_threads);
 
-			auto row = src.row_begin(y);
+			auto row = row_begin(src, y);
 			for (u32 x = 0; x < src.width; ++x)
 			{
 				u32 val = func(row[x]) ? 1 : 0;
@@ -1377,7 +1418,197 @@ namespace libimage
 	}
 
 
+	template <class GRAY_IMG_T>
+	static bool do_neighbors(GRAY_IMG_T const& img, u32 x, u32 y)
+	{
+		assert(x >= 1);
+		assert(x < img.width);
+		assert(y >= 1);
+		assert(y < img.height);
 
+		constexpr std::array<int, 8> x_neighbors = { -1,  0,  1,  1,  1,  0, -1, -1 };
+		constexpr std::array<int, 8> y_neighbors = { -1, -1, -1,  0,  1,  1,  1,  0 };
+
+		constexpr auto n_neighbors = x_neighbors.size();
+		int value_total = 0;
+		u32 value_count = 0;
+		u32 flip = 0;
+
+		auto xi = (u32)(x + x_neighbors[n_neighbors - 1]);
+		auto yi = (u32)(y + y_neighbors[n_neighbors - 1]);
+		auto val = *xy_at(img, xi, yi);
+		bool is_on = val != 0;
+
+		for (u32 i = 0; i < n_neighbors; ++i)
+		{
+			xi = (u32)(x + x_neighbors[i]);
+			yi = (u32)(y + y_neighbors[i]);
+
+			val = *xy_at(img, xi, yi);
+			flip += (val != 0) != is_on;
+
+			is_on = val != 0;
+			value_count += is_on;
+		}
+
+		return value_count > 1 && value_count < 7 && flip == 2;
+	}
+
+
+	template <class GRAY_IMG_T>
+	static u32 skeleton_once(GRAY_IMG_T const& img)
+	{
+		u32 pixel_count = 0;
+
+		auto width = img.width;
+		auto height = img.height;
+
+		auto const xy_func = [&](u32 x, u32 y)
+		{
+			auto& p = *xy_at(img, x, y);
+			if (p == 0)
+			{
+				return;
+			}
+
+			if (do_neighbors(img, x, y))
+			{
+				p = 0;
+			}
+
+			pixel_count += p > 0;
+		};
+
+		u32 x_begin = 1;
+		u32 x_end = width - 1;
+		u32 y_begin = 1;
+		u32 y_end = height - 2;
+		u32 x = 0;
+		u32 y = 0;
+
+		auto const done = [&]() { return !(x_begin < x_end&& y_begin < y_end); };
+
+		while (!done())
+		{
+			// iterate clockwise
+			y = y_begin;
+			x = x_begin;
+			for (; x < x_end; ++x)
+			{
+				xy_func(x, y);
+			}
+			--x;
+
+			for (++y; y < y_end; ++y)
+			{
+				xy_func(x, y);
+			}
+			--y;
+
+			for (--x; x >= x_begin; --x)
+			{
+				xy_func(x, y);
+			}
+			++x;
+
+			for (--y; y > y_begin; --y)
+			{
+				xy_func(x, y);
+			}
+			++y;
+
+			++x_begin;
+			++y_begin;
+			--x_end;
+			--y_end;
+
+			if (done())
+			{
+				break;
+			}
+
+			// iterate counter clockwise
+			for (++x; y < y_end; ++y)
+			{
+				xy_func(x, y);
+			}
+			--y;
+
+			for (++x; x < x_end; ++x)
+			{
+				xy_func(x, y);
+			}
+			--x;
+
+			for (--y; y >= y_begin; --y)
+			{
+				xy_func(x, y);
+			}
+			++y;
+
+			for (--x; x >= x_begin; --x)
+			{
+				xy_func(x, y);
+			}
+			++x;
+
+			++x_begin;
+			++y_begin;
+			--x_end;
+			--y_end;
+		}
+
+		return pixel_count;
+	}
+
+
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void do_skeleton(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	{
+		copy(src, dst);
+
+		u32 current_count = 0;
+		u32 pixel_count = skeleton_once(dst);
+		u32 max_iter = 100; // src.width / 2;
+
+		for (u32 i = 1; pixel_count != current_count && i < max_iter; ++i)
+		{
+			current_count = pixel_count;
+			pixel_count = skeleton_once(dst);
+		}
+	}
+
+
+	void skeleton(gray::Image const& src, gray::Image const& dst)
+	{
+		assert(verify(src, dst));
+
+		do_skeleton(src, dst);
+	}
+
+
+	void skeleton(gray::Image const& src, gray::View const& dst)
+	{
+		assert(verify(src, dst));
+
+		do_skeleton(src, dst);
+	}
+
+
+	void skeleton(gray::View const& src, gray::Image const& dst)
+	{
+		assert(verify(src, dst));
+
+		do_skeleton(src, dst);
+	}
+
+
+	void skeleton(gray::View const& src, gray::View const& dst)
+	{
+		assert(verify(src, dst));
+
+		do_skeleton(src, dst);
+	}
 	
 }
 
@@ -1572,7 +1803,7 @@ namespace libimage
 
 		for (u32 y = range.y_begin; y < range.y_end; ++y)
 		{
-			auto row = img.row_begin(y);
+			auto row = row_begin(img, y);
 
 			for (u32 x = range.x_begin; x < range.x_end; ++x)
 			{
@@ -1830,132 +2061,79 @@ namespace libimage
 
 
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void copy_top(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	static void copy_top_bottom(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
-		auto src_top = row_view(src, 0);
-		auto dst_top = row_view(dst, 0);
+		u32 const x_begin = 0;
+		u32 const x_end = src.width;
+		u32 const y_top = 0;
+		u32 const y_bottom = src.height - 1;
 
-		copy(src_top, dst_top);
+		auto const src_top = row_begin(src, y_top);
+		auto const dst_top = row_begin(dst, y_top);
+		auto const src_bottom = row_begin(src, y_bottom);
+		auto const dst_bottom = row_begin(dst, y_bottom);
+
+		for (u32 x = x_begin; x < x_end; ++x)
+		{
+			dst_top[x] = src_top[x];
+			dst_bottom[x] = src_bottom[x];
+		}
 	}
 
 
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void copy_bottom(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	static void copy_left_right(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
-		auto src_bottom = row_view(src, src.height - 1);
-		auto dst_bottom = row_view(dst, src.height - 1);
+		u32 const y_begin = 1;
+		u32 const y_end = src.height - 1;
+		u32 const x_left = 0;
+		u32 const x_right = src.width - 1;
 
-		copy(src_bottom, dst_bottom);
+		for (u32 y = y_begin; y < y_end; ++y)
+		{
+			auto src_row = row_begin(src, y);
+			auto dst_row = row_begin(dst, y);
+
+			dst_row[x_left] = src_row[x_left];
+			dst_row[x_right] = src_row[x_right];
+		}
 	}
 
 
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void copy_left(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
-	{
-		Range2Du32 r = {};
-		r.x_begin = 0;
-		r.x_end = 1;
-		r.y_begin = 1;
-		r.y_end = src.height - 1;
-
-		auto src_left = sub_view(src, r);
-		auto dst_left = sub_view(dst, r);
-
-		copy(src_left, dst_left);
-	}
-
-
-	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void copy_right(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
-	{
-		Range2Du32 r = {};
-		r.x_begin = src.width - 1;
-		r.x_end = src.width;
-		r.y_begin = 1;
-		r.y_end = src.height - 1;
-
-		auto src_right = sub_view(src, r);
-		auto dst_right = sub_view(dst, r);
-
-		copy(src_right, dst_right);
-	}
-
-
-	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void gauss_inner_top(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	static void gauss_inner_top_bottom(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
 		u32 const x_begin = 1;
 		u32 const x_end = src.width - 1;
-		u32 const y = 1;
+		u32 const y_top = 1;
+		u32 const y_bottom = src.height - 2;
 
-		auto dst_top = dst.row_begin(y);
+		auto const dst_top = row_begin(dst, y_top);
+		auto const dst_bottom = row_begin(dst, y_bottom);
 
-		u32_range_t x_ids(x_begin, x_end);
-
-		auto const gauss = [&](u32 x)
+		for (u32 x = x_begin; x < x_end; ++x)
 		{
-			dst_top[x] = gauss3(src, x, y);
-		};
-
-		std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), gauss);
+			dst_top[x] = gauss3(src, x, y_top);
+			dst_bottom[x] = gauss3(src, x, y_bottom);
+		}
 	}
 
 
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void gauss_inner_bottom(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
-	{
-		u32 const x_begin = 1;
-		u32 const x_end = src.width - 1;
-		u32 const y = src.height - 2;
-
-		auto dst_bottom = dst.row_begin(y);
-
-		u32_range_t x_ids(x_begin, x_end);
-
-		auto const gauss = [&](u32 x)
-		{
-			dst_bottom[x] = gauss3(src, x, y);
-		};
-
-		std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), gauss);
-	}
-
-
-	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void gauss_inner_left(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	static void gauss_inner_left_right(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
 		u32 const y_begin = 2;
 		u32 const y_end = src.height - 2;
-		u32 const x = 1;
+		u32 const x_left = 1;
+		u32 const x_right = src.width - 2;
 
-		u32_range_t y_ids(y_begin, y_end);
-
-		auto const gauss = [&](u32 y)
+		for (u32 y = y_begin; y < y_end; ++y)
 		{
-			auto dst_row = dst.row_begin(y);
-			dst_row[x] = gauss3(src, x, y);
-		};
+			auto dst_row = row_begin(dst, y);
 
-		std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), gauss);
-	}
-
-
-	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void gauss_inner_right(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
-	{
-		u32 const y_begin = 2;
-		u32 const y_end = src.height - 2;
-		u32 const x = src.width - 2;
-
-		u32_range_t y_ids(y_begin, y_end);
-
-		auto const gauss = [&](u32 y)
-		{
-			auto dst_row = dst.row_begin(y);
-			dst_row[x] = gauss3(src, x, y);
-		};
-
-		std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), gauss);
+			dst_row[x_left] = gauss3(src, x_left, y);
+			dst_row[x_right] = gauss3(src, x_right, y);
+		}
 	}
 
 
@@ -1964,26 +2142,18 @@ namespace libimage
 	{
 		u32 const x_begin = 2;
 		u32 const x_end = src.width - 2;
-		u32_range_t x_ids(x_begin, x_end);
-
-		auto const gauss_row = [&](u32 y)
-		{
-			auto dst_row = dst.row_begin(y);
-
-			auto const gauss_x = [&](u32 x)
-			{
-				dst_row[x] = gauss5(src, x, y);
-			};
-
-			std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), gauss_x);
-		};
-
 		u32 const y_begin = 2;
 		u32 const y_end = src.height - 2;
 
-		u32_range_t y_ids(y_begin, y_end);
+		for (u32 y = y_begin; y < y_end; ++y)
+		{
+			auto dst_row = row_begin(dst, y);
 
-		std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), gauss_row);
+			for (u32 x = x_begin; x < x_end; ++x)
+			{
+				dst_row[x] = gauss5(src, x, y);
+			}
+		}
 	}
 
 
@@ -1991,16 +2161,12 @@ namespace libimage
 	static void do_blur(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
 		// lambdas in an array
-		std::array<std::function<void()>, 9> f_list =
+		std::array<std::function<void()>, 5> f_list =
 		{
-			[&]() { copy_top(src, dst); },
-			[&]() { copy_bottom(src, dst); } ,
-			[&]() { copy_left(src, dst); } ,
-			[&]() { copy_right(src, dst); },
-			[&]() { gauss_inner_top(src, dst); },
-			[&]() { gauss_inner_bottom(src, dst); },
-			[&]() { gauss_inner_left(src, dst); },
-			[&]() { gauss_inner_right(src, dst); },
+			[&]() { copy_top_bottom(src, dst); },
+			[&]() { copy_left_right(src, dst); },
+			[&]() { gauss_inner_top_bottom(src, dst); },
+			[&]() { gauss_inner_left_right(src, dst); },
 			[&]() { inner_gauss(src, dst); }
 		};
 
@@ -2076,57 +2242,40 @@ namespace libimage
 {
 
 
-
 	template<class GRAY_IMG_T>
-	static void fill_zero(GRAY_IMG_T const& view)
+	static void zero_top_bottom(GRAY_IMG_T const& dst)
 	{
-		std::fill(std::execution::par, view.begin(), view.end(), 0);
+		u32 const x_begin = 0;
+		u32 const x_end = dst.width;
+		u32 const y_top = 0;
+		u32 const y_bottom = dst.height - 1;
+
+		auto const dst_top = row_begin(dst, y_top);
+		auto const dst_bottom = row_begin(dst, y_bottom);
+
+		for (u32 x = x_begin; x < x_end; ++x)
+		{
+			dst_top[x] = 0;
+			dst_bottom[x] = 0;
+		}
 	}
 
 
 	template<class GRAY_IMG_T>
-	static void zero_top(GRAY_IMG_T const& dst)
+	static void zero_left_right(GRAY_IMG_T const& dst)
 	{
-		auto dst_top = row_view(dst, 0);
+		u32 const y_begin = 1;
+		u32 const y_end = dst.height - 1;
+		u32 const x_left = 0;
+		u32 const x_right = dst.width - 1;
 
-		fill_zero(dst_top);
-	}
+		for (u32 y = y_begin; y < y_end; ++y)
+		{
+			auto dst_row = row_begin(dst, y);
 
-
-	template<class GRAY_IMG_T>
-	static void zero_bottom(GRAY_IMG_T const& dst)
-	{
-		auto dst_bottom = row_view(dst, dst.height - 1);
-
-		fill_zero(dst_bottom);
-	}
-
-
-	template<class GRAY_IMG_T>
-	static void zero_left(GRAY_IMG_T const& dst)
-	{
-		Range2Du32 r = {};
-		r.x_begin = 0;
-		r.x_end = 1;
-		r.y_begin = 1;
-		r.y_end = dst.height - 1;
-		auto dst_left = sub_view(dst, r);
-
-		fill_zero(dst_left);
-	}
-
-
-	template<class GRAY_IMG_T>
-	static void zero_right(GRAY_IMG_T const& dst)
-	{
-		Range2Du32 r = {};
-		r.x_begin = dst.width - 1;
-		r.x_end = dst.width;
-		r.y_begin = 1;
-		r.y_end = dst.height - 1;
-		auto dst_right = sub_view(dst, r);
-
-		fill_zero(dst_right);
+			dst_row[x_left] = 0;
+			dst_row[x_right] = 0;
+		}
 	}
 
 
@@ -2135,40 +2284,31 @@ namespace libimage
 	{
 		u32 const x_begin = 1;
 		u32 const x_end = src.width - 1;
-		u32_range_t x_ids(x_begin, x_end);
-
 		u32 const y_begin = 1;
 		u32 const y_end = src.height - 1;
-		u32_range_t y_ids(y_begin, y_end);
 
-		auto const grad_row = [&](u32 y)
+		for (u32 y = y_begin; y < y_end; ++y)
 		{
-			auto dst_row = dst.row_begin(y);
+			auto dst_row = row_begin(dst, y);
 
-			auto const grad_x = [&](u32 x)
+			for (u32 x = x_begin; x < x_end; ++x)
 			{
 				auto gx = x_gradient(src, x, y);
 				auto gy = y_gradient(src, x, y);
 				auto g = (u8)(std::hypot(gx, gy));
 				dst_row[x] = cond(g) ? 255 : 0;
-			};
-
-			std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), grad_x);
-		};
-
-		std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), grad_row);
+			}
+		}
 	}
 
 
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
 	static void do_edges(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst, u8_to_bool_f const& cond)
 	{
-		std::array<std::function<void()>, 5> f_list
+		std::array<std::function<void()>, 3> f_list
 		{
-			[&]() { zero_top(dst); },
-			[&]() { zero_bottom(dst); },
-			[&]() { zero_left(dst); },
-			[&]() { zero_right(dst); },
+			[&]() { zero_top_bottom(dst); },
+			[&]() { zero_left_right(dst); },
 			[&]() { edges_inner(src, dst, cond); }
 		};
 
@@ -2181,40 +2321,31 @@ namespace libimage
 	{
 		u32 const x_begin = 1;
 		u32 const x_end = src.width - 1;
-		u32_range_t x_ids(x_begin, x_end);
-
 		u32 const y_begin = 1;
 		u32 const y_end = src.height - 1;
-		u32_range_t y_ids(y_begin, y_end);
 
-		auto const grad_row = [&](u32 y)
+		for (u32 y = y_begin; y < y_end; ++y)
 		{
-			auto dst_row = dst.row_begin(y);
+			auto dst_row = row_begin(dst, y);
 
-			auto const grad_x = [&](u32 x)
+			for (u32 x = x_begin; x < x_end; ++x)
 			{
 				auto gx = x_gradient(src, x, y);
 				auto gy = y_gradient(src, x, y);
 				auto g = std::hypot(gx, gy);
 				dst_row[x] = (u8)(g);
-			};
-
-			std::for_each(std::execution::par, x_ids.begin(), x_ids.end(), grad_x);
-		};
-
-		std::for_each(std::execution::par, y_ids.begin(), y_ids.end(), grad_row);
+			}
+		}
 	}
 
 
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
 	static void do_gradients(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
-		std::array<std::function<void()>, 5> f_list
+		std::array<std::function<void()>, 3> f_list
 		{
-			[&]() { zero_top(dst); },
-			[&]() { zero_bottom(dst); },
-			[&]() { zero_left(dst); },
-			[&]() { zero_right(dst); },
+			[&]() { zero_top_bottom(dst); },
+			[&]() { zero_left_right(dst); },
 			[&]() { gradients_inner(src, dst); }
 		};
 
@@ -2284,10 +2415,6 @@ namespace libimage
 
 		do_gradients(src, dst);
 	}
-
-
-
-
 }
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
@@ -2336,7 +2463,7 @@ namespace libimage
 			return to_pixel(0, 0, 0);
 		}
 
-		return *src_image.xy_at((u32)floorf(x), (u32)floorf(y));
+		return *xy_at(src_image, (u32)floorf(x), (u32)floorf(y));
 	}
 
 #endif // !LIBIMAGE_NO_COLOR
@@ -2358,7 +2485,7 @@ namespace libimage
 			return 0;
 		}
 
-		return *src_image.xy_at((u32)floorf(x), (u32)floorf(y));
+		return *xy_at(src_image, (u32)floorf(x), (u32)floorf(y));
 	}
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
@@ -2381,7 +2508,7 @@ namespace libimage
 			auto y = i / dst.width;
 			auto x = i - y * dst.width;
 			auto src_pt = find_rotation_src({ x, y }, origin, theta);
-			*dst.xy_at(x, y) = get_color(src, src_pt);
+			*xy_at(dst, x, y) = get_color(src, src_pt);
 		};
 
 		std::for_each(std::execution::par, range.begin(), range.end(), func);
@@ -2476,7 +2603,7 @@ namespace libimage
 			auto y = i / dst.width;
 			auto x = i - y * dst.width;
 			auto src_pt = find_rotation_src({ x, y }, origin, theta);
-			*dst.xy_at(x, y) = get_gray(src, src_pt);
+			*xy_at(dst, x, y) = get_gray(src, src_pt);
 		};
 
 		std::for_each(std::execution::par, range.begin(), range.end(), func);
