@@ -1,16 +1,65 @@
 #include "libimage.hpp"
 
-
-#include <execution>
-
-
 #include <algorithm>
 #include <cmath>
 
 
+#ifndef LIBIMAGE_NO_PARALLEL
+
+#include <execution>
+
+constexpr u32 N_THREADS = 4;
+
+static void for_each(auto& list, auto const& func)
+{
+	std::for_each(std::execution::par, list.begin(), list.end(), func);
+}
+
+#else
+
+constexpr u32 N_THREADS = 1;
+
+static void for_each(auto const& list, auto const& func)
+{
+	std::for_each(list.begin(), list.end(), func);
+}
+
+#endif // !LIBIMAGE_NO_PARALLEL
+
+
+class ThreadProcess
+{
+public:
+	u32 thread_id = 0;
+	std::function<void(u32)> process;
+};
+
+
+using ProcList = std::array<ThreadProcess, N_THREADS>;
+
+
+static ProcList make_proc_list(std::function<void(u32)> const& id_func)
+{
+	ProcList list = { 0 };
+
+	for (u32 i = 0; i < N_THREADS; ++i)
+	{
+		list[i] = { i, id_func };
+	}
+
+	return list;
+}
+
+
+static void execute_procs(ProcList const& list)
+{
+	auto const func = [](ThreadProcess const& t) { t.process(t.thread_id); };
+
+	for_each(list, func);
+}
+
+
 /*  libimage.cpp  */
-
-
 
 namespace libimage
 {
@@ -523,40 +572,6 @@ using u32_range_t = UnsignedRange<unsigned>;
 
 #endif // INDEX_RANGE_IMPL
 
-constexpr u32 N_THREADS = 4;
-
-class ThreadProcess
-{
-public:
-	u32 thread_id;
-	std::function<void(u32)> process;
-};
-
-
-using ProcList = std::array<ThreadProcess, N_THREADS>;
-
-
-static ProcList make_proc_list(std::function<void(u32)> const& id_func)
-{
-	ProcList list = { 0 };
-
-	for (u32 i = 0; i < N_THREADS; ++i)
-	{
-		list[i] = { i, id_func };
-	}
-
-	return list;
-}
-
-
-static void execute_procs(ProcList const& list)
-{
-	// seq or par
-
-	auto const func = [](ThreadProcess const& t) { t.process(t.thread_id); };
-
-	std::for_each(std::execution::par, list.begin(), list.end(), func);
-}
 
 
 template <typename PIXEL_T, class PIXEL_F>
@@ -583,19 +598,42 @@ static void for_each_xy_in_row(u32 y, u32 length, XY_F const& func)
 }
 
 
+template <typename SRC_PIXEL_T, typename DST_PIXEL_T, class SRC_TO_DST_F>
+static void transform_row(SRC_PIXEL_T* src_begin, DST_PIXEL_T* dst_begin, u32 length, SRC_TO_DST_F const& func)
+{
+	for (u32 i = 0; i < length; ++i)
+	{
+		dst_begin[i] = func(src_begin[i]);
+	}
+}
+
+
+template <typename SRC_A_PIXEL_T, typename SRC_B_PIXEL_T, typename DST_PIXEL_T, class SRC_TO_DST_F>
+static void transform_row2(SRC_A_PIXEL_T* src_a_begin, SRC_B_PIXEL_T* src_b_begin, DST_PIXEL_T* dst_begin, u32 length, SRC_TO_DST_F const& func)
+{
+	for (u32 i = 0; i < length; ++i)
+	{
+		dst_begin[i] = func(src_a_begin[i], src_b_begin[i]);
+	}
+}
+
+
 namespace libimage
 {
 	template <class IMG_T, class PIXEL_F>
 	static void for_each_pixel_by_row(IMG_T const& image, PIXEL_F const& func)
 	{
+		auto const height = image.height;
+		auto const width = image.width;
+
 		auto const thread_proc = [&](u32 id) 
 		{
-			auto y_begin = id * image.height / N_THREADS;
-			auto y_end = id == N_THREADS - 1 ? image.height : y_begin + image.height / N_THREADS;
+			auto y_begin = id * height / N_THREADS;
+			auto y_end = id == N_THREADS - 1 ? height : y_begin + height / N_THREADS;
 
 			for (u32 y = y_begin; y < y_end; ++y)
 			{
-				for_each_pixel_in_row(row_begin(image, y), image.width, func);
+				for_each_pixel_in_row(row_begin(image, y), width, func);
 			}
 		};
 
@@ -606,14 +644,17 @@ namespace libimage
 	template <class IMG_T>
 	static void for_each_xy_by_row(IMG_T const& image, std::function<void(u32 x, u32 y)> const& func)
 	{
+		auto const height = image.height;
+		auto const width = image.width;
+
 		auto const thread_proc = [&](u32 id) 
 		{
 			auto y_begin = id * image.height / N_THREADS;
-			auto y_end = id == N_THREADS - 1 ? image.height : y_begin + image.height / N_THREADS;
+			auto y_end = id == N_THREADS - 1 ? height : y_begin + height / N_THREADS;
 
 			for (u32 y = y_begin; y < y_end; ++y)
 			{
-				for_each_xy_in_row(y, image.width, func);
+				for_each_xy_in_row(y, width, func);
 			}
 		};
 
@@ -621,43 +662,45 @@ namespace libimage
 	}
 
 
-	template <typename SRC_PIXEL_T, typename DST_PIXEL_T, class SRC_TO_DST_F>
-	static void transform_row(SRC_PIXEL_T* src_begin, DST_PIXEL_T* dst_begin, u32 length, SRC_TO_DST_F const& func)
-	{
-		for (u32 i = 0; i < length; ++i)
-		{
-			dst_begin[i] = func(src_begin[i]);
-		}
-	}
-
-
 	template <class SRC_IMG_T, class DST_IMG_T, class SRC_TO_DST_F>
 	static void transform_by_row(SRC_IMG_T const& src, DST_IMG_T const& dst, SRC_TO_DST_F const& func)
 	{
-		for (u32 y = 0; y < src.height; ++y)
-		{
-			transform_row(row_begin(src, y), row_begin(dst, y), src.width, func);
-		}
-	}
+		auto const height = src.height;
+		auto const width = src.width;
 
-
-	template <typename SRC_A_PIXEL_T, typename SRC_B_PIXEL_T, typename DST_PIXEL_T, class SRC_TO_DST_F>
-	static void transform_row2(SRC_A_PIXEL_T* src_a_begin, SRC_B_PIXEL_T* src_b_begin, DST_PIXEL_T* dst_begin, u32 length, SRC_TO_DST_F const& func)
-	{
-		for (u32 i = 0; i < length; ++i)
+		auto const thread_proc = [&](u32 id)
 		{
-			dst_begin[i] = func(src_a_begin[i], src_b_begin[i]);
-		}
+			auto y_begin = id * src.height / N_THREADS;
+			auto y_end = id == N_THREADS - 1 ? height : y_begin + height / N_THREADS;
+
+			for (u32 y = y_begin; y < y_end; ++y)
+			{
+				transform_row(row_begin(src, y), row_begin(dst, y), width, func);
+			}
+		};
+
+		execute_procs(make_proc_list(thread_proc));
 	}
 
 
 	template <class SRC_A_IMG_T, class SRC_B_IMG_T, class DST_IMG_T, class SRC_TO_DST_F>
 	static void transform_by_row(SRC_A_IMG_T const& src_a, SRC_B_IMG_T const& src_b, DST_IMG_T const& dst, SRC_TO_DST_F const& func)
 	{
-		for (u32 y = 0; y < src_a.height; ++y)
+		auto const height = src_a.height;
+		auto const width = src_a.width;
+
+		auto const thread_proc = [&](u32 id)
 		{
-			transform_row2(row_begin(src_a, y), row_begin(src_b, y), row_begin(dst, y), src_a.width, func);
-		}
+			auto y_begin = id * height / N_THREADS;
+			auto y_end = id == N_THREADS - 1 ? height : y_begin + height / N_THREADS;
+
+			for (u32 y = y_begin; y < y_end; ++y)
+			{
+				transform_row2(row_begin(src_a, y), row_begin(src_b, y), row_begin(dst, y), width, func);
+			}
+		};
+
+		execute_procs(make_proc_list(thread_proc));
 	}
 
 
@@ -767,14 +810,10 @@ namespace libimage
 
 
 
-/*  transform.cpp  */
-
+/*  transform  */
 
 namespace libimage
 {
-	
-
-
 
 #ifndef LIBIMAGE_NO_COLOR
 
@@ -994,7 +1033,7 @@ namespace libimage
 }
 
 
-/*  copy.cpp  */
+/*  copy  */
 
 namespace libimage
 {
@@ -1081,7 +1120,7 @@ namespace libimage
 
 }
 
-/*  alpha_blend.cpp  */
+/*  alpha_blend  */
 
 #ifndef LIBIMAGE_NO_COLOR
 
@@ -1107,11 +1146,6 @@ namespace libimage
 
 		return to_pixel(red, green, blue);
 	}
-
-
-
-
-
 
 
 	void alpha_blend(Image const& src, Image const& current, Image const& dst)
@@ -1212,7 +1246,7 @@ namespace libimage
 #endif // !LIBIMAGE_NO_COLOR
 
 
-/*  grayscale.cpp  */
+/*  grayscale  */
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 #ifndef LIBIMAGE_NO_COLOR
@@ -1242,8 +1276,6 @@ namespace libimage
 	{
 		return rgb_grayscale_standard(p.red, p.green, p.blue);
 	}
-
-
 
 
 	void grayscale(Image const& src, gray::Image const& dst)
@@ -1287,14 +1319,12 @@ namespace libimage
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
 
-/*  binary.cpp  */
+/*  binary  */
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
 namespace libimage
 {
-
-
 	void binarize(gray::Image const& src, gray::Image const& dst, u8_to_bool_f const& cond)
 	{
 		auto const conv = [&](u8 p) { return cond(p) ? 255 : 0; };
@@ -1671,7 +1701,7 @@ namespace libimage
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
 
-/*  contrast.cpp  */
+/*  contrast  */
 
 constexpr u8 U8_MIN = 0;
 constexpr u8 U8_MAX = 255;
@@ -1700,15 +1730,8 @@ static constexpr u8 lerp_clamp(u8 src_low, u8 src_high, u8 dst_low, u8 dst_high,
 	return dst_low + static_cast<u8>(diff);
 }
 
-
-#endif // !LIBIMAGE_NO_GRAYSCALE
-
-
 namespace libimage
 {
-
-
-#ifndef LIBIMAGE_NO_GRAYSCALE
 
 	void contrast(gray::Image const& src, gray::Image const& dst, u8 src_low, u8 src_high)
 	{
@@ -1758,14 +1781,16 @@ namespace libimage
 		transform_in_place(src_dst, conv);
 	}
 
-#endif // !LIBIMAGE_NO_GRAYSCALE
+
 
 
 
 }
 
+#endif // !LIBIMAGE_NO_GRAYSCALE
 
-/*  convolve.cpp  */
+
+/*  convolve  */
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
@@ -2107,14 +2132,12 @@ namespace libimage
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
 
-/*  blur.cpp  */
+/*  blur  */
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
 namespace libimage
 {
-
-
 
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
 	static void copy_top_bottom(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
@@ -2290,7 +2313,7 @@ namespace libimage
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
 
-/*  edges_gradients.cpp  */
+/*  edges_gradients  */
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
@@ -2368,7 +2391,7 @@ namespace libimage
 			[&]() { edges_inner(src, dst, cond); }
 		};
 
-		std::for_each(std::execution::par, f_list.begin(), f_list.end(), [](auto const& f) { f(); });
+		for_each(f_list, [](auto const& f) { f(); });
 	}
 
 
@@ -2405,7 +2428,7 @@ namespace libimage
 			[&]() { gradients_inner(src, dst); }
 		};
 
-		std::for_each(std::execution::par, f_list.begin(), f_list.end(), [](auto const& f) { f(); });
+		for_each(f_list, [](auto const& f) { f(); });
 	}
 
 
@@ -2476,7 +2499,7 @@ namespace libimage
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
 
-/*  rotate.cpp  */
+/*  rotate  */
 
 static Point2Dr32 find_rotation_src(Point2Du32 const& pt, Point2Du32 const& origin, r32 theta_rotate)
 {
@@ -2567,7 +2590,7 @@ namespace libimage
 			*xy_at(dst, x, y) = get_color(src, src_pt);
 		};
 
-		std::for_each(std::execution::par, range.begin(), range.end(), func);
+		for_each(range, func);
 	}
 
 
@@ -2662,7 +2685,7 @@ namespace libimage
 			*xy_at(dst, x, y) = get_gray(src, src_pt);
 		};
 
-		std::for_each(std::execution::par, range.begin(), range.end(), func);
+		for_each(range, func);
 	}
 
 
