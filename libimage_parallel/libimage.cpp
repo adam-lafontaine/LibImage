@@ -525,82 +525,99 @@ using u32_range_t = UnsignedRange<unsigned>;
 
 constexpr u32 N_THREADS = 4;
 
+class ThreadProcess
+{
+public:
+	u32 thread_id;
+	std::function<void(u32)> process;
+};
+
+
+using ProcList = std::array<ThreadProcess, N_THREADS>;
+
+
+static ProcList make_proc_list(std::function<void(u32)> const& id_func)
+{
+	ProcList list = { 0 };
+
+	for (u32 i = 0; i < N_THREADS; ++i)
+	{
+		list[i] = { i, id_func };
+	}
+
+	return list;
+}
+
+
+static void execute_procs(ProcList const& list)
+{
+	// seq or par
+
+	auto const func = [](ThreadProcess const& t) { t.process(t.thread_id); };
+
+	std::for_each(std::execution::par, list.begin(), list.end(), func);
+}
+
+
+template <typename PIXEL_T, class PIXEL_F>
+static void for_each_pixel_in_row(PIXEL_T* row_begin, u32 length, PIXEL_F const& func)
+{
+	// simd ?
+
+	for (u32 i = 0; i < length; ++i)
+	{
+		func(row_begin[i]);
+	}
+}
+
+
+template <class XY_F>
+static void for_each_xy_in_row(u32 y, u32 length, XY_F const& func)
+{
+	// simd ?
+
+	for (u32 x = 0; x < length; ++x)
+	{
+		func(x, y);
+	}
+}
+
 
 namespace libimage
 {
-	template <typename PIXEL_T, class PIXEL_F>
-	static void for_each_pixel_in_row(PIXEL_T* row_begin, u32 length, PIXEL_F const& func)
-	{
-		for (u32 i = 0; i < length; ++i)
-		{
-			func(row_begin[i]);
-		}
-	}
-
-
 	template <class IMG_T, class PIXEL_F>
 	static void for_each_pixel_by_row(IMG_T const& image, PIXEL_F const& func)
 	{
-		/*std::array<std::function<void()>, N_THREADS> procs = { 0 };
-
-		for (u32 i = 0; i < N_THREADS; ++i)
+		auto const thread_proc = [&](u32 id) 
 		{
-			procs[i] = [&]() 
+			auto y_begin = id * image.height / N_THREADS;
+			auto y_end = id == N_THREADS - 1 ? image.height : y_begin + image.height / N_THREADS;
+
+			for (u32 y = y_begin; y < y_end; ++y)
 			{
-				auto y_begin = i * image.height / N_THREADS;
-				auto y_end = i == N_THREADS - 1 ? image.height : y_begin + image.height / N_THREADS;
+				for_each_pixel_in_row(row_begin(image, y), image.width, func);
+			}
+		};
 
-				for (u32 y = y_begin; y < y_end; ++y)
-				{
-					for_each_pixel_in_row(row_begin(image, y), image.width, func);
-				}
-			};
-		}
-
-		std::for_each(std::execution::par, procs.begin(), procs.end(), [](auto const& f) { f(); });*/
-
-
-		for (u32 y = 0; y < image.height; ++y)
-		{
-			for_each_pixel_in_row(row_begin(image, y), image.width, func);
-		}
-	}
-
-
-	static void for_each_xy_in_row(u32 y, u32 length, std::function<void(u32 x, u32 y)> const& func)
-	{
-		for (u32 x = 0; x < length; ++x)
-		{
-			func(x, y);
-		}
+		execute_procs(make_proc_list(thread_proc));
 	}
 
 
 	template <class IMG_T>
 	static void for_each_xy_by_row(IMG_T const& image, std::function<void(u32 x, u32 y)> const& func)
 	{
-		/*std::array<std::function<void()>, N_THREADS> procs = { 0 };
-
-		for (u32 i = 0; i < N_THREADS; ++i)
+		auto const thread_proc = [&](u32 id) 
 		{
-			auto y_begin = i * image.height / N_THREADS;
-			auto y_end = i == N_THREADS - 1 ? image.height : y_begin + image.height / N_THREADS;
+			auto y_begin = id * image.height / N_THREADS;
+			auto y_end = id == N_THREADS - 1 ? image.height : y_begin + image.height / N_THREADS;
 
-			procs[i] = [&]()
+			for (u32 y = y_begin; y < y_end; ++y)
 			{
-				for (u32 y = y_begin; y < y_end; ++y)
-				{
-					for_each_xy_in_row(y, image.width, func);
-				}
-			};
-		}
+				for_each_xy_in_row(y, image.width, func);
+			}
+		};
 
-		std::for_each(std::execution::par, procs.begin(), procs.end(), [](auto const& f) { f(); });*/
-
-		for (u32 y = 0; y < image.height; ++y)
-		{
-			for_each_xy_in_row(y, image.width, func);
-		}
+		execute_procs(make_proc_list(thread_proc));
 	}
 
 
