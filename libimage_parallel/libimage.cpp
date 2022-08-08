@@ -4,6 +4,12 @@
 #include <cmath>
 
 
+static void do_for_each_seq(auto& list, auto const& func)
+{
+	std::for_each(list.begin(), list.end(), func);
+}
+
+
 #ifndef LIBIMAGE_NO_PARALLEL
 
 #include <execution>
@@ -21,7 +27,7 @@ constexpr u32 N_THREADS = 1;
 
 static void do_for_each(auto const& list, auto const& func)
 {
-	std::for_each(list.begin(), list.end(), func);
+	do_for_each_seq(list, func);
 }
 
 #endif // !LIBIMAGE_NO_PARALLEL
@@ -1770,44 +1776,6 @@ namespace libimage
 
 namespace libimage
 {
-	static inline void left_2_wide(Range2Du32& range, u32 x, u32 width)
-	{
-		// left (2 wide)
-		assert(x <= width - 2);
-		range.x_begin = x;
-		range.x_end = x + 2;
-	}
-
-
-	static inline void right_2_wide(Range2Du32& range, u32 x, u32 width)
-	{
-		// right (2 wide)
-		assert(x >= 1);
-		assert(x <= width - 1);
-		range.x_begin = x - 1;
-		range.x_end = x + 1;
-	}
-
-
-	static inline void top_2_high(Range2Du32& range, u32 y, u32 height)
-	{
-		// top (2 high)
-		assert(y <= height - 2);
-		range.y_begin = y;
-		range.y_end = y + 2;
-	}
-
-
-	static inline void bottom_2_high(Range2Du32& range, u32 y, u32 height)
-	{
-		// bottom (2 high)
-		assert(y >= 1);
-		assert(y <= height - 1);
-		range.y_begin = y - 1;
-		range.y_end = y + 1;
-	}
-
-
 	static inline void top_or_bottom_3_high(Range2Du32& range, u32 y, u32 height)
 	{
 		// top or bottom (3 high)
@@ -2079,7 +2047,7 @@ namespace libimage
 			[&]() { inner_gauss(src, dst); }
 		};
 
-		do_for_each(f_list, [](auto const& f) { f(); });
+		do_for_each_seq(f_list, [](auto const& f) { f(); });
 	}
 
 
@@ -2246,7 +2214,7 @@ namespace libimage
 			[&]() { edges_inner(src, dst, cond); }
 		};
 
-		do_for_each(f_list, [](auto const& f) { f(); });
+		do_for_each_seq(f_list, [](auto const& f) { f(); });
 	}
 
 
@@ -2278,7 +2246,7 @@ namespace libimage
 			[&]() { gradients_inner(src, dst); }
 		};
 
-		do_for_each(f_list, [](auto const& f) { f(); });
+		do_for_each_seq(f_list, [](auto const& f) { f(); });
 	}
 
 
