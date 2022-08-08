@@ -475,6 +475,12 @@ namespace libimage
 
 namespace libimage
 {
+	using pixel_f = std::function<void(Pixel& p)>;
+
+	using u8_f = std::function<void(u8& p)>;
+
+	using xy_f = std::function<void(u32 x, u32 y)>;
+
 	using u8_to_bool_f = std::function<bool(u8)>;
 
 	using pixel_to_bool_f = std::function<bool(Pixel)>;
@@ -493,25 +499,25 @@ namespace libimage
 {
 #ifndef LIBIMAGE_NO_COLOR	
 
-	void for_each_pixel(Image const& image, std::function<void(Pixel& p)> const& func);
+	void for_each_pixel(Image const& image, pixel_f const& func);
 
-	void for_each_pixel(View const& view, std::function<void(Pixel& p)> const& func);
+	void for_each_pixel(View const& view, pixel_f const& func);
 
-	void for_each_xy(Image const& image, std::function<void(u32 x, u32 y)> const& func);
+	void for_each_xy(Image const& image, xy_f const& func);
 
-	void for_each_xy(View const& view, std::function<void(u32 x, u32 y)> const& func);
+	void for_each_xy(View const& view, xy_f const& func);
 
 #endif // !LIBIMAGE_NO_COLOR
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-	void for_each_pixel(gray::Image const& image, std::function<void(gray::Pixel& p)> const& func);
+	void for_each_pixel(gray::Image const& image, u8_f const& func);
 
-	void for_each_pixel(gray::View const& view, std::function<void(gray::Pixel& p)> const& func);
+	void for_each_pixel(gray::View const& view, u8_f const& func);
 
-	void for_each_pixel(gray::Image const& image, std::function<void(u32 x, u32 y)> const& func);
+	void for_each_xy(gray::Image const& image, xy_f const& func);
 
-	void for_each_pixel(gray::View const& view, std::function<void(u32 x, u32 y)> const& func);
+	void for_each_xy(gray::View const& view, xy_f const& func);
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 }

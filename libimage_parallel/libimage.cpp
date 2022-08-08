@@ -10,7 +10,7 @@
 
 constexpr u32 N_THREADS = 8;
 
-static void for_each(auto& list, auto const& func)
+static void do_for_each(auto& list, auto const& func)
 {
 	std::for_each(std::execution::par, list.begin(), list.end(), func);
 }
@@ -19,7 +19,7 @@ static void for_each(auto& list, auto const& func)
 
 constexpr u32 N_THREADS = 1;
 
-static void for_each(auto const& list, auto const& func)
+static void do_for_each(auto const& list, auto const& func)
 {
 	std::for_each(list.begin(), list.end(), func);
 }
@@ -55,7 +55,7 @@ static void execute_procs(ProcList const& list)
 {
 	auto const func = [](ThreadProcess const& t) { t.process(t.thread_id); };
 
-	for_each(list, func);
+	do_for_each(list, func);
 }
 
 
@@ -380,7 +380,7 @@ namespace libimage
 }
 
 
-/*  verify.hpp  */
+/*  verify  */
 
 namespace libimage
 {
@@ -498,81 +498,7 @@ namespace libimage
 }
 
 
-/*  index_range.hpp  */
-
-#define INDEX_RANGE_IMPL
-#ifdef INDEX_RANGE_IMPL
-
-template<typename UINT>
-class UnsignedRange
-{
-public:
-
-	using index_type = UINT;
-
-	class iterator
-	{
-	public:
-		using iterator_category = std::forward_iterator_tag;
-		using value_type = index_type;
-		using difference_type = std::ptrdiff_t;
-		using pointer = const value_type*;
-		using reference = value_type;
-
-		value_type m_val;
-
-		explicit iterator() : m_val(0) {}
-
-		explicit iterator(value_type val) : m_val(val) {}
-
-		reference operator*() const { return m_val; }
-		iterator& operator++() { ++m_val; return *this; }
-		iterator operator++(int) { iterator retval = *this; ++(*this); return retval; }
-		bool operator==(iterator other) const { return m_val == other.m_val; }
-		bool operator!=(iterator other) const { return !(*this == other); }
-	};
-
-private:
-
-	index_type m_min = 0;
-	index_type m_max = 1;
-
-	template<typename INT_T>
-	index_type to_min(INT_T val) { return val < 0 ? 0 : static_cast<index_type>(val); }
-
-	template<typename INT_T>
-	index_type to_max(INT_T val) { return val < 1 ? 0 : static_cast<index_type>(val - 1); }
-
-public:
-
-	template<typename INT_T>
-	UnsignedRange(INT_T size) : m_max(to_max(size)) {}
-
-	template<typename INT_T>
-	UnsignedRange(INT_T begin, INT_T end)
-	{
-		if (end >= begin)
-		{
-			m_min = to_min(begin);
-			m_max = to_max(end);
-		}
-		else
-		{
-			m_min = to_min(end);
-			m_max = to_max(begin);
-		}
-	}
-
-	iterator begin() { return iterator(m_min); }
-	iterator end() { return iterator(m_max + 1); }
-};
-
-using u32_range_t = UnsignedRange<unsigned>;
-
-
-#endif // INDEX_RANGE_IMPL
-
-
+// TODO: simd specializations
 
 template <typename PIXEL_T, class PIXEL_F>
 static void for_each_pixel_in_row(PIXEL_T* row_begin, u32 length, PIXEL_F const& func)
@@ -587,14 +513,21 @@ static void for_each_pixel_in_row(PIXEL_T* row_begin, u32 length, PIXEL_F const&
 
 
 template <class XY_F>
-static void for_each_xy_in_row(u32 y, u32 length, XY_F const& func)
+static void for_each_xy_in_row(u32 y, u32 x_begin, u32 length, XY_F const& func)
 {
-	// simd ?
-
-	for (u32 x = 0; x < length; ++x)
+	for (u32 x = x_begin; x < length; ++x)
 	{
 		func(x, y);
 	}
+}
+
+
+template <class XY_F>
+static void for_each_xy_in_row(u32 y, u32 length, XY_F const& func)
+{
+	auto x_begin = 0;
+
+	for_each_xy_in_row(y, x_begin, length, func);
 }
 
 
@@ -618,23 +551,68 @@ static void transform_row2(SRC_A_PIXEL_T* src_a_begin, SRC_B_PIXEL_T* src_b_begi
 }
 
 
+template <class IMG_T>
+static Range2Du32 make_range(IMG_T const& img)
+{
+	Range2Du32 r{};
+
+	r.x_begin = 0;
+	r.x_end = img.width;
+	r.y_begin = 0;
+	r.y_end = img.height;
+
+	return r;
+}
+
+
+template <class IMG_T>
+static void for_each_xy_in_range_by_row(IMG_T const& image, Range2Du32 const& range, std::function<void(u32 x, u32 y)> const& func)
+{
+	auto const height = range.y_end - range.y_begin;
+	auto const width = range.x_end - range.x_begin;
+	auto const rows_per_thread = height / N_THREADS;
+
+	auto const thread_proc = [&](u32 id)
+	{
+		auto y_begin = range.y_begin + id * rows_per_thread;
+		auto y_end = range.y_begin + (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
+
+		for (u32 y = y_begin; y < y_end; ++y)
+		{
+			for_each_xy_in_row(y, range.x_begin, width, func);
+		}
+	};
+
+	execute_procs(make_proc_list(thread_proc));
+}
+
+
+template <class IMG_T>
+static void for_each_xy_by_row(IMG_T const& image, std::function<void(u32 x, u32 y)> const& func)
+{
+	auto const range = make_range(image);
+	for_each_xy_in_range_by_row(image, range, func);
+}
+
+
 namespace libimage
 {
 	template <class IMG_T, class PIXEL_F>
-	static void for_each_pixel_by_row(IMG_T const& image, PIXEL_F const& func)
+	static void for_each_pixel_in_range_by_row(IMG_T const& image, Range2Du32 const& range, PIXEL_F const& func)
 	{
-		auto const height = image.height;
-		auto const width = image.width;
+		auto const height = range.y_end - range.y_begin;
+		auto const width = range.x_end - range.x_begin;
 		auto const rows_per_thread = height / N_THREADS;
 
-		auto const thread_proc = [&](u32 id) 
+		auto const thread_proc = [&](u32 id)
 		{
-			auto y_begin = id * rows_per_thread;
-			auto y_end = id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread;
+			auto y_begin = range.y_begin + id * rows_per_thread;
+			auto y_end = range.y_begin + (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
 
 			for (u32 y = y_begin; y < y_end; ++y)
 			{
-				for_each_pixel_in_row(row_begin(image, y), width, func);
+				auto img_begin = row_begin(image, y) + range.x_begin;
+				for_each_pixel_in_row(img_begin, width, func);
 			}
 		};
 
@@ -642,25 +620,11 @@ namespace libimage
 	}
 
 
-	template <class IMG_T>
-	static void for_each_xy_by_row(IMG_T const& image, std::function<void(u32 x, u32 y)> const& func)
+	template <class IMG_T, class PIXEL_F>
+	static void for_each_pixel_by_row(IMG_T const& image, PIXEL_F const& func)
 	{
-		auto const height = image.height;
-		auto const width = image.width;
-		auto const rows_per_thread = height / N_THREADS;
-
-		auto const thread_proc = [&](u32 id) 
-		{
-			auto y_begin = id * rows_per_thread;
-			auto y_end = id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread;
-
-			for (u32 y = y_begin; y < y_end; ++y)
-			{
-				for_each_xy_in_row(y, width, func);
-			}
-		};
-
-		execute_procs(make_proc_list(thread_proc));
+		auto range = make_range(image);
+		for_each_pixel_in_range_by_row(image, range, func);
 	}
 
 
@@ -719,25 +683,25 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR
 
-	void for_each_pixel(Image const& image, std::function<void(Pixel&)> const& func)
+	void for_each_pixel(Image const& image, pixel_f const& func)
 	{
 		for_each_pixel_by_row(image, func);
 	}
 
 
-	void for_each_pixel(View const& view, std::function<void(Pixel&)> const& func)
+	void for_each_pixel(View const& view, pixel_f const& func)
 	{
 		for_each_pixel_by_row(view, func);
 	}
 
 
-	void for_each_xy(Image const& image, std::function<void(u32 x, u32 y)> const& func)
+	void for_each_xy(Image const& image, xy_f const& func)
 	{
 		for_each_xy_by_row(image, func);
 	}
 
 
-	void for_each_xy(View const& view, std::function<void(u32 x, u32 y)> const& func)
+	void for_each_xy(View const& view, xy_f const& func)
 	{
 		for_each_xy_by_row(view, func);
 	}
@@ -746,25 +710,25 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-	void for_each_pixel(gray::Image const& image, std::function<void(gray::Pixel& p)> const& func)
+	void for_each_pixel(gray::Image const& image, u8_f const& func)
 	{
 		for_each_pixel_by_row(image, func);
 	}
 
 
-	void for_each_pixel(gray::View const& view, std::function<void(gray::Pixel& p)> const& func)
+	void for_each_pixel(gray::View const& view, u8_f const& func)
 	{
 		for_each_pixel_by_row(view, func);
 	}
 
 
-	void for_each_xy(gray::Image const& image, std::function<void(u32 x, u32 y)> const& func)
+	void for_each_xy(gray::Image const& image, xy_f const& func)
 	{
 		for_each_xy_by_row(image, func);
 	}
 
 
-	void for_each_xy(gray::View const& view, std::function<void(u32 x, u32 y)> const& func)
+	void for_each_xy(gray::View const& view, xy_f const& func)
 	{
 		for_each_xy_by_row(view, func);
 	}
@@ -891,9 +855,14 @@ namespace libimage
 	{
 		lookup_table_t lut = { 0 };
 
-		u32_range_t ids(0u, 256u);
+		/*u32_range_t ids(0u, 256u);
 
-		std::for_each(ids.begin(), ids.end(), [&](u32 id) { lut[id] = func(id); });
+		std::for_each(ids.begin(), ids.end(), [&](u32 id) { lut[id] = func(id); });*/
+
+		for (u32 i = 0; i < 256; ++i)
+		{
+			lut[i] = func(i);
+		}
 
 		return lut;
 	}
@@ -1408,7 +1377,7 @@ namespace libimage
 	template <class GRAY_IMG_T>
 	Point2Du32 do_centroid(GRAY_IMG_T const& src, u8_to_bool_f const& func)
 	{
-		constexpr u32 n_threads = 20;
+		constexpr u32 n_threads = N_THREADS;
 		u32 h = src.height / n_threads;
 
 		std::array<u32, n_threads> thread_totals = { 0 };
@@ -1447,9 +1416,10 @@ namespace libimage
 			thread_x_totals = { 0 };
 			thread_y_totals = { 0 };
 
-			u32_range_t rows(y_begin, y_begin + n_threads);
-
-			std::for_each(rows.begin(), rows.end(), row_func);
+			for (u32 y = y_begin; y < y_begin + n_threads; ++y)
+			{
+				row_func(y);
+			}
 
 			for (u32 i = 0; i < n_threads; ++i)
 			{
@@ -1926,110 +1896,6 @@ namespace libimage
 	}
 
 
-	template<class GRAY_Image>
-	static r32 weighted_top_left(GRAY_Image const& img, u32 x, u32 y, std::array<r32, 4> const& weights)
-	{
-		Range2Du32 range = {};
-
-		top_2_high(range, y, img.height);
-
-		left_2_wide(range, x, img.width);
-
-		return apply_weights(img, range, weights);
-	}
-
-
-	template<class GRAY_Image>
-	static r32 weighted_top_right(GRAY_Image const& img, u32 x, u32 y, std::array<r32, 4> const& weights)
-	{
-		Range2Du32 range = {};
-
-		top_2_high(range, y, img.height);
-
-		right_2_wide(range, x, img.width);
-
-		return apply_weights(img, range, weights);
-	}
-
-
-	template<class GRAY_Image>
-	static r32 weighted_bottom_left(GRAY_Image const& img, u32 x, u32 y, std::array<r32, 4> const& weights)
-	{
-		Range2Du32 range = {};
-
-		bottom_2_high(range, y, img.width);
-
-		left_2_wide(range, x, img.width);
-
-		return apply_weights(img, range, weights);
-	}
-
-
-	template<class GRAY_Image>
-	static r32 weighted_bottom_right(GRAY_Image const& img, u32 x, u32 y, std::array<r32, 4> const& weights)
-	{
-		Range2Du32 range = {};
-
-		bottom_2_high(range, y, img.width);
-
-		right_2_wide(range, x, img.width);
-
-		return apply_weights(img, range, weights);
-	}
-
-
-	template<class GRAY_Image>
-	static r32 weighted_top(GRAY_Image const& img, u32 x, u32 y, std::array<r32, 6> const& weights)
-	{
-		Range2Du32 range = {};
-
-		top_2_high(range, y, img.height);
-
-		left_or_right_3_wide(range, x, img.width);
-
-		return apply_weights(img, range, weights);
-	}
-
-
-	template<class GRAY_Image>
-	static r32 weighted_bottom(GRAY_Image const& img, u32 x, u32 y, std::array<r32, 6> const& weights)
-	{
-		Range2Du32 range = {};
-
-		bottom_2_high(range, y, img.width);
-
-		left_or_right_3_wide(range, x, img.width);
-
-		return apply_weights(img, range, weights);
-	}
-
-
-	template<class GRAY_Image>
-	static r32 weighted_left(GRAY_Image const& img, u32 x, u32 y, std::array<r32, 6> const& weights)
-	{
-		Range2Du32 range = {};
-
-		top_or_bottom_3_high(range, y, img.height);
-
-		left_2_wide(range, x, img.width);
-
-		return apply_weights(img, range, weights);
-	}
-
-
-	template<class GRAY_Image>
-	static r32 weighted_right(GRAY_Image const& img, u32 x, u32 y, std::array<r32, 6> const& weights)
-	{
-		Range2Du32 range = {};
-
-		top_or_bottom_3_high(range, y, img.height);
-
-		right_2_wide(range, x, img.width);
-
-		return apply_weights(img, range, weights);
-	}
-
-
 	constexpr r32 D3 = 16.0f;
 	constexpr std::array<r32, 9> GAUSS_3X3
 	{
@@ -2065,20 +1931,10 @@ namespace libimage
 	};
 
 
-	u8 gauss3(gray::Image const& img, u32 x, u32 y)
+	template<class GRAY_Image>
+	u8 gauss3(GRAY_Image const& img, u32 x, u32 y)
 	{
 		auto p = weighted_center(img, x, y, GAUSS_3X3);
-
-		assert(p >= 0.0f);
-		assert(p <= 255.0f);
-
-		return (u8)(p);
-	}
-
-
-	u8 gauss3(gray::View const& view, u32 x, u32 y)
-	{
-		auto p = weighted_center(view, x, y, GAUSS_3X3);
 
 		assert(p >= 0.0f);
 		assert(p <= 255.0f);
@@ -2106,30 +1962,6 @@ namespace libimage
 		assert(p <= 255.0f);
 
 		return (u8)(p);
-	}
-
-
-	r32 x_gradient(gray::Image const& img, u32 x, u32 y)
-	{
-		return weighted_center(img, x, y, GRAD_X_3X3);
-	}
-
-
-	r32 x_gradient(gray::View const& view, u32 x, u32 y)
-	{
-		return weighted_center(view, x, y, GRAD_X_3X3);
-	}
-
-
-	r32 y_gradient(gray::Image const& img, u32 x, u32 y)
-	{
-		return weighted_center(img, x, y, GRAD_Y_3X3);
-	}
-
-
-	r32 y_gradient(gray::View const& view, u32 x, u32 y)
-	{
-		return weighted_center(view, x, y, GRAD_Y_3X3);
 	}
 }
 
@@ -2223,27 +2055,21 @@ namespace libimage
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
 	static void inner_gauss(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
-		u32 const x_begin = 2;
-		u32 const x_end = src.width - 2;
-		u32 const y_begin = 2;
-		u32 const y_end = src.height - 2;
+		Range2Du32 r{};
+		r.x_begin = 2;
+		r.x_end = src.width - 2;
+		r.y_begin = 2;
+		r.y_end = src.height - 2;
 
-		for (u32 y = y_begin; y < y_end; ++y)
-		{
-			auto dst_row = row_begin(dst, y);
+		auto const func = [&](u32 x, u32 y) { *xy_at(dst, x, y) = gauss5(src, x, y); };
 
-			for (u32 x = x_begin; x < x_end; ++x)
-			{
-				dst_row[x] = gauss5(src, x, y);
-			}
-		}
+		for_each_xy_in_range_by_row(src, r, func);
 	}
 
 
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
 	static void do_blur(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
-		// lambdas in an array
 		std::array<std::function<void()>, 5> f_list =
 		{
 			[&]() { copy_top_bottom(src, dst); },
@@ -2253,8 +2079,7 @@ namespace libimage
 			[&]() { inner_gauss(src, dst); }
 		};
 
-		// execute everything
-		std::for_each(std::execution::par, f_list.begin(), f_list.end(), [](auto const& f) { f(); });
+		do_for_each(f_list, [](auto const& f) { f(); });
 	}
 
 
@@ -2362,26 +2187,52 @@ namespace libimage
 	}
 
 
+	template <typename GR_IMG_T>
+	static r32 gradient_at_xy(GR_IMG_T const& img, u32 x, u32 y)
+	{
+		r32 grad_x = 0.0f;
+		r32 grad_y = 0.0f;
+
+		// x, y range
+		auto x_begin = x - 1;
+		auto x_end = x + 2;
+		auto y_begin = y - 1;
+		auto y_end = y + 2;
+
+		u32 a = 0; // array index
+
+		for (u32 v = y_begin; v < y_end; ++v)
+		{
+			for (u32 u = x_begin; u < x_end; ++u)
+			{
+				auto p = *xy_at(img, u, v);
+
+				grad_x += GRAD_X_3X3[a] * p;
+				grad_y += GRAD_Y_3X3[a] * p;
+				++a;
+			}
+		}
+
+		return std::hypot(grad_x, grad_y);
+	}
+
+
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
 	static void edges_inner(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst, u8_to_bool_f const& cond)
 	{
-		u32 const x_begin = 1;
-		u32 const x_end = src.width - 1;
-		u32 const y_begin = 1;
-		u32 const y_end = src.height - 1;
+		Range2Du32 r{};
+		r.x_begin = 1;
+		r.x_end = src.width - 1;
+		r.y_begin = 1;
+		r.y_end = src.height - 1;
 
-		for (u32 y = y_begin; y < y_end; ++y)
-		{
-			auto dst_row = row_begin(dst, y);
+		auto const func = [&](u32 x, u32 y) 
+		{ 
+			auto g = (u8)gradient_at_xy(src, x, y);
+			*xy_at(dst, x, y) = cond(g) ? 255 : 0;
+		};
 
-			for (u32 x = x_begin; x < x_end; ++x)
-			{
-				auto gx = x_gradient(src, x, y);
-				auto gy = y_gradient(src, x, y);
-				auto g = (u8)(std::hypot(gx, gy));
-				dst_row[x] = cond(g) ? 255 : 0;
-			}
-		}
+		for_each_xy_in_range_by_row(src, r, func);
 	}
 
 
@@ -2395,30 +2246,25 @@ namespace libimage
 			[&]() { edges_inner(src, dst, cond); }
 		};
 
-		for_each(f_list, [](auto const& f) { f(); });
+		do_for_each(f_list, [](auto const& f) { f(); });
 	}
 
 
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
 	static void gradients_inner(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
-		u32 const x_begin = 1;
-		u32 const x_end = src.width - 1;
-		u32 const y_begin = 1;
-		u32 const y_end = src.height - 1;
+		Range2Du32 r{};
+		r.x_begin = 1;
+		r.x_end = src.width - 1;
+		r.y_begin = 1;
+		r.y_end = src.height - 1;
 
-		for (u32 y = y_begin; y < y_end; ++y)
+		auto const func = [&](u32 x, u32 y)
 		{
-			auto dst_row = row_begin(dst, y);
+			*xy_at(dst, x, y) = (u8)gradient_at_xy(src, x, y);
+		};
 
-			for (u32 x = x_begin; x < x_end; ++x)
-			{
-				auto gx = x_gradient(src, x, y);
-				auto gy = y_gradient(src, x, y);
-				auto g = std::hypot(gx, gy);
-				dst_row[x] = (u8)(g);
-			}
-		}
+		for_each_xy_in_range_by_row(src, r, func);
 	}
 
 
@@ -2432,7 +2278,7 @@ namespace libimage
 			[&]() { gradients_inner(src, dst); }
 		};
 
-		for_each(f_list, [](auto const& f) { f(); });
+		do_for_each(f_list, [](auto const& f) { f(); });
 	}
 
 
@@ -2580,21 +2426,17 @@ namespace libimage
 
 
 	template <typename IMG_SRC_T, typename IMG_DST_T>
-	static void rotate_par(IMG_SRC_T const& src, IMG_DST_T const& dst, u32 origin_x, u32 origin_y, r32 theta)
+	static void do_rotate(IMG_SRC_T const& src, IMG_DST_T const& dst, u32 origin_x, u32 origin_y, r32 theta)
 	{
 		Point2Du32 origin = { origin_x, origin_y };
 
-		u32_range_t range(dst.width * dst.height);
-
-		auto const func = [&](u32 i)
+		auto const func = [&](u32 x, u32 y) 
 		{
-			auto y = i / dst.width;
-			auto x = i - y * dst.width;
 			auto src_pt = find_rotation_src({ x, y }, origin, theta);
 			*xy_at(dst, x, y) = get_color(src, src_pt);
 		};
 
-		for_each(range, func);
+		for_each_xy(src, func);
 	}
 
 
@@ -2603,7 +2445,7 @@ namespace libimage
 		assert(verify(src));
 		assert(verify(dst));
 
-		rotate_par(src, dst, origin_x, origin_y, theta);
+		do_rotate(src, dst, origin_x, origin_y, theta);
 	}
 
 
@@ -2612,7 +2454,7 @@ namespace libimage
 		assert(verify(src));
 		assert(verify(dst));
 
-		rotate_par(src, dst, origin_x, origin_y, theta);
+		do_rotate(src, dst, origin_x, origin_y, theta);
 	}
 
 
@@ -2621,7 +2463,7 @@ namespace libimage
 		assert(verify(src));
 		assert(verify(dst));
 
-		rotate_par(src, dst, origin_x, origin_y, theta);
+		do_rotate(src, dst, origin_x, origin_y, theta);
 	}
 
 
@@ -2630,7 +2472,7 @@ namespace libimage
 		assert(verify(src));
 		assert(verify(dst));
 
-		rotate_par(src, dst, origin_x, origin_y, theta);
+		do_rotate(src, dst, origin_x, origin_y, theta);
 	}
 
 
@@ -2639,7 +2481,7 @@ namespace libimage
 		assert(verify(src));
 		assert(verify(dst));
 
-		rotate_par(src, dst, origin.x, origin.y, theta);
+		do_rotate(src, dst, origin.x, origin.y, theta);
 	}
 
 
@@ -2648,7 +2490,7 @@ namespace libimage
 		assert(verify(src));
 		assert(verify(dst));
 
-		rotate_par(src, dst, origin.x, origin.y, theta);
+		do_rotate(src, dst, origin.x, origin.y, theta);
 	}
 
 
@@ -2657,7 +2499,7 @@ namespace libimage
 		assert(verify(src));
 		assert(verify(dst));
 
-		rotate_par(src, dst, origin.x, origin.y, theta);
+		do_rotate(src, dst, origin.x, origin.y, theta);
 	}
 
 
@@ -2666,7 +2508,7 @@ namespace libimage
 		assert(verify(src));
 		assert(verify(dst));
 
-		rotate_par(src, dst, origin.x, origin.y, theta);
+		do_rotate(src, dst, origin.x, origin.y, theta);
 	}
 
 
@@ -2675,21 +2517,17 @@ namespace libimage
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
 	template <typename GR_IMG_SRC_T, typename GR_IMG_DST_T>
-	static void rotate_par_gray(GR_IMG_SRC_T const& src, GR_IMG_DST_T const& dst, u32 origin_x, u32 origin_y, r32 theta)
+	static void do_rotate_gray(GR_IMG_SRC_T const& src, GR_IMG_DST_T const& dst, u32 origin_x, u32 origin_y, r32 theta)
 	{
 		Point2Du32 origin = { origin_x, origin_y };
 
-		u32_range_t range(dst.width * dst.height);
-
-		auto const func = [&](u32 i)
+		auto const func = [&](u32 x, u32 y) 
 		{
-			auto y = i / dst.width;
-			auto x = i - y * dst.width;
 			auto src_pt = find_rotation_src({ x, y }, origin, theta);
 			*xy_at(dst, x, y) = get_gray(src, src_pt);
 		};
 
-		for_each(range, func);
+		for_each_xy(src, func);
 	}
 
 
@@ -2698,7 +2536,7 @@ namespace libimage
 		assert(verify(src));
 		assert(verify(dst));
 
-		rotate_par_gray(src, dst, origin_x, origin_y, theta);
+		do_rotate_gray(src, dst, origin_x, origin_y, theta);
 	}
 
 
@@ -2707,7 +2545,7 @@ namespace libimage
 		assert(verify(src));
 		assert(verify(dst));
 
-		rotate_par_gray(src, dst, origin_x, origin_y, theta);
+		do_rotate_gray(src, dst, origin_x, origin_y, theta);
 	}
 
 
@@ -2716,7 +2554,7 @@ namespace libimage
 		assert(verify(src));
 		assert(verify(dst));
 
-		rotate_par_gray(src, dst, origin_x, origin_y, theta);
+		do_rotate_gray(src, dst, origin_x, origin_y, theta);
 	}
 
 
@@ -2725,7 +2563,7 @@ namespace libimage
 		assert(verify(src));
 		assert(verify(dst));
 
-		rotate_par_gray(src, dst, origin_x, origin_y, theta);
+		do_rotate_gray(src, dst, origin_x, origin_y, theta);
 	}
 
 
@@ -2734,7 +2572,7 @@ namespace libimage
 		assert(verify(src));
 		assert(verify(dst));
 
-		rotate_par_gray(src, dst, origin.x, origin.y, theta);
+		do_rotate_gray(src, dst, origin.x, origin.y, theta);
 	}
 
 
@@ -2743,7 +2581,7 @@ namespace libimage
 		assert(verify(src));
 		assert(verify(dst));
 
-		rotate_par_gray(src, dst, origin.x, origin.y, theta);
+		do_rotate_gray(src, dst, origin.x, origin.y, theta);
 	}
 
 
@@ -2752,7 +2590,7 @@ namespace libimage
 		assert(verify(src));
 		assert(verify(dst));
 
-		rotate_par_gray(src, dst, origin.x, origin.y, theta);
+		do_rotate_gray(src, dst, origin.x, origin.y, theta);
 	}
 
 
@@ -2761,7 +2599,7 @@ namespace libimage
 		assert(verify(src));
 		assert(verify(dst));
 
-		rotate_par_gray(src, dst, origin.x, origin.y, theta);
+		do_rotate_gray(src, dst, origin.x, origin.y, theta);
 	}
 
 
