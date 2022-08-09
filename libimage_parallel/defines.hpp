@@ -27,8 +27,8 @@
 
 #ifdef INTEL_CPU
 
-#define SIMD_INTEL_128
-//#define SIMD_INTEL_256
+//#define SIMD_INTEL_128
+#define SIMD_INTEL_256
 
 #endif // INTEL_CPU
 

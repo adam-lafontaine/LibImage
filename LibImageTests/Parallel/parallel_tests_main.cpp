@@ -127,6 +127,7 @@ int main()
 	blur_test();
 	gradients_test();
 	edges_test();
+	combo_view_test();
 	rotate_test();
 }
 

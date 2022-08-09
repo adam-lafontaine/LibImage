@@ -518,7 +518,7 @@ static void do_for_each_pixel_in_span(PIXEL_T* row_begin, u32 length, PIXEL_F co
 template <class XY_F>
 static void do_for_each_xy_in_span(u32 y, u32 x_begin, u32 length, XY_F const& func)
 {
-	for (u32 x = x_begin; x < length; ++x)
+	for (u32 x = x_begin; x < x_begin + length; ++x)
 	{
 		func(x, y);
 	}
@@ -1181,12 +1181,12 @@ namespace libimage
 		auto const func = [&](u8& p) { p = gray; };
 		for_each_pixel(image, func);
 
-		auto const row_func = [&](u8* row_begin, u32 length) 
+		/*auto const row_func = [&](u8* row_begin, u32 length) 
 		{
 			simd_fill_gray_row(row_begin, gray, length);
 		};
 
-		do_simd_for_each_by_row(image, row_func);
+		do_simd_for_each_by_row(image, row_func);*/
 	}
 
 #else
@@ -2671,14 +2671,18 @@ namespace libimage
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
 	static void do_gradients(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
-		std::array<std::function<void()>, 3> f_list
+		/*std::array<std::function<void()>, 3> f_list
 		{
 			[&]() { do_zero_top_bottom(dst); },
 			[&]() { do_zero_left_right(dst); },
 			[&]() { do_gradients_inner(src, dst); }
 		};
 
-		do_for_each_seq(f_list, [](auto const& f) { f(); });
+		do_for_each_seq(f_list, [](auto const& f) { f(); });*/
+
+		do_zero_top_bottom(dst);
+		do_zero_left_right(dst);
+		do_gradients_inner(src, dst);
 	}
 
 

@@ -76,13 +76,16 @@ namespace simd
 		return _mm_sqrt_ps(a);
 	}
 
-
+}
 #endif // SIMD_INTEL_128
 
 #ifdef SIMD_INTEL_256
 
 #include <xmmintrin.h>
 #include <immintrin.h>
+
+namespace simd
+{
 
 	constexpr u32 VEC_LEN = 8;
 
@@ -148,6 +151,8 @@ namespace simd
 		return _mm256_sqrt_ps(a);
 	}
 
+}
+
 #endif // SIMD_INTEL_256
 
 
@@ -155,6 +160,8 @@ namespace simd
 
 #include <arm_neon.h>
 
+namespace simd
+{
 
 	constexpr u32 VEC_LEN = 4;
 
@@ -220,9 +227,11 @@ namespace simd
 		return vrecpeq_f32(vrsqrteq_f32(a));
 	}
 
-
+}
 #endif // SIMD_ARM_NEON
 
+namespace simd
+{
 
 	template <typename SRC_T, typename DST_T>
 	static inline void cast_copy_len(SRC_T* src, DST_T* dst)
