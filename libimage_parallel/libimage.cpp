@@ -806,7 +806,7 @@ namespace libimage
 
 			for (u32 y = y_begin; y < y_end; ++y)
 			{
-				func(row_begin(src_a, y), row_begin(src_b, y), row_begin(dst, y), width, func);
+				func(row_begin(src_a, y), row_begin(src_b, y), row_begin(dst, y), width);
 			}
 		};
 
@@ -1174,6 +1174,9 @@ namespace libimage
 
 namespace libimage
 {
+
+
+
 	static Pixel alpha_blend_linear(Pixel src, Pixel current)
 	{
 		auto const a = (r32)(src.alpha) / 255.0f;
@@ -1196,11 +1199,89 @@ namespace libimage
 	}
 
 
+#ifndef LIBIMAGE_NO_SIMD
+
+	static void simd_alpha_blend_row(Pixel* src_begin, Pixel* cur_begin, Pixel* dst_begin, u32 length)
+	{
+		constexpr u32 N = simd::VEC_LEN;
+		constexpr u32 STEP = N;
+
+		r32 one = 1.0f;
+		r32 u8max = 255.0f;
+
+		auto const do_simd = [&](u32 i)
+		{
+			// pixels are interleaved
+			// make them planar
+			PixelPlanar src_mem{};
+			PixelPlanar cur_mem{};
+			PixelPlanar dst_mem{};
+
+			auto src = src_begin + i;
+			auto cur = cur_begin + i;
+			auto dst = dst_begin + i;
+
+			for (u32 j = 0; j < N; ++j)
+			{
+				src_mem.red[j] = (r32)src[j].red;
+				src_mem.green[j] = (r32)src[j].green;
+				src_mem.blue[j] = (r32)src[j].blue;
+				src_mem.alpha[j] = (r32)src[j].alpha;
+
+				cur_mem.red[j] = (r32)cur[j].red;
+				cur_mem.green[j] = (r32)cur[j].green;
+				cur_mem.blue[j] = (r32)cur[j].blue;
+			}
+
+			auto one_vec = simd::load_broadcast(&one);
+			auto u8max_vec = simd::load_broadcast(&u8max);
+
+			auto src_a_vec = simd::divide(simd::load(src_mem.alpha), u8max_vec);
+			auto cur_a_vec = simd::subtract(one_vec, src_a_vec);
+
+			auto dst_vec = simd::fmadd(src_a_vec, simd::load(src_mem.red), simd::multiply(cur_a_vec, simd::load(cur_mem.red)));
+			simd::store(dst_mem.red, dst_vec);
+
+			dst_vec = simd::fmadd(src_a_vec, simd::load(src_mem.green), simd::multiply(cur_a_vec, simd::load(cur_mem.green)));
+			simd::store(dst_mem.green, dst_vec);
+
+			dst_vec = simd::fmadd(src_a_vec, simd::load(src_mem.blue), simd::multiply(cur_a_vec, simd::load(cur_mem.blue)));
+			simd::store(dst_mem.blue, dst_vec);
+
+			for (u32 j = 0; j < N; ++j)
+			{
+				dst[j].red = (u8)dst_mem.red[j];
+				dst[j].green = (u8)dst_mem.green[j];
+				dst[j].blue = (u8)dst_mem.blue[j];
+				dst[j].alpha = 255;
+			}
+		};
+
+		for (u32 i = 0; i < length - STEP; i += STEP)
+		{
+			do_simd(i);
+		}
+
+		do_simd(length - STEP);
+	}
+
+
+	template <class SRC_A_IMG_T, class SRC_B_IMG_T, class DST_IMG_T>
+	static void do_alpha_blend(SRC_A_IMG_T const& src_a, SRC_B_IMG_T const& src_b, DST_IMG_T const& dst)
+	{
+		do_simd_transform_by_row2(src_a, src_b, dst, simd_alpha_blend_row);
+	}
+
+
+#else
+
 	template <class SRC_A_IMG_T, class SRC_B_IMG_T, class DST_IMG_T>
 	static void do_alpha_blend(SRC_A_IMG_T const& src_a, SRC_B_IMG_T const& src_b, DST_IMG_T const& dst)
 	{
 		do_transform_by_row2(src_a, src_b, dst, alpha_blend_linear);
 	}
+
+#endif !LIBIMAGE_NO_SIMD	
 
 
 	void alpha_blend(Image const& src, Image const& current, Image const& dst)
