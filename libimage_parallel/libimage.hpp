@@ -584,12 +584,6 @@ namespace libimage
 namespace libimage
 {
 
-
-
-	/*** copy parallel ***/
-
-
-
 #ifndef LIBIMAGE_NO_COLOR	
 
 	void copy(Image const& src, Image const& dst);

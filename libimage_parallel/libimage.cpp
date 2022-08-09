@@ -818,47 +818,6 @@ namespace libimage
 #endif // !LIBIMAGE_NO_SIMD
 
 
-/* fill */
-
-namespace libimage
-{
-#ifndef LIBIMAGE_NO_COLOR	
-
-	void fill(Image const& image, Pixel color)
-	{
-		auto const func = [&](Pixel& p) { p = color; };
-		for_each_pixel(image, func);
-	}
-
-
-	void fill(View const& view, Pixel color)
-	{
-		auto const func = [&](Pixel& p) { p = color; };
-		for_each_pixel(view, func);
-	}
-
-#endif // !LIBIMAGE_NO_COLOR
-
-#ifndef LIBIMAGE_NO_GRAYSCALE
-
-	void fill(gray::Image const& image, u8 gray)
-	{
-		auto const func = [&](u8& p) { p = gray; };
-		for_each_pixel(image, func);
-	}
-
-
-	void fill(gray::View const& view, u8 gray)
-	{
-		auto const func = [&](u8& p) { p = gray; };
-		for_each_pixel(view, func);
-	}
-
-#endif // !LIBIMAGE_NO_GRAYSCALE
-}
-
-
-
 /*  transform  */
 
 namespace libimage
@@ -1087,6 +1046,46 @@ namespace libimage
 }
 
 
+/* fill */
+
+namespace libimage
+{
+#ifndef LIBIMAGE_NO_COLOR	
+
+	void fill(Image const& image, Pixel color)
+	{
+		auto const func = [&](Pixel& p) { p = color; };
+		for_each_pixel(image, func);
+	}
+
+
+	void fill(View const& view, Pixel color)
+	{
+		auto const func = [&](Pixel& p) { p = color; };
+		for_each_pixel(view, func);
+	}
+
+#endif // !LIBIMAGE_NO_COLOR
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	void fill(gray::Image const& image, u8 gray)
+	{
+		auto const func = [&](u8& p) { p = gray; };
+		for_each_pixel(image, func);
+	}
+
+
+	void fill(gray::View const& view, u8 gray)
+	{
+		auto const func = [&](u8& p) { p = gray; };
+		for_each_pixel(view, func);
+	}
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+}
+
+
 /*  copy  */
 
 namespace libimage
@@ -1094,72 +1093,117 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR
 
+#ifndef LIBIMAGE_NO_SIMD
+
+
+
+	template <class SRC_IMG_T, class DST_IMG_T>
+	static void do_copy(SRC_IMG_T const& src, DST_IMG_T const& dst)
+	{
+		auto const func = [](auto p) { return p; };
+		do_transform_by_row(src, dst, func);
+	}
+
+#else
+
+	template <class SRC_IMG_T, class DST_IMG_T>
+	static void do_copy(SRC_IMG_T const& src, DST_IMG_T const& dst)
+	{
+		auto const func = [](auto p) { return p; };
+		do_transform_by_row(src, dst, func);
+	}
+
+#endif // !LIBIMAGE_NO_SIMD
+
+
 	void copy(Image const& src, Image const& dst)
 	{
 		assert(verify(src, dst));
-		auto const func = [](auto p) { return p; };
-		do_transform_by_row(src, dst, func);
+		
+		do_copy(src, dst);
 	}
 
 
 	void copy(Image const& src, View const& dst)
 	{
 		assert(verify(src, dst));
-		auto const func = [](auto p) { return p; };
-		do_transform_by_row(src, dst, func);
+
+		do_copy(src, dst);
 	}
 
 
 	void copy(View const& src, Image const& dst)
 	{
 		assert(verify(src, dst));
-		auto const func = [](auto p) { return p; };
-		do_transform_by_row(src, dst, func);
+
+		do_copy(src, dst);
 	}
 
 
 	void copy(View const& src, View const& dst)
 	{
 		assert(verify(src, dst));
-		auto const func = [](auto p) { return p; };
-		do_transform_by_row(src, dst, func);
+
+		do_copy(src, dst);
 	}
 
 
 #endif // !LIBIMAGE_NO_COLOR
 
-
 #ifndef LIBIMAGE_NO_GRAYSCALE
+
+#ifndef LIBIMAGE_NO_SIMD
+
+
+
+	template <class SRC_IMG_T, class DST_IMG_T>
+	static void do_copy_gray(SRC_IMG_T const& src, DST_IMG_T const& dst)
+	{
+		auto const func = [](auto p) { return p; };
+		do_transform_by_row(src, dst, func);
+	}
+
+#else
+
+	template <class SRC_IMG_T, class DST_IMG_T>
+	static void do_copy_gray(SRC_IMG_T const& src, DST_IMG_T const& dst)
+	{
+		auto const func = [](auto p) { return p; };
+		do_transform_by_row(src, dst, func);
+	}
+
+#endif // !LIBIMAGE_NO_SIMD
+
 
 	void copy(gray::Image const& src, gray::Image const& dst)
 	{
 		assert(verify(src, dst));
-		auto const func = [](auto p) { return p; };
-		do_transform_by_row(src, dst, func);
+
+		do_copy_gray(src, dst);
 	}
 
 
 	void copy(gray::Image const& src, gray::View const& dst)
 	{
 		assert(verify(src, dst));
-		auto const func = [](auto p) { return p; };
-		do_transform_by_row(src, dst, func);
+
+		do_copy_gray(src, dst);
 	}
 
 
 	void copy(gray::View const& src, gray::Image const& dst)
 	{
 		assert(verify(src, dst));
-		auto const func = [](auto p) { return p; };
-		do_transform_by_row(src, dst, func);
+
+		do_copy_gray(src, dst);
 	}
 
 
 	void copy(gray::View const& src, gray::View const& dst)
 	{
 		assert(verify(src, dst));
-		auto const func = [](auto p) { return p; };
-		do_transform_by_row(src, dst, func);
+
+		do_copy_gray(src, dst);
 	}
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
@@ -1168,15 +1212,13 @@ namespace libimage
 
 }
 
+
 /*  alpha_blend  */
 
 #ifndef LIBIMAGE_NO_COLOR
 
 namespace libimage
 {
-
-
-
 	static Pixel alpha_blend_linear(Pixel src, Pixel current)
 	{
 		auto const a = (r32)(src.alpha) / 255.0f;

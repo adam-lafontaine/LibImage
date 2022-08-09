@@ -86,6 +86,7 @@ void read_write_image_test();
 void resize_test();
 void view_test();
 void transform_test();
+void copy_test();
 void alpha_blend_test();
 void grayscale_test();
 void binary_test();
@@ -116,6 +117,7 @@ int main()
 	resize_test();
 	view_test();
 	transform_test();
+	copy_test();
 	alpha_blend_test();
 	grayscale_test();
 	binary_test();
@@ -275,6 +277,41 @@ void transform_test()
 
 	img::transform(gray, dst_gray, invert);
 	img::write_image(dst_gray, out_dir / "transform_gray.bmp");
+
+	img::destroy_image(image);
+	img::destroy_image(dst);
+	img::destroy_image(gray);
+	img::destroy_image(dst_gray);
+}
+
+
+void copy_test()
+{
+	auto title = "copy_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+
+	Image image;
+	img::read_image_from_file(CORVETTE_PATH, image);
+	img::write_image(image, out_dir / "vette.bmp");
+
+	Image dst;
+	img::make_image(dst, image.width, image.height);
+
+	img::copy(image, dst);
+	img::write_image(dst, out_dir / "copy.bmp");
+
+
+	GrayImage gray;
+	img::read_image_from_file(CADILLAC_PATH, gray);
+	img::write_image(gray, out_dir / "caddy.bmp");
+
+	GrayImage dst_gray;
+	img::make_image(dst_gray, gray.width, gray.height);
+
+	img::copy(gray, dst_gray);
+	img::write_image(dst_gray, out_dir / "copy_gray.bmp");
 
 	img::destroy_image(image);
 	img::destroy_image(dst);
