@@ -770,6 +770,37 @@ namespace libimage
 	}
 
 
+	template <class IMG_T, class SIMD_F>
+	static void do_simd_for_each_in_range_by_row(IMG_T const& image, Range2Du32 const& range, SIMD_F const& func)
+	{
+		auto const height = range.y_end - range.y_begin;
+		auto const width = range.x_end - range.x_begin;
+		auto const rows_per_thread = height / N_THREADS;
+
+		auto const thread_proc = [&](u32 id)
+		{
+			auto y_begin = range.y_begin + id * rows_per_thread;
+			auto y_end = range.y_begin + (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
+
+			for (u32 y = y_begin; y < y_end; ++y)
+			{
+				auto img_begin = row_begin(image, y) + range.x_begin;
+				func(img_begin, width);
+			}
+		};
+
+		execute_procs(make_proc_list(thread_proc));
+	}
+
+
+	template <class IMG_T, class SIMD_F>
+	static void do_simd_for_each_by_row(IMG_T const& image, SIMD_F const& func)
+	{
+		auto range = make_range(image);
+		do_simd_for_each_in_range_by_row(image, range, func);
+	}
+
+
 	template <class SRC_IMG_T, class DST_IMG_T, class SIMD_F>
 	static void do_simd_transform_by_row(SRC_IMG_T const& src, DST_IMG_T const& dst, SIMD_F const& func)
 	{
@@ -1054,18 +1085,19 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_SIMD
 
-	/*static void simd_fill_row(Pixel* src_begin, Pixel color, u32 length)
+	static void simd_fill_row(Pixel* dst_begin, Pixel color, u32 length)
 	{
 		assert(sizeof(Pixel) == sizeof(r32));
 
 		constexpr u32 STEP = simd::VEC_LEN;
 
+		auto fcolor = (r32*)(&color);
+
 		auto const do_simd = [&](u32 i)
 		{
-			auto src = (r32*)(src_begin + i);
 			auto dst = (r32*)(dst_begin + i);
 
-			auto vec = simd::load(src);
+			auto vec = simd::load_broadcast(fcolor);
 			simd::store(dst, vec);
 		};
 
@@ -1075,16 +1107,19 @@ namespace libimage
 		}
 
 		do_simd(length - STEP);
-	}*/
+	}
 
 
 
 	template <class IMG_T>
 	static void do_fill(IMG_T const& image, Pixel color)
 	{
-		//do_simd_transform_by_row(image, simd_fill_row);
-		auto const func = [&](Pixel& p) { p = color; };
-		for_each_pixel(image, func);
+		auto const row_func = [&](Pixel* row_begin, u32 length) 
+		{
+			simd_fill_row(row_begin, color, length);
+		};
+
+		do_simd_for_each_by_row(image, row_func);
 	}
 
 #else
@@ -1113,17 +1148,67 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-	void fill(gray::Image const& image, u8 gray)
+#ifndef LIBIMAGE_NO_SIMD
+
+	static void simd_fill_gray_row(u8* dst_begin, u8 gray, u32 length)
+	{
+		constexpr u32 STEP = simd::VEC_LEN * sizeof(r32) / sizeof(u8);
+
+		u8 four_bytes[] = { gray, gray, gray, gray };
+
+		auto fgray = (r32*)four_bytes;
+
+		auto const do_simd = [&](u32 i)
+		{
+			auto dst = (r32*)(dst_begin + i);
+
+			auto vec = simd::load_broadcast(fgray);
+			simd::store(dst, vec);
+		};
+
+		for (u32 i = 0; i < length - STEP; i += STEP)
+		{
+			do_simd(i);
+		}
+
+		do_simd(length - STEP);
+	}
+
+
+	template <class IMG_T>
+	static void do_fill_gray(IMG_T const& image, u8 gray)
+	{
+		auto const func = [&](u8& p) { p = gray; };
+		for_each_pixel(image, func);
+
+		auto const row_func = [&](u8* row_begin, u32 length) 
+		{
+			simd_fill_gray_row(row_begin, gray, length);
+		};
+
+		do_simd_for_each_by_row(image, row_func);
+	}
+
+#else
+
+	template <class IMG_T>
+	static void do_fill_gray(IMG_T const& image, u8 gray)
 	{
 		auto const func = [&](u8& p) { p = gray; };
 		for_each_pixel(image, func);
 	}
 
+#endif // !LIBIMAGE_NO_SIMD
+
+	void fill(gray::Image const& image, u8 gray)
+	{
+		do_fill_gray(image, gray);
+	}
+
 
 	void fill(gray::View const& view, u8 gray)
 	{
-		auto const func = [&](u8& p) { p = gray; };
-		for_each_pixel(view, func);
+		do_fill_gray(view, gray);
 	}
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
