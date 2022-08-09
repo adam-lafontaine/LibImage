@@ -1,5 +1,7 @@
 #pragma once
 
+#ifndef LIBIMAGE_NO_SIMD
+
 #include "defines.hpp"
 
 
@@ -259,3 +261,4 @@ public:
 	r32 alpha[simd::VEC_LEN] = { 0 };
 };
 
+#endif // !LIBIMAGE_NO_SIMD

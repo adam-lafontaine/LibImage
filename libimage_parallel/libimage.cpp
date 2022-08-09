@@ -740,6 +740,9 @@ namespace libimage
 }
 
 
+/* simd helpers */
+
+#ifndef LIBIMAGE_NO_SIMD
 
 namespace libimage
 {
@@ -787,8 +790,32 @@ namespace libimage
 
 		execute_procs(make_proc_list(thread_proc));
 	}
+
+
+	template <class SRC_A_IMG_T, class SRC_B_IMG_T, class DST_IMG_T, class SIMD_F>
+	static void do_simd_transform_by_row2(SRC_A_IMG_T const& src_a, SRC_B_IMG_T const& src_b, DST_IMG_T const& dst, SIMD_F const& func)
+	{
+		auto const height = src_a.height;
+		auto const width = src_a.width;
+		auto const rows_per_thread = height / N_THREADS;
+
+		auto const thread_proc = [&](u32 id)
+		{
+			auto y_begin = id * rows_per_thread;
+			auto y_end = id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread;
+
+			for (u32 y = y_begin; y < y_end; ++y)
+			{
+				func(row_begin(src_a, y), row_begin(src_b, y), row_begin(dst, y), width, func);
+			}
+		};
+
+		execute_procs(make_proc_list(thread_proc));
+	}
+
 }
 
+#endif // !LIBIMAGE_NO_SIMD
 
 
 /* fill */
@@ -1169,11 +1196,19 @@ namespace libimage
 	}
 
 
+	template <class SRC_A_IMG_T, class SRC_B_IMG_T, class DST_IMG_T>
+	static void do_alpha_blend(SRC_A_IMG_T const& src_a, SRC_B_IMG_T const& src_b, DST_IMG_T const& dst)
+	{
+		do_transform_by_row2(src_a, src_b, dst, alpha_blend_linear);
+	}
+
+
 	void alpha_blend(Image const& src, Image const& current, Image const& dst)
 	{
 		assert(verify(src, current));
 		assert(verify(src, dst));
-		do_transform_by_row2(src, current, dst, alpha_blend_linear);
+
+		do_alpha_blend(src, current, dst);
 	}
 
 
@@ -1181,7 +1216,8 @@ namespace libimage
 	{
 		assert(verify(src, current));
 		assert(verify(src, dst));
-		do_transform_by_row2(src, current, dst, alpha_blend_linear);
+
+		do_alpha_blend(src, current, dst);
 	}
 
 
@@ -1189,7 +1225,8 @@ namespace libimage
 	{
 		assert(verify(src, current));
 		assert(verify(src, dst));
-		do_transform_by_row2(src, current, dst, alpha_blend_linear);
+
+		do_alpha_blend(src, current, dst);
 	}
 
 
@@ -1197,7 +1234,8 @@ namespace libimage
 	{
 		assert(verify(src, current));
 		assert(verify(src, dst));
-		do_transform_by_row2(src, current, dst, alpha_blend_linear);
+
+		do_alpha_blend(src, current, dst);
 	}
 
 
@@ -1205,7 +1243,8 @@ namespace libimage
 	{
 		assert(verify(src, current));
 		assert(verify(src, dst));
-		do_transform_by_row2(src, current, dst, alpha_blend_linear);
+
+		do_alpha_blend(src, current, dst);
 	}
 
 
@@ -1213,7 +1252,8 @@ namespace libimage
 	{
 		assert(verify(src, current));
 		assert(verify(src, dst));
-		do_transform_by_row2(src, current, dst, alpha_blend_linear);
+
+		do_alpha_blend(src, current, dst);
 	}
 
 
@@ -1221,7 +1261,8 @@ namespace libimage
 	{
 		assert(verify(src, current));
 		assert(verify(src, dst));
-		do_transform_by_row2(src, current, dst, alpha_blend_linear);
+
+		do_alpha_blend(src, current, dst);
 	}
 
 
@@ -1229,35 +1270,40 @@ namespace libimage
 	{
 		assert(verify(src, current));
 		assert(verify(src, dst));
-		do_transform_by_row2(src, current, dst, alpha_blend_linear);
+
+		do_alpha_blend(src, current, dst);
 	}
 
 
 	void alpha_blend(Image const& src, Image const& current_dst)
 	{
 		assert(verify(src, current_dst));
-		do_transform_by_row2(src, current_dst, current_dst, alpha_blend_linear);
+
+		do_alpha_blend(src, current_dst, current_dst);
 	}
 
 
 	void alpha_blend(Image const& src, View const& current_dst)
 	{
 		assert(verify(src, current_dst));
-		do_transform_by_row2(src, current_dst, current_dst, alpha_blend_linear);
+
+		do_alpha_blend(src, current_dst, current_dst);
 	}
 
 
 	void alpha_blend(View const& src, Image const& current_dst)
 	{
 		assert(verify(src, current_dst));
-		do_transform_by_row2(src, current_dst, current_dst, alpha_blend_linear);
+
+		do_alpha_blend(src, current_dst, current_dst);
 	}
 
 
 	void alpha_blend(View const& src, View const& current_dst)
 	{
 		assert(verify(src, current_dst));
-		do_transform_by_row2(src, current_dst, current_dst, alpha_blend_linear);
+
+		do_alpha_blend(src, current_dst, current_dst);
 	}
 }
 
@@ -1269,39 +1315,27 @@ namespace libimage
 #ifndef LIBIMAGE_NO_GRAYSCALE
 #ifndef LIBIMAGE_NO_COLOR
 
+
+constexpr r32 COEFF_RED = 0.299f;
+constexpr r32 COEFF_GREEN = 0.587f;
+constexpr r32 COEFF_BLUE = 0.114f;
+
+
 static constexpr u8 rgb_grayscale_standard(u8 red, u8 green, u8 blue)
 {
-	constexpr r32 COEFF_RED = 0.299f;
-	constexpr r32 COEFF_GREEN = 0.587f;
-	constexpr r32 COEFF_BLUE = 0.114f;
-
 	return (u8)(COEFF_RED * red + COEFF_GREEN * green + COEFF_BLUE * blue);
 }
 
 
-
-
-
 namespace libimage
-{
-
-	static void grayscale(u8* dst, u8* red, u8* blue, u8* green, u32 length)
-	{
-		for (u32 i = 0; i < length; ++i)
-		{
-			dst[i] = rgb_grayscale_standard(red[i], green[i], blue[i]);
-		}
-	}
+{	
 
 	static constexpr u8 pixel_grayscale_standard(Pixel const& p)
 	{
 		return rgb_grayscale_standard(p.red, p.green, p.blue);
 	}
 
-
-	constexpr r32 COEFF_RED = 0.299f;
-	constexpr r32 COEFF_GREEN = 0.587f;
-	constexpr r32 COEFF_BLUE = 0.114f;
+#ifndef LIBIMAGE_NO_SIMD
 
 	constexpr std::array<r32, 3> STANDARD_GRAYSCALE_COEFFS{ COEFF_RED, COEFF_GREEN, COEFF_BLUE };
 
@@ -1346,11 +1380,29 @@ namespace libimage
 	}
 
 
+	template <class SRC_IMG_T, class DST_IMG_T>
+	static void do_grayscale(SRC_IMG_T const& src, DST_IMG_T const& dst)
+	{
+		do_simd_transform_by_row(src, dst, simd_grayscale_row);
+	}
+
+#else
+
+	template <class SRC_IMG_T, class DST_IMG_T>
+	static void do_grayscale(SRC_IMG_T const& src, DST_IMG_T const& dst)
+	{
+		do_transform_by_row(src, dst, pixel_grayscale_standard);
+	}
+
+
+#endif // !LIBIMAGE_NO_SIMD	
+
+
 	void grayscale(Image const& src, gray::Image const& dst)
 	{
 		assert(verify(src, dst));
 
-		do_simd_transform_by_row(src, dst, simd_grayscale_row);
+		do_grayscale(src, dst);
 	}
 
 
@@ -1358,7 +1410,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		do_simd_transform_by_row(src, dst, simd_grayscale_row);
+		do_grayscale(src, dst);
 	}
 
 
@@ -1366,7 +1418,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		do_simd_transform_by_row(src, dst, simd_grayscale_row);
+		do_grayscale(src, dst);
 	}
 
 
@@ -1374,7 +1426,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		do_simd_transform_by_row(src, dst, simd_grayscale_row);
+		do_grayscale(src, dst);
 	}
 
 	void alpha_grayscale(Image const& src)
