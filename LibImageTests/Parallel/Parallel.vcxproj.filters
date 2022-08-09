@@ -56,5 +56,8 @@
     <ClInclude Include="..\utils\win32_leak_check.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\libimage_parallel\simd_def.hpp">
+      <Filter>Header Files\libimage</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

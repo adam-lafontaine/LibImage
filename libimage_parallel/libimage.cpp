@@ -1,4 +1,5 @@
 #include "libimage.hpp"
+#include "simd_def.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -504,13 +505,9 @@ namespace libimage
 }
 
 
-// TODO: simd specializations
-
 template <typename PIXEL_T, class PIXEL_F>
 static void do_for_each_pixel_in_span(PIXEL_T* row_begin, u32 length, PIXEL_F const& func)
 {
-	// simd ?
-
 	for (u32 i = 0; i < length; ++i)
 	{
 		func(row_begin[i]);
@@ -741,6 +738,57 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 }
+
+
+
+namespace libimage
+{
+	static inline void copy_vec_len(Pixel* src, PixelPlanar& dst)
+	{
+		for (u32 i = 0; i < simd::VEC_LEN; ++i)
+		{
+			dst.red[i] = (r32)src[i].red;
+			dst.green[i] = (r32)src[i].green;
+			dst.blue[i] = (r32)src[i].blue;
+			dst.alpha[i] = (r32)src[i].alpha;
+		}
+	}
+
+
+	static inline void copy_vec_len(u8* red, u8* green, u8* blue, PixelPlanar& dst)
+	{
+		for (u32 i = 0; i < simd::VEC_LEN; ++i)
+		{
+			dst.red[i] = (r32)red[i];
+			dst.green[i] = (r32)green[i];
+			dst.blue[i] = (r32)blue[i];
+			dst.alpha[i] = 255.0f;
+		}
+	}
+
+
+	template <class SRC_IMG_T, class DST_IMG_T, class SIMD_F>
+	static void do_simd_transform_by_row(SRC_IMG_T const& src, DST_IMG_T const& dst, SIMD_F const& func)
+	{
+		auto const height = src.height;
+		auto const width = src.width;
+		auto const rows_per_thread = height / N_THREADS;
+
+		auto const thread_proc = [&](u32 id)
+		{
+			auto y_begin = id * rows_per_thread;
+			auto y_end = id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread;
+
+			for (u32 y = y_begin; y < y_end; ++y)
+			{
+				func(row_begin(src, y), row_begin(dst, y), width);
+			}
+		};
+
+		execute_procs(make_proc_list(thread_proc));
+	}
+}
+
 
 
 /* fill */
@@ -1231,6 +1279,9 @@ static constexpr u8 rgb_grayscale_standard(u8 red, u8 green, u8 blue)
 }
 
 
+
+
+
 namespace libimage
 {
 
@@ -1248,27 +1299,82 @@ namespace libimage
 	}
 
 
+	constexpr r32 COEFF_RED = 0.299f;
+	constexpr r32 COEFF_GREEN = 0.587f;
+	constexpr r32 COEFF_BLUE = 0.114f;
+
+	constexpr std::array<r32, 3> STANDARD_GRAYSCALE_COEFFS{ COEFF_RED, COEFF_GREEN, COEFF_BLUE };
+
+
+	static void simd_grayscale_row(Pixel* src_begin, u8* dst_begin, u32 length)
+	{
+		constexpr u32 STEP = simd::VEC_LEN;
+
+		auto weights = STANDARD_GRAYSCALE_COEFFS.data();
+
+		auto red_w_vec = simd::load_broadcast(weights);
+		auto green_w_vec = simd::load_broadcast(weights + 1);
+		auto blue_w_vec = simd::load_broadcast(weights + 2);
+
+		auto const do_simd = [&](u32 i)
+		{
+			// pixels are interleaved
+			// make them planar
+			PixelPlanar mem{};
+			copy_vec_len(src_begin + i, mem);
+
+			auto src_vec = simd::load(mem.red);
+			auto dst_vec = simd::multiply(src_vec, red_w_vec);
+
+			src_vec = simd::load(mem.green);
+			dst_vec = simd::fmadd(src_vec, green_w_vec, dst_vec);
+
+			src_vec = simd::load(mem.blue);
+			dst_vec = simd::fmadd(src_vec, blue_w_vec, dst_vec);
+
+			simd::store(mem.alpha, dst_vec);
+
+			simd::cast_copy_len(mem.alpha, dst_begin + i);
+		};
+
+		for (u32 i = 0; i < length - STEP; i += STEP)
+		{
+			do_simd(i);
+		}
+
+		do_simd(length - STEP);
+	}
+
+
 	void grayscale(Image const& src, gray::Image const& dst)
 	{
-		transform(src, dst, pixel_grayscale_standard);
+		assert(verify(src, dst));
+
+		do_simd_transform_by_row(src, dst, simd_grayscale_row);
 	}
 
 
 	void grayscale(Image const& src, gray::View const& dst)
 	{
-		transform(src, dst, pixel_grayscale_standard);
+		assert(verify(src, dst));
+
+		do_simd_transform_by_row(src, dst, simd_grayscale_row);
 	}
 
 
 	void grayscale(View const& src, gray::Image const& dst)
 	{
-		transform(src, dst, pixel_grayscale_standard);
+		assert(verify(src, dst));
+
+		do_simd_transform_by_row(src, dst, simd_grayscale_row);
 	}
 
 
 	void grayscale(View const& src, gray::View const& dst)
 	{
-		transform(src, dst, pixel_grayscale_standard);
+		assert(verify(src, dst));
+
+		do_simd_transform_by_row(src, dst, simd_grayscale_row);
 	}
 
 	void alpha_grayscale(Image const& src)
