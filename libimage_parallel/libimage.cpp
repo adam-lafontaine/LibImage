@@ -746,7 +746,7 @@ namespace libimage
 
 namespace libimage
 {
-	static inline void copy_vec_len(Pixel* src, PixelPlanar& dst)
+	static inline void copy_vec_len(Pixel* src, Pixelr32Planar& dst)
 	{
 		for (u32 i = 0; i < simd::VEC_LEN; ++i)
 		{
@@ -758,7 +758,7 @@ namespace libimage
 	}
 
 
-	static inline void copy_vec_len(u8* red, u8* green, u8* blue, PixelPlanar& dst)
+	static inline void copy_vec_len(u8* red, u8* green, u8* blue, Pixelr32Planar& dst)
 	{
 		for (u32 i = 0; i < simd::VEC_LEN; ++i)
 		{
@@ -1095,13 +1095,35 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_SIMD
 
+	static void simd_copy_row(Pixel* src_begin, Pixel* dst_begin, u32 length)
+	{
+		assert(sizeof(Pixel) == sizeof(r32));
+
+		constexpr u32 STEP = simd::VEC_LEN;
+
+		auto const do_simd = [&](u32 i) 
+		{
+			auto src = (r32*)(src_begin + i);
+			auto dst = (r32*)(dst_begin + i);
+
+			auto vec = simd::load(src);
+			simd::store(dst, vec);
+		};
+
+		for (u32 i = 0; i < length - STEP; i += STEP)
+		{
+			do_simd(i);
+		}
+
+		do_simd(length - STEP);
+	}
+
 
 
 	template <class SRC_IMG_T, class DST_IMG_T>
 	static void do_copy(SRC_IMG_T const& src, DST_IMG_T const& dst)
 	{
-		auto const func = [](auto p) { return p; };
-		do_transform_by_row(src, dst, func);
+		do_simd_transform_by_row(src, dst, simd_copy_row);
 	}
 
 #else
@@ -1154,13 +1176,32 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_SIMD
 
+	static void simd_copy_gray_row(u8* src_begin, u8* dst_begin, u32 length)
+	{
+		constexpr u32 STEP = simd::VEC_LEN * sizeof(r32) / sizeof(u8);
+
+		auto const do_simd = [&](u32 i) 
+		{
+			auto src = (r32*)(src_begin + i);
+			auto dst = (r32*)(dst_begin + i);
+
+			auto vec = simd::load(src);
+			simd::store(dst, vec);
+		};
+
+		for (u32 i = 0; i < length - STEP; i += STEP)
+		{
+			do_simd(i);
+		}
+
+		do_simd(length - STEP);
+	}
 
 
 	template <class SRC_IMG_T, class DST_IMG_T>
 	static void do_copy_gray(SRC_IMG_T const& src, DST_IMG_T const& dst)
 	{
-		auto const func = [](auto p) { return p; };
-		do_transform_by_row(src, dst, func);
+		do_simd_transform_by_row(src, dst, simd_copy_gray_row);
 	}
 
 #else
@@ -1255,9 +1296,9 @@ namespace libimage
 		{
 			// pixels are interleaved
 			// make them planar
-			PixelPlanar src_mem{};
-			PixelPlanar cur_mem{};
-			PixelPlanar dst_mem{};
+			Pixelr32Planar src_mem{};
+			Pixelr32Planar cur_mem{};
+			Pixelr32Planar dst_mem{};
 
 			auto src = src_begin + i;
 			auto cur = cur_begin + i;
@@ -1477,7 +1518,7 @@ namespace libimage
 		{
 			// pixels are interleaved
 			// make them planar
-			PixelPlanar mem{};
+			Pixelr32Planar mem{};
 			copy_vec_len(src_begin + i, mem);
 
 			auto src_vec = simd::load(mem.red);

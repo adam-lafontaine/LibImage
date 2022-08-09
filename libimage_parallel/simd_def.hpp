@@ -252,7 +252,7 @@ public:
 };
 
 
-class PixelPlanar
+class Pixelr32Planar
 {
 public:
 	r32 red[simd::VEC_LEN] = { 0 };
