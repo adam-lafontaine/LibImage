@@ -87,6 +87,7 @@ void resize_test();
 void view_test();
 void transform_test();
 void copy_test();
+void fill_test();
 void alpha_blend_test();
 void grayscale_test();
 void binary_test();
@@ -118,6 +119,7 @@ int main()
 	view_test();
 	transform_test();
 	copy_test();
+	fill_test();
 	alpha_blend_test();
 	grayscale_test();
 	binary_test();
@@ -316,6 +318,33 @@ void copy_test()
 	img::destroy_image(image);
 	img::destroy_image(dst);
 	img::destroy_image(gray);
+	img::destroy_image(dst_gray);
+}
+
+
+void fill_test()
+{
+	auto title = "fill_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+
+	u32 width = 800;
+	u32 height = 600;
+
+	Image dst;
+	img::make_image(dst, width, height);
+
+	img::fill(dst, img::to_pixel(20, 20, 220));
+	img::write_image(dst, out_dir / "fill.bmp");
+
+	GrayImage dst_gray;
+	img::make_image(dst_gray, width, height);
+
+	img::fill(dst_gray, 127);
+	img::write_image(dst_gray, out_dir / "copy_gray.bmp");
+
+	img::destroy_image(dst);
 	img::destroy_image(dst_gray);
 }
 

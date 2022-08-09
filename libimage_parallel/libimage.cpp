@@ -1050,19 +1050,63 @@ namespace libimage
 
 namespace libimage
 {
-#ifndef LIBIMAGE_NO_COLOR	
+#ifndef LIBIMAGE_NO_COLOR
 
-	void fill(Image const& image, Pixel color)
+#ifndef LIBIMAGE_NO_SIMD
+
+	/*static void simd_fill_row(Pixel* src_begin, Pixel color, u32 length)
+	{
+		assert(sizeof(Pixel) == sizeof(r32));
+
+		constexpr u32 STEP = simd::VEC_LEN;
+
+		auto const do_simd = [&](u32 i)
+		{
+			auto src = (r32*)(src_begin + i);
+			auto dst = (r32*)(dst_begin + i);
+
+			auto vec = simd::load(src);
+			simd::store(dst, vec);
+		};
+
+		for (u32 i = 0; i < length - STEP; i += STEP)
+		{
+			do_simd(i);
+		}
+
+		do_simd(length - STEP);
+	}*/
+
+
+
+	template <class IMG_T>
+	static void do_fill(IMG_T const& image, Pixel color)
+	{
+		//do_simd_transform_by_row(image, simd_fill_row);
+		auto const func = [&](Pixel& p) { p = color; };
+		for_each_pixel(image, func);
+	}
+
+#else
+
+	template <class IMG_T>
+	static void do_fill(IMG_T const& image, Pixel color)
 	{
 		auto const func = [&](Pixel& p) { p = color; };
 		for_each_pixel(image, func);
 	}
 
+#endif // !LIBIMAGE_NO_SIMD
+
+	void fill(Image const& image, Pixel color)
+	{
+		do_fill(image, color);
+	}
+
 
 	void fill(View const& view, Pixel color)
 	{
-		auto const func = [&](Pixel& p) { p = color; };
-		for_each_pixel(view, func);
+		do_fill(view, color);
 	}
 
 #endif // !LIBIMAGE_NO_COLOR
