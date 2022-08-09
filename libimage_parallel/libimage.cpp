@@ -507,7 +507,7 @@ namespace libimage
 // TODO: simd specializations
 
 template <typename PIXEL_T, class PIXEL_F>
-static void for_each_pixel_in_row(PIXEL_T* row_begin, u32 length, PIXEL_F const& func)
+static void do_for_each_pixel_in_span(PIXEL_T* row_begin, u32 length, PIXEL_F const& func)
 {
 	// simd ?
 
@@ -519,7 +519,7 @@ static void for_each_pixel_in_row(PIXEL_T* row_begin, u32 length, PIXEL_F const&
 
 
 template <class XY_F>
-static void for_each_xy_in_row(u32 y, u32 x_begin, u32 length, XY_F const& func)
+static void do_for_each_xy_in_span(u32 y, u32 x_begin, u32 length, XY_F const& func)
 {
 	for (u32 x = x_begin; x < length; ++x)
 	{
@@ -529,16 +529,16 @@ static void for_each_xy_in_row(u32 y, u32 x_begin, u32 length, XY_F const& func)
 
 
 template <class XY_F>
-static void for_each_xy_in_row(u32 y, u32 length, XY_F const& func)
+static void do_for_each_xy_in_row(u32 y, u32 length, XY_F const& func)
 {
 	auto x_begin = 0;
 
-	for_each_xy_in_row(y, x_begin, length, func);
+	do_for_each_xy_in_span(y, x_begin, length, func);
 }
 
 
 template <typename SRC_PIXEL_T, typename DST_PIXEL_T, class SRC_TO_DST_F>
-static void transform_row(SRC_PIXEL_T* src_begin, DST_PIXEL_T* dst_begin, u32 length, SRC_TO_DST_F const& func)
+static void do_transform_row(SRC_PIXEL_T* src_begin, DST_PIXEL_T* dst_begin, u32 length, SRC_TO_DST_F const& func)
 {
 	for (u32 i = 0; i < length; ++i)
 	{
@@ -548,7 +548,7 @@ static void transform_row(SRC_PIXEL_T* src_begin, DST_PIXEL_T* dst_begin, u32 le
 
 
 template <typename SRC_A_PIXEL_T, typename SRC_B_PIXEL_T, typename DST_PIXEL_T, class SRC_TO_DST_F>
-static void transform_row2(SRC_A_PIXEL_T* src_a_begin, SRC_B_PIXEL_T* src_b_begin, DST_PIXEL_T* dst_begin, u32 length, SRC_TO_DST_F const& func)
+static void do_transform_row2(SRC_A_PIXEL_T* src_a_begin, SRC_B_PIXEL_T* src_b_begin, DST_PIXEL_T* dst_begin, u32 length, SRC_TO_DST_F const& func)
 {
 	for (u32 i = 0; i < length; ++i)
 	{
@@ -572,7 +572,7 @@ static Range2Du32 make_range(IMG_T const& img)
 
 
 template <class IMG_T>
-static void for_each_xy_in_range_by_row(IMG_T const& image, Range2Du32 const& range, std::function<void(u32 x, u32 y)> const& func)
+static void do_for_each_xy_in_range_by_row(IMG_T const& image, Range2Du32 const& range, std::function<void(u32 x, u32 y)> const& func)
 {
 	auto const height = range.y_end - range.y_begin;
 	auto const width = range.x_end - range.x_begin;
@@ -585,7 +585,7 @@ static void for_each_xy_in_range_by_row(IMG_T const& image, Range2Du32 const& ra
 
 		for (u32 y = y_begin; y < y_end; ++y)
 		{
-			for_each_xy_in_row(y, range.x_begin, width, func);
+			do_for_each_xy_in_span(y, range.x_begin, width, func);
 		}
 	};
 
@@ -594,17 +594,17 @@ static void for_each_xy_in_range_by_row(IMG_T const& image, Range2Du32 const& ra
 
 
 template <class IMG_T>
-static void for_each_xy_by_row(IMG_T const& image, std::function<void(u32 x, u32 y)> const& func)
+static void do_for_each_xy_by_row(IMG_T const& image, std::function<void(u32 x, u32 y)> const& func)
 {
 	auto const range = make_range(image);
-	for_each_xy_in_range_by_row(image, range, func);
+	do_for_each_xy_in_range_by_row(image, range, func);
 }
 
 
 namespace libimage
 {
 	template <class IMG_T, class PIXEL_F>
-	static void for_each_pixel_in_range_by_row(IMG_T const& image, Range2Du32 const& range, PIXEL_F const& func)
+	static void do_for_each_pixel_in_range_by_row(IMG_T const& image, Range2Du32 const& range, PIXEL_F const& func)
 	{
 		auto const height = range.y_end - range.y_begin;
 		auto const width = range.x_end - range.x_begin;
@@ -618,7 +618,7 @@ namespace libimage
 			for (u32 y = y_begin; y < y_end; ++y)
 			{
 				auto img_begin = row_begin(image, y) + range.x_begin;
-				for_each_pixel_in_row(img_begin, width, func);
+				do_for_each_pixel_in_span(img_begin, width, func);
 			}
 		};
 
@@ -627,15 +627,15 @@ namespace libimage
 
 
 	template <class IMG_T, class PIXEL_F>
-	static void for_each_pixel_by_row(IMG_T const& image, PIXEL_F const& func)
+	static void do_for_each_pixel_by_row(IMG_T const& image, PIXEL_F const& func)
 	{
 		auto range = make_range(image);
-		for_each_pixel_in_range_by_row(image, range, func);
+		do_for_each_pixel_in_range_by_row(image, range, func);
 	}
 
 
 	template <class SRC_IMG_T, class DST_IMG_T, class SRC_TO_DST_F>
-	static void transform_by_row(SRC_IMG_T const& src, DST_IMG_T const& dst, SRC_TO_DST_F const& func)
+	static void do_transform_by_row(SRC_IMG_T const& src, DST_IMG_T const& dst, SRC_TO_DST_F const& func)
 	{
 		auto const height = src.height;
 		auto const width = src.width;
@@ -648,7 +648,7 @@ namespace libimage
 
 			for (u32 y = y_begin; y < y_end; ++y)
 			{
-				transform_row(row_begin(src, y), row_begin(dst, y), width, func);
+				do_transform_row(row_begin(src, y), row_begin(dst, y), width, func);
 			}
 		};
 
@@ -657,7 +657,7 @@ namespace libimage
 
 
 	template <class SRC_A_IMG_T, class SRC_B_IMG_T, class DST_IMG_T, class SRC_TO_DST_F>
-	static void transform_by_row(SRC_A_IMG_T const& src_a, SRC_B_IMG_T const& src_b, DST_IMG_T const& dst, SRC_TO_DST_F const& func)
+	static void do_transform_by_row2(SRC_A_IMG_T const& src_a, SRC_B_IMG_T const& src_b, DST_IMG_T const& dst, SRC_TO_DST_F const& func)
 	{
 		auto const height = src_a.height;
 		auto const width = src_a.width;
@@ -670,7 +670,7 @@ namespace libimage
 
 			for (u32 y = y_begin; y < y_end; ++y)
 			{
-				transform_row2(row_begin(src_a, y), row_begin(src_b, y), row_begin(dst, y), width, func);
+				do_transform_row2(row_begin(src_a, y), row_begin(src_b, y), row_begin(dst, y), width, func);
 			}
 		};
 
@@ -691,25 +691,25 @@ namespace libimage
 
 	void for_each_pixel(Image const& image, pixel_f const& func)
 	{
-		for_each_pixel_by_row(image, func);
+		do_for_each_pixel_by_row(image, func);
 	}
 
 
 	void for_each_pixel(View const& view, pixel_f const& func)
 	{
-		for_each_pixel_by_row(view, func);
+		do_for_each_pixel_by_row(view, func);
 	}
 
 
 	void for_each_xy(Image const& image, xy_f const& func)
 	{
-		for_each_xy_by_row(image, func);
+		do_for_each_xy_by_row(image, func);
 	}
 
 
 	void for_each_xy(View const& view, xy_f const& func)
 	{
-		for_each_xy_by_row(view, func);
+		do_for_each_xy_by_row(view, func);
 	}
 
 #endif // !LIBIMAGE_NO_COLOR
@@ -718,25 +718,25 @@ namespace libimage
 
 	void for_each_pixel(gray::Image const& image, u8_f const& func)
 	{
-		for_each_pixel_by_row(image, func);
+		do_for_each_pixel_by_row(image, func);
 	}
 
 
 	void for_each_pixel(gray::View const& view, u8_f const& func)
 	{
-		for_each_pixel_by_row(view, func);
+		do_for_each_pixel_by_row(view, func);
 	}
 
 
 	void for_each_xy(gray::Image const& image, xy_f const& func)
 	{
-		for_each_xy_by_row(image, func);
+		do_for_each_xy_by_row(image, func);
 	}
 
 
 	void for_each_xy(gray::View const& view, xy_f const& func)
 	{
-		for_each_xy_by_row(view, func);
+		do_for_each_xy_by_row(view, func);
 	}
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
@@ -795,28 +795,28 @@ namespace libimage
 	void transform(Image const& src, Image const& dst, pixel_to_pixel_f const& func)
 	{
 		assert(verify(src, dst));
-		transform_by_row(src, dst, func);
+		do_transform_by_row(src, dst, func);
 	}
 
 
 	void transform(Image const& src, View const& dst, pixel_to_pixel_f const& func)
 	{
 		assert(verify(src, dst));
-		transform_by_row(src, dst, func);
+		do_transform_by_row(src, dst, func);
 	}
 
 
 	void transform(View const& src, Image const& dst, pixel_to_pixel_f const& func)
 	{
 		assert(verify(src, dst));
-		transform_by_row(src, dst, func);
+		do_transform_by_row(src, dst, func);
 	}
 
 
 	void transform(View const& src, View const& dst, pixel_to_pixel_f const& func)
 	{
 		assert(verify(src, dst));
-		transform_by_row(src, dst, func);
+		do_transform_by_row(src, dst, func);
 	}
 
 
@@ -824,7 +824,7 @@ namespace libimage
 	{
 		assert(verify(src_dst));
 		auto const update = [&](Pixel& p) { p = func(p); };		
-		for_each_pixel_by_row(src_dst, update);
+		do_for_each_pixel_by_row(src_dst, update);
 	}
 
 
@@ -832,7 +832,7 @@ namespace libimage
 	{
 		assert(verify(src_dst));
 		auto const update = [&](Pixel& p) { p = func(p); };
-		for_each_pixel_by_row(src_dst, update);
+		do_for_each_pixel_by_row(src_dst, update);
 	}
 
 
@@ -840,7 +840,7 @@ namespace libimage
 	{
 		assert(verify(src_dst));
 		auto const update = [&](Pixel& p) { p.alpha = func(p); };
-		for_each_pixel_by_row(src_dst, update);
+		do_for_each_pixel_by_row(src_dst, update);
 	}
 
 
@@ -848,7 +848,7 @@ namespace libimage
 	{
 		assert(verify(src_dst));
 		auto const update = [&](Pixel& p) { p.alpha = func(p); };
-		for_each_pixel_by_row(src_dst, update);
+		do_for_each_pixel_by_row(src_dst, update);
 	}
 
 
@@ -878,7 +878,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 		auto const conv = [&lut](u8 p) { return lut[p]; };
-		transform_by_row(src, dst, conv);
+		do_transform_by_row(src, dst, conv);
 	}
 
 
@@ -886,7 +886,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 		auto const conv = [&lut](u8 p) { return lut[p]; };
-		transform_by_row(src, dst, conv);
+		do_transform_by_row(src, dst, conv);
 	}
 
 
@@ -894,7 +894,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 		auto const conv = [&lut](u8 p) { return lut[p]; };
-		transform_by_row(src, dst, conv);
+		do_transform_by_row(src, dst, conv);
 	}
 
 
@@ -902,7 +902,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 		auto const conv = [&lut](u8 p) { return lut[p]; };
-		transform_by_row(src, dst, conv);
+		do_transform_by_row(src, dst, conv);
 	}
 
 
@@ -942,14 +942,14 @@ namespace libimage
 	{
 		assert(verify(src_dst));
 		auto const conv = [&lut](u8& p) { p = lut[p]; };
-		for_each_pixel_by_row(src_dst, conv);
+		do_for_each_pixel_by_row(src_dst, conv);
 	}
 
 	void transform_in_place(gray::View const& src_dst, lookup_table_t const& lut)
 	{
 		assert(verify(src_dst));
 		auto const conv = [&lut](u8& p) { p = lut[p]; };
-		for_each_pixel_by_row(src_dst, conv);
+		do_for_each_pixel_by_row(src_dst, conv);
 	}
 
 
@@ -978,28 +978,28 @@ namespace libimage
 	void transform(Image const& src, gray::Image const& dst, pixel_to_u8_f const& func)
 	{
 		assert(verify(src, dst));
-		transform_by_row(src, dst, func);
+		do_transform_by_row(src, dst, func);
 	}
 
 
 	void transform(Image const& src, gray::View const& dst, pixel_to_u8_f const& func)
 	{
 		assert(verify(src, dst));
-		transform_by_row(src, dst, func);
+		do_transform_by_row(src, dst, func);
 	}
 
 
 	void transform(View const& src, gray::Image const& dst, pixel_to_u8_f const& func)
 	{
 		assert(verify(src, dst));
-		transform_by_row(src, dst, func);
+		do_transform_by_row(src, dst, func);
 	}
 
 
 	void transform(View const& src, gray::View const& dst, pixel_to_u8_f const& func)
 	{
 		assert(verify(src, dst));
-		transform_by_row(src, dst, func);
+		do_transform_by_row(src, dst, func);
 	}
 
 
@@ -1017,19 +1017,13 @@ namespace libimage
 namespace libimage
 {
 
-
-
-
-
-
-
 #ifndef LIBIMAGE_NO_COLOR
 
 	void copy(Image const& src, Image const& dst)
 	{
 		assert(verify(src, dst));
 		auto const func = [](auto p) { return p; };
-		transform_by_row(src, dst, func);
+		do_transform_by_row(src, dst, func);
 	}
 
 
@@ -1037,7 +1031,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 		auto const func = [](auto p) { return p; };
-		transform_by_row(src, dst, func);
+		do_transform_by_row(src, dst, func);
 	}
 
 
@@ -1045,7 +1039,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 		auto const func = [](auto p) { return p; };
-		transform_by_row(src, dst, func);
+		do_transform_by_row(src, dst, func);
 	}
 
 
@@ -1053,7 +1047,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 		auto const func = [](auto p) { return p; };
-		transform_by_row(src, dst, func);
+		do_transform_by_row(src, dst, func);
 	}
 
 
@@ -1066,7 +1060,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 		auto const func = [](auto p) { return p; };
-		transform_by_row(src, dst, func);
+		do_transform_by_row(src, dst, func);
 	}
 
 
@@ -1074,7 +1068,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 		auto const func = [](auto p) { return p; };
-		transform_by_row(src, dst, func);
+		do_transform_by_row(src, dst, func);
 	}
 
 
@@ -1082,7 +1076,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 		auto const func = [](auto p) { return p; };
-		transform_by_row(src, dst, func);
+		do_transform_by_row(src, dst, func);
 	}
 
 
@@ -1090,7 +1084,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 		auto const func = [](auto p) { return p; };
-		transform_by_row(src, dst, func);
+		do_transform_by_row(src, dst, func);
 	}
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
@@ -1131,7 +1125,7 @@ namespace libimage
 	{
 		assert(verify(src, current));
 		assert(verify(src, dst));
-		transform_by_row(src, current, dst, alpha_blend_linear);
+		do_transform_by_row2(src, current, dst, alpha_blend_linear);
 	}
 
 
@@ -1139,7 +1133,7 @@ namespace libimage
 	{
 		assert(verify(src, current));
 		assert(verify(src, dst));
-		transform_by_row(src, current, dst, alpha_blend_linear);
+		do_transform_by_row2(src, current, dst, alpha_blend_linear);
 	}
 
 
@@ -1147,7 +1141,7 @@ namespace libimage
 	{
 		assert(verify(src, current));
 		assert(verify(src, dst));
-		transform_by_row(src, current, dst, alpha_blend_linear);
+		do_transform_by_row2(src, current, dst, alpha_blend_linear);
 	}
 
 
@@ -1155,7 +1149,7 @@ namespace libimage
 	{
 		assert(verify(src, current));
 		assert(verify(src, dst));
-		transform_by_row(src, current, dst, alpha_blend_linear);
+		do_transform_by_row2(src, current, dst, alpha_blend_linear);
 	}
 
 
@@ -1163,7 +1157,7 @@ namespace libimage
 	{
 		assert(verify(src, current));
 		assert(verify(src, dst));
-		transform_by_row(src, current, dst, alpha_blend_linear);
+		do_transform_by_row2(src, current, dst, alpha_blend_linear);
 	}
 
 
@@ -1171,7 +1165,7 @@ namespace libimage
 	{
 		assert(verify(src, current));
 		assert(verify(src, dst));
-		transform_by_row(src, current, dst, alpha_blend_linear);
+		do_transform_by_row2(src, current, dst, alpha_blend_linear);
 	}
 
 
@@ -1179,7 +1173,7 @@ namespace libimage
 	{
 		assert(verify(src, current));
 		assert(verify(src, dst));
-		transform_by_row(src, current, dst, alpha_blend_linear);
+		do_transform_by_row2(src, current, dst, alpha_blend_linear);
 	}
 
 
@@ -1187,39 +1181,36 @@ namespace libimage
 	{
 		assert(verify(src, current));
 		assert(verify(src, dst));
-		transform_by_row(src, current, dst, alpha_blend_linear);
+		do_transform_by_row2(src, current, dst, alpha_blend_linear);
 	}
 
 
 	void alpha_blend(Image const& src, Image const& current_dst)
 	{
 		assert(verify(src, current_dst));
-		transform_by_row(src, current_dst, current_dst, alpha_blend_linear);
+		do_transform_by_row2(src, current_dst, current_dst, alpha_blend_linear);
 	}
 
 
 	void alpha_blend(Image const& src, View const& current_dst)
 	{
 		assert(verify(src, current_dst));
-		transform_by_row(src, current_dst, current_dst, alpha_blend_linear);
+		do_transform_by_row2(src, current_dst, current_dst, alpha_blend_linear);
 	}
 
 
 	void alpha_blend(View const& src, Image const& current_dst)
 	{
 		assert(verify(src, current_dst));
-		transform_by_row(src, current_dst, current_dst, alpha_blend_linear);
+		do_transform_by_row2(src, current_dst, current_dst, alpha_blend_linear);
 	}
 
 
 	void alpha_blend(View const& src, View const& current_dst)
 	{
 		assert(verify(src, current_dst));
-		transform_by_row(src, current_dst, current_dst, alpha_blend_linear);
+		do_transform_by_row2(src, current_dst, current_dst, alpha_blend_linear);
 	}
-
-
-	
 }
 
 #endif // !LIBIMAGE_NO_COLOR
@@ -1522,7 +1513,7 @@ namespace libimage
 
 
 	template <class GRAY_IMG_T>
-	static u32 skeleton_once(GRAY_IMG_T const& img)
+	static u32 do_skeleton_once(GRAY_IMG_T const& img)
 	{
 		u32 pixel_count = 0;
 
@@ -1634,13 +1625,13 @@ namespace libimage
 		copy(src, dst);
 
 		u32 current_count = 0;
-		u32 pixel_count = skeleton_once(dst);
+		u32 pixel_count = do_skeleton_once(dst);
 		u32 max_iter = 100; // src.width / 2;
 
 		for (u32 i = 1; pixel_count != current_count && i < max_iter; ++i)
 		{
 			current_count = pixel_count;
-			pixel_count = skeleton_once(dst);
+			pixel_count = do_skeleton_once(dst);
 		}
 	}
 
@@ -1817,7 +1808,7 @@ namespace libimage
 
 
 	template<class GRAY_Image, size_t N>
-	static r32 apply_weights(GRAY_Image const& img, Range2Du32 const& range, std::array<r32, N> const& weights)
+	static r32 do_apply_weights(GRAY_Image const& img, Range2Du32 const& range, std::array<r32, N> const& weights)
 	{
 		assert((range.y_end - range.y_begin) * (range.x_end - range.x_begin) == weights.size());
 
@@ -1839,7 +1830,7 @@ namespace libimage
 
 
 	template<class GRAY_Image>
-	static r32 weighted_center(GRAY_Image const& img, u32 x, u32 y, std::array<r32, 9> const& weights)
+	static r32 do_weighted_center(GRAY_Image const& img, u32 x, u32 y, std::array<r32, 9> const& weights)
 	{
 		Range2Du32 range = {};
 
@@ -1847,12 +1838,12 @@ namespace libimage
 
 		left_or_right_3_wide(range, x, img.width);
 
-		return apply_weights(img, range, weights);
+		return do_apply_weights(img, range, weights);
 	}
 
 
 	template<class GRAY_Image>
-	static r32 weighted_center(GRAY_Image const& img, u32 x, u32 y, std::array<r32, 25> const& weights)
+	static r32 do_weighted_center(GRAY_Image const& img, u32 x, u32 y, std::array<r32, 25> const& weights)
 	{
 		Range2Du32 range = {};
 
@@ -1860,7 +1851,7 @@ namespace libimage
 
 		left_or_right_5_wide(range, x, img.width);
 
-		return apply_weights(img, range, weights);
+		return do_apply_weights(img, range, weights);
 	}
 
 
@@ -1900,9 +1891,9 @@ namespace libimage
 
 
 	template<class GRAY_Image>
-	u8 gauss3(GRAY_Image const& img, u32 x, u32 y)
+	u8 do_gauss3(GRAY_Image const& img, u32 x, u32 y)
 	{
-		auto p = weighted_center(img, x, y, GAUSS_3X3);
+		auto p = do_weighted_center(img, x, y, GAUSS_3X3);
 
 		assert(p >= 0.0f);
 		assert(p <= 255.0f);
@@ -1911,20 +1902,10 @@ namespace libimage
 	}
 
 
-	u8 gauss5(gray::Image const& img, u32 x, u32 y)
+	template<class GRAY_Image>
+	u8 do_gauss5(GRAY_Image const& img, u32 x, u32 y)
 	{
-		auto p = weighted_center(img, x, y, GAUSS_5X5);
-
-		assert(p >= 0.0f);
-		assert(p <= 255.0f);
-
-		return (u8)(p);
-	}
-
-
-	u8 gauss5(gray::View const& view, u32 x, u32 y)
-	{
-		auto p = weighted_center(view, x, y, GAUSS_5X5);
+		auto p = do_weighted_center(img, x, y, GAUSS_5X5);
 
 		assert(p >= 0.0f);
 		assert(p <= 255.0f);
@@ -1944,7 +1925,7 @@ namespace libimage
 {
 
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void copy_top_bottom(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	static void do_copy_top_bottom(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
 		u32 const x_begin = 0;
 		u32 const x_end = src.width;
@@ -1965,7 +1946,7 @@ namespace libimage
 
 
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void copy_left_right(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	static void do_copy_left_right(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
 		u32 const y_begin = 1;
 		u32 const y_end = src.height - 1;
@@ -1984,7 +1965,7 @@ namespace libimage
 
 
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void gauss_inner_top_bottom(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	static void do_gauss_inner_top_bottom(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
 		u32 const x_begin = 1;
 		u32 const x_end = src.width - 1;
@@ -1996,14 +1977,14 @@ namespace libimage
 
 		for (u32 x = x_begin; x < x_end; ++x)
 		{
-			dst_top[x] = gauss3(src, x, y_top);
-			dst_bottom[x] = gauss3(src, x, y_bottom);
+			dst_top[x] = do_gauss3(src, x, y_top);
+			dst_bottom[x] = do_gauss3(src, x, y_bottom);
 		}
 	}
 
 
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void gauss_inner_left_right(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	static void do_gauss_inner_left_right(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
 		u32 const y_begin = 2;
 		u32 const y_end = src.height - 2;
@@ -2014,14 +1995,14 @@ namespace libimage
 		{
 			auto dst_row = row_begin(dst, y);
 
-			dst_row[x_left] = gauss3(src, x_left, y);
-			dst_row[x_right] = gauss3(src, x_right, y);
+			dst_row[x_left] = do_gauss3(src, x_left, y);
+			dst_row[x_right] = do_gauss3(src, x_right, y);
 		}
 	}
 
 
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void inner_gauss(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	static void do_inner_gauss(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
 		Range2Du32 r{};
 		r.x_begin = 2;
@@ -2029,9 +2010,9 @@ namespace libimage
 		r.y_begin = 2;
 		r.y_end = src.height - 2;
 
-		auto const func = [&](u32 x, u32 y) { *xy_at(dst, x, y) = gauss5(src, x, y); };
+		auto const func = [&](u32 x, u32 y) { *xy_at(dst, x, y) = do_gauss5(src, x, y); };
 
-		for_each_xy_in_range_by_row(src, r, func);
+		do_for_each_xy_in_range_by_row(src, r, func);
 	}
 
 
@@ -2040,11 +2021,11 @@ namespace libimage
 	{
 		std::array<std::function<void()>, 5> f_list =
 		{
-			[&]() { copy_top_bottom(src, dst); },
-			[&]() { copy_left_right(src, dst); },
-			[&]() { gauss_inner_top_bottom(src, dst); },
-			[&]() { gauss_inner_left_right(src, dst); },
-			[&]() { inner_gauss(src, dst); }
+			[&]() { do_copy_top_bottom(src, dst); },
+			[&]() { do_copy_left_right(src, dst); },
+			[&]() { do_gauss_inner_top_bottom(src, dst); },
+			[&]() { do_gauss_inner_left_right(src, dst); },
+			[&]() { do_inner_gauss(src, dst); }
 		};
 
 		do_for_each_seq(f_list, [](auto const& f) { f(); });
@@ -2119,7 +2100,7 @@ namespace libimage
 
 
 	template<class GRAY_IMG_T>
-	static void zero_top_bottom(GRAY_IMG_T const& dst)
+	static void do_zero_top_bottom(GRAY_IMG_T const& dst)
 	{
 		u32 const x_begin = 0;
 		u32 const x_end = dst.width;
@@ -2138,7 +2119,7 @@ namespace libimage
 
 
 	template<class GRAY_IMG_T>
-	static void zero_left_right(GRAY_IMG_T const& dst)
+	static void do_zero_left_right(GRAY_IMG_T const& dst)
 	{
 		u32 const y_begin = 1;
 		u32 const y_end = dst.height - 1;
@@ -2156,7 +2137,7 @@ namespace libimage
 
 
 	template <typename GR_IMG_T>
-	static r32 gradient_at_xy(GR_IMG_T const& img, u32 x, u32 y)
+	static r32 do_gradient_at_xy(GR_IMG_T const& img, u32 x, u32 y)
 	{
 		r32 grad_x = 0.0f;
 		r32 grad_y = 0.0f;
@@ -2186,7 +2167,7 @@ namespace libimage
 
 
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void edges_inner(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst, u8_to_bool_f const& cond)
+	static void do_edges_inner(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst, u8_to_bool_f const& cond)
 	{
 		Range2Du32 r{};
 		r.x_begin = 1;
@@ -2196,11 +2177,11 @@ namespace libimage
 
 		auto const func = [&](u32 x, u32 y) 
 		{ 
-			auto g = (u8)gradient_at_xy(src, x, y);
+			auto g = (u8)do_gradient_at_xy(src, x, y);
 			*xy_at(dst, x, y) = cond(g) ? 255 : 0;
 		};
 
-		for_each_xy_in_range_by_row(src, r, func);
+		do_for_each_xy_in_range_by_row(src, r, func);
 	}
 
 
@@ -2209,9 +2190,9 @@ namespace libimage
 	{
 		std::array<std::function<void()>, 3> f_list
 		{
-			[&]() { zero_top_bottom(dst); },
-			[&]() { zero_left_right(dst); },
-			[&]() { edges_inner(src, dst, cond); }
+			[&]() { do_zero_top_bottom(dst); },
+			[&]() { do_zero_left_right(dst); },
+			[&]() { do_edges_inner(src, dst, cond); }
 		};
 
 		do_for_each_seq(f_list, [](auto const& f) { f(); });
@@ -2219,7 +2200,7 @@ namespace libimage
 
 
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void gradients_inner(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	static void do_gradients_inner(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
 		Range2Du32 r{};
 		r.x_begin = 1;
@@ -2229,10 +2210,10 @@ namespace libimage
 
 		auto const func = [&](u32 x, u32 y)
 		{
-			*xy_at(dst, x, y) = (u8)gradient_at_xy(src, x, y);
+			*xy_at(dst, x, y) = (u8)do_gradient_at_xy(src, x, y);
 		};
 
-		for_each_xy_in_range_by_row(src, r, func);
+		do_for_each_xy_in_range_by_row(src, r, func);
 	}
 
 
@@ -2241,9 +2222,9 @@ namespace libimage
 	{
 		std::array<std::function<void()>, 3> f_list
 		{
-			[&]() { zero_top_bottom(dst); },
-			[&]() { zero_left_right(dst); },
-			[&]() { gradients_inner(src, dst); }
+			[&]() { do_zero_top_bottom(dst); },
+			[&]() { do_zero_left_right(dst); },
+			[&]() { do_gradients_inner(src, dst); }
 		};
 
 		do_for_each_seq(f_list, [](auto const& f) { f(); });
@@ -2346,7 +2327,7 @@ namespace libimage
 #ifndef LIBIMAGE_NO_COLOR
 
 	template <typename IMG_T>
-	static Pixel get_color(IMG_T const& src_image, Point2Dr32 location)
+	static Pixel do_get_color(IMG_T const& src_image, Point2Dr32 location)
 	{
 		auto zero = 0.0f;
 		auto width = (r32)src_image.width;
@@ -2368,7 +2349,7 @@ namespace libimage
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
 	template <typename GR_IMG_T>
-	static u8 get_gray(GR_IMG_T const& src_image, Point2Dr32 location)
+	static u8 do_get_gray(GR_IMG_T const& src_image, Point2Dr32 location)
 	{
 		auto zero = 0.0f;
 		auto width = (r32)src_image.width;
@@ -2401,7 +2382,7 @@ namespace libimage
 		auto const func = [&](u32 x, u32 y) 
 		{
 			auto src_pt = find_rotation_src({ x, y }, origin, theta);
-			*xy_at(dst, x, y) = get_color(src, src_pt);
+			*xy_at(dst, x, y) = do_get_color(src, src_pt);
 		};
 
 		for_each_xy(src, func);
@@ -2492,7 +2473,7 @@ namespace libimage
 		auto const func = [&](u32 x, u32 y) 
 		{
 			auto src_pt = find_rotation_src({ x, y }, origin, theta);
-			*xy_at(dst, x, y) = get_gray(src, src_pt);
+			*xy_at(dst, x, y) = do_get_gray(src, src_pt);
 		};
 
 		for_each_xy(src, func);
