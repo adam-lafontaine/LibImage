@@ -1083,132 +1083,34 @@ namespace libimage
 {
 #ifndef LIBIMAGE_NO_COLOR
 
-#ifndef LIBIMAGE_NO_SIMD
-
-	static void simd_fill_row(Pixel* dst_begin, Pixel color, u32 length)
-	{
-		assert(sizeof(Pixel) == sizeof(r32));
-
-		constexpr u32 STEP = simd::VEC_LEN;
-
-		auto fcolor = (r32*)(&color);
-
-		auto const do_simd = [&](u32 i)
-		{
-			auto dst = (r32*)(dst_begin + i);
-
-			auto vec = simd::load_broadcast(fcolor);
-			simd::store(dst, vec);
-		};
-
-		for (u32 i = 0; i < length - STEP; i += STEP)
-		{
-			do_simd(i);
-		}
-
-		do_simd(length - STEP);
-	}
-
-
-
-	template <class IMG_T>
-	static void do_fill(IMG_T const& image, Pixel color)
-	{
-		auto const row_func = [&](Pixel* row_begin, u32 length) 
-		{
-			simd_fill_row(row_begin, color, length);
-		};
-
-		do_simd_for_each_by_row(image, row_func);
-	}
-
-#else
-
-	template <class IMG_T>
-	static void do_fill(IMG_T const& image, Pixel color)
+	void fill(Image const& image, Pixel color)
 	{
 		auto const func = [&](Pixel& p) { p = color; };
 		for_each_pixel(image, func);
 	}
 
-#endif // !LIBIMAGE_NO_SIMD
-
-	void fill(Image const& image, Pixel color)
-	{
-		do_fill(image, color);
-	}
-
 
 	void fill(View const& view, Pixel color)
 	{
-		do_fill(view, color);
+		auto const func = [&](Pixel& p) { p = color; };
+		for_each_pixel(view, func);
 	}
 
 #endif // !LIBIMAGE_NO_COLOR
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-#ifndef LIBIMAGE_NO_SIMD
-
-	static void simd_fill_gray_row(u8* dst_begin, u8 gray, u32 length)
-	{
-		constexpr u32 STEP = simd::VEC_LEN * sizeof(r32) / sizeof(u8);
-
-		u8 four_bytes[] = { gray, gray, gray, gray };
-
-		auto fgray = (r32*)four_bytes;
-
-		auto const do_simd = [&](u32 i)
-		{
-			auto dst = (r32*)(dst_begin + i);
-
-			auto vec = simd::load_broadcast(fgray);
-			simd::store(dst, vec);
-		};
-
-		for (u32 i = 0; i < length - STEP; i += STEP)
-		{
-			do_simd(i);
-		}
-
-		do_simd(length - STEP);
-	}
-
-
-	template <class IMG_T>
-	static void do_fill_gray(IMG_T const& image, u8 gray)
-	{
-		auto const func = [&](u8& p) { p = gray; };
-		for_each_pixel(image, func);
-
-		/*auto const row_func = [&](u8* row_begin, u32 length) 
-		{
-			simd_fill_gray_row(row_begin, gray, length);
-		};
-
-		do_simd_for_each_by_row(image, row_func);*/
-	}
-
-#else
-
-	template <class IMG_T>
-	static void do_fill_gray(IMG_T const& image, u8 gray)
-	{
-		auto const func = [&](u8& p) { p = gray; };
-		for_each_pixel(image, func);
-	}
-
-#endif // !LIBIMAGE_NO_SIMD
-
 	void fill(gray::Image const& image, u8 gray)
 	{
-		do_fill_gray(image, gray);
+		auto const func = [&](u8& p) { p = gray; };
+		for_each_pixel(image, func);
 	}
 
 
 	void fill(gray::View const& view, u8 gray)
 	{
-		do_fill_gray(view, gray);
+		auto const func = [&](u8& p) { p = gray; };
+		for_each_pixel(view, func);
 	}
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
