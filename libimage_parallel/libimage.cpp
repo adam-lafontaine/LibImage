@@ -2265,6 +2265,16 @@ namespace libimage
 	};
 
 
+	template <size_t N>
+	static void fill_kernel_data(r32* dst, std::array<r32, N> const& data)
+	{
+		for (u32 i = 0; i < data.size(); ++i)
+		{
+			dst[i] = data[i];
+		}
+	}
+
+
 	class ConvolveProps
 	{
 	public:
@@ -2317,79 +2327,7 @@ namespace libimage
 	}
 
 
-	static void convolve_span(ConvolveProps const& props)
-	{
-		assert(props.kernel.width % 2 == 1);
-		assert(props.kernel.height % 2 == 1);
-
-		int ry_begin = -(props.kernel.height / 2);
-		int ry_end = props.kernel.height / 2 + 1;
-		int rx_begin = -(props.kernel.width / 2);
-		int rx_end = props.kernel.width / 2 + 1;
-
-		auto weights = props.kernel.data;
-		u32 w = 0;
-
-		for (u32 i = 0; i < props.length; ++i)
-		{
-			w = 0;
-			r32 p = 0.0f;
-			for (int ry = ry_begin; ry < ry_end; ++ry)
-			{
-				for (int rx = rx_begin; rx < rx_end; ++rx, ++w)
-				{
-					int offset = ry * props.pitch + rx + i;
-					
-					p += props.src_begin[offset] * weights[w];
-				}
-			}
-
-			assert(p >= 0.0f);
-			assert(p <= 255.0f);
-
-			props.dst_begin[i] = (u8)p;
-		}
-	}
-
-
-	static void convolve_span(Convolve2Props const& props)
-	{
-		assert(props.kernel.width % 2 == 1);
-		assert(props.kernel.height % 2 == 1);
-
-		int ry_begin = -(props.kernel.height / 2);
-		int ry_end = props.kernel.height / 2 + 1;
-		int rx_begin = -(props.kernel.width / 2);
-		int rx_end = props.kernel.width / 2 + 1;
-
-		auto weights = props.kernel.data;
-		u32 w = 0;
-
-		for (u32 i = 0; i < props.length; ++i)
-		{
-			w = 0;
-			r32 p = 0.0f;
-			r32 p2 = 0.0f;
-			for (int ry = ry_begin; ry < ry_end; ++ry)
-			{
-				for (int rx = rx_begin; rx < rx_end; ++rx, ++w)
-				{
-					int offset = ry * props.pitch + rx + i;
-
-					p += props.src_begin[offset] * weights[w];
-					p2 += props.src2_begin[offset] * weights[w];
-				}
-			}
-
-			assert(p >= 0.0f);
-			assert(p <= 255.0f);
-			assert(p2 >= 0.0f);
-			assert(p2 <= 255.0f);
-
-			props.dst_begin[i] = (u8)p;
-			props.dst2_begin[i] = (u8)p2;
-		}
-	}
+	
 
 
 #ifndef LIBIMAGE_NO_SIMD
@@ -2400,9 +2338,9 @@ namespace libimage
 		assert(props.kernel.width % 2 == 1);
 		assert(props.kernel.height % 2 == 1);
 
-		int ry_begin = -(props.kernel.height / 2);
+		int ry_begin = 0 - (props.kernel.height / 2);
 		int ry_end = props.kernel.height / 2 + 1;
-		int rx_begin = -(props.kernel.width / 2);
+		int rx_begin = 0 - (props.kernel.width / 2);
 		int rx_end = props.kernel.width / 2 + 1;
 
 		auto weights = props.kernel.data;
@@ -2451,9 +2389,9 @@ namespace libimage
 		assert(props.kernel.width % 2 == 1);
 		assert(props.kernel.height % 2 == 1);
 
-		int ry_begin = -(props.kernel.height / 2);
+		int ry_begin = 0 - (props.kernel.height / 2);
 		int ry_end = props.kernel.height / 2 + 1;
-		int rx_begin = -(props.kernel.width / 2);
+		int rx_begin = 0 - (props.kernel.width / 2);
 		int rx_end = props.kernel.width / 2 + 1;
 
 		auto weights = props.kernel.data;
@@ -2510,23 +2448,125 @@ namespace libimage
 	}
 
 
+	static void convolve_span(ConvolveProps const& props)
+	{
+		simd_convolve_span(props);
+	}
+
+
+	static void convolve_span(Convolve2Props const& props)
+	{
+		simd_convolve_span(props);
+	}
+
 
 #else
 
+	static void convolve_span(ConvolveProps const& props)
+	{
+		assert(props.kernel.width % 2 == 1);
+		assert(props.kernel.height % 2 == 1);
 
+		int ry_begin = 0 - (props.kernel.height / 2);
+		int ry_end = props.kernel.height / 2 + 1;
+		int rx_begin = 0 - (props.kernel.width / 2);
+		int rx_end = props.kernel.width / 2 + 1;
+
+		auto weights = props.kernel.data;
+		u32 w = 0;
+
+		for (u32 i = 0; i < props.length; ++i)
+		{
+			w = 0;
+			r32 p = 0.0f;
+			for (int ry = ry_begin; ry < ry_end; ++ry)
+			{
+				for (int rx = rx_begin; rx < rx_end; ++rx, ++w)
+				{
+					int offset = ry * props.pitch + rx + i;
+
+					p += props.src_begin[offset] * weights[w];
+				}
+			}
+
+			assert(p >= 0.0f);
+			assert(p <= 255.0f);
+
+			props.dst_begin[i] = (u8)p;
+		}
+	}
+
+
+	static void convolve_span(Convolve2Props const& props)
+	{
+		assert(props.kernel.width % 2 == 1);
+		assert(props.kernel.height % 2 == 1);
+
+		int ry_begin = 0 - (props.kernel.height / 2);
+		int ry_end = props.kernel.height / 2 + 1;
+		int rx_begin = 0 - (props.kernel.width / 2);
+		int rx_end = props.kernel.width / 2 + 1;
+
+		auto weights = props.kernel.data;
+		u32 w = 0;
+
+		for (u32 i = 0; i < props.length; ++i)
+		{
+			w = 0;
+			r32 p = 0.0f;
+			r32 p2 = 0.0f;
+			for (int ry = ry_begin; ry < ry_end; ++ry)
+			{
+				for (int rx = rx_begin; rx < rx_end; ++rx, ++w)
+				{
+					int offset = ry * props.pitch + rx + i;
+
+					p += props.src_begin[offset] * weights[w];
+					p2 += props.src2_begin[offset] * weights[w];
+				}
+			}
+
+			assert(p >= 0.0f);
+			assert(p <= 255.0f);
+			assert(p2 >= 0.0f);
+			assert(p2 <= 255.0f);
+
+			props.dst_begin[i] = (u8)p;
+			props.dst2_begin[i] = (u8)p2;
+		}
+	}
 
 
 #endif // !LIBIMAGE_NO_SIMD
 
-
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void do_gauss5_in_range()
+	static void do_convolve_in_range(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst, Range2Du32 const& range, Matrix2Dr32 const& kernel)
 	{
+		auto const height = range.y_end - range.y_begin;
+		auto const width = range.x_end - range.x_begin;
+		auto const rows_per_thread = height / N_THREADS;
+		auto const pitch = (u32)(row_begin(src, 1) - row_begin(src, 0));
 
+		auto const thread_proc = [&](u32 id)
+		{
+			auto y_begin = range.y_begin + id * rows_per_thread;
+			auto y_end = range.y_begin + (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
+
+			for (u32 y = y_begin; y < y_end; ++y)
+			{
+				ConvolveProps props{};
+				props.src_begin = row_begin(src, y) + range.x_begin;
+				props.dst_begin = row_begin(dst, y) + range.x_begin;
+				props.kernel = kernel;
+				props.length = width;
+				props.pitch = pitch;
+
+				convolve_span(props);
+			}
+		};
+
+		execute_procs(make_proc_list(thread_proc));
 	}
-
-
-	
 }
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
@@ -2587,33 +2627,23 @@ namespace libimage
 		u32 const y_top = 1;
 		u32 const y_bottom = src.height - 2;
 
-		auto const pitch = (u32)(row_begin(src, 1) - row_begin(src, 0));
-		auto& weights = GAUSS_3X3;
+		r32 kernel_data[GAUSS_3X3.size()];
+		fill_kernel_data(kernel_data, GAUSS_3X3);
+		Matrix2Dr32 kernel{};
+		kernel.width = 3;
+		kernel.height = 3;
+		kernel.data = kernel_data;
 
-		auto const src_top = row_begin(src, y_top);
-		auto const src_bottom = row_begin(src, y_bottom);
-		auto const dst_top = row_begin(dst, y_top);
-		auto const dst_bottom = row_begin(dst, y_bottom);
-
-		for (u32 x = x_begin; x < x_end; ++x)
-		{
-			u32 w = 0;
-			r32 t = 0.0f;
-			r32 b = 0.0f;
-			for (int ry = -1; ry < 2; ++ry)
-			{
-				for (int rx = -1; rx < 2; ++rx, ++w)
-				{
-					int offset = ry * pitch + rx + x;
-
-					t += src_top[offset] * weights[w];
-					b += src_bottom[offset] * weights[w];
-				}				
-			}
-
-			dst_top[x] = (u8)t;
-			dst_bottom[x] = (u8)b;
-		}
+		Convolve2Props props{};
+		props.src_begin = row_begin(src, y_top) + x_begin;
+		props.dst_begin = row_begin(dst, y_top) + x_begin;
+		props.src2_begin = row_begin(src, y_bottom) + x_begin;
+		props.dst2_begin = row_begin(dst, y_bottom) + x_begin;
+		props.length = x_end - x_begin;
+		props.pitch = (u32)(row_begin(src, 1) - row_begin(src, 0));
+		props.kernel = kernel;
+		
+		convolve_span(props);
 	}
 
 
@@ -2662,12 +2692,21 @@ namespace libimage
 		r.y_begin = 2;
 		r.y_end = src.height - 2;
 
-		auto const func = [&](u32 x, u32 y) 
+		/*auto const func = [&](u32 x, u32 y) 
 		{ 
 			*xy_at(dst, x, y) = do_gauss5(src, x, y); 
 		};
 
-		do_for_each_xy_in_range_by_row(src, r, func);
+		do_for_each_xy_in_range_by_row(src, r, func);*/
+
+		r32 kernel_data[GAUSS_5X5.size()];
+		fill_kernel_data(kernel_data, GAUSS_5X5);
+		Matrix2Dr32 kernel{};
+		kernel.width = 5;
+		kernel.height = 5;
+		kernel.data = kernel_data;
+
+		do_convolve_in_range(src, dst, r, kernel);
 	}
 
 
