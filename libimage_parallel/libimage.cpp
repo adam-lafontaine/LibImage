@@ -2255,6 +2255,44 @@ namespace libimage
 	};
 
 
+	class Matrix2Dr32
+	{
+	public:
+		u32 width;
+		u32 height;
+
+		r32* data;
+	};
+
+
+	class ConvolveProps
+	{
+	public:
+		u8* src_begin;
+		u8* dst_begin;
+
+		u32 length;
+		u32 pitch;
+
+		Matrix2Dr32 kernel;
+	};
+
+
+	class Convolve2Props
+	{
+	public:
+		u8* src_begin;
+		u8* dst_begin;
+		u8* src2_begin;
+		u8* dst2_begin;
+
+		u32 length;
+		u32 pitch;
+
+		Matrix2Dr32 kernel;
+	};
+
+
 	template<class GRAY_Image>
 	u8 do_gauss3(GRAY_Image const& img, u32 x, u32 y)
 	{
@@ -2279,91 +2317,197 @@ namespace libimage
 	}
 
 
-#ifndef LIBIMAGE_NO_SIMD
-
-
-	static void simd_gauss3_row(u8* src_begin, u8* dst_begin, u32 length, u32 pitch)
+	static void convolve_span(ConvolveProps const& props)
 	{
-		constexpr u32 N = simd::VEC_LEN;
-		constexpr u32 STEP = N;
+		assert(props.kernel.width % 2 == 1);
+		assert(props.kernel.height % 2 == 1);
 
-		auto const do_simd = [&](int i)
+		int ry_begin = -(props.kernel.height / 2);
+		int ry_end = props.kernel.height / 2 + 1;
+		int rx_begin = -(props.kernel.width / 2);
+		int rx_end = props.kernel.width / 2 + 1;
+
+		auto weights = props.kernel.data;
+		u32 w = 0;
+
+		for (u32 i = 0; i < props.length; ++i)
 		{
-			MemoryVector mem{};
-			u32 w = 0;
-			auto acc_vec = simd::setzero();
-			auto src_vec = simd::setzero();
-
-			for (int ry = -1; ry < 2; ++ry)
+			w = 0;
+			r32 p = 0.0f;
+			for (int ry = ry_begin; ry < ry_end; ++ry)
 			{
-				for (int rx = -1; rx < 2; ++rx, ++w)
+				for (int rx = rx_begin; rx < rx_end; ++rx, ++w)
 				{
-					int offset = ry * pitch + rx + i;
-					auto ptr = src_begin + offset;
-					simd::cast_copy_len(ptr, mem.data);
-
-					src_vec = simd::load(mem.data);
-
-					auto weight = simd::load_broadcast(GAUSS_3X3.data() + w);
-
-					acc_vec = simd::fmadd(weight, src_vec, acc_vec);
+					int offset = ry * props.pitch + rx + i;
+					
+					p += props.src_begin[offset] * weights[w];
 				}
 			}
 
-			simd::store(mem.data, acc_vec);
+			assert(p >= 0.0f);
+			assert(p <= 255.0f);
 
-			simd::cast_copy_len(mem.data, dst_begin + i);
-		};
-
-		for (u32 i = 0; i < length - STEP; i += STEP)
-		{
-			do_simd(i);
+			props.dst_begin[i] = (u8)p;
 		}
-
-		do_simd(length - STEP);
 	}
 
 
-	static void simd_gauss5_row(u8* src_begin, u8* dst_begin, u32 length, u32 pitch)
+	static void convolve_span(Convolve2Props const& props)
 	{
+		assert(props.kernel.width % 2 == 1);
+		assert(props.kernel.height % 2 == 1);
+
+		int ry_begin = -(props.kernel.height / 2);
+		int ry_end = props.kernel.height / 2 + 1;
+		int rx_begin = -(props.kernel.width / 2);
+		int rx_end = props.kernel.width / 2 + 1;
+
+		auto weights = props.kernel.data;
+		u32 w = 0;
+
+		for (u32 i = 0; i < props.length; ++i)
+		{
+			w = 0;
+			r32 p = 0.0f;
+			r32 p2 = 0.0f;
+			for (int ry = ry_begin; ry < ry_end; ++ry)
+			{
+				for (int rx = rx_begin; rx < rx_end; ++rx, ++w)
+				{
+					int offset = ry * props.pitch + rx + i;
+
+					p += props.src_begin[offset] * weights[w];
+					p2 += props.src2_begin[offset] * weights[w];
+				}
+			}
+
+			assert(p >= 0.0f);
+			assert(p <= 255.0f);
+			assert(p2 >= 0.0f);
+			assert(p2 <= 255.0f);
+
+			props.dst_begin[i] = (u8)p;
+			props.dst2_begin[i] = (u8)p2;
+		}
+	}
+
+
+#ifndef LIBIMAGE_NO_SIMD
+
+
+	static void simd_convolve_span(ConvolveProps const& props)
+	{
+		assert(props.kernel.width % 2 == 1);
+		assert(props.kernel.height % 2 == 1);
+
+		int ry_begin = -(props.kernel.height / 2);
+		int ry_end = props.kernel.height / 2 + 1;
+		int rx_begin = -(props.kernel.width / 2);
+		int rx_end = props.kernel.width / 2 + 1;
+
+		auto weights = props.kernel.data;
+		u32 w = 0;
+
 		constexpr u32 N = simd::VEC_LEN;
 		constexpr u32 STEP = N;
 
 		auto const do_simd = [&](int i)
 		{
 			MemoryVector mem{};
-			u32 w = 0;
+			w = 0;
 			auto acc_vec = simd::setzero();
 			auto src_vec = simd::setzero();
 
-			for (int ry = -2; ry < 3; ++ry)
+			for (int ry = ry_begin; ry < ry_end; ++ry)
 			{
-				for (int rx = -2; rx < 3; ++rx, ++w)
+				for (int rx = rx_begin; rx < rx_end; ++rx, ++w)
 				{
-					int offset = ry * pitch + rx + i;
-					auto ptr = src_begin + offset;
+					int offset = ry * props.pitch + rx + i;
+
+					auto ptr = props.src_begin + offset;
 					simd::cast_copy_len(ptr, mem.data);
-
 					src_vec = simd::load(mem.data);
-
-					auto weight = simd::load_broadcast(GAUSS_5X5.data() + w);
-
+					auto weight = simd::load_broadcast(weights + w);
 					acc_vec = simd::fmadd(weight, src_vec, acc_vec);
 				}
 			}
 
 			simd::store(mem.data, acc_vec);
 
-			simd::cast_copy_len(mem.data, dst_begin + i);
-	};
+			simd::cast_copy_len(mem.data, props.dst_begin + i);
+		};
 
-		for (u32 i = 0; i < length - STEP; i += STEP)
+		for (u32 i = 0; i < props.length - STEP; i += STEP)
 		{
 			do_simd(i);
 		}
 
-		do_simd(length - STEP);
+		do_simd(props.length - STEP);
+	}
+
+
+	static void simd_convolve_span(Convolve2Props const& props)
+	{
+		assert(props.kernel.width % 2 == 1);
+		assert(props.kernel.height % 2 == 1);
+
+		int ry_begin = -(props.kernel.height / 2);
+		int ry_end = props.kernel.height / 2 + 1;
+		int rx_begin = -(props.kernel.width / 2);
+		int rx_end = props.kernel.width / 2 + 1;
+
+		auto weights = props.kernel.data;
+		u32 w = 0;
+
+		constexpr u32 N = simd::VEC_LEN;
+		constexpr u32 STEP = N;
+
+		auto const do_simd = [&](int i)
+		{
+			MemoryVector mem{};
+			MemoryVector mem2{};
+			
+			auto acc_vec = simd::setzero();
+			auto src_vec = simd::setzero();
+			auto acc2_vec = simd::setzero();
+			auto src2_vec = simd::setzero();
+
+			w = 0;
+
+			for (int ry = ry_begin; ry < ry_end; ++ry)
+			{
+				for (int rx = rx_begin; rx < rx_end; ++rx, ++w)
+				{
+					int offset = ry * props.pitch + rx + i;
+
+					auto ptr = props.src_begin + offset;
+					simd::cast_copy_len(ptr, mem.data);
+					src_vec = simd::load(mem.data);
+					auto weight = simd::load_broadcast(weights + w);
+					acc_vec = simd::fmadd(weight, src_vec, acc_vec);
+
+					auto ptr2 = props.src2_begin + offset;
+					simd::cast_copy_len(ptr2, mem2.data);
+					src2_vec = simd::load(mem2.data);
+					weight = simd::load_broadcast(weights + w);
+					acc2_vec = simd::fmadd(weight, src2_vec, acc2_vec);
+				}
+			}
+
+			simd::store(mem.data, acc_vec);
+			simd::cast_copy_len(mem.data, props.dst_begin + i);
+
+			simd::store(mem2.data, acc_vec);
+			simd::cast_copy_len(mem2.data, props.dst2_begin + i);
+		};
+
+		for (u32 i = 0; i < props.length - STEP; i += STEP)
+		{
+			do_simd(i);
 		}
+
+		do_simd(props.length - STEP);
+	}
 
 
 
@@ -2373,6 +2517,16 @@ namespace libimage
 
 
 #endif // !LIBIMAGE_NO_SIMD
+
+
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void do_gauss5_in_range()
+	{
+
+	}
+
+
+	
 }
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
@@ -2508,7 +2662,10 @@ namespace libimage
 		r.y_begin = 2;
 		r.y_end = src.height - 2;
 
-		auto const func = [&](u32 x, u32 y) { *xy_at(dst, x, y) = do_gauss5(src, x, y); };
+		auto const func = [&](u32 x, u32 y) 
+		{ 
+			*xy_at(dst, x, y) = do_gauss5(src, x, y); 
+		};
 
 		do_for_each_xy_in_range_by_row(src, r, func);
 	}
@@ -2517,16 +2674,17 @@ namespace libimage
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
 	static void do_blur(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
-		std::array<std::function<void()>, 5> f_list =
+		std::array<std::function<void()>, 4> f_list =
 		{
 			[&]() { do_copy_top_bottom(src, dst); },
 			[&]() { do_copy_left_right(src, dst); },
 			[&]() { do_gauss_inner_top_bottom(src, dst); },
 			[&]() { do_gauss_inner_left_right(src, dst); },
-			[&]() { do_inner_gauss(src, dst); }
 		};
 
-		do_for_each_seq(f_list, [](auto const& f) { f(); });
+		do_for_each(f_list, [](auto const& f) { f(); });
+
+		do_inner_gauss(src, dst);
 	}
 
 
