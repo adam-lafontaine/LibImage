@@ -624,9 +624,6 @@ namespace libimage
 namespace libimage
 {
 
-
-
-
 	void alpha_blend(Image const& src, Image const& current, Image const& dst);
 
 	void alpha_blend(Image const& src, Image const& current, View const& dst);
@@ -667,9 +664,6 @@ namespace libimage
 namespace libimage
 {
 
-
-
-
 	void grayscale(Image const& src, gray::Image const& dst);
 
 	void grayscale(Image const& src, gray::View const& dst);
@@ -696,8 +690,6 @@ namespace libimage
 
 namespace libimage
 {
-
-
 	void binarize(gray::Image const& src, gray::Image const& dst, u8_to_bool_f const& cond);
 
 	void binarize(gray::Image const& src, gray::View const& dst, u8_to_bool_f const& cond);
@@ -749,8 +741,6 @@ namespace libimage
 // threshold overloads
 namespace libimage
 {
-
-
 	inline void binarize_th(gray::Image const& src, gray::Image const& dst, u8 th) { binarize(src, dst, [&th](u8 p) { return p >= th; }); }
 
 	inline void binarize_th(gray::Image const& src, gray::View const& dst, u8 th) { binarize(src, dst, [&th](u8 p) { return p >= th; }); }
@@ -769,7 +759,6 @@ namespace libimage
 
 namespace libimage
 {
-
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 

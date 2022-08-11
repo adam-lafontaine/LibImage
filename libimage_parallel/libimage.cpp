@@ -1132,12 +1132,16 @@ namespace libimage
 
 		constexpr u32 STEP = simd::VEC_LEN;
 
+		r32* src = 0;
+		r32* dst = 0;
+		simd::vec_t vec{};
+
 		auto const do_simd = [&](u32 i) 
 		{
-			auto src = (r32*)(src_begin + i);
-			auto dst = (r32*)(dst_begin + i);
+			src = (r32*)(src_begin + i);
+			dst = (r32*)(dst_begin + i);
 
-			auto vec = simd::load(src);
+			vec = simd::load(src);
 			simd::store(dst, vec);
 		};
 
@@ -1211,12 +1215,16 @@ namespace libimage
 	{
 		constexpr u32 STEP = simd::VEC_LEN * sizeof(r32) / sizeof(u8);
 
+		r32* src = 0;
+		r32* dst = 0;
+		simd::vec_t vec{};
+
 		auto const do_simd = [&](u32 i) 
 		{
-			auto src = (r32*)(src_begin + i);
-			auto dst = (r32*)(dst_begin + i);
+			src = (r32*)(src_begin + i);
+			dst = (r32*)(dst_begin + i);
 
-			auto vec = simd::load(src);
+			vec = simd::load(src);
 			simd::store(dst, vec);
 		};
 
@@ -1545,15 +1553,19 @@ namespace libimage
 		auto green_w_vec = simd::load_broadcast(weights + 1);
 		auto blue_w_vec = simd::load_broadcast(weights + 2);
 
+		simd::vec_t src_vec{};
+		simd::vec_t dst_vec{};
+		Pixelr32Planar mem{};
+
 		auto const do_simd = [&](u32 i)
 		{
 			// pixels are interleaved
 			// make them planar
-			Pixelr32Planar mem{};
+			
 			copy_vec_len(src_begin + i, mem);
 
-			auto src_vec = simd::load(mem.red);
-			auto dst_vec = simd::multiply(src_vec, red_w_vec);
+			src_vec = simd::load(mem.red);
+			dst_vec = simd::multiply(src_vec, red_w_vec);
 
 			src_vec = simd::load(mem.green);
 			dst_vec = simd::fmadd(src_vec, green_w_vec, dst_vec);
@@ -2265,6 +2277,102 @@ namespace libimage
 
 		return (u8)(p);
 	}
+
+
+#ifndef LIBIMAGE_NO_SIMD
+
+
+	static void simd_gauss3_row(u8* src_begin, u8* dst_begin, u32 length, u32 pitch)
+	{
+		constexpr u32 N = simd::VEC_LEN;
+		constexpr u32 STEP = N;
+
+		auto const do_simd = [&](int i)
+		{
+			MemoryVector mem{};
+			u32 w = 0;
+			auto acc_vec = simd::setzero();
+			auto src_vec = simd::setzero();
+
+			for (int ry = -1; ry < 2; ++ry)
+			{
+				for (int rx = -1; rx < 2; ++rx, ++w)
+				{
+					int offset = ry * pitch + rx + i;
+					auto ptr = src_begin + offset;
+					simd::cast_copy_len(ptr, mem.data);
+
+					src_vec = simd::load(mem.data);
+
+					auto weight = simd::load_broadcast(GAUSS_3X3.data() + w);
+
+					acc_vec = simd::fmadd(weight, src_vec, acc_vec);
+				}
+			}
+
+			simd::store(mem.data, acc_vec);
+
+			simd::cast_copy_len(mem.data, dst_begin + i);
+		};
+
+		for (u32 i = 0; i < length - STEP; i += STEP)
+		{
+			do_simd(i);
+		}
+
+		do_simd(length - STEP);
+	}
+
+
+	static void simd_gauss5_row(u8* src_begin, u8* dst_begin, u32 length, u32 pitch)
+	{
+		constexpr u32 N = simd::VEC_LEN;
+		constexpr u32 STEP = N;
+
+		auto const do_simd = [&](int i)
+		{
+			MemoryVector mem{};
+			u32 w = 0;
+			auto acc_vec = simd::setzero();
+			auto src_vec = simd::setzero();
+
+			for (int ry = -2; ry < 3; ++ry)
+			{
+				for (int rx = -2; rx < 3; ++rx, ++w)
+				{
+					int offset = ry * pitch + rx + i;
+					auto ptr = src_begin + offset;
+					simd::cast_copy_len(ptr, mem.data);
+
+					src_vec = simd::load(mem.data);
+
+					auto weight = simd::load_broadcast(GAUSS_5X5.data() + w);
+
+					acc_vec = simd::fmadd(weight, src_vec, acc_vec);
+				}
+			}
+
+			simd::store(mem.data, acc_vec);
+
+			simd::cast_copy_len(mem.data, dst_begin + i);
+	};
+
+		for (u32 i = 0; i < length - STEP; i += STEP)
+		{
+			do_simd(i);
+		}
+
+		do_simd(length - STEP);
+		}
+
+
+
+#else
+
+
+
+
+#endif // !LIBIMAGE_NO_SIMD
 }
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
@@ -2325,13 +2433,32 @@ namespace libimage
 		u32 const y_top = 1;
 		u32 const y_bottom = src.height - 2;
 
+		auto const pitch = (u32)(row_begin(src, 1) - row_begin(src, 0));
+		auto& weights = GAUSS_3X3;
+
+		auto const src_top = row_begin(src, y_top);
+		auto const src_bottom = row_begin(src, y_bottom);
 		auto const dst_top = row_begin(dst, y_top);
 		auto const dst_bottom = row_begin(dst, y_bottom);
 
 		for (u32 x = x_begin; x < x_end; ++x)
 		{
-			dst_top[x] = do_gauss3(src, x, y_top);
-			dst_bottom[x] = do_gauss3(src, x, y_bottom);
+			u32 w = 0;
+			r32 t = 0.0f;
+			r32 b = 0.0f;
+			for (int ry = -1; ry < 2; ++ry)
+			{
+				for (int rx = -1; rx < 2; ++rx, ++w)
+				{
+					int offset = ry * pitch + rx + x;
+
+					t += src_top[offset] * weights[w];
+					b += src_bottom[offset] * weights[w];
+				}				
+			}
+
+			dst_top[x] = (u8)t;
+			dst_bottom[x] = (u8)b;
 		}
 	}
 
@@ -2341,15 +2468,33 @@ namespace libimage
 	{
 		u32 const y_begin = 2;
 		u32 const y_end = src.height - 2;
-		u32 const x_left = 1;
-		u32 const x_right = src.width - 2;
+		int const x_left = 1;
+		int const x_right = src.width - 2;
+
+		auto const pitch = (u32)(row_begin(src, 1) - row_begin(src, 0));
+		auto& weights = GAUSS_3X3;
 
 		for (u32 y = y_begin; y < y_end; ++y)
 		{
+			auto src_row = row_begin(src, y);
 			auto dst_row = row_begin(dst, y);
 
-			dst_row[x_left] = do_gauss3(src, x_left, y);
-			dst_row[x_right] = do_gauss3(src, x_right, y);
+			u32 w = 0;
+			r32 l = 0.0f;
+			r32 r = 0.0f;
+			for (int ry = -1; ry < 2; ++ry)
+			{
+				for (int rx = -1; rx < 2; ++rx, ++w)
+				{
+					int offset = ry * pitch + rx;
+
+					l += src_row[x_left + offset] * weights[w];
+					r += src_row[x_right + offset] * weights[w];
+				}
+			}
+
+			dst_row[x_left] = (u8)l;
+			dst_row[x_right] = (u8)r;
 		}
 	}
 
