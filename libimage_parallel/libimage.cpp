@@ -2132,94 +2132,6 @@ namespace libimage
 
 namespace libimage
 {
-	static inline void top_or_bottom_3_high(Range2Du32& range, u32 y, u32 height)
-	{
-		// top or bottom (3 high)
-		assert(y >= 1);
-		assert(y <= height - 2);
-		range.y_begin = y - 1;
-		range.y_end = y + 2;
-	}
-
-
-	static inline void left_or_right_3_wide(Range2Du32& range, u32 x, u32 width)
-	{
-		// left or right (3 wide)
-		assert(x >= 1);
-		assert(x <= width - 2);
-		range.x_begin = x - 1;
-		range.x_end = x + 2;
-	}
-
-
-	static inline void top_or_bottom_5_high(Range2Du32& range, u32 y, u32 height)
-	{
-		// top or bottom (5 high)
-		assert(y >= 2);
-		assert(y <= height - 3);
-		range.y_begin = y - 2;
-		range.y_end = y + 3;
-	}
-
-
-	static inline void left_or_right_5_wide(Range2Du32& range, u32 x, u32 width)
-	{
-		// left or right (5 wide)
-		assert(x >= 2);
-		assert(x <= width - 3);
-		range.x_begin = x - 2;
-		range.x_end = x + 3;
-	}
-
-
-	template<class GRAY_Image, size_t N>
-	static r32 do_apply_weights(GRAY_Image const& img, Range2Du32 const& range, std::array<r32, N> const& weights)
-	{
-		assert((range.y_end - range.y_begin) * (range.x_end - range.x_begin) == weights.size());
-
-		u32 w = 0;
-		r32 total = 0.0f;
-
-		for (u32 y = range.y_begin; y < range.y_end; ++y)
-		{
-			auto row = row_begin(img, y);
-
-			for (u32 x = range.x_begin; x < range.x_end; ++x)
-			{
-				total += weights[w++] * row[x];
-			}
-		}
-
-		return total;
-	}
-
-
-	template<class GRAY_Image>
-	static r32 do_weighted_center(GRAY_Image const& img, u32 x, u32 y, std::array<r32, 9> const& weights)
-	{
-		Range2Du32 range = {};
-
-		top_or_bottom_3_high(range, y, img.height);
-
-		left_or_right_3_wide(range, x, img.width);
-
-		return do_apply_weights(img, range, weights);
-	}
-
-
-	template<class GRAY_Image>
-	static r32 do_weighted_center(GRAY_Image const& img, u32 x, u32 y, std::array<r32, 25> const& weights)
-	{
-		Range2Du32 range = {};
-
-		top_or_bottom_5_high(range, y, img.height);
-
-		left_or_right_5_wide(range, x, img.width);
-
-		return do_apply_weights(img, range, weights);
-	}
-
-
 	constexpr r32 D3 = 16.0f;
 	constexpr std::array<r32, 9> GAUSS_3X3
 	{
@@ -2300,34 +2212,7 @@ namespace libimage
 		u32 pitch;
 
 		Matrix2Dr32 kernel;
-	};
-
-
-	template<class GRAY_Image>
-	u8 do_gauss3(GRAY_Image const& img, u32 x, u32 y)
-	{
-		auto p = do_weighted_center(img, x, y, GAUSS_3X3);
-
-		assert(p >= 0.0f);
-		assert(p <= 255.0f);
-
-		return (u8)(p);
-	}
-
-
-	template<class GRAY_Image>
-	u8 do_gauss5(GRAY_Image const& img, u32 x, u32 y)
-	{
-		auto p = do_weighted_center(img, x, y, GAUSS_5X5);
-
-		assert(p >= 0.0f);
-		assert(p <= 255.0f);
-
-		return (u8)(p);
-	}
-
-
-	
+	};	
 
 
 #ifndef LIBIMAGE_NO_SIMD
@@ -2692,13 +2577,6 @@ namespace libimage
 		r.y_begin = 2;
 		r.y_end = src.height - 2;
 
-		/*auto const func = [&](u32 x, u32 y) 
-		{ 
-			*xy_at(dst, x, y) = do_gauss5(src, x, y); 
-		};
-
-		do_for_each_xy_in_range_by_row(src, r, func);*/
-
 		r32 kernel_data[GAUSS_5X5.size()];
 		fill_kernel_data(kernel_data, GAUSS_5X5);
 		Matrix2Dr32 kernel{};
@@ -2777,10 +2655,6 @@ namespace libimage
 
 		do_blur(src, dst);
 	}
-
-
-
-
 }
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
@@ -2792,6 +2666,233 @@ namespace libimage
 
 namespace libimage
 {
+#ifndef LIBIMAGE_NO_SIMD
+
+
+	static void simd_gradients_span(u8* src_begin, u8* dst_begin, u32 length, u32 pitch)
+	{
+		constexpr u32 N = simd::VEC_LEN;
+		constexpr u32 STEP = N;
+
+		auto const do_simd = [&](int i)
+		{
+			MemoryVector mem{};
+			u32 w = 0;
+			auto vec_x = simd::setzero();
+			auto vec_y = simd::setzero();
+			auto src_vec = simd::setzero();
+
+			for (int ry = -1; ry < 2; ++ry)
+			{
+				for (int rx = -1; rx < 2; ++rx, ++w)
+				{
+					int offset = ry * pitch + rx + i;
+					auto ptr = src_begin + offset;
+					simd::cast_copy_len(ptr, mem.data);
+
+					src_vec = simd::load(mem.data);
+
+					auto weight_x = simd::load_broadcast(GRAD_X_3X3.data() + w);
+					auto weight_y = simd::load_broadcast(GRAD_Y_3X3.data() + w);
+
+					vec_x = simd::fmadd(weight_x, src_vec, vec_x);
+					vec_y = simd::fmadd(weight_y, src_vec, vec_y);
+				}
+			}
+
+			vec_x = simd::multiply(vec_x, vec_x);
+			vec_y = simd::multiply(vec_y, vec_y);
+
+			auto grad = simd::sqrt(simd::add(vec_x, vec_y));
+			simd::store(mem.data, grad);
+
+			simd::cast_copy_len(mem.data, dst_begin + i);
+		};
+
+		for (u32 i = 0; i < length - STEP; i += STEP)
+		{
+			do_simd(i);
+		}
+
+		do_simd(length - STEP);
+	}
+
+
+	static void simd_edges_span(u8* src_begin, u8* dst_begin, u32 length, u32 pitch, u8_to_bool_f const& cond)
+	{
+		constexpr u32 N = simd::VEC_LEN;
+		constexpr u32 STEP = N;
+
+		auto const do_simd = [&](int i)
+		{
+			MemoryVector mem{};
+			u32 w = 0;
+			auto vec_x = simd::setzero();
+			auto vec_y = simd::setzero();
+			auto src_vec = simd::setzero();
+
+			for (int ry = -1; ry < 2; ++ry)
+			{
+				for (int rx = -1; rx < 2; ++rx, ++w)
+				{
+					int offset = ry * pitch + rx + i;
+					auto ptr = src_begin + offset;
+					simd::cast_copy_len(ptr, mem.data);
+
+					src_vec = simd::load(mem.data);
+
+					auto weight_x = simd::load_broadcast(GRAD_X_3X3.data() + w);
+					auto weight_y = simd::load_broadcast(GRAD_Y_3X3.data() + w);
+
+					vec_x = simd::fmadd(weight_x, src_vec, vec_x);
+					vec_y = simd::fmadd(weight_y, src_vec, vec_y);
+				}
+			}
+
+			vec_x = simd::multiply(vec_x, vec_x);
+			vec_y = simd::multiply(vec_y, vec_y);
+
+			auto grad = simd::sqrt(simd::add(vec_x, vec_y));
+			simd::store(mem.data, grad);
+
+			simd::transform_len(mem.data, dst_begin + i, [&](r32 val) { return (u8)(cond((u8)val) ? 255 : 0); });
+		};
+
+		for (u32 i = 0; i < length - STEP; i += STEP)
+		{
+			do_simd(i);
+		}
+
+		do_simd(length - STEP);
+	}
+
+
+	static void gradients_span(u8* src_begin, u8* dst_begin, u32 length, u32 pitch)
+	{
+		simd_gradients_span(src_begin, dst_begin, length, pitch);
+	}
+
+
+	static void edges_span(u8* src_begin, u8* dst_begin, u32 length, u32 pitch, u8_to_bool_f const& cond)
+	{
+		simd_edges_span(src_begin, dst_begin, length, pitch, cond);
+	}
+
+
+#else
+
+	static void gradients_span(u8* src_begin, u8* dst_begin, u32 length, u32 pitch)
+	{		
+		u32 w = 0;
+		for (u32 i = 0; i < length; ++i)
+		{
+			r32 grad_x = 0.0f;
+			r32 grad_y = 0.0f;
+			w = 0;
+			for (int ry = -1; ry < 2; ++ry)
+			{
+				for (int rx = -1; rx < 2; ++rx, ++w)
+				{
+					int offset = ry * pitch + rx + i;
+					auto p = src_begin[offset];
+
+					grad_x += GRAD_X_3X3[w] * p;
+					grad_y += GRAD_Y_3X3[w] * p;
+				}
+			}
+
+			auto g = std::hypot(grad_x, grad_y);
+
+			assert(g >= 0.0f);
+			assert(g <= 255.0f);
+
+			dst_begin[i] = (u8)g;
+		}
+	}
+
+
+	static void edges_span(u8* src_begin, u8* dst_begin, u32 length, u32 pitch, u8_to_bool_f const& cond)
+	{
+		u32 w = 0;
+		for (u32 i = 0; i < length; ++i)
+		{
+			r32 grad_x = 0.0f;
+			r32 grad_y = 0.0f;
+			w = 0;
+			for (int ry = -1; ry < 2; ++ry)
+			{
+				for (int rx = -1; rx < 2; ++rx, ++w)
+				{
+					int offset = ry * pitch + rx + i;
+					auto p = src_begin[offset];
+
+					grad_x += GRAD_X_3X3[w] * p;
+					grad_y += GRAD_Y_3X3[w] * p;
+				}
+			}			
+
+			auto g =std::hypot(grad_x, grad_y);
+
+			assert(g >= 0.0f);
+			assert(g <= 255.0f);
+
+			dst_begin[i] = cond((u8)g) ? 255 : 0;
+		}
+	}
+
+#endif !LIBIMAGE_NO_SIMD
+
+
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void do_gradients_in_range(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst, Range2Du32 const& range)
+	{
+		auto const height = range.y_end - range.y_begin;
+		auto const width = range.x_end - range.x_begin;
+		auto const rows_per_thread = height / N_THREADS;
+		auto const pitch = (u32)(row_begin(src, 1) - row_begin(src, 0));
+
+		auto const thread_proc = [&](u32 id)
+		{
+			auto y_begin = range.y_begin + id * rows_per_thread;
+			auto y_end = range.y_begin + (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
+
+			for (u32 y = y_begin; y < y_end; ++y)
+			{
+				auto src_begin = row_begin(src, y) + range.x_begin;
+				auto dst_begin = row_begin(dst, y) + range.x_begin;
+
+				gradients_span(src_begin, dst_begin, width, pitch);
+			}
+		};
+
+		execute_procs(make_proc_list(thread_proc));
+	}
+
+
+	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
+	static void do_edges_in_range(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst, Range2Du32 const& range, u8_to_bool_f const& cond)
+	{
+		auto const height = range.y_end - range.y_begin;
+		auto const width = range.x_end - range.x_begin;
+		auto const rows_per_thread = height / N_THREADS;
+		auto const pitch = (u32)(row_begin(src, 1) - row_begin(src, 0));
+
+		auto const thread_proc = [&](u32 id)
+		{
+			auto y_begin = range.y_begin + id * rows_per_thread;
+			auto y_end = range.y_begin + (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
+
+			for (u32 y = y_begin; y < y_end; ++y)
+			{
+				auto src_begin = row_begin(src, y) + range.x_begin;
+				auto dst_begin = row_begin(dst, y) + range.x_begin;
+
+				edges_span(src_begin, dst_begin, width, pitch, cond);
+			}
+		};
+
+		execute_procs(make_proc_list(thread_proc));
+	}
 
 
 	template<class GRAY_IMG_T>
@@ -2831,102 +2932,45 @@ namespace libimage
 	}
 
 
-	template <typename GR_IMG_T>
-	static r32 do_gradient_at_xy(GR_IMG_T const& img, u32 x, u32 y)
-	{
-		r32 grad_x = 0.0f;
-		r32 grad_y = 0.0f;
-
-		// x, y range
-		auto x_begin = x - 1;
-		auto x_end = x + 2;
-		auto y_begin = y - 1;
-		auto y_end = y + 2;
-
-		u32 a = 0; // array index
-
-		for (u32 v = y_begin; v < y_end; ++v)
-		{
-			for (u32 u = x_begin; u < x_end; ++u)
-			{
-				auto p = *xy_at(img, u, v);
-
-				grad_x += GRAD_X_3X3[a] * p;
-				grad_y += GRAD_Y_3X3[a] * p;
-				++a;
-			}
-		}
-
-		return std::hypot(grad_x, grad_y);
-	}
-
-
-	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void do_edges_inner(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst, u8_to_bool_f const& cond)
-	{
-		Range2Du32 r{};
-		r.x_begin = 1;
-		r.x_end = src.width - 1;
-		r.y_begin = 1;
-		r.y_end = src.height - 1;
-
-		auto const func = [&](u32 x, u32 y) 
-		{ 
-			auto g = (u8)do_gradient_at_xy(src, x, y);
-			*xy_at(dst, x, y) = cond(g) ? 255 : 0;
-		};
-
-		do_for_each_xy_in_range_by_row(src, r, func);
-	}
-
-
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
 	static void do_edges(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst, u8_to_bool_f const& cond)
 	{
-		std::array<std::function<void()>, 3> f_list
+		std::array<std::function<void()>, 2> f_list
 		{
 			[&]() { do_zero_top_bottom(dst); },
 			[&]() { do_zero_left_right(dst); },
-			[&]() { do_edges_inner(src, dst, cond); }
 		};
 
-		do_for_each_seq(f_list, [](auto const& f) { f(); });
-	}
+		do_for_each(f_list, [](auto const& f) { f(); });
 
-
-	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void do_gradients_inner(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
-	{
 		Range2Du32 r{};
 		r.x_begin = 1;
 		r.x_end = src.width - 1;
 		r.y_begin = 1;
 		r.y_end = src.height - 1;
 
-		auto const func = [&](u32 x, u32 y)
-		{
-			*xy_at(dst, x, y) = (u8)do_gradient_at_xy(src, x, y);
-		};
-
-		do_for_each_xy_in_range_by_row(src, r, func);
+		do_edges_in_range(src, dst, r, cond);
 	}
 
 
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
 	static void do_gradients(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
-		/*std::array<std::function<void()>, 3> f_list
+		std::array<std::function<void()>, 2> f_list
 		{
 			[&]() { do_zero_top_bottom(dst); },
 			[&]() { do_zero_left_right(dst); },
-			[&]() { do_gradients_inner(src, dst); }
 		};
 
-		do_for_each_seq(f_list, [](auto const& f) { f(); });*/
+		do_for_each(f_list, [](auto const& f) { f(); });
 
-		do_zero_top_bottom(dst);
-		do_zero_left_right(dst);
-		do_gradients_inner(src, dst);
+		Range2Du32 r{};
+		r.x_begin = 1;
+		r.x_end = src.width - 1;
+		r.y_begin = 1;
+		r.y_end = src.height - 1;
+
+		do_gradients_in_range(src, dst, r);
 	}
 
 
