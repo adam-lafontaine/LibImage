@@ -750,6 +750,15 @@ namespace libimage
 	inline void binarize_th(gray::View const& src, gray::View const& dst, u8 th) { binarize(src, dst, [&th](u8 p) { return p >= th; }); }
 
 
+	inline void binarize_th(gray::Image const& src, gray::Image const& dst, u8 min_th, u8 max_th) { binarize(src, dst, [&](u8 p) { return min_th <= p && p <= max_th; }); }
+
+	inline void binarize_th(gray::Image const& src, gray::View const& dst, u8 min_th, u8 max_th) { binarize(src, dst, [&](u8 p) { return min_th <= p && p <= max_th; }); }
+
+	inline void binarize_th(gray::View const& src, gray::Image const& dst, u8 min_th, u8 max_th) { binarize(src, dst, [&](u8 p) { return min_th <= p && p <= max_th; }); }
+
+	inline void binarize_th(gray::View const& src, gray::View const& dst, u8 min_th, u8 max_th) { binarize(src, dst, [&](u8 p) { return min_th <= p && p <= max_th; }); }
+
+
 }
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
