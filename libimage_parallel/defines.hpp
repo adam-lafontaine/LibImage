@@ -12,8 +12,6 @@
 //#define LIBIMAGE_NO_PARALLEL
 //#define LIBIMAGE_NO_FILESYSTEM
 
-//#define LIBIMAGE_NO_RAII
-
 //#define LIBIMAGE_NO_CPP17
 
 //#define LIBIMAGE_NO_SIMD
@@ -56,8 +54,6 @@
 
 #endif // LIBIMAGE_NO_CPP17
 
-//#define NDEBUG
-
 
 /*  types.hpp  */
 
@@ -67,3 +63,14 @@ using u64 = uint64_t;
 using r32 = float;
 using r64 = double;
 using i32 = int32_t;
+
+
+#ifdef LIBIMAGE_NO_PARALLEL
+
+constexpr u32 N_THREADS = 1;
+
+#else
+
+constexpr u32 N_THREADS = 8;
+
+#endif !LIBIMAGE_NO_PARALLEL

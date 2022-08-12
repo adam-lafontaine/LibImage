@@ -5,7 +5,7 @@
 #include <cmath>
 
 
-static void do_for_each_seq(auto& list, auto const& func)
+static void do_for_each_seq(auto const& list, auto const& func)
 {
 	std::for_each(list.begin(), list.end(), func);
 }
@@ -15,16 +15,13 @@ static void do_for_each_seq(auto& list, auto const& func)
 
 #include <execution>
 
-constexpr u32 N_THREADS = 8;
 
-static void do_for_each(auto& list, auto const& func)
+static void do_for_each(auto const& list, auto const& func)
 {
 	std::for_each(std::execution::par, list.begin(), list.end(), func);
 }
 
 #else
-
-constexpr u32 N_THREADS = 1;
 
 static void do_for_each(auto const& list, auto const& func)
 {
@@ -2569,8 +2566,18 @@ namespace libimage
 
 
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void do_inner_gauss(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	static void do_blur(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
 	{
+		std::array<std::function<void()>, 4> f_list =
+		{
+			[&]() { do_copy_top_bottom(src, dst); },
+			[&]() { do_copy_left_right(src, dst); },
+			[&]() { do_gauss_inner_top_bottom(src, dst); },
+			[&]() { do_gauss_inner_left_right(src, dst); },
+		};
+
+		do_for_each(f_list, [](auto const& f) { f(); });
+
 		Range2Du32 r{};
 		r.x_begin = 2;
 		r.x_end = src.width - 2;
@@ -2585,23 +2592,6 @@ namespace libimage
 		kernel.data = kernel_data;
 
 		do_convolve_in_range(src, dst, r, kernel);
-	}
-
-
-	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void do_blur(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
-	{
-		std::array<std::function<void()>, 4> f_list =
-		{
-			[&]() { do_copy_top_bottom(src, dst); },
-			[&]() { do_copy_left_right(src, dst); },
-			[&]() { do_gauss_inner_top_bottom(src, dst); },
-			[&]() { do_gauss_inner_left_right(src, dst); },
-		};
-
-		do_for_each(f_list, [](auto const& f) { f(); });
-
-		do_inner_gauss(src, dst);
 	}
 
 
@@ -2755,7 +2745,7 @@ namespace libimage
 			auto grad = simd::sqrt(simd::add(vec_x, vec_y));
 			simd::store(mem.data, grad);
 
-			simd::transform_len(mem.data, dst_begin + i, [&](r32 val) { return (u8)(cond((u8)val) ? 255 : 0); });
+			simd::transform_len(mem.data, dst_begin + i, [&](r32 val) { return cond((u8)val) ? 255 : 0; });
 		};
 
 		for (u32 i = 0; i < length - STEP; i += STEP)
