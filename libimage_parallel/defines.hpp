@@ -14,7 +14,7 @@
 
 //#define LIBIMAGE_NO_CPP17
 
-//#define LIBIMAGE_NO_SIMD
+#define LIBIMAGE_NO_SIMD
 
 #define INTEL_CPU
 //#define RPI_3B_PLUS
@@ -25,8 +25,8 @@
 
 #ifdef INTEL_CPU
 
-//#define SIMD_INTEL_128
-#define SIMD_INTEL_256
+#define SIMD_INTEL_128
+//#define SIMD_INTEL_256
 
 #endif // INTEL_CPU
 
@@ -73,4 +73,4 @@ constexpr u32 N_THREADS = 1;
 
 constexpr u32 N_THREADS = 8;
 
-#endif !LIBIMAGE_NO_PARALLEL
+#endif //!LIBIMAGE_NO_PARALLEL

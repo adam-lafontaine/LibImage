@@ -5,7 +5,8 @@
 #include <cmath>
 
 
-static void do_for_each_seq(auto const& list, auto const& func)
+template <class LIST_T, class FUNC_T>
+static void do_for_each_seq(LIST_T const& list, FUNC_T const& func)
 {
 	std::for_each(list.begin(), list.end(), func);
 }
@@ -14,16 +15,18 @@ static void do_for_each_seq(auto const& list, auto const& func)
 #ifndef LIBIMAGE_NO_PARALLEL
 
 #include <execution>
+// -ltbb
 
 
-static void do_for_each(auto const& list, auto const& func)
+template <class LIST_T, class FUNC_T>
+static void do_for_each(LIST_T const& list, FUNC_T const& func)
 {
 	std::for_each(std::execution::par, list.begin(), list.end(), func);
 }
 
 #else
 
-static void do_for_each(auto const& list, auto const& func)
+static void do_for_each(LIST_T const& list, FUNC_T const& func)
 {
 	do_for_each_seq(list, func);
 }
@@ -919,7 +922,7 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-	static lookup_table_t to_lookup_table(u8_to_u8_f const& func)
+	lookup_table_t to_lookup_table(u8_to_u8_f const& func)
 	{
 		lookup_table_t lut = { 0 };
 
@@ -1400,7 +1403,7 @@ namespace libimage
 		do_transform_by_row2(src_a, src_b, dst, alpha_blend_linear);
 	}
 
-#endif !LIBIMAGE_NO_SIMD	
+#endif // !LIBIMAGE_NO_SIMD	
 
 
 	void alpha_blend(Image const& src, Image const& current, Image const& dst)
@@ -2830,7 +2833,7 @@ namespace libimage
 		}
 	}
 
-#endif !LIBIMAGE_NO_SIMD
+#endif // !LIBIMAGE_NO_SIMD
 
 
 	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
