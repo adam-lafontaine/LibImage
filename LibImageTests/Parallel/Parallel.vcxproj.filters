@@ -59,5 +59,8 @@
     <ClInclude Include="..\..\libimage_parallel\simd_def.hpp">
       <Filter>Header Files\libimage</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\libimage_parallel\stb_wrapper\stb_image_write.h">
+      <Filter>Header Files\libimage\stb_wrapper</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
