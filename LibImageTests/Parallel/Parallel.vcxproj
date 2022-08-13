@@ -27,7 +27,6 @@
     <ClInclude Include="..\..\libimage_parallel\defines.hpp" />
     <ClInclude Include="..\..\libimage_parallel\libimage.hpp" />
     <ClInclude Include="..\..\libimage_parallel\simd_def.hpp" />
-    <ClInclude Include="..\..\libimage_parallel\stb_wrapper\stb_image_write.h" />
     <ClInclude Include="..\..\libimage_parallel\stb_wrapper\stb_include.hpp" />
     <ClInclude Include="..\utils\stopwatch.hpp" />
     <ClInclude Include="..\utils\win32_leak_check.h" />
