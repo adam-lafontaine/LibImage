@@ -2,6 +2,13 @@
 
 #include "../defines.hpp"
 
+#define STBI_NO_GIF
+#define STBI_NO_PSD
+#define STBI_NO_PIC
+#define STBI_NO_PNM
+#define STBI_NO_HDR
+#define STBI_NO_TGA
+
 #define STBI_NO_JPEG
 
 #ifndef LIBIMAGE_PNG
@@ -12,13 +19,16 @@
 #define STBI_NO_BMP
 #endif // !LIBIMAGE_BMP
 
+#ifdef LIBIMAGE_NO_SIMD
+#define STBI_NO_SIMD
+#endif // LIBIMAGE_NO_SIMD
 
-#define STBI_NO_GIF
-#define STBI_NO_PSD
-#define STBI_NO_PIC
-#define STBI_NO_PNM
-#define STBI_NO_HDR
-#define STBI_NO_TGA
+#ifdef SIMD_ARM_NEON
+#define STBI_NEON
+#endif // SIMD_ARM_NEON
+
+
+
 
 
 #define STB_IMAGE_IMPLEMENTATION

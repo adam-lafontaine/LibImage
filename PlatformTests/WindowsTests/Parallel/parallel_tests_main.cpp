@@ -1,4 +1,4 @@
-#include "../../libimage_parallel/libimage.hpp"
+#include "../../../libimage_parallel/libimage.hpp"
 
 #include "../utils/stopwatch.hpp"
 

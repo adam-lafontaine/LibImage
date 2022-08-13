@@ -33,28 +33,28 @@
     <ClCompile Include="compact_tests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\libimage_compact\libimage.cpp">
+    <ClCompile Include="..\..\..\libimage_compact\libimage.cpp">
       <Filter>Source Files\libimage_compact</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\libimage_compact\stb_wrapper\stb_libimage.cpp">
+    <ClCompile Include="..\..\..\libimage_compact\stb_wrapper\stb_libimage.cpp">
       <Filter>Source Files\libimage_compact\stb_wrapper</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\libimage_compact\libimage.hpp">
-      <Filter>Header Files\libimage_compact</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\libimage_compact\stb_wrapper\stb_include.hpp">
-      <Filter>Header Files\libimage_compact\stb_wrapper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\libimage_compact\defines.hpp">
-      <Filter>Header Files\libimage_compact</Filter>
-    </ClInclude>
     <ClInclude Include="..\utils\stopwatch.hpp">
       <Filter>Header Files\util</Filter>
     </ClInclude>
     <ClInclude Include="..\utils\win32_leak_check.h">
       <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\libimage_compact\defines.hpp">
+      <Filter>Header Files\libimage_compact</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\libimage_compact\libimage.hpp">
+      <Filter>Header Files\libimage_compact</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\libimage_compact\stb_wrapper\stb_include.hpp">
+      <Filter>Header Files\libimage_compact\stb_wrapper</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

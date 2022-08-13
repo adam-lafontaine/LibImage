@@ -1,10 +1,4 @@
-/*
-
-March 13, 2021: Warnings removed by Adam Lafontaine
-
-*/
-
-/* stb_image_resize - v0.96 - public domain image resizing
+/* stb_image_resize - v0.97 - public domain image resizing
    by Jorge L Rodriguez (@VinoBS) - 2014
    http://github.com/nothings/stb
 
@@ -260,7 +254,7 @@ STBIRDEF int stbir_resize_uint8_srgb(const unsigned char *input_pixels , int inp
                                            unsigned char *output_pixels, int output_w, int output_h, int output_stride_in_bytes,
                                      int num_channels, int alpha_channel, int flags);
 
-/*
+
 typedef enum
 {
     STBIR_EDGE_CLAMP   = 1,
@@ -268,13 +262,6 @@ typedef enum
     STBIR_EDGE_WRAP    = 3,
     STBIR_EDGE_ZERO    = 4,
 } stbir_edge;
-*/
-
-#define STBIR_EDGE_CLAMP 1
-#define STBIR_EDGE_REFLECT 2
-#define STBIR_EDGE_WRAP 3
-#define STBIR_EDGE_ZERO 4
-#define stbir_edge unsigned char
 
 // This function adds the ability to specify how requests to sample off the edge of the image are handled.
 STBIRDEF int stbir_resize_uint8_srgb_edgemode(const unsigned char *input_pixels , int input_w , int input_h , int input_stride_in_bytes,
@@ -297,7 +284,6 @@ STBIRDEF int stbir_resize_uint8_srgb_edgemode(const unsigned char *input_pixels 
 //     * sRGB colorspace available for all types
 //     * context parameter for passing to STBIR_MALLOC
 
-/*
 typedef enum
 {
     STBIR_FILTER_DEFAULT      = 0,  // use same filter type that easy-to-use API chooses
@@ -307,17 +293,7 @@ typedef enum
     STBIR_FILTER_CATMULLROM   = 4,  // An interpolating cubic spline
     STBIR_FILTER_MITCHELL     = 5,  // Mitchell-Netrevalli filter with B=1/3, C=1/3
 } stbir_filter;
-*/
 
-#define STBIR_FILTER_DEFAULT 0
-#define STBIR_FILTER_BOX 1
-#define STBIR_FILTER_TRIANGLE 2
-#define STBIR_FILTER_CUBICBSPLINE 3
-#define STBIR_FILTER_CATMULLROM 4
-#define STBIR_FILTER_MITCHELL 5
-#define stbir_filter unsigned char
-
-/*
 typedef enum
 {
     STBIR_COLORSPACE_LINEAR,
@@ -325,12 +301,6 @@ typedef enum
 
     STBIR_MAX_COLORSPACES,
 } stbir_colorspace;
-*/
-
-#define STBIR_COLORSPACE_LINEAR 0
-#define STBIR_COLORSPACE_SRGB 1
-#define STBIR_MAX_COLORSPACES 2
-#define stbir_colorspace unsigned char
 
 // The following functions are all identical except for the type of the image data
 
@@ -367,7 +337,6 @@ STBIRDEF int stbir_resize_float_generic( const float *input_pixels         , int
 //     * can specify scale explicitly for subpixel correctness
 //     * can specify image source tile using texture coordinates
 
-/*
 typedef enum
 {
     STBIR_TYPE_UINT8 ,
@@ -377,14 +346,6 @@ typedef enum
 
     STBIR_MAX_TYPES
 } stbir_datatype;
-*/
-
-#define STBIR_TYPE_UINT8 0
-#define STBIR_TYPE_UINT16 1
-#define STBIR_TYPE_UINT32 2
-#define STBIR_TYPE_FLOAT 3
-#define STBIR_MAX_TYPES 4
-#define stbir_datatype unsigned char
 
 STBIRDEF int stbir_resize(         const void *input_pixels , int input_w , int input_h , int input_stride_in_bytes,
                                          void *output_pixels, int output_w, int output_h, int output_stride_in_bytes,
@@ -925,8 +886,7 @@ static int stbir__get_filter_pixel_width(stbir_filter filter, float scale)
     STBIR_ASSERT(filter < STBIR__ARRAY_SIZE(stbir__filter_info_table));
 
     if (stbir__use_upsampling(scale))
-        return (int)ceil((size_t)stbir__filter_info_table[filter].support(1 / scale) * 2);
-        //return (int)ceil(stbir__filter_info_table[filter].support(1/scale) * 2);
+        return (int)ceil(stbir__filter_info_table[filter].support(1/scale) * 2);
     else
         return (int)ceil(stbir__filter_info_table[filter].support(scale) * 2 / scale);
 }
@@ -941,9 +901,9 @@ static int stbir__get_filter_pixel_margin(stbir_filter filter, float scale)
 static int stbir__get_coefficient_width(stbir_filter filter, float scale)
 {
     if (stbir__use_upsampling(scale))
-        return (int)ceil((size_t)stbir__filter_info_table[filter].support(1 / scale) * 2);
+        return (int)ceil(stbir__filter_info_table[filter].support(1 / scale) * 2);
     else
-        return (int)ceil((size_t)stbir__filter_info_table[filter].support(scale) * 2);
+        return (int)ceil(stbir__filter_info_table[filter].support(scale) * 2);
 }
 
 static int stbir__get_contributors(float scale, stbir_filter filter, int input_size, int output_size)
@@ -1081,7 +1041,7 @@ static void stbir__calculate_coefficients_upsample(stbir_filter filter, float sc
     float total_filter = 0;
     float filter_scale;
 
-    STBIR_ASSERT(in_last_pixel - in_first_pixel <= (int)ceil((size_t)stbir__filter_info_table[filter].support(1/scale) * 2)); // Taken directly from stbir__get_coefficient_width() which we can't call because we don't know if we're horizontal or vertical.
+    STBIR_ASSERT(in_last_pixel - in_first_pixel <= (int)ceil(stbir__filter_info_table[filter].support(1/scale) * 2)); // Taken directly from stbir__get_coefficient_width() which we can't call because we don't know if we're horizontal or vertical.
 
     contributor->n0 = in_first_pixel;
     contributor->n1 = in_last_pixel;
@@ -1104,7 +1064,11 @@ static void stbir__calculate_coefficients_upsample(stbir_filter filter, float sc
         total_filter += coefficient_group[i];
     }
 
-    STBIR_ASSERT(stbir__filter_info_table[filter].kernel((float)(in_last_pixel + 1) + 0.5f - in_center_of_out, 1/scale) == 0);
+    // NOTE(fg): Not actually true in general, nor is there any reason to expect it should be.
+    // It would be true in exact math but is at best approximately true in floating-point math,
+    // and it would not make sense to try and put actual bounds on this here because it depends
+    // on the image aspect ratio which can get pretty extreme.
+    //STBIR_ASSERT(stbir__filter_info_table[filter].kernel((float)(in_last_pixel + 1) + 0.5f - in_center_of_out, 1/scale) == 0);
 
     STBIR_ASSERT(total_filter > 0.9);
     STBIR_ASSERT(total_filter < 1.1f); // Make sure it's not way off.
@@ -1129,7 +1093,7 @@ static void stbir__calculate_coefficients_downsample(stbir_filter filter, float 
 {
     int i;
 
-     STBIR_ASSERT(out_last_pixel - out_first_pixel <= (int)ceil((size_t)stbir__filter_info_table[filter].support(scale_ratio) * 2)); // Taken directly from stbir__get_coefficient_width() which we can't call because we don't know if we're horizontal or vertical.
+    STBIR_ASSERT(out_last_pixel - out_first_pixel <= (int)ceil(stbir__filter_info_table[filter].support(scale_ratio) * 2)); // Taken directly from stbir__get_coefficient_width() which we can't call because we don't know if we're horizontal or vertical.
 
     contributor->n0 = out_first_pixel;
     contributor->n1 = out_last_pixel;
@@ -1143,7 +1107,11 @@ static void stbir__calculate_coefficients_downsample(stbir_filter filter, float 
         coefficient_group[i] = stbir__filter_info_table[filter].kernel(x, scale_ratio) * scale_ratio;
     }
 
-    STBIR_ASSERT(stbir__filter_info_table[filter].kernel((float)(out_last_pixel + 1) + 0.5f - out_center_of_in, scale_ratio) == 0);
+    // NOTE(fg): Not actually true in general, nor is there any reason to expect it should be.
+    // It would be true in exact math but is at best approximately true in floating-point math,
+    // and it would not make sense to try and put actual bounds on this here because it depends
+    // on the image aspect ratio which can get pretty extreme.
+    //STBIR_ASSERT(stbir__filter_info_table[filter].kernel((float)(out_last_pixel + 1) + 0.5f - out_center_of_in, scale_ratio) == 0);
 
     for (i = out_last_pixel - out_first_pixel; i >= 0; i--)
     {
@@ -1286,10 +1254,8 @@ static void stbir__decode_scanline(stbir__info* stbir_info, int n)
     int c;
     int channels = stbir_info->channels;
     int alpha_channel = stbir_info->alpha_channel;
-    //int type = stbir_info->type;
-    int type = (int)stbir_info->type;
-    //int colorspace = stbir_info->colorspace;
-    int colorspace = (int)stbir_info->colorspace;
+    int type = stbir_info->type;
+    int colorspace = stbir_info->colorspace;
     int input_w = stbir_info->input_w;
     size_t input_stride_bytes = stbir_info->input_stride_bytes;
     float* decode_buffer = stbir__get_decode_buffer(stbir_info);
@@ -1594,7 +1560,6 @@ static void stbir__resample_horizontal_downsample(stbir__info* stbir_info, float
                 {
                     int out_pixel_index = k * 1;
                     float coefficient = horizontal_coefficients[coefficient_group + k - n0];
-                    STBIR_ASSERT(coefficient != 0);
                     output_buffer[out_pixel_index + 0] += decode_buffer[in_pixel_index + 0] * coefficient;
                 }
             }
@@ -1615,7 +1580,6 @@ static void stbir__resample_horizontal_downsample(stbir__info* stbir_info, float
                 {
                     int out_pixel_index = k * 2;
                     float coefficient = horizontal_coefficients[coefficient_group + k - n0];
-                    STBIR_ASSERT(coefficient != 0);
                     output_buffer[out_pixel_index + 0] += decode_buffer[in_pixel_index + 0] * coefficient;
                     output_buffer[out_pixel_index + 1] += decode_buffer[in_pixel_index + 1] * coefficient;
                 }
@@ -1637,7 +1601,6 @@ static void stbir__resample_horizontal_downsample(stbir__info* stbir_info, float
                 {
                     int out_pixel_index = k * 3;
                     float coefficient = horizontal_coefficients[coefficient_group + k - n0];
-                    STBIR_ASSERT(coefficient != 0);
                     output_buffer[out_pixel_index + 0] += decode_buffer[in_pixel_index + 0] * coefficient;
                     output_buffer[out_pixel_index + 1] += decode_buffer[in_pixel_index + 1] * coefficient;
                     output_buffer[out_pixel_index + 2] += decode_buffer[in_pixel_index + 2] * coefficient;
@@ -1660,7 +1623,6 @@ static void stbir__resample_horizontal_downsample(stbir__info* stbir_info, float
                 {
                     int out_pixel_index = k * 4;
                     float coefficient = horizontal_coefficients[coefficient_group + k - n0];
-                    STBIR_ASSERT(coefficient != 0);
                     output_buffer[out_pixel_index + 0] += decode_buffer[in_pixel_index + 0] * coefficient;
                     output_buffer[out_pixel_index + 1] += decode_buffer[in_pixel_index + 1] * coefficient;
                     output_buffer[out_pixel_index + 2] += decode_buffer[in_pixel_index + 2] * coefficient;
@@ -1685,7 +1647,6 @@ static void stbir__resample_horizontal_downsample(stbir__info* stbir_info, float
                     int c;
                     int out_pixel_index = k * channels;
                     float coefficient = horizontal_coefficients[coefficient_group + k - n0];
-                    STBIR_ASSERT(coefficient != 0);
                     for (c = 0; c < channels; c++)
                         output_buffer[out_pixel_index + c] += decode_buffer[in_pixel_index + c] * coefficient;
                 }
@@ -1713,8 +1674,7 @@ static void stbir__decode_and_resample_downsample(stbir__info* stbir_info, int n
     // Decode the nth scanline from the source image into the decode buffer.
     stbir__decode_scanline(stbir_info, n);
 
-    //memset(stbir_info->horizontal_buffer, 0, stbir_info->output_w * stbir_info->channels * sizeof(float));
-    memset(stbir_info->horizontal_buffer, 0, (size_t)stbir_info->output_w * stbir_info->channels * sizeof(float));
+    memset(stbir_info->horizontal_buffer, 0, stbir_info->output_w * stbir_info->channels * sizeof(float));
 
     // Now resample it into the horizontal buffer.
     if (stbir__use_width_upsampling(stbir_info))

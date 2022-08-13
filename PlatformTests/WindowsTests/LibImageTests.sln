@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32319.34
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LibImageAllTests", "LibImageAllTests\LibImageAllTests.vcxproj", "{3BA01AAC-2BB8-41DC-A9D8-AFFE7E12A601}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Compact", "Compact\Compact.vcxproj", "{572882A3-83BF-4320-A55A-4FFE2A27845E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Parallel", "Parallel\Parallel.vcxproj", "{8577E610-73F1-4A3C-A252-4C98A3D012CA}"
@@ -17,14 +15,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{3BA01AAC-2BB8-41DC-A9D8-AFFE7E12A601}.Debug|x64.ActiveCfg = Debug|x64
-		{3BA01AAC-2BB8-41DC-A9D8-AFFE7E12A601}.Debug|x64.Build.0 = Debug|x64
-		{3BA01AAC-2BB8-41DC-A9D8-AFFE7E12A601}.Debug|x86.ActiveCfg = Debug|Win32
-		{3BA01AAC-2BB8-41DC-A9D8-AFFE7E12A601}.Debug|x86.Build.0 = Debug|Win32
-		{3BA01AAC-2BB8-41DC-A9D8-AFFE7E12A601}.Release|x64.ActiveCfg = Release|x64
-		{3BA01AAC-2BB8-41DC-A9D8-AFFE7E12A601}.Release|x64.Build.0 = Release|x64
-		{3BA01AAC-2BB8-41DC-A9D8-AFFE7E12A601}.Release|x86.ActiveCfg = Release|Win32
-		{3BA01AAC-2BB8-41DC-A9D8-AFFE7E12A601}.Release|x86.Build.0 = Release|Win32
 		{572882A3-83BF-4320-A55A-4FFE2A27845E}.Debug|x64.ActiveCfg = Debug|x64
 		{572882A3-83BF-4320-A55A-4FFE2A27845E}.Debug|x64.Build.0 = Debug|x64
 		{572882A3-83BF-4320-A55A-4FFE2A27845E}.Debug|x86.ActiveCfg = Debug|Win32

@@ -1,4 +1,4 @@
-#include "../../libimage_compact/libimage.hpp"
+#include "../../../libimage_compact/libimage.hpp"
 
 #include "../utils/stopwatch.hpp"
 
@@ -23,7 +23,7 @@ using path_t = fs::path;
 
 
 // set this directory for your system
-constexpr auto ROOT_DIR = "C:/D_Data/repos/LibImage/";
+constexpr auto ROOT_DIR = "../../../";
 
 constexpr auto TEST_IMAGE_DIR = "TestImages/";
 constexpr auto IMAGE_IN_DIR = "in_files/";
@@ -123,6 +123,7 @@ int main()
 	blur_test();
 	gradients_test();
 	edges_test();
+	combo_view_test();
 	rotate_test();
 }
 

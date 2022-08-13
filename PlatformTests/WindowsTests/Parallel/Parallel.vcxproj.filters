@@ -13,51 +13,51 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\libimage">
-      <UniqueIdentifier>{d2ab70b6-6d31-4edc-8a55-f441f9f8ae57}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\libimage">
-      <UniqueIdentifier>{58049a5f-bde1-4d31-81c4-e70e4991e119}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\libimage\stb_wrapper">
-      <UniqueIdentifier>{19ab3d4d-6bbe-4ff1-8bc9-216bb9c4b27d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\libimage\stb_wrapper">
-      <UniqueIdentifier>{7284b41b-9148-42fd-8b15-ceefe9ddfb51}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\util">
       <UniqueIdentifier>{8e123c45-dbda-467c-816b-7b8dd456635e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\libimage_parallel">
+      <UniqueIdentifier>{58049a5f-bde1-4d31-81c4-e70e4991e119}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\libimage_parallel\stb_wrapper">
+      <UniqueIdentifier>{7284b41b-9148-42fd-8b15-ceefe9ddfb51}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\libimage_parallel">
+      <UniqueIdentifier>{d2ab70b6-6d31-4edc-8a55-f441f9f8ae57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\libimage_parallel\stb_wrapper">
+      <UniqueIdentifier>{19ab3d4d-6bbe-4ff1-8bc9-216bb9c4b27d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\libimage_parallel\stb_wrapper\stb_libimage.cpp">
-      <Filter>Source Files\libimage\stb_wrapper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\libimage_parallel\libimage.cpp">
-      <Filter>Source Files\libimage</Filter>
-    </ClCompile>
     <ClCompile Include="parallel_tests_main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\libimage_parallel\stb_wrapper\stb_libimage.cpp">
+      <Filter>Source Files\libimage_parallel\stb_wrapper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\libimage_parallel\libimage.cpp">
+      <Filter>Source Files\libimage_parallel</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\libimage_parallel\stb_wrapper\stb_include.hpp">
-      <Filter>Header Files\libimage\stb_wrapper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\libimage_parallel\defines.hpp">
-      <Filter>Header Files\libimage</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\libimage_parallel\libimage.hpp">
-      <Filter>Header Files\libimage</Filter>
-    </ClInclude>
     <ClInclude Include="..\utils\stopwatch.hpp">
       <Filter>Header Files\util</Filter>
     </ClInclude>
     <ClInclude Include="..\utils\win32_leak_check.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\libimage_parallel\simd_def.hpp">
-      <Filter>Header Files\libimage</Filter>
+    <ClInclude Include="..\..\..\libimage_parallel\stb_wrapper\stb_include.hpp">
+      <Filter>Header Files\libimage_parallel\stb_wrapper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\libimage_parallel\defines.hpp">
+      <Filter>Header Files\libimage_parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\libimage_parallel\libimage.hpp">
+      <Filter>Header Files\libimage_parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\libimage_parallel\simd_def.hpp">
+      <Filter>Header Files\libimage_parallel</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
