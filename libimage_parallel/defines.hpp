@@ -12,12 +12,12 @@
 //#define LIBIMAGE_NO_PARALLEL
 //#define LIBIMAGE_NO_FILESYSTEM
 
-//#define LIBIMAGE_NO_CPP17
+#define LIBIMAGE_NO_CPP17
 
-//#define LIBIMAGE_NO_SIMD
+#define LIBIMAGE_NO_SIMD
 
 //#define INTEL_CPU
-#define RPI_3B_PLUS
+//#define RPI_3B_PLUS
 //#define JETSON_NANO
 
 
