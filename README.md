@@ -1,5 +1,7 @@
 # LibImage
 A Basic image processing libray for C++
+
+## Basic Implementation - /libimage/
 * C++17
 * Interface inspired by boost::GIL
 * Uses stb_image to read, write and resize images (https://github.com/nothings/stb)
@@ -7,21 +9,21 @@ A Basic image processing libray for C++
 * Forward iterator begin() and end() to allow using the STL algorithms
 * Histogram, mean, standard deviation
 * Copy, conversion, binarization, alpha blending, edge detection
-* Settings macros defined in /libimage/defines.hpp
-* /libimage_compact for version with fewer files
+* Settings macros defined in /defines.hpp
 
-Windows
-* Sequential and parallel processing (std::execution)
-* SIMD available for Intel 128 bit, Intel 256 bit, ARM 128 bit
-
-Raspberry Pi 3B+
-* Sequential and parallel processing (std::execution)
-* SIMD ARM Neon 128 bit
-* See /RPiTests/rpi_tests_main.cpp for demonstration
+## Latest Implementation - /libimage_parallel/
+* C++17
+* Settings macros defined in /defines.hpp
+* A more C-style api than the basic implementation
+* Processes images by evenly dividing by per number of specified threads
+* Limited SIMD support provided
+* Visual Studio solution for Windows
+* Makefiles for Ubuntu and Raspberry Pi 3B+
 * "make setup" to create build directory
 * "make build" or "make run"
+* Create directory /TestImages/out_files/ to allow programs to write output images
 
-CUDA
+## CUDA
 * Typesafe wrapper for preallocating memory on the GPU
 * Developed on the Jetson Nano.  C++14
 * See /CudaTests/cuda_test_main.cpp for demonstration

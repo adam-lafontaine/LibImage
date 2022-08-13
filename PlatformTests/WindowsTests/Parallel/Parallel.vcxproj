@@ -18,11 +18,24 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\libimage_parallel\libimage.cpp" />
+    <ClCompile Include="..\..\..\libimage_parallel\stb_wrapper\stb_libimage.cpp" />
+    <ClCompile Include="parallel_tests_main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\libimage_parallel\defines.hpp" />
+    <ClInclude Include="..\..\..\libimage_parallel\libimage.hpp" />
+    <ClInclude Include="..\..\..\libimage_parallel\simd_def.hpp" />
+    <ClInclude Include="..\..\..\libimage_parallel\stb_wrapper\stb_include.hpp" />
+    <ClInclude Include="..\utils\stopwatch.hpp" />
+    <ClInclude Include="..\utils\win32_leak_check.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{3ba01aac-2bb8-41dc-a9d8-affe7e12a601}</ProjectGuid>
-    <RootNamespace>LibImageAllTests</RootNamespace>
+    <ProjectGuid>{8577e610-73f1-4a3c-a252-4c98a3d012ca}</ProjectGuid>
+    <RootNamespace>Parallel</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -70,25 +83,13 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>false</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkIncremental>true</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkIncremental>false</LinkIncremental>
-  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -103,7 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -118,7 +119,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -133,7 +134,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -142,56 +143,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\libimage\libimage.cpp" />
-    <ClCompile Include="..\..\libimage\locate\locate.cpp" />
-    <ClCompile Include="..\..\libimage\math\charts.cpp" />
-    <ClCompile Include="..\..\libimage\math\math.cpp" />
-    <ClCompile Include="..\..\libimage\proc\alpha_blend.cpp" />
-    <ClCompile Include="..\..\libimage\proc\binary.cpp" />
-    <ClCompile Include="..\..\libimage\proc\blur.cpp" />
-    <ClCompile Include="..\..\libimage\proc\contrast.cpp" />
-    <ClCompile Include="..\..\libimage\proc\convolve.cpp" />
-    <ClCompile Include="..\..\libimage\proc\copy.cpp" />
-    <ClCompile Include="..\..\libimage\proc\edges_gradients.cpp" />
-    <ClCompile Include="..\..\libimage\proc\grayscale.cpp" />
-    <ClCompile Include="..\..\libimage\proc\rotate.cpp" />
-    <ClCompile Include="..\..\libimage\proc\simd\simd_alpha_blend.cpp" />
-    <ClCompile Include="..\..\libimage\proc\simd\simd_convolve.cpp" />
-    <ClCompile Include="..\..\libimage\proc\simd\simd_grayscale.cpp" />
-    <ClCompile Include="..\..\libimage\proc\transform.cpp" />
-    <ClCompile Include="..\..\libimage\stb_wrapper\stb_libimage.cpp" />
-    <ClCompile Include="libimage_tests_main.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\libimage\defines.hpp" />
-    <ClInclude Include="..\..\libimage\gray.hpp" />
-    <ClInclude Include="..\..\libimage\libimage.hpp" />
-    <ClInclude Include="..\..\libimage\locate\locate.hpp" />
-    <ClInclude Include="..\..\libimage\math\charts.hpp" />
-    <ClInclude Include="..\..\libimage\math\math.hpp" />
-    <ClInclude Include="..\..\libimage\proc\alpha_blend.hpp" />
-    <ClInclude Include="..\..\libimage\proc\binary.hpp" />
-    <ClInclude Include="..\..\libimage\proc\blur.hpp" />
-    <ClInclude Include="..\..\libimage\proc\contrast.hpp" />
-    <ClInclude Include="..\..\libimage\proc\copy.hpp" />
-    <ClInclude Include="..\..\libimage\proc\edges.hpp" />
-    <ClInclude Include="..\..\libimage\proc\gradients.hpp" />
-    <ClInclude Include="..\..\libimage\proc\grayscale.hpp" />
-    <ClInclude Include="..\..\libimage\proc\proc_def.hpp" />
-    <ClInclude Include="..\..\libimage\proc\rotate.hpp" />
-    <ClInclude Include="..\..\libimage\proc\simd\simd_def.hpp" />
-    <ClInclude Include="..\..\libimage\proc\transform.hpp" />
-    <ClInclude Include="..\..\libimage\proc\verify.hpp" />
-    <ClInclude Include="..\..\libimage\rgba.hpp" />
-    <ClInclude Include="..\..\libimage\types.hpp" />
-    <ClInclude Include="..\..\libimage\proc\convolve.hpp" />
-    <ClInclude Include="..\..\libimage\proc\index_range.hpp" />
-    <ClInclude Include="..\..\libimage\proc\process.hpp" />
-    <ClInclude Include="..\..\libimage\stb_wrapper\stb_include.hpp" />
-    <ClInclude Include="..\utils\stopwatch.hpp" />
-    <ClInclude Include="..\utils\win32_leak_check.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

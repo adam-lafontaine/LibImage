@@ -143,14 +143,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\libimage_compact\libimage.cpp" />
-    <ClCompile Include="..\..\libimage_compact\stb_wrapper\stb_libimage.cpp" />
+    <ClCompile Include="..\..\..\libimage_compact\libimage.cpp" />
+    <ClCompile Include="..\..\..\libimage_compact\stb_wrapper\stb_libimage.cpp" />
     <ClCompile Include="compact_tests.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\libimage_compact\defines.hpp" />
-    <ClInclude Include="..\..\libimage_compact\libimage.hpp" />
-    <ClInclude Include="..\..\libimage_compact\stb_wrapper\stb_include.hpp" />
+    <ClInclude Include="..\..\..\libimage_compact\defines.hpp" />
+    <ClInclude Include="..\..\..\libimage_compact\libimage.hpp" />
+    <ClInclude Include="..\..\..\libimage_compact\stb_wrapper\stb_include.hpp" />
     <ClInclude Include="..\utils\stopwatch.hpp" />
     <ClInclude Include="..\utils\win32_leak_check.h" />
   </ItemGroup>
