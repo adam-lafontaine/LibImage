@@ -1421,6 +1421,14 @@ namespace libimage
 		do_simd_transform_by_row(src, dst, simd_copy_gray_row);
 	}
 
+#else
+
+	template <class SRC_IMG_T, class DST_IMG_T>
+	static void do_copy_gray(SRC_IMG_T const& src, DST_IMG_T const& dst)
+	{
+		do_copy(src, dst);
+	}
+
 #endif // !LIBIMAGE_NO_SIMD
 
 
@@ -1428,7 +1436,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		do_copy(src, dst);
+		do_copy_gray(src, dst);
 	}
 
 
@@ -1436,7 +1444,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		do_copy(src, dst);
+		do_copy_gray(src, dst);
 	}
 
 
@@ -1444,7 +1452,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		do_copy(src, dst);
+		do_copy_gray(src, dst);
 	}
 
 
@@ -1452,7 +1460,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		do_copy(src, dst);
+		do_copy_gray(src, dst);
 	}
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
