@@ -506,16 +506,6 @@ namespace libimage
 }
 
 
-//template <typename PIXEL_T, class PIXEL_F>
-//static void do_for_each_pixel_in_span(PIXEL_T* row_begin, u32 length, PIXEL_F const& func)
-//{
-//	for (u32 i = 0; i < length; ++i)
-//	{
-//		func(row_begin[i]);
-//	}
-//}
-
-
 template <class XY_F>
 static void do_for_each_xy_in_span(u32 y, u32 x_begin, u32 length, XY_F const& func)
 {
@@ -533,26 +523,6 @@ static void do_for_each_xy_in_row(u32 y, u32 length, XY_F const& func)
 
 	do_for_each_xy_in_span(y, x_begin, length, func);
 }
-
-
-//template <typename SRC_PIXEL_T, typename DST_PIXEL_T, class SRC_TO_DST_F>
-//static void do_transform_row(SRC_PIXEL_T* src_begin, DST_PIXEL_T* dst_begin, u32 length, SRC_TO_DST_F const& func)
-//{
-//	for (u32 i = 0; i < length; ++i)
-//	{
-//		dst_begin[i] = func(src_begin[i]);
-//	}
-//}
-//
-//
-//template <typename SRC_A_PIXEL_T, typename SRC_B_PIXEL_T, typename DST_PIXEL_T, class SRC_TO_DST_F>
-//static void do_transform_row2(SRC_A_PIXEL_T* src_a_begin, SRC_B_PIXEL_T* src_b_begin, DST_PIXEL_T* dst_begin, u32 length, SRC_TO_DST_F const& func)
-//{
-//	for (u32 i = 0; i < length; ++i)
-//	{
-//		dst_begin[i] = func(src_a_begin[i], src_b_begin[i]);
-//	}
-//}
 
 
 template <typename PIXEL_T, typename PIXEL_F>
@@ -586,6 +556,7 @@ static void do_process_span(PIXEL_A_T* a_begin, PIXEL_B_T* b_begin, PIXEL_C_T* c
 
 
 
+
 template <class IMG_T>
 static Range2Du32 make_range(IMG_T const& img)
 {
@@ -598,9 +569,6 @@ static Range2Du32 make_range(IMG_T const& img)
 
 	return r;
 }
-
-
-
 
 
 template <class IMG_T>
@@ -623,14 +591,6 @@ static void do_for_each_xy_in_range(IMG_T const& image, Range2Du32 const& range,
 
 	execute_procs(make_proc_list(thread_proc));
 }
-
-//
-//template <class IMG_T>
-//static void do_for_each_xy_by_row(IMG_T const& image, std::function<void(u32 x, u32 y)> const& func)
-//{
-//	auto const range = make_range(image);
-//	do_for_each_xy_in_range_by_row(image, range, func);
-//}
 
 
 namespace libimage
@@ -705,81 +665,6 @@ namespace libimage
 
 		execute_procs(make_proc_list(thread_proc));
 	}
-	/*template <class IMG_T, class PIXEL_F>
-	static void do_for_each_pixel_in_range_by_row(IMG_T const& image, Range2Du32 const& range, PIXEL_F const& func)
-	{
-		auto const height = range.y_end - range.y_begin;
-		auto const width = range.x_end - range.x_begin;
-		auto const rows_per_thread = height / N_THREADS;
-
-		auto const thread_proc = [&](u32 id)
-		{
-			auto y_begin = range.y_begin + id * rows_per_thread;
-			auto y_end = range.y_begin + (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
-
-			for (u32 y = y_begin; y < y_end; ++y)
-			{
-				auto img_begin = row_begin(image, y) + range.x_begin;
-				do_for_each_pixel_in_span(img_begin, width, func);
-			}
-		};
-
-		execute_procs(make_proc_list(thread_proc));
-	}
-
-
-	template <class IMG_T, class PIXEL_F>
-	static void do_for_each_pixel_by_row(IMG_T const& image, PIXEL_F const& func)
-	{
-		auto const range = make_range(image);
-		do_for_each_pixel_in_range_by_row(image, range, func);
-	}
-
-
-	template <class SRC_IMG_T, class DST_IMG_T, class SRC_TO_DST_F>
-	static void do_transform_by_row(SRC_IMG_T const& src, DST_IMG_T const& dst, SRC_TO_DST_F const& func)
-	{
-		auto const height = src.height;
-		auto const width = src.width;
-		auto const rows_per_thread = height / N_THREADS;
-
-		auto const thread_proc = [&](u32 id)
-		{
-			auto y_begin = id * rows_per_thread;
-			auto y_end = id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread;
-
-			for (u32 y = y_begin; y < y_end; ++y)
-			{
-				do_transform_row(row_begin(src, y), row_begin(dst, y), width, func);
-			}
-		};
-
-		execute_procs(make_proc_list(thread_proc));
-	}
-
-
-	template <class SRC_A_IMG_T, class SRC_B_IMG_T, class DST_IMG_T, class SRC_TO_DST_F>
-	static void do_transform_by_row2(SRC_A_IMG_T const& src_a, SRC_B_IMG_T const& src_b, DST_IMG_T const& dst, SRC_TO_DST_F const& func)
-	{
-		auto const height = src_a.height;
-		auto const width = src_a.width;
-		auto const rows_per_thread = height / N_THREADS;
-
-		auto const thread_proc = [&](u32 id)
-		{
-			auto y_begin = id * rows_per_thread;
-			auto y_end = id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread;
-
-			for (u32 y = y_begin; y < y_end; ++y)
-			{
-				do_transform_row2(row_begin(src_a, y), row_begin(src_b, y), row_begin(dst, y), width, func);
-			}
-		};
-
-		execute_procs(make_proc_list(thread_proc));
-	}*/
-
-
 }
 
 
@@ -889,37 +774,6 @@ namespace libimage
 			dst.alpha[i] = 255.0f;
 		}
 	}
-
-
-	/*template <class IMG_T, class SIMD_F>
-	static void do_simd_for_each_in_range_by_row(IMG_T const& image, Range2Du32 const& range, SIMD_F const& func)
-	{
-		auto const height = range.y_end - range.y_begin;
-		auto const width = range.x_end - range.x_begin;
-		auto const rows_per_thread = height / N_THREADS;
-
-		auto const thread_proc = [&](u32 id)
-		{
-			auto y_begin = range.y_begin + id * rows_per_thread;
-			auto y_end = range.y_begin + (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
-
-			for (u32 y = y_begin; y < y_end; ++y)
-			{
-				auto img_begin = row_begin(image, y) + range.x_begin;
-				func(img_begin, width);
-			}
-		};
-
-		execute_procs(make_proc_list(thread_proc));
-	}*/
-
-
-	/*template <class IMG_T, class SIMD_F>
-	static void do_simd_for_each_by_row(IMG_T const& image, SIMD_F const& func)
-	{
-		auto const range = make_range(image);
-		do_simd_for_each_in_range_by_row(image, range, func);
-	}*/
 
 
 	template <class SRC_IMG_T, class DST_IMG_T, class SIMD_F>
@@ -1248,9 +1102,6 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
 #endif // !LIBIMAGE_NO_COLOR
-
-
-
 
 }
 
