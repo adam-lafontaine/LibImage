@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstddef>
+#include <cassert>
+#include <cstdint>
 
 #define LIBIMAGE_PNG
 #define LIBIMAGE_BMP
