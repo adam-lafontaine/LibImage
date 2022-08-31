@@ -143,6 +143,15 @@ namespace libimage
 	}
 
 
+	PlatformPixel* xy_at(PlatformImage const& image, u32 x, u32 y)
+	{
+		assert(y < image.height);
+		assert(x < image.width);
+
+		return row_begin(image, y) + x;
+	}
+
+
 	void make_image(ImageRGBAr32& image, u32 width, u32 height)
 	{
 		assert(width);
@@ -191,6 +200,15 @@ namespace libimage
 		assert(ptr);
 
 		return ptr;
+	}
+
+
+	r32* xy_at(ImageRGBAr32 const& image, u32 x, u32 y, RGBA channel)
+	{
+		assert(y < image.height);
+		assert(x < image.width);
+
+		return row_begin(image, y, channel) + x;
 	}
 
 
@@ -311,6 +329,15 @@ namespace libimage
 		assert(ptr);
 
 		return ptr;
+	}
+
+
+	r32* xy_at(ImageRGBr32 const& image, u32 x, u32 y, RGB channel)
+	{
+		assert(y < image.height);
+		assert(x < image.width);
+
+		return row_begin(image, y, channel) + x;
 	}
 
 

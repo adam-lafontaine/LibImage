@@ -72,6 +72,8 @@ namespace libimage
 
 	PlatformPixel* row_begin(PlatformImage const& image, u32 y);
 
+	PlatformPixel* xy_at(PlatformImage const& image, u32 x, u32 y);
+
 	void read_image_from_file(const char* img_path_src, PlatformImage& image_dst);	
 
 
@@ -102,6 +104,8 @@ namespace libimage
 	void destroy_image(ImageRGBAr32& image);
 
 	r32* row_begin(ImageRGBAr32 const& image, u32 y, RGBA channel);
+
+	r32* xy_at(ImageRGBAr32 const& image, u32 x, u32 y, RGBA channel);
 
 	void transform(ImageRGBAr32 const& src, PlatformImage const& dst);
 
@@ -134,6 +138,8 @@ namespace libimage
 	void destroy_image(ImageRGBr32& image);
 
 	r32* row_begin(ImageRGBr32 const& image, u32 y, RGB channel);
+
+	r32* xy_at(ImageRGBr32 const& image, u32 x, u32 y, RGB channel);
 
 	void transform(ImageRGBr32 const& src, PlatformImage const& dst);
 
