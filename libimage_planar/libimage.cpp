@@ -332,8 +332,6 @@ namespace libimage
 	}
 
 
-#ifndef LIBIMAGE_NO_GRAYSCALE
-
 	void make_image(PlatformImageGRAY& image, u32 width, u32 height)
 	{
 		assert(width);
@@ -441,7 +439,6 @@ namespace libimage
 		execute_procs(make_proc_list(thread_proc));
 	}
 
-#endif // !LIBIMAGE_NO_GRAYSCALE
 }
 
 

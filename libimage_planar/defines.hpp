@@ -7,8 +7,6 @@
 #define LIBIMAGE_PNG
 #define LIBIMAGE_BMP
 
-//#define LIBIMAGE_NO_COLOR
-//#define LIBIMAGE_NO_GRAYSCALE
 //#define LIBIMAGE_NO_WRITE
 //#define LIBIMAGE_NO_RESIZE
 //#define LIBIMAGE_NO_PARALLEL
@@ -23,12 +21,14 @@
 #ifdef RPI_3B_PLUS
 
 #define LIBIMAGE_NO_CPP17
+#define SIMD_ARM_NEON
 
 #endif // RPI_3B_PLUS
 
 #ifdef JETSON_NANO
 
 #define LIBIMAGE_NO_CPP17
+#define SIMD_ARM_NEON
 
 #endif // JETSON_NANO
 

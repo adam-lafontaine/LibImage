@@ -53,6 +53,8 @@ namespace libimage
 
 	void destroy_image(PlatformImage& image);
 
+	void read_image_from_file(const char* img_path_src, PlatformImage& image_dst);	
+
 
 	class ImageRGBAr32
 	{
@@ -99,8 +101,6 @@ namespace libimage
 	void transform(PlatformImage const& src, ImageRGBr32 const& dst);
 
 
-#ifndef LIBIMAGE_NO_GRAYSCALE
-
 	class PlatformImageGRAY
 	{
 	public:
@@ -115,6 +115,8 @@ namespace libimage
 	void make_image(PlatformImageGRAY& image, u32 width, u32 height);
 
 	void destroy_image(PlatformImageGRAY& image);
+
+	void read_image_from_file(const char* file_path_src, PlatformImageGRAY& image_dst);
 
 
 	class ImageGRAYr32
@@ -136,8 +138,23 @@ namespace libimage
 
 	void transform(PlatformImageGRAY const& src, ImageGRAYr32 const& dst);
 
-#endif // !LIBIMAGE_NO_GRAYSCALE
 
+#ifndef LIBIMAGE_NO_WRITE
+
+	void write_image(PlatformImage const& image_src, const char* file_path_dst);
+
+	void write_image(PlatformImageGRAY const& image_src, const char* file_path_dst);
+
+#endif // !LIBIMAGE_NO_WRITE
+
+
+#ifndef LIBIMAGE_NO_RESIZE
+
+	void resize_image(PlatformImage const& image_src, PlatformImage& image_dst);
+
+	void resize_image(PlatformImageGRAY const& image_src, PlatformImageGRAY& image_dst);
+
+#endif // !LIBIMAGE_NO_RESIZE
 	
 }
 

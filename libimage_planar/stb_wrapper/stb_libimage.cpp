@@ -26,20 +26,8 @@ static bool is_png(const char* filename)
 }
 
 
-static bool is_jpg(const char* filename)
-{
-	return has_extension(filename, ".jpg") || 
-		has_extension(filename, ".jpeg") || 
-		has_extension(filename, ".JPG") || 
-		has_extension(filename, ".JPEG");
-}
-
-
 namespace libimage
 {
-
-#ifndef LIBIMAGE_NO_COLOR
-
 	void read_image_from_file(const char* img_path_src, PlatformImage& image_dst)
 	{
 		int width = 0;
@@ -83,17 +71,12 @@ namespace libimage
 
 			result = stbi_write_png(file_path_dst, width, height, channels, data, stride_in_bytes);
 		}
-		else if(is_jpg(file_path_dst))
-		{
-			// TODO: quality?
-			// stbi_write_jpg(char const *filename, int w, int h, int comp, const void *data, int quality);
-		}
 
 		assert(result);
 	}
 
 
-	static void make_image(View const& view_src, PlatformImage& image_dst)
+	/*static void make_image(View const& view_src, PlatformImage& image_dst)
 	{
 		make_image(image_dst, view_src.width, view_src.height);
 
@@ -109,7 +92,7 @@ namespace libimage
 		write_image(image, file_path_dst);
 
 		destroy_image(image);
-	}
+	}*/
 
 #endif // !LIBIMAGE_NO_WRITE
 
@@ -150,27 +133,23 @@ namespace libimage
 	}
 
 
-	View make_resized_view(PlatformImage const& img_src, PlatformImage& img_dst)
+	/*View make_resized_view(PlatformImage const& img_src, PlatformImage& img_dst)
 	{
 		resize_image(img_src, img_dst);
 
 		return make_view(img_dst);
-	}
+	}*/
 
 #endif // !LIBIMAGE_NO_RESIZE
 
-#endif // !LIBIMAGE_NO_COLOR
-	
-#ifndef LIBIMAGE_NO_GRAYSCALE
-
-	void read_image_from_file(const char* file_path_src, gray::PlatformImage& image_dst)
+	void read_image_from_file(const char* file_path_src, PlatformImageGRAY& image_dst)
 	{
 		int width = 0;
 		int height = 0;
 		int image_channels = 0;
 		int desired_channels = 1;
 
-		auto data = (gray::PlatformPixel*)stbi_load(file_path_src, &width, &height, &image_channels, desired_channels);
+		auto data = (u8*)stbi_load(file_path_src, &width, &height, &image_channels, desired_channels);
 
 		assert(data);
 		assert(width);
@@ -183,7 +162,7 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_WRITE
 
-	void write_image(gray::PlatformImage const& image_src, const char* file_path_dst)
+	void write_image(PlatformImageGRAY const& image_src, const char* file_path_dst)
 	{
 		assert(image_src.width);
 		assert(image_src.height);
@@ -206,17 +185,12 @@ namespace libimage
 
 			result = stbi_write_png(file_path_dst, width, height, channels, data, stride_in_bytes);
 		}
-		else if(is_jpg(file_path_dst))
-		{
-			// TODO: quality?
-			// stbi_write_jpg(char const *filename, int w, int h, int comp, const void *data, int quality);
-		}
 
 		assert(result);
 	}
 
 
-	static void make_image(gray::View const& view_src, gray::PlatformImage& image_dst)
+	/*static void make_image(gray::View const& view_src, PlatformImageGRAY& image_dst)
 	{
 		make_image(image_dst, view_src.width, view_src.height);
 
@@ -226,20 +200,20 @@ namespace libimage
 
 	void write_view(gray::View const& view_src, const char* file_path_dst)
 	{
-		gray::PlatformImage image;
+		PlatformImageGRAY image;
 		make_image(view_src, image);
 
 		write_image(image, file_path_dst);
 
 		destroy_image(image);
-	}
+	}*/
 
 #endif // !LIBIMAGE_NO_WRITE
 
 
 #ifndef LIBIMAGE_NO_RESIZE
 
-	void resize_image(gray::PlatformImage const& image_src, gray::PlatformImage& image_dst)
+	void resize_image(PlatformImageGRAY const& image_src, PlatformImageGRAY& image_dst)
 	{
 		assert(image_src.width);
 		assert(image_src.height);
@@ -261,7 +235,7 @@ namespace libimage
 
 		if (!image_dst.data)
 		{
-			image_dst.data = (gray::PlatformPixel*)malloc(sizeof(gray::PlatformPixel) * image_dst.width * image_dst.height);
+			image_dst.data = (u8*)malloc(sizeof(u8) * image_dst.width * image_dst.height);
 		}
 
 		result = stbir_resize_uint8(
@@ -273,16 +247,14 @@ namespace libimage
 	}
 
 
-	gray::View make_resized_view(gray::PlatformImage const& image_src, gray::PlatformImage& image_dst)
+	/*gray::View make_resized_view(PlatformImageGRAY const& image_src, PlatformImageGRAY& image_dst)
 	{
 		resize_image(image_src, image_dst);
 
 		return make_view(image_dst);
-	}
+	}*/
 
 #endif // !LIBIMAGE_NO_RESIZE
-
-#endif // !LIBIMAGE_NO_GRAYSCALE
 
 }
 
