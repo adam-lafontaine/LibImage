@@ -127,6 +127,22 @@ namespace libimage
 	}
 
 
+	PlatformPixel* row_begin(PlatformImage const& image, u32 y)
+	{
+		assert(image.width);
+		assert(image.height);
+		assert(image.data);
+		assert(y < image.height);
+
+		auto offset = y * image.width;
+
+		auto ptr = image.data + (u64)(offset);
+		assert(ptr);
+
+		return ptr;
+	}
+
+
 	void make_image(ImageRGBAr32& image, u32 width, u32 height)
 	{
 		assert(width);
@@ -160,6 +176,24 @@ namespace libimage
 	}
 
 
+	r32* row_begin(ImageRGBAr32 const& image, u32 y, RGBA channel)
+	{
+		auto ch = static_cast<int>(channel);
+
+		assert(image.width);
+		assert(image.height);
+		assert(image.channel_data[ch]);
+		assert(y < image.height);
+
+		auto offset = y * image.width;
+
+		auto ptr = image.channel_data[ch] + (u64)(offset);
+		assert(ptr);
+
+		return ptr;
+	}
+
+
 	void transform(ImageRGBAr32 const& src, PlatformImage const& dst)
 	{
 		assert(src.width == dst.width);
@@ -178,14 +212,14 @@ namespace libimage
 
 			for (u32 y = y_begin; y < y_end; ++y)
 			{
-				auto r = src.red + y * width;
-				auto g = src.green + y * width;
-				auto b = src.blue + y * width;
-				auto a = src.alpha + y * width;
-				auto dst_begin = dst.data + y * width;
+				auto r = row_begin(src, y, RGBA::R);
+				auto g = row_begin(src, y, RGBA::G);
+				auto b = row_begin(src, y, RGBA::B);
+				auto a = row_begin(src, y, RGBA::A);
+				auto d = row_begin(dst, y);
 				for (u32 x = 0; x < width; ++x)
 				{
-					dst_begin[x] = to_pixel(r[x], g[x], b[x], a[x]);
+					d[x] = to_pixel(r[x], g[x], b[x], a[x]);
 				}
 			}
 		};
@@ -212,18 +246,17 @@ namespace libimage
 
 			for (u32 y = y_begin; y < y_end; ++y)
 			{
-				auto r = dst.red + y * width;
-				auto g = dst.green + y * width;
-				auto b = dst.blue + y * width;
-				auto a = dst.alpha + y * width;
-				auto src_begin = src.data + y * width;
+				auto r = row_begin(dst, y, RGBA::R);
+				auto g = row_begin(dst, y, RGBA::G);
+				auto b = row_begin(dst, y, RGBA::B);
+				auto a = row_begin(dst, y, RGBA::A);
+				auto s = row_begin(src, y);
 				for (u32 x = 0; x < width; ++x)
 				{
-					auto s = src_begin[x];
-					r[x] = to_channel_r32(s.red);
-					g[x] = to_channel_r32(s.green);
-					b[x] = to_channel_r32(s.blue);
-					a[x] = to_channel_r32(s.alpha);
+					r[x] = to_channel_r32(s[x].red);
+					g[x] = to_channel_r32(s[x].green);
+					b[x] = to_channel_r32(s[x].blue);
+					a[x] = to_channel_r32(s[x].alpha);
 				}
 			}
 		};
@@ -263,6 +296,24 @@ namespace libimage
 	}
 
 
+	r32* row_begin(ImageRGBr32 const& image, u32 y, RGB channel)
+	{
+		auto ch = static_cast<int>(channel);
+
+		assert(image.width);
+		assert(image.height);
+		assert(image.channel_data[ch]);
+		assert(y < image.height);
+
+		auto offset = y * image.width;
+
+		auto ptr = image.channel_data[ch] + (u64)(offset);
+		assert(ptr);
+
+		return ptr;
+	}
+
+
 	void transform(ImageRGBr32 const& src, PlatformImage const& dst)
 	{
 		assert(src.width == dst.width);
@@ -281,13 +332,13 @@ namespace libimage
 
 			for (u32 y = y_begin; y < y_end; ++y)
 			{
-				auto r = src.red + y * width;
-				auto g = src.green + y * width;
-				auto b = src.blue + y * width;
-				auto dst_begin = dst.data + y * width;
+				auto r = row_begin(src, y, RGB::R);
+				auto g = row_begin(src, y, RGB::G);
+				auto b = row_begin(src, y, RGB::B);
+				auto d = row_begin(dst, y);
 				for (u32 x = 0; x < width; ++x)
 				{
-					dst_begin[x] = to_pixel(r[x], g[x], b[x]);
+					d[x] = to_pixel(r[x], g[x], b[x]);
 				}
 			}
 		};
@@ -314,16 +365,15 @@ namespace libimage
 
 			for (u32 y = y_begin; y < y_end; ++y)
 			{
-				auto r = dst.red + y * width;
-				auto g = dst.green + y * width;
-				auto b = dst.blue + y * width;
-				auto src_begin = src.data + y * width;
+				auto r = row_begin(dst, y, RGB::R);
+				auto g = row_begin(dst, y, RGB::G);
+				auto b = row_begin(dst, y, RGB::B);
+				auto s = row_begin(src, y);
 				for (u32 x = 0; x < width; ++x)
 				{
-					auto s = src_begin[x];
-					r[x] = to_channel_r32(s.red);
-					g[x] = to_channel_r32(s.green);
-					b[x] = to_channel_r32(s.blue);
+					r[x] = to_channel_r32(s[x].red);
+					g[x] = to_channel_r32(s[x].green);
+					b[x] = to_channel_r32(s[x].blue);
 				}
 			}
 		};
@@ -355,6 +405,22 @@ namespace libimage
 	}
 
 
+	u8* row_begin(PlatformImageGRAY const& image, u32 y)
+	{
+		assert(image.width);
+		assert(image.height);
+		assert(image.data);
+		assert(y < image.height);
+
+		auto offset = y * image.width;
+
+		auto ptr = image.data + (u64)(offset);
+		assert(ptr);
+
+		return ptr;
+	}
+
+
 	void make_image(ImageGRAYr32& image, u32 width, u32 height)
 	{
 		assert(width);
@@ -378,6 +444,22 @@ namespace libimage
 	}
 
 
+	r32* row_begin(ImageGRAYr32 const& image, u32 y)
+	{
+		assert(image.width);
+		assert(image.height);
+		assert(image.data);
+		assert(y < image.height);
+
+		auto offset = y * image.width;
+
+		auto ptr = image.data + (u64)(offset);
+		assert(ptr);
+
+		return ptr;
+	}
+
+
 	void transform(ImageGRAYr32 const& src, PlatformImageGRAY const& dst)
 	{
 		assert(src.width == dst.width);
@@ -396,8 +478,8 @@ namespace libimage
 
 			for (u32 y = y_begin; y < y_end; ++y)
 			{
-				auto s = src.data + y * width;
-				auto d = dst.data + y * width;
+				auto s = row_begin(src, y);
+				auto d = row_begin(dst, y);
 				for (u32 x = 0; x < width; ++x)
 				{
 					d[x] = to_channel_u8(s[x]);
@@ -427,8 +509,8 @@ namespace libimage
 
 			for (u32 y = y_begin; y < y_end; ++y)
 			{
-				auto s = src.data + y * width;
-				auto d = dst.data + y * width;
+				auto s = row_begin(src, y);
+				auto d = row_begin(dst, y);
 				for (u32 x = 0; x < width; ++x)
 				{
 					d[x] = to_channel_r32(s[x]);
