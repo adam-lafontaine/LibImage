@@ -20,6 +20,24 @@ namespace libimage
 	};
 
 
+	inline PlatformPixel to_pixel(u8 r, u8 g, u8 b, u8 a)
+	{
+		PlatformPixel p{};
+		p.red = r;
+		p.green = g;
+		p.blue = b;
+		p.alpha = a;
+
+		return p;
+	}
+
+
+	inline PlatformPixel to_pixel(u8 r, u8 g, u8 b)
+	{
+		return to_pixel(r, g, b, 255);
+	}
+
+
 	class PlatformImage
 	{
 	public:
@@ -52,10 +70,75 @@ namespace libimage
 
 	void make_image(ImageRGBAr32& image, u32 width, u32 height);
 
-	void destroy_image(ImageRGBAr32& image);
+	void destroy_image(ImageRGBAr32& image);	
+
+	void transform(ImageRGBAr32 const& src, PlatformImage const& dst);
+
+	void transform(PlatformImage const& src, ImageRGBAr32 const& dst);
 
 
+	class ImageRGBr32
+	{
+	public:
 
+		u32 width = 0;
+		u32 height = 0;
+
+		r32* red = nullptr;
+		r32* green = nullptr;
+		r32* blue = nullptr;
+	};
+
+
+	void make_image(ImageRGBr32& image, u32 width, u32 height);
+
+	void destroy_image(ImageRGBr32& image);
+
+	void transform(ImageRGBr32 const& src, PlatformImage const& dst);
+
+	void transform(PlatformImage const& src, ImageRGBr32 const& dst);
+
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	class PlatformImageGRAY
+	{
+	public:
+
+		u32 width;
+		u32 height;
+
+		u8* data = nullptr;
+	};
+
+
+	void make_image(PlatformImageGRAY& image, u32 width, u32 height);
+
+	void destroy_image(PlatformImageGRAY& image);
+
+
+	class ImageGRAYr32
+	{
+	public:
+
+		u32 width;
+		u32 height;
+
+		r32* data = nullptr;
+	};
+
+
+	void make_image(ImageGRAYr32& image, u32 width, u32 height);
+
+	void destroy_image(ImageGRAYr32& image);	
+
+	void transform(ImageGRAYr32 const& src, PlatformImageGRAY const& dst);
+
+	void transform(PlatformImageGRAY const& src, ImageGRAYr32 const& dst);
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+
+	
 }
 
 
