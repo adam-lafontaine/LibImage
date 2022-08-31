@@ -152,6 +152,102 @@ namespace libimage
 	}
 
 
+	PlatformImageView make_view(PlatformImage const& image)
+	{
+		assert(image.width);
+		assert(image.height);
+		assert(image.data);
+
+		PlatformImageView view;
+
+		view.image_data = image.data;
+		view.image_width = image.width;
+		view.x_begin = 0;
+		view.y_begin = 0;
+		view.x_end = image.width;
+		view.y_end = image.height;
+		view.width = image.width;
+		view.height = image.height;
+
+		return view;
+	}
+
+
+	PlatformImageView sub_view(PlatformImage const& image, Range2Du32 const& range)
+	{
+		assert(image.width);
+		assert(image.height);
+		assert(image.data);
+
+		PlatformImageView sub_view;
+
+		sub_view.image_data = image.data;
+		sub_view.image_width = image.width;
+		sub_view.x_begin = range.x_begin;
+		sub_view.y_begin = range.y_begin;
+		sub_view.x_end = range.x_end;
+		sub_view.y_end = range.y_end;
+		sub_view.width = range.x_end - range.x_begin;
+		sub_view.height = range.y_end - range.y_begin;
+
+		assert(sub_view.width);
+		assert(sub_view.height);
+
+		return sub_view;
+	}
+
+
+	PlatformImageView sub_view(PlatformImageView const& view, Range2Du32 const& range)
+	{
+		assert(view.width);
+		assert(view.height);
+		assert(view.image_data);
+
+		assert(range.x_begin >= view.x_begin);
+		assert(range.x_end <= view.x_end);
+		assert(range.y_begin >= view.y_begin);
+		assert(range.y_end <= view.y_end);
+
+		PlatformImageView sub_view;
+
+		sub_view.image_data = view.image_data;
+		sub_view.image_width = view.image_width;
+		sub_view.x_begin = view.x_begin + range.x_begin;
+		sub_view.y_begin = view.y_begin + range.y_begin;
+		sub_view.x_end = view.x_begin + range.x_end;
+		sub_view.y_end = view.y_begin + range.y_end;
+		sub_view.width = range.x_end - range.x_begin;
+		sub_view.height = range.y_end - range.y_begin;
+
+		assert(sub_view.width);
+		assert(sub_view.height);
+
+		return sub_view;
+	}
+
+
+	PlatformPixel* row_begin(PlatformImageView const& view, u32 y)
+	{
+		assert(y < view.height);
+
+		auto offset = (view.y_begin + y) * view.image_width + view.x_begin;
+
+		auto ptr = view.image_data + (u64)(offset);
+		assert(ptr);
+
+		return ptr;
+	}
+
+
+	PlatformPixel* xy_at(PlatformImageView const& view, u32 x, u32 y)
+	{
+		assert(y < view.height);
+		assert(x < view.width);
+
+		return row_begin(view, y) + x;
+	}
+
+
 	void make_image(ImageRGBAr32& image, u32 width, u32 height)
 	{
 		assert(width);
@@ -244,6 +340,17 @@ namespace libimage
 
 		execute_procs(make_proc_list(thread_proc));
 	}
+
+
+	ImageViewRGBAr32 make_view(ImageRGBAr32 const& image);
+
+	ImageViewRGBAr32 sub_view(ImageRGBAr32 const& image, Range2Du32 const& range);
+
+	ImageViewRGBAr32 sub_view(ImageViewRGBAr32 const& view, Range2Du32 const& range);
+
+	r32* row_begin(ImageViewRGBAr32 const& view, u32 y);
+
+	r32* xy_at(ImageViewRGBAr32 const& view, u32 x, u32 y);
 
 
 	void transform(PlatformImage const& src, ImageRGBAr32 const& dst)
@@ -448,6 +555,15 @@ namespace libimage
 	}
 
 
+	u8* xy_at(PlatformImageGRAY const& image, u32 x, u32 y)
+	{
+		assert(y < image.height);
+		assert(x < image.width);
+
+		return row_begin(image, y) + x;
+	}
+
+
 	void make_image(ImageGRAYr32& image, u32 width, u32 height)
 	{
 		assert(width);
@@ -484,6 +600,15 @@ namespace libimage
 		assert(ptr);
 
 		return ptr;
+	}
+
+
+	r32* xy_at(ImageGRAYr32 const& image, u32 x, u32 y)
+	{
+		assert(y < image.height);
+		assert(x < image.width);
+
+		return row_begin(image, y) + x;
 	}
 
 

@@ -74,7 +74,33 @@ namespace libimage
 
 	PlatformPixel* xy_at(PlatformImage const& image, u32 x, u32 y);
 
-	void read_image_from_file(const char* img_path_src, PlatformImage& image_dst);	
+
+	class PlatformImageView
+	{
+	public:
+
+		PlatformPixel* image_data = 0;
+		u32 image_width = 0;
+
+		u32 x_begin = 0;
+		u32 x_end = 0;
+		u32 y_begin = 0;
+		u32 y_end = 0;
+
+		u32 width = 0;
+		u32 height = 0;
+	};
+
+
+	PlatformImageView make_view(PlatformImage const& image);
+
+	PlatformImageView sub_view(PlatformImage const& image, Range2Du32 const& range);
+
+	PlatformImageView sub_view(PlatformImageView const& view, Range2Du32 const& range);
+
+	PlatformPixel* row_begin(PlatformImageView const& view, u32 y);
+
+	PlatformPixel* xy_at(PlatformImageView const& view, u32 x, u32 y);
 
 
 	class ImageRGBAr32
@@ -110,6 +136,46 @@ namespace libimage
 	void transform(ImageRGBAr32 const& src, PlatformImage const& dst);
 
 	void transform(PlatformImage const& src, ImageRGBAr32 const& dst);
+
+
+	class ImageViewRGBAr32
+	{
+	public:
+
+		u32 image_width = 0;
+
+		union
+		{
+			struct
+			{
+				r32* image_red;
+				r32* image_green;
+				r32* image_blue;
+				r32* image_alpha;
+			};
+
+			r32* image_channel_data[4];
+		};
+
+		u32 x_begin = 0;
+		u32 x_end = 0;
+		u32 y_begin = 0;
+		u32 y_end = 0;
+
+		u32 width = 0;
+		u32 height = 0;
+	};
+
+
+	ImageViewRGBAr32 make_view(ImageRGBAr32 const& image);
+
+	ImageViewRGBAr32 sub_view(ImageRGBAr32 const& image, Range2Du32 const& range);
+
+	ImageViewRGBAr32 sub_view(ImageViewRGBAr32 const& view, Range2Du32 const& range);
+
+	r32* row_begin(ImageViewRGBAr32 const& view, u32 y);
+
+	r32* xy_at(ImageViewRGBAr32 const& view, u32 x, u32 y);
 
 
 	class ImageRGBr32
@@ -163,7 +229,7 @@ namespace libimage
 
 	u8* row_begin(PlatformImageGRAY const& image, u32 y);
 
-	void read_image_from_file(const char* file_path_src, PlatformImageGRAY& image_dst);
+	u8* xy_at(PlatformImageGRAY const& image, u32 x, u32 y);
 
 
 	class ImageGRAYr32
@@ -183,9 +249,16 @@ namespace libimage
 
 	r32* row_begin(ImageGRAYr32 const& image, u32 y);
 
+	r32* xy_at(ImageGRAYr32 const& image, u32 x, u32 y);
+
 	void transform(ImageGRAYr32 const& src, PlatformImageGRAY const& dst);
 
 	void transform(PlatformImageGRAY const& src, ImageGRAYr32 const& dst);
+
+
+	void read_image_from_file(const char* img_path_src, PlatformImage& image_dst);
+
+	void read_image_from_file(const char* file_path_src, PlatformImageGRAY& image_dst);
 
 
 #ifndef LIBIMAGE_NO_WRITE
