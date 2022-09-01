@@ -69,6 +69,25 @@ static void execute_procs(ProcList const& list)
 }
 
 
+static void process_rows(u32 height, std::function<void(u32)> const& row_func)
+{
+	auto const rows_per_thread = height / N_THREADS;
+
+	auto const thread_proc = [&](u32 id)
+	{
+		auto y_begin = id * rows_per_thread;
+		auto y_end = (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
+
+		for (u32 y = y_begin; y < y_end; ++y)
+		{
+			row_func(y);
+		}
+	};
+
+	execute_procs(make_proc_list(thread_proc));
+}
+
+
 static inline r32 to_channel_r32(u8 value)
 {
 	return value / 255.0f;
@@ -327,30 +346,47 @@ namespace libimage
 		assert(src.red);
 		assert(dst.data);
 
-		auto const width = src.width;
-		auto const height = src.height;
-		auto const rows_per_thread = height / N_THREADS;
-
-		auto const thread_proc = [&](u32 id)
+		auto const row_func = [&](u32 y) 
 		{
-			auto y_begin = id * rows_per_thread;
-			auto y_end = (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
-
-			for (u32 y = y_begin; y < y_end; ++y)
+			auto r = row_begin(src, y, RGBA::R);
+			auto g = row_begin(src, y, RGBA::G);
+			auto b = row_begin(src, y, RGBA::B);
+			auto a = row_begin(src, y, RGBA::A);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
 			{
-				auto r = row_begin(src, y, RGBA::R);
-				auto g = row_begin(src, y, RGBA::G);
-				auto b = row_begin(src, y, RGBA::B);
-				auto a = row_begin(src, y, RGBA::A);
-				auto d = row_begin(dst, y);
-				for (u32 x = 0; x < width; ++x)
-				{
-					d[x] = to_pixel(r[x], g[x], b[x], a[x]);
-				}
+				d[x] = to_pixel(r[x], g[x], b[x], a[x]);
 			}
 		};
 
-		execute_procs(make_proc_list(thread_proc));
+		process_rows(src.height, row_func);
+	}
+
+
+	void convert(Image const& src, Image4Cr32 const& dst)
+	{
+		assert(src.width == dst.width);
+		assert(src.height == dst.height);
+		assert(src.data);
+		assert(dst.red);
+
+		auto const row_func = [&](u32 y) 
+		{
+			auto r = row_begin(dst, y, RGBA::R);
+			auto g = row_begin(dst, y, RGBA::G);
+			auto b = row_begin(dst, y, RGBA::B);
+			auto a = row_begin(dst, y, RGBA::A);
+			auto s = row_begin(src, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				r[x] = to_channel_r32(s[x].red);
+				g[x] = to_channel_r32(s[x].green);
+				b[x] = to_channel_r32(s[x].blue);
+				a[x] = to_channel_r32(s[x].alpha);
+			}
+		};
+
+		process_rows(src.height, row_func);
 	}
 
 
@@ -460,44 +496,7 @@ namespace libimage
 
 		return row_begin(view, y, channel) + x;
 	}
-
-
-	void convert(Image const& src, Image4Cr32 const& dst)
-	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.data);
-		assert(dst.red);
-
-		auto const width = src.width;
-		auto const height = src.height;
-		auto const rows_per_thread = height / N_THREADS;
-
-		auto const thread_proc = [&](u32 id)
-		{
-			auto y_begin = id * rows_per_thread;
-			auto y_end = (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
-
-			for (u32 y = y_begin; y < y_end; ++y)
-			{
-				auto r = row_begin(dst, y, RGBA::R);
-				auto g = row_begin(dst, y, RGBA::G);
-				auto b = row_begin(dst, y, RGBA::B);
-				auto a = row_begin(dst, y, RGBA::A);
-				auto s = row_begin(src, y);
-				for (u32 x = 0; x < width; ++x)
-				{
-					r[x] = to_channel_r32(s[x].red);
-					g[x] = to_channel_r32(s[x].green);
-					b[x] = to_channel_r32(s[x].blue);
-					a[x] = to_channel_r32(s[x].alpha);
-				}
-			}
-		};
-
-		execute_procs(make_proc_list(thread_proc));
-	}
-
+	
 
 	void make_image(Image3Cr32& image, u32 width, u32 height)
 	{
@@ -564,29 +563,19 @@ namespace libimage
 		assert(src.red);
 		assert(dst.data);
 
-		auto const width = src.width;
-		auto const height = src.height;
-		auto const rows_per_thread = height / N_THREADS;
-
-		auto const thread_proc = [&](u32 id)
+		auto const row_func = [&](u32 y) 
 		{
-			auto y_begin = id * rows_per_thread;
-			auto y_end = (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
-
-			for (u32 y = y_begin; y < y_end; ++y)
+			auto r = row_begin(src, y, RGB::R);
+			auto g = row_begin(src, y, RGB::G);
+			auto b = row_begin(src, y, RGB::B);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
 			{
-				auto r = row_begin(src, y, RGB::R);
-				auto g = row_begin(src, y, RGB::G);
-				auto b = row_begin(src, y, RGB::B);
-				auto d = row_begin(dst, y);
-				for (u32 x = 0; x < width; ++x)
-				{
-					d[x] = to_pixel(r[x], g[x], b[x]);
-				}
+				d[x] = to_pixel(r[x], g[x], b[x]);
 			}
 		};
 
-		execute_procs(make_proc_list(thread_proc));
+		process_rows(src.height, row_func);
 	}
 
 
@@ -597,31 +586,21 @@ namespace libimage
 		assert(src.data);
 		assert(dst.red);
 
-		auto const width = src.width;
-		auto const height = src.height;
-		auto const rows_per_thread = height / N_THREADS;
-
-		auto const thread_proc = [&](u32 id)
+		auto const row_func = [&](u32 y) 
 		{
-			auto y_begin = id * rows_per_thread;
-			auto y_end = (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
-
-			for (u32 y = y_begin; y < y_end; ++y)
+			auto r = row_begin(dst, y, RGB::R);
+			auto g = row_begin(dst, y, RGB::G);
+			auto b = row_begin(dst, y, RGB::B);
+			auto s = row_begin(src, y);
+			for (u32 x = 0; x < src.width; ++x)
 			{
-				auto r = row_begin(dst, y, RGB::R);
-				auto g = row_begin(dst, y, RGB::G);
-				auto b = row_begin(dst, y, RGB::B);
-				auto s = row_begin(src, y);
-				for (u32 x = 0; x < width; ++x)
-				{
-					r[x] = to_channel_r32(s[x].red);
-					g[x] = to_channel_r32(s[x].green);
-					b[x] = to_channel_r32(s[x].blue);
-				}
+				r[x] = to_channel_r32(s[x].red);
+				g[x] = to_channel_r32(s[x].green);
+				b[x] = to_channel_r32(s[x].blue);
 			}
 		};
 
-		execute_procs(make_proc_list(thread_proc));
+		process_rows(src.height, row_func);
 	}
 
 
@@ -822,6 +801,7 @@ namespace libimage
 		return view;
 	}
 
+
 	gray::View sub_view(gray::View const& view, Range2Du32 const& range)
 	{
 		assert(view.width);
@@ -928,27 +908,17 @@ namespace libimage
 		assert(src.data);
 		assert(dst.data);
 
-		auto const width = src.width;
-		auto const height = src.height;
-		auto const rows_per_thread = height / N_THREADS;
-
-		auto const thread_proc = [&](u32 id)
+		auto const row_func = [&](u32 y) 
 		{
-			auto y_begin = id * rows_per_thread;
-			auto y_end = (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
-
-			for (u32 y = y_begin; y < y_end; ++y)
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
 			{
-				auto s = row_begin(src, y);
-				auto d = row_begin(dst, y);
-				for (u32 x = 0; x < width; ++x)
-				{
-					d[x] = to_channel_u8(s[x]);
-				}
+				d[x] = to_channel_u8(s[x]);
 			}
 		};
 
-		execute_procs(make_proc_list(thread_proc));
+		process_rows(src.height, row_func);
 	}
 
 
@@ -959,27 +929,17 @@ namespace libimage
 		assert(src.data);
 		assert(dst.data);
 
-		auto const width = src.width;
-		auto const height = src.height;
-		auto const rows_per_thread = height / N_THREADS;
-
-		auto const thread_proc = [&](u32 id)
+		auto const row_func = [&](u32 y) 
 		{
-			auto y_begin = id * rows_per_thread;
-			auto y_end = (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
-
-			for (u32 y = y_begin; y < y_end; ++y)
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
 			{
-				auto s = row_begin(src, y);
-				auto d = row_begin(dst, y);
-				for (u32 x = 0; x < width; ++x)
-				{
-					d[x] = to_channel_r32(s[x]);
-				}
+				d[x] = to_channel_r32(s[x]);
 			}
 		};
 
-		execute_procs(make_proc_list(thread_proc));
+		process_rows(src.height, row_func);
 	}
 
 
