@@ -37,18 +37,21 @@ static void do_for_each(LIST_T const& list, FUNC_T const& func)
 #endif // !LIBIMAGE_NO_PARALLEL
 
 
+using id_func_t = std::function<void(u32)>;
+
+
 class ThreadProcess
 {
 public:
 	u32 thread_id = 0;
-	std::function<void(u32)> process;
+	id_func_t process;
 };
 
 
 using ProcList = std::array<ThreadProcess, N_THREADS>;
 
 
-static ProcList make_proc_list(std::function<void(u32)> const& id_func)
+static ProcList make_proc_list(id_func_t const& id_func)
 {
 	ProcList list = { 0 };
 
@@ -69,7 +72,7 @@ static void execute_procs(ProcList const& list)
 }
 
 
-static void process_rows(u32 height, std::function<void(u32)> const& row_func)
+static void process_rows(u32 height, id_func_t const& row_func)
 {
 	auto const rows_per_thread = height / N_THREADS;
 
@@ -943,15 +946,100 @@ namespace libimage
 	}
 
 
-	View1Cr32 make_view(Image1Cr32 const& image);
+	View1Cr32 make_view(Image1Cr32 const& image)
+	{
+		assert(image.width);
+		assert(image.height);
+		assert(image.data);
 
-	View1Cr32 sub_view(Image1Cr32 const& image, Range2Du32 const& range);
+		View1Cr32 view;
 
-	View1Cr32 sub_view(View1Cr32 const& view, Range2Du32 const& range);
+		view.image_data = image.data;
+		view.image_width = image.width;
+		view.x_begin = 0;
+		view.y_begin = 0;
+		view.x_end = image.width;
+		view.y_end = image.height;
+		view.width = image.width;
+		view.height = image.height;
 
-	r32* row_begin(View1Cr32 const& view, u32 y, RGB channel);
+		return view;
+	}
 
-	r32* xy_at(View1Cr32 const& view, u32 x, u32 y, RGB channel);
+
+	View1Cr32 sub_view(Image1Cr32 const& image, Range2Du32 const& range)
+	{
+		assert(image.width);
+		assert(image.height);
+		assert(image.data);
+
+		View1Cr32 view;
+
+		view.image_data = image.data;
+		view.image_width = image.width;
+		view.x_begin = range.x_begin;
+		view.y_begin = range.y_begin;
+		view.x_end = range.x_end;
+		view.y_end = range.y_end;
+		view.width = range.x_end - range.x_begin;
+		view.height = range.y_end - range.y_begin;
+
+		assert(view.width);
+		assert(view.height);
+
+		return view;
+	}
+
+
+	View1Cr32 sub_view(View1Cr32 const& view, Range2Du32 const& range)
+	{
+		assert(view.width);
+		assert(view.height);
+		assert(view.image_data);
+
+		assert(range.x_begin >= view.x_begin);
+		assert(range.x_end <= view.x_end);
+		assert(range.y_begin >= view.y_begin);
+		assert(range.y_end <= view.y_end);
+
+		View1Cr32 sub_view;
+
+		sub_view.image_data = view.image_data;
+		sub_view.image_width = view.image_width;
+		sub_view.x_begin = view.x_begin + range.x_begin;
+		sub_view.y_begin = view.y_begin + range.y_begin;
+		sub_view.x_end = view.x_begin + range.x_end;
+		sub_view.y_end = view.y_begin + range.y_end;
+		sub_view.width = range.x_end - range.x_begin;
+		sub_view.height = range.y_end - range.y_begin;
+
+		assert(sub_view.width);
+		assert(sub_view.height);
+
+		return sub_view;
+	}
+
+
+	r32* row_begin(View1Cr32 const& view, u32 y)
+	{
+		assert(y < view.height);
+
+		auto offset = (view.y_begin + y) * view.image_width + view.x_begin;
+
+		auto ptr = view.image_data + (u64)(offset);
+		assert(ptr);
+
+		return ptr;
+	}
+
+
+	r32* xy_at(View1Cr32 const& view, u32 x, u32 y)
+	{
+		assert(y < view.height);
+		assert(x < view.width);
+
+		return row_begin(view, y) + x;
+	}
 
 }
 

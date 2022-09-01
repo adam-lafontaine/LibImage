@@ -350,9 +350,9 @@ namespace libimage
 
 	View1Cr32 sub_view(View1Cr32 const& view, Range2Du32 const& range);
 
-	r32* row_begin(View1Cr32 const& view, u32 y, RGB channel);
+	r32* row_begin(View1Cr32 const& view, u32 y);
 
-	r32* xy_at(View1Cr32 const& view, u32 x, u32 y, RGB channel);
+	r32* xy_at(View1Cr32 const& view, u32 x, u32 y);
 
 
 
