@@ -320,7 +320,7 @@ namespace libimage
 	}
 
 
-	void transform(Image4Cr32 const& src, Image const& dst)
+	void convert(Image4Cr32 const& src, Image const& dst)
 	{
 		assert(src.width == dst.width);
 		assert(src.height == dst.height);
@@ -462,7 +462,7 @@ namespace libimage
 	}
 
 
-	void transform(Image const& src, Image4Cr32 const& dst)
+	void convert(Image const& src, Image4Cr32 const& dst)
 	{
 		assert(src.width == dst.width);
 		assert(src.height == dst.height);
@@ -557,7 +557,7 @@ namespace libimage
 	}
 
 
-	void transform(Image3Cr32 const& src, Image const& dst)
+	void convert(Image3Cr32 const& src, Image const& dst)
 	{
 		assert(src.width == dst.width);
 		assert(src.height == dst.height);
@@ -590,7 +590,7 @@ namespace libimage
 	}
 
 
-	void transform(Image const& src, Image3Cr32 const& dst)
+	void convert(Image const& src, Image3Cr32 const& dst)
 	{
 		assert(src.width == dst.width);
 		assert(src.height == dst.height);
@@ -921,7 +921,7 @@ namespace libimage
 	}
 
 
-	void transform(Image1Cr32 const& src, gray::Image const& dst)
+	void convert(Image1Cr32 const& src, gray::Image const& dst)
 	{
 		assert(src.width == dst.width);
 		assert(src.height == dst.height);
@@ -952,7 +952,7 @@ namespace libimage
 	}
 
 
-	void transform(gray::Image const& src, Image1Cr32 const& dst)
+	void convert(gray::Image const& src, Image1Cr32 const& dst)
 	{
 		assert(src.width == dst.width);
 		assert(src.height == dst.height);

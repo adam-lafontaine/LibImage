@@ -91,6 +91,7 @@ void empty_dir(path_t const& dir);
 
 void read_write_image_test();
 void resize_test();
+void convert_test();
 //void view_test();
 //void transform_test();
 //void copy_test();
@@ -123,6 +124,7 @@ int main()
 
 	read_write_image_test();
 	resize_test();
+	convert_test();
 	//view_test();
 	//transform_test();
 	//copy_test();
@@ -206,6 +208,63 @@ void resize_test()
 	img::destroy_image(gray);
 	img::destroy_image(vertical_gray);
 	img::destroy_image(horizontal_gray);
+}
+
+
+void convert_test()
+{
+	auto title = "convert_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+
+	Image image;
+	img::read_image_from_file(CORVETTE_PATH, image);
+	auto width = image.width;
+	auto height = image.height;
+
+	Image image_dst;
+	img::make_image(image_dst, width, height);
+
+	img::Image4Cr32 image4;
+	img::make_image(image4, width, height);
+
+	img::convert(image, image4);
+	img::convert(image4, image_dst);
+
+	img::write_image(image_dst, out_dir / "convert4.bmp");
+
+	img::Image3Cr32 image3;
+	img::make_image(image3, width, height);
+
+	img::convert(image, image3);
+	img::convert(image3, image_dst);
+
+	img::write_image(image_dst, out_dir / "convert3.bmp");
+
+	GrayImage gray;
+	img::read_image_from_file(CADILLAC_PATH, gray);
+	width = gray.width;
+	height = gray.height;
+
+	GrayImage gray_dst;
+	img::make_image(gray_dst, width, height);
+
+	img::Image1Cr32 image1;
+	img::make_image(image1, width, height);
+
+	img::convert(gray, image1);
+	img::convert(image1, gray_dst);
+
+	img::write_image(gray_dst, out_dir / "convert1.bmp");
+
+	img::destroy_image(image);
+	img::destroy_image(image_dst);
+	img::destroy_image(image4);
+	img::destroy_image(image3);
+	img::destroy_image(gray);
+	img::destroy_image(gray_dst);
+	img::destroy_image(image1);
 }
 
 

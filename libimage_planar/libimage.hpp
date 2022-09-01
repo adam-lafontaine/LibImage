@@ -135,9 +135,9 @@ namespace libimage
 
 	r32* xy_at(Image4Cr32 const& image, u32 x, u32 y, RGBA channel);
 
-	void transform(Image4Cr32 const& src, Image const& dst);
+	void convert(Image4Cr32 const& src, Image const& dst);
 
-	void transform(Image const& src, Image4Cr32 const& dst);
+	void convert(Image const& src, Image4Cr32 const& dst);
 
 
 	class View4Cr32
@@ -209,9 +209,9 @@ namespace libimage
 
 	r32* xy_at(Image3Cr32 const& image, u32 x, u32 y, RGB channel);
 
-	void transform(Image3Cr32 const& src, Image const& dst);
+	void convert(Image3Cr32 const& src, Image const& dst);
 
-	void transform(Image const& src, Image3Cr32 const& dst);
+	void convert(Image const& src, Image3Cr32 const& dst);
 
 
 	class View3Cr32
@@ -322,9 +322,9 @@ namespace libimage
 
 	r32* xy_at(Image1Cr32 const& image, u32 x, u32 y, RGB channel);
 
-	void transform(Image1Cr32 const& src, gray::Image const& dst);
+	void convert(Image1Cr32 const& src, gray::Image const& dst);
 
-	void transform(gray::Image const& src, Image1Cr32 const& dst);
+	void convert(gray::Image const& src, Image1Cr32 const& dst);
 
 
 	class View1Cr32
@@ -414,10 +414,10 @@ namespace libimage
 	}
 
 #endif // !LIBIMAGE_NO_WRITE
-
-#endif // !LIBIMAGE_NO_FILESYSTEM
 	
 }
+
+#endif // !LIBIMAGE_NO_FILESYSTEM
 
 
 
