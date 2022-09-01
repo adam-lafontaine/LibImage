@@ -92,9 +92,9 @@ static inline u8 to_channel_u8(r32 value)
 
 namespace libimage
 {
-	static PlatformPixel to_pixel(r32 r, r32 g, r32 b, r32 a)
+	static Pixel to_pixel(r32 r, r32 g, r32 b, r32 a)
 	{
-		PlatformPixel p{};
+		Pixel p{};
 		p.red = to_channel_u8(r);
 		p.green = to_channel_u8(g);
 		p.blue = to_channel_u8(b);
@@ -104,12 +104,12 @@ namespace libimage
 	}
 
 
-	void make_image(PlatformImage& image, u32 width, u32 height)
+	void make_image(Image& image, u32 width, u32 height)
 	{
 		assert(width);
 		assert(height);
 		
-		image.data = (PlatformPixel*)malloc(sizeof(PlatformPixel) * width * height);
+		image.data = (Pixel*)malloc(sizeof(Pixel) * width * height);
 		assert(image.data);
 
 		image.width = width;
@@ -117,7 +117,7 @@ namespace libimage
 	}
 
 
-	void destroy_image(PlatformImage& image)
+	void destroy_image(Image& image)
 	{
 		if (image.data != nullptr)
 		{
@@ -127,7 +127,7 @@ namespace libimage
 	}
 
 
-	PlatformPixel* row_begin(PlatformImage const& image, u32 y)
+	Pixel* row_begin(Image const& image, u32 y)
 	{
 		assert(image.width);
 		assert(image.height);
@@ -143,7 +143,7 @@ namespace libimage
 	}
 
 
-	PlatformPixel* xy_at(PlatformImage const& image, u32 x, u32 y)
+	Pixel* xy_at(Image const& image, u32 x, u32 y)
 	{
 		assert(y < image.height);
 		assert(x < image.width);
@@ -152,13 +152,13 @@ namespace libimage
 	}
 
 
-	PlatformImageView make_view(PlatformImage const& image)
+	View make_view(Image const& image)
 	{
 		assert(image.width);
 		assert(image.height);
 		assert(image.data);
 
-		PlatformImageView view;
+		View view;
 
 		view.image_data = image.data;
 		view.image_width = image.width;
@@ -173,31 +173,31 @@ namespace libimage
 	}
 
 
-	PlatformImageView sub_view(PlatformImage const& image, Range2Du32 const& range)
+	View sub_view(Image const& image, Range2Du32 const& range)
 	{
 		assert(image.width);
 		assert(image.height);
 		assert(image.data);
 
-		PlatformImageView sub_view;
+		View view;
 
-		sub_view.image_data = image.data;
-		sub_view.image_width = image.width;
-		sub_view.x_begin = range.x_begin;
-		sub_view.y_begin = range.y_begin;
-		sub_view.x_end = range.x_end;
-		sub_view.y_end = range.y_end;
-		sub_view.width = range.x_end - range.x_begin;
-		sub_view.height = range.y_end - range.y_begin;
+		view.image_data = image.data;
+		view.image_width = image.width;
+		view.x_begin = range.x_begin;
+		view.y_begin = range.y_begin;
+		view.x_end = range.x_end;
+		view.y_end = range.y_end;
+		view.width = range.x_end - range.x_begin;
+		view.height = range.y_end - range.y_begin;
 
-		assert(sub_view.width);
-		assert(sub_view.height);
+		assert(view.width);
+		assert(view.height);
 
-		return sub_view;
+		return view;
 	}
 
 
-	PlatformImageView sub_view(PlatformImageView const& view, Range2Du32 const& range)
+	View sub_view(View const& view, Range2Du32 const& range)
 	{
 		assert(view.width);
 		assert(view.height);
@@ -208,7 +208,7 @@ namespace libimage
 		assert(range.y_begin >= view.y_begin);
 		assert(range.y_end <= view.y_end);
 
-		PlatformImageView sub_view;
+		View sub_view;
 
 		sub_view.image_data = view.image_data;
 		sub_view.image_width = view.image_width;
@@ -226,7 +226,7 @@ namespace libimage
 	}
 
 
-	PlatformPixel* row_begin(PlatformImageView const& view, u32 y)
+	Pixel* row_begin(View const& view, u32 y)
 	{
 		assert(y < view.height);
 
@@ -239,7 +239,7 @@ namespace libimage
 	}
 
 
-	PlatformPixel* xy_at(PlatformImageView const& view, u32 x, u32 y)
+	Pixel* xy_at(View const& view, u32 x, u32 y)
 	{
 		assert(y < view.height);
 		assert(x < view.width);
@@ -248,7 +248,7 @@ namespace libimage
 	}
 
 
-	void make_image(ImageRGBAr32& image, u32 width, u32 height)
+	void make_image(Image4Cr32& image, u32 width, u32 height)
 	{
 		assert(width);
 		assert(height);
@@ -268,7 +268,7 @@ namespace libimage
 	}
 
 
-	void destroy_image(ImageRGBAr32& image)
+	void destroy_image(Image4Cr32& image)
 	{
 		if (image.red != nullptr)
 		{
@@ -281,7 +281,7 @@ namespace libimage
 	}
 
 
-	r32* row_begin(ImageRGBAr32 const& image, u32 y, RGBA channel)
+	r32* row_begin(Image4Cr32 const& image, u32 y, RGBA channel)
 	{
 		auto ch = static_cast<int>(channel);
 
@@ -299,7 +299,7 @@ namespace libimage
 	}
 
 
-	r32* xy_at(ImageRGBAr32 const& image, u32 x, u32 y, RGBA channel)
+	r32* xy_at(Image4Cr32 const& image, u32 x, u32 y, RGBA channel)
 	{
 		assert(y < image.height);
 		assert(x < image.width);
@@ -308,7 +308,7 @@ namespace libimage
 	}
 
 
-	void transform(ImageRGBAr32 const& src, PlatformImage const& dst)
+	void transform(Image4Cr32 const& src, Image const& dst)
 	{
 		assert(src.width == dst.width);
 		assert(src.height == dst.height);
@@ -342,18 +342,115 @@ namespace libimage
 	}
 
 
-	ImageViewRGBAr32 make_view(ImageRGBAr32 const& image);
+	View4Cr32 make_view(Image4Cr32 const& image)
+	{
+		assert(image.width);
+		assert(image.height);
+		assert(image.red);
 
-	ImageViewRGBAr32 sub_view(ImageRGBAr32 const& image, Range2Du32 const& range);
+		View4Cr32 view;
 
-	ImageViewRGBAr32 sub_view(ImageViewRGBAr32 const& view, Range2Du32 const& range);
+		view.image_red = image.red;
+		view.image_green = image.green;
+		view.image_blue = image.blue;
+		view.image_alpha = image.alpha;
+		view.image_width = image.width;
+		view.x_begin = 0;
+		view.y_begin = 0;
+		view.x_end = image.width;
+		view.y_end = image.height;
+		view.width = image.width;
+		view.height = image.height;
 
-	r32* row_begin(ImageViewRGBAr32 const& view, u32 y);
+		return view;
+	}
 
-	r32* xy_at(ImageViewRGBAr32 const& view, u32 x, u32 y);
+
+	View4Cr32 sub_view(Image4Cr32 const& image, Range2Du32 const& range)
+	{
+		assert(image.width);
+		assert(image.height);
+		assert(image.red);
+
+		View4Cr32 view;
+
+		view.image_red = image.red;
+		view.image_green = image.green;
+		view.image_blue = image.blue;
+		view.image_alpha = image.alpha;
+		view.image_width = image.width;
+		view.x_begin = range.x_begin;
+		view.y_begin = range.y_begin;
+		view.x_end = range.x_end;
+		view.y_end = range.y_end;
+		view.width = range.x_end - range.x_begin;
+		view.height = range.y_end - range.y_begin;
+
+		assert(view.width);
+		assert(view.height);
+
+		return view;
+	}
 
 
-	void transform(PlatformImage const& src, ImageRGBAr32 const& dst)
+	View4Cr32 sub_view(View4Cr32 const& view, Range2Du32 const& range)
+	{
+		assert(view.width);
+		assert(view.height);
+		assert(view.image_red);
+
+		assert(range.x_begin >= view.x_begin);
+		assert(range.x_end <= view.x_end);
+		assert(range.y_begin >= view.y_begin);
+		assert(range.y_end <= view.y_end);
+
+		View4Cr32 sub_view;
+
+		sub_view.image_red = view.image_red;
+		sub_view.image_green = view.image_green;
+		sub_view.image_blue = view.image_blue;
+		sub_view.image_alpha = view.image_alpha;
+		sub_view.image_width = view.image_width;
+		sub_view.x_begin = view.x_begin + range.x_begin;
+		sub_view.y_begin = view.y_begin + range.y_begin;
+		sub_view.x_end = view.x_begin + range.x_end;
+		sub_view.y_end = view.y_begin + range.y_end;
+		sub_view.width = range.x_end - range.x_begin;
+		sub_view.height = range.y_end - range.y_begin;
+
+		assert(sub_view.width);
+		assert(sub_view.height);
+
+		return sub_view;
+	}
+
+
+	r32* row_begin(View4Cr32 const& view, u32 y, RGBA channel)
+	{
+		auto ch = static_cast<int>(channel);
+
+		assert(y < view.height);
+		assert(view.image_channel_data[ch]);
+
+		auto offset = (view.y_begin + y) * view.image_width + view.x_begin;
+
+		auto ptr = view.image_channel_data[ch] + (u64)(offset);
+		assert(ptr);
+
+		return ptr;
+	}
+
+
+	r32* xy_at(View4Cr32 const& view, u32 x, u32 y, RGBA channel)
+	{
+		assert(y < view.height);
+		assert(x < view.width);
+
+		return row_begin(view, y, channel) + x;
+	}
+
+
+	void transform(Image const& src, Image4Cr32 const& dst)
 	{
 		assert(src.width == dst.width);
 		assert(src.height == dst.height);
@@ -390,7 +487,7 @@ namespace libimage
 	}
 
 
-	void make_image(ImageRGBr32& image, u32 width, u32 height)
+	void make_image(Image3Cr32& image, u32 width, u32 height)
 	{
 		assert(width);
 		assert(height);
@@ -409,7 +506,7 @@ namespace libimage
 	}
 
 
-	void destroy_image(ImageRGBr32& image)
+	void destroy_image(Image3Cr32& image)
 	{
 		if (image.red != nullptr)
 		{
@@ -421,7 +518,7 @@ namespace libimage
 	}
 
 
-	r32* row_begin(ImageRGBr32 const& image, u32 y, RGB channel)
+	r32* row_begin(Image3Cr32 const& image, u32 y, RGB channel)
 	{
 		auto ch = static_cast<int>(channel);
 
@@ -439,7 +536,7 @@ namespace libimage
 	}
 
 
-	r32* xy_at(ImageRGBr32 const& image, u32 x, u32 y, RGB channel)
+	r32* xy_at(Image3Cr32 const& image, u32 x, u32 y, RGB channel)
 	{
 		assert(y < image.height);
 		assert(x < image.width);
@@ -448,7 +545,7 @@ namespace libimage
 	}
 
 
-	void transform(ImageRGBr32 const& src, PlatformImage const& dst)
+	void transform(Image3Cr32 const& src, Image const& dst)
 	{
 		assert(src.width == dst.width);
 		assert(src.height == dst.height);
@@ -481,7 +578,7 @@ namespace libimage
 	}
 
 
-	void transform(PlatformImage const& src, ImageRGBr32 const& dst)
+	void transform(Image const& src, Image3Cr32 const& dst)
 	{
 		assert(src.width == dst.width);
 		assert(src.height == dst.height);
@@ -516,7 +613,112 @@ namespace libimage
 	}
 
 
-	void make_image(PlatformImageGRAY& image, u32 width, u32 height)
+	View3Cr32 make_view(Image3Cr32 const& image)
+	{
+		assert(image.width);
+		assert(image.height);
+		assert(image.red);
+
+		View3Cr32 view;
+
+		view.image_red = image.red;
+		view.image_green = image.green;
+		view.image_blue = image.blue;
+		view.image_width = image.width;
+		view.x_begin = 0;
+		view.y_begin = 0;
+		view.x_end = image.width;
+		view.y_end = image.height;
+		view.width = image.width;
+		view.height = image.height;
+
+		return view;
+	}
+
+
+	View3Cr32 sub_view(Image3Cr32 const& image, Range2Du32 const& range)
+	{
+		assert(image.width);
+		assert(image.height);
+		assert(image.red);
+
+		View3Cr32 view;
+
+		view.image_red = image.red;
+		view.image_green = image.green;
+		view.image_blue = image.blue;
+		view.image_width = image.width;
+		view.x_begin = range.x_begin;
+		view.y_begin = range.y_begin;
+		view.x_end = range.x_end;
+		view.y_end = range.y_end;
+		view.width = range.x_end - range.x_begin;
+		view.height = range.y_end - range.y_begin;
+
+		assert(view.width);
+		assert(view.height);
+
+		return view;
+	}
+
+
+	View3Cr32 sub_view(View3Cr32 const& view, Range2Du32 const& range)
+	{
+		assert(view.width);
+		assert(view.height);
+		assert(view.image_red);
+
+		assert(range.x_begin >= view.x_begin);
+		assert(range.x_end <= view.x_end);
+		assert(range.y_begin >= view.y_begin);
+		assert(range.y_end <= view.y_end);
+
+		View3Cr32 sub_view;
+
+		sub_view.image_red = view.image_red;
+		sub_view.image_green = view.image_green;
+		sub_view.image_blue = view.image_blue;
+		sub_view.image_width = view.image_width;
+		sub_view.x_begin = view.x_begin + range.x_begin;
+		sub_view.y_begin = view.y_begin + range.y_begin;
+		sub_view.x_end = view.x_begin + range.x_end;
+		sub_view.y_end = view.y_begin + range.y_end;
+		sub_view.width = range.x_end - range.x_begin;
+		sub_view.height = range.y_end - range.y_begin;
+
+		assert(sub_view.width);
+		assert(sub_view.height);
+
+		return sub_view;
+	}
+
+
+	r32* row_begin(View3Cr32 const& view, u32 y, RGB channel)
+	{
+		auto ch = static_cast<int>(channel);
+
+		assert(y < view.height);
+		assert(view.image_channel_data[ch]);
+
+		auto offset = (view.y_begin + y) * view.image_width + view.x_begin;
+
+		auto ptr = view.image_channel_data[ch] + (u64)(offset);
+		assert(ptr);
+
+		return ptr;
+	}
+
+
+	r32* xy_at(View3Cr32 const& view, u32 x, u32 y, RGB channel)
+	{
+		assert(y < view.height);
+		assert(x < view.width);
+
+		return row_begin(view, y, channel) + x;
+	}
+
+
+	void make_image(gray::Image& image, u32 width, u32 height)
 	{
 		assert(width);
 		assert(height);
@@ -529,7 +731,7 @@ namespace libimage
 	}
 
 
-	void destroy_image(PlatformImageGRAY& image)
+	void destroy_image(gray::Image& image)
 	{
 		if (image.data != nullptr)
 		{
@@ -539,7 +741,7 @@ namespace libimage
 	}
 
 
-	u8* row_begin(PlatformImageGRAY const& image, u32 y)
+	u8* row_begin(gray::Image const& image, u32 y)
 	{
 		assert(image.width);
 		assert(image.height);
@@ -555,7 +757,7 @@ namespace libimage
 	}
 
 
-	u8* xy_at(PlatformImageGRAY const& image, u32 x, u32 y)
+	u8* xy_at(gray::Image const& image, u32 x, u32 y)
 	{
 		assert(y < image.height);
 		assert(x < image.width);
@@ -564,7 +766,102 @@ namespace libimage
 	}
 
 
-	void make_image(ImageGRAYr32& image, u32 width, u32 height)
+	gray::View make_view(gray::Image const& image)
+	{
+		assert(image.width);
+		assert(image.height);
+		assert(image.data);
+
+		gray::View view;
+
+		view.image_data = image.data;
+		view.image_width = image.width;
+		view.x_begin = 0;
+		view.y_begin = 0;
+		view.x_end = image.width;
+		view.y_end = image.height;
+		view.width = image.width;
+		view.height = image.height;
+
+		return view;
+	}
+
+
+	gray::View sub_view(gray::Image const& image, Range2Du32 const& range)
+	{
+		assert(image.width);
+		assert(image.height);
+		assert(image.data);
+
+		gray::View view;
+
+		view.image_data = image.data;
+		view.image_width = image.width;
+		view.x_begin = range.x_begin;
+		view.y_begin = range.y_begin;
+		view.x_end = range.x_end;
+		view.y_end = range.y_end;
+		view.width = range.x_end - range.x_begin;
+		view.height = range.y_end - range.y_begin;
+
+		assert(view.width);
+		assert(view.height);
+
+		return view;
+	}
+
+	gray::View sub_view(gray::View const& view, Range2Du32 const& range)
+	{
+		assert(view.width);
+		assert(view.height);
+		assert(view.image_data);
+
+		assert(range.x_begin >= view.x_begin);
+		assert(range.x_end <= view.x_end);
+		assert(range.y_begin >= view.y_begin);
+		assert(range.y_end <= view.y_end);
+
+		gray::View sub_view;
+
+		sub_view.image_data = view.image_data;
+		sub_view.image_width = view.image_width;
+		sub_view.x_begin = view.x_begin + range.x_begin;
+		sub_view.y_begin = view.y_begin + range.y_begin;
+		sub_view.x_end = view.x_begin + range.x_end;
+		sub_view.y_end = view.y_begin + range.y_end;
+		sub_view.width = range.x_end - range.x_begin;
+		sub_view.height = range.y_end - range.y_begin;
+
+		assert(sub_view.width);
+		assert(sub_view.height);
+
+		return sub_view;
+	}
+
+
+	u8* row_begin(gray::View const& view, u32 y)
+	{
+		assert(y < view.height);
+
+		auto offset = (view.y_begin + y) * view.image_width + view.x_begin;
+
+		auto ptr = view.image_data + (u64)(offset);
+		assert(ptr);
+
+		return ptr;
+	}
+
+
+	u8* xy_at(gray::View const& view, u32 x, u32 y)
+	{
+		assert(y < view.height);
+		assert(x < view.width);
+
+		return row_begin(view, y) + x;
+	}
+
+
+	void make_image(Image1Cr32& image, u32 width, u32 height)
 	{
 		assert(width);
 		assert(height);
@@ -577,7 +874,7 @@ namespace libimage
 	}
 
 
-	void destroy_image(ImageGRAYr32& image)
+	void destroy_image(Image1Cr32& image)
 	{
 		if (image.data != nullptr)
 		{
@@ -587,7 +884,7 @@ namespace libimage
 	}
 
 
-	r32* row_begin(ImageGRAYr32 const& image, u32 y)
+	r32* row_begin(Image1Cr32 const& image, u32 y)
 	{
 		assert(image.width);
 		assert(image.height);
@@ -603,7 +900,7 @@ namespace libimage
 	}
 
 
-	r32* xy_at(ImageGRAYr32 const& image, u32 x, u32 y)
+	r32* xy_at(Image1Cr32 const& image, u32 x, u32 y)
 	{
 		assert(y < image.height);
 		assert(x < image.width);
@@ -612,7 +909,7 @@ namespace libimage
 	}
 
 
-	void transform(ImageGRAYr32 const& src, PlatformImageGRAY const& dst)
+	void transform(Image1Cr32 const& src, gray::Image const& dst)
 	{
 		assert(src.width == dst.width);
 		assert(src.height == dst.height);
@@ -643,7 +940,7 @@ namespace libimage
 	}
 
 
-	void transform(PlatformImageGRAY const& src, ImageGRAYr32 const& dst)
+	void transform(gray::Image const& src, Image1Cr32 const& dst)
 	{
 		assert(src.width == dst.width);
 		assert(src.height == dst.height);
@@ -672,6 +969,17 @@ namespace libimage
 
 		execute_procs(make_proc_list(thread_proc));
 	}
+
+
+	View1Cr32 make_view(Image1Cr32 const& image);
+
+	View1Cr32 sub_view(Image1Cr32 const& image, Range2Du32 const& range);
+
+	View1Cr32 sub_view(View1Cr32 const& view, Range2Du32 const& range);
+
+	r32* row_begin(View1Cr32 const& view, u32 y, RGB channel);
+
+	r32* xy_at(View1Cr32 const& view, u32 x, u32 y, RGB channel);
 
 }
 

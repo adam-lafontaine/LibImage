@@ -34,12 +34,12 @@ namespace libimage
 
 		u32 value;
 
-	} PlatformPixel;
+	} Pixel;
 
 
-	inline PlatformPixel to_pixel(u8 r, u8 g, u8 b, u8 a)
+	inline Pixel to_pixel(u8 r, u8 g, u8 b, u8 a)
 	{
-		PlatformPixel p{};
+		Pixel p{};
 		p.red = r;
 		p.green = g;
 		p.blue = b;
@@ -49,37 +49,37 @@ namespace libimage
 	}
 
 
-	inline PlatformPixel to_pixel(u8 r, u8 g, u8 b)
+	inline Pixel to_pixel(u8 r, u8 g, u8 b)
 	{
 		return to_pixel(r, g, b, 255);
 	}
 
 
-	class PlatformImage
+	class Image
 	{
 	public:
 
 		u32 width = 0;
 		u32 height = 0;
 
-		PlatformPixel* data = nullptr;
+		Pixel* data = nullptr;
 	};
 
 
-	void make_image(PlatformImage& image, u32 width, u32 height);
+	void make_image(Image& image, u32 width, u32 height);
 
-	void destroy_image(PlatformImage& image);
+	void destroy_image(Image& image);
 
-	PlatformPixel* row_begin(PlatformImage const& image, u32 y);
+	Pixel* row_begin(Image const& image, u32 y);
 
-	PlatformPixel* xy_at(PlatformImage const& image, u32 x, u32 y);
+	Pixel* xy_at(Image const& image, u32 x, u32 y);
 
 
-	class PlatformImageView
+	class View
 	{
 	public:
 
-		PlatformPixel* image_data = 0;
+		Pixel* image_data = 0;
 		u32 image_width = 0;
 
 		u32 x_begin = 0;
@@ -92,18 +92,18 @@ namespace libimage
 	};
 
 
-	PlatformImageView make_view(PlatformImage const& image);
+	View make_view(Image const& image);
 
-	PlatformImageView sub_view(PlatformImage const& image, Range2Du32 const& range);
+	View sub_view(Image const& image, Range2Du32 const& range);
 
-	PlatformImageView sub_view(PlatformImageView const& view, Range2Du32 const& range);
+	View sub_view(View const& view, Range2Du32 const& range);
 
-	PlatformPixel* row_begin(PlatformImageView const& view, u32 y);
+	Pixel* row_begin(View const& view, u32 y);
 
-	PlatformPixel* xy_at(PlatformImageView const& view, u32 x, u32 y);
+	Pixel* xy_at(View const& view, u32 x, u32 y);
 
 
-	class ImageRGBAr32
+	class Image4Cr32
 	{
 	public:
 
@@ -125,20 +125,20 @@ namespace libimage
 	};
 
 
-	void make_image(ImageRGBAr32& image, u32 width, u32 height);
+	void make_image(Image4Cr32& image, u32 width, u32 height);
 
-	void destroy_image(ImageRGBAr32& image);
+	void destroy_image(Image4Cr32& image);
 
-	r32* row_begin(ImageRGBAr32 const& image, u32 y, RGBA channel);
+	r32* row_begin(Image4Cr32 const& image, u32 y, RGBA channel);
 
-	r32* xy_at(ImageRGBAr32 const& image, u32 x, u32 y, RGBA channel);
+	r32* xy_at(Image4Cr32 const& image, u32 x, u32 y, RGBA channel);
 
-	void transform(ImageRGBAr32 const& src, PlatformImage const& dst);
+	void transform(Image4Cr32 const& src, Image const& dst);
 
-	void transform(PlatformImage const& src, ImageRGBAr32 const& dst);
+	void transform(Image const& src, Image4Cr32 const& dst);
 
 
-	class ImageViewRGBAr32
+	class View4Cr32
 	{
 	public:
 
@@ -167,18 +167,18 @@ namespace libimage
 	};
 
 
-	ImageViewRGBAr32 make_view(ImageRGBAr32 const& image);
+	View4Cr32 make_view(Image4Cr32 const& image);
 
-	ImageViewRGBAr32 sub_view(ImageRGBAr32 const& image, Range2Du32 const& range);
+	View4Cr32 sub_view(Image4Cr32 const& image, Range2Du32 const& range);
 
-	ImageViewRGBAr32 sub_view(ImageViewRGBAr32 const& view, Range2Du32 const& range);
+	View4Cr32 sub_view(View4Cr32 const& view, Range2Du32 const& range);
 
-	r32* row_begin(ImageViewRGBAr32 const& view, u32 y);
+	r32* row_begin(View4Cr32 const& view, u32 y, RGBA channel);
 
-	r32* xy_at(ImageViewRGBAr32 const& view, u32 x, u32 y);
+	r32* xy_at(View4Cr32 const& view, u32 x, u32 y, RGBA channel);
 
 
-	class ImageRGBr32
+	class Image3Cr32
 	{
 	public:
 
@@ -199,40 +199,109 @@ namespace libimage
 	};
 
 
-	void make_image(ImageRGBr32& image, u32 width, u32 height);
+	void make_image(Image3Cr32& image, u32 width, u32 height);
 
-	void destroy_image(ImageRGBr32& image);
+	void destroy_image(Image3Cr32& image);
 
-	r32* row_begin(ImageRGBr32 const& image, u32 y, RGB channel);
+	r32* row_begin(Image3Cr32 const& image, u32 y, RGB channel);
 
-	r32* xy_at(ImageRGBr32 const& image, u32 x, u32 y, RGB channel);
+	r32* xy_at(Image3Cr32 const& image, u32 x, u32 y, RGB channel);
 
-	void transform(ImageRGBr32 const& src, PlatformImage const& dst);
+	void transform(Image3Cr32 const& src, Image const& dst);
 
-	void transform(PlatformImage const& src, ImageRGBr32 const& dst);
+	void transform(Image const& src, Image3Cr32 const& dst);
 
 
-	class PlatformImageGRAY
+	class View3Cr32
 	{
 	public:
 
-		u32 width;
-		u32 height;
+		u32 image_width = 0;
 
-		u8* data = nullptr;
+		union
+		{
+			struct
+			{
+				r32* image_red;
+				r32* image_green;
+				r32* image_blue;
+			};
+
+			r32* image_channel_data[3];
+		};
+
+		u32 x_begin = 0;
+		u32 x_end = 0;
+		u32 y_begin = 0;
+		u32 y_end = 0;
+
+		u32 width = 0;
+		u32 height = 0;
 	};
 
 
-	void make_image(PlatformImageGRAY& image, u32 width, u32 height);
+	View3Cr32 make_view(Image3Cr32 const& image);
 
-	void destroy_image(PlatformImageGRAY& image);
+	View3Cr32 sub_view(Image3Cr32 const& image, Range2Du32 const& range);
 
-	u8* row_begin(PlatformImageGRAY const& image, u32 y);
+	View3Cr32 sub_view(View3Cr32 const& view, Range2Du32 const& range);
 
-	u8* xy_at(PlatformImageGRAY const& image, u32 x, u32 y);
+	r32* row_begin(View3Cr32 const& view, u32 y, RGB channel);
+
+	r32* xy_at(View3Cr32 const& view, u32 x, u32 y, RGB channel);
 
 
-	class ImageGRAYr32
+	namespace gray
+	{
+		class Image
+		{
+		public:
+
+			u32 width;
+			u32 height;
+
+			u8* data = nullptr;
+		};
+
+
+		class View
+		{
+		public:
+
+			u8* image_data = 0;
+			u32 image_width = 0;
+
+			u32 x_begin = 0;
+			u32 x_end = 0;
+			u32 y_begin = 0;
+			u32 y_end = 0;
+
+			u32 width = 0;
+			u32 height = 0;
+		};
+	}
+
+
+	void make_image(gray::Image& image, u32 width, u32 height);
+
+	void destroy_image(gray::Image& image);
+
+	u8* row_begin(gray::Image const& image, u32 y);
+
+	u8* xy_at(gray::Image const& image, u32 x, u32 y);
+
+	gray::View make_view(gray::Image const& image);
+
+	gray::View sub_view(gray::Image const& image, Range2Du32 const& range);
+
+	gray::View sub_view(gray::View const& view, Range2Du32 const& range);
+
+	u8* row_begin(gray::View const& view, u32 y);
+
+	u8* xy_at(gray::View const& view, u32 x, u32 y);
+
+
+	class Image1Cr32
 	{
 	public:
 
@@ -243,38 +312,67 @@ namespace libimage
 	};
 
 
-	void make_image(ImageGRAYr32& image, u32 width, u32 height);
+	void make_image(Image1Cr32& image, u32 width, u32 height);
 
-	void destroy_image(ImageGRAYr32& image);
+	void destroy_image(Image1Cr32& image);
 
-	r32* row_begin(ImageGRAYr32 const& image, u32 y);
+	r32* row_begin(Image1Cr32 const& image, u32 y, RGB channel);
 
-	r32* xy_at(ImageGRAYr32 const& image, u32 x, u32 y);
+	r32* xy_at(Image1Cr32 const& image, u32 x, u32 y, RGB channel);
 
-	void transform(ImageGRAYr32 const& src, PlatformImageGRAY const& dst);
+	void transform(Image1Cr32 const& src, gray::Image const& dst);
 
-	void transform(PlatformImageGRAY const& src, ImageGRAYr32 const& dst);
+	void transform(gray::Image const& src, Image1Cr32 const& dst);
 
 
-	void read_image_from_file(const char* img_path_src, PlatformImage& image_dst);
+	class View1Cr32
+	{
+	public:
 
-	void read_image_from_file(const char* file_path_src, PlatformImageGRAY& image_dst);
+		r32* image_data = 0;
+		u32 image_width = 0;
+
+		u32 x_begin = 0;
+		u32 x_end = 0;
+		u32 y_begin = 0;
+		u32 y_end = 0;
+
+		u32 width = 0;
+		u32 height = 0;
+	};
+
+
+	View1Cr32 make_view(Image1Cr32 const& image);
+
+	View1Cr32 sub_view(Image1Cr32 const& image, Range2Du32 const& range);
+
+	View1Cr32 sub_view(View1Cr32 const& view, Range2Du32 const& range);
+
+	r32* row_begin(View1Cr32 const& view, u32 y, RGB channel);
+
+	r32* xy_at(View1Cr32 const& view, u32 x, u32 y, RGB channel);
+	
+
+
+	void read_image_from_file(const char* img_path_src, Image& image_dst);
+
+	void read_image_from_file(const char* file_path_src, Image& image_dst);
 
 
 #ifndef LIBIMAGE_NO_WRITE
 
-	void write_image(PlatformImage const& image_src, const char* file_path_dst);
+	void write_image(Image const& image_src, const char* file_path_dst);
 
-	void write_image(PlatformImageGRAY const& image_src, const char* file_path_dst);
+	void write_image(Image const& image_src, const char* file_path_dst);
 
 #endif // !LIBIMAGE_NO_WRITE
 
 
 #ifndef LIBIMAGE_NO_RESIZE
 
-	void resize_image(PlatformImage const& image_src, PlatformImage& image_dst);
+	void resize_image(Image const& image_src, Image& image_dst);
 
-	void resize_image(PlatformImageGRAY const& image_src, PlatformImageGRAY& image_dst);
+	void resize_image(Image const& image_src, Image& image_dst);
 
 #endif // !LIBIMAGE_NO_RESIZE
 	
