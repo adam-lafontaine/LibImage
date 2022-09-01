@@ -22,6 +22,9 @@
     <Filter Include="Source Files\stb_wrapper">
       <UniqueIdentifier>{0e524c59-aebc-4528-8b44-d0474d4a7134}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\libimage_planar">
+      <UniqueIdentifier>{d3de0f23-3c4f-4cec-83a4-881e00eccace}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\libimage_planar\stb_wrapper\stb_include.hpp">
@@ -38,8 +41,11 @@
     <ClCompile Include="..\..\..\libimage_planar\stb_wrapper\stb_libimage.cpp">
       <Filter>Source Files\stb_wrapper</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libimage_planar\libimage.cpp">
+    <ClCompile Include="planar_tests_main.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\libimage_planar\libimage.cpp">
+      <Filter>Source Files\libimage_planar</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

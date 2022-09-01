@@ -104,6 +104,18 @@ namespace libimage
 	}
 
 
+	static Pixel to_pixel(r32 r, r32 g, r32 b)
+	{
+		Pixel p{};
+		p.red = to_channel_u8(r);
+		p.green = to_channel_u8(g);
+		p.blue = to_channel_u8(b);
+		p.alpha = 255;
+
+		return p;
+	}
+
+
 	void make_image(Image& image, u32 width, u32 height)
 	{
 		assert(width);

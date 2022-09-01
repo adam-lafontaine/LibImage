@@ -138,6 +138,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\libimage_planar\libimage.cpp" />
     <ClCompile Include="..\..\..\libimage_planar\stb_wrapper\stb_libimage.cpp" />
+    <ClCompile Include="planar_tests_main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
