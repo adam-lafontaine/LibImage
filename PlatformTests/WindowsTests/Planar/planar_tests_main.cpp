@@ -1,4 +1,4 @@
-#include "../../../libimage_parallel/libimage.hpp"
+#include "../../../libimage_planar/libimage.hpp"
 
 #include "../utils/stopwatch.hpp"
 
@@ -10,8 +10,10 @@
 
 #include <cstdio>
 #include <algorithm>
+#include <filesystem>
 
 namespace img = libimage;
+namespace fs = std::filesystem;
 
 using Image = img::Image;
 using ImageView = img::View;
@@ -37,6 +39,11 @@ const auto IMAGE_OUT_PATH = TEST_IMAGE_PATH / IMAGE_OUT_DIR;
 const auto CORVETTE_PATH = IMAGE_IN_PATH / "corvette.png";
 const auto CADILLAC_PATH = IMAGE_IN_PATH / "cadillac.png";
 const auto WEED_PATH = IMAGE_IN_PATH / "weed.png";
+
+const char* to_cstring(path_t const& path)
+{
+	return path.string().c_str();
+}
 
 
 bool directory_files_test()
@@ -82,8 +89,8 @@ void empty_dir(path_t const& dir);
 //void clear_image(Image const& img);
 //void clear_image(GrayImage const& img);
 
-//void read_write_image_test();
-//void resize_test();
+void read_write_image_test();
+void resize_test();
 //void view_test();
 //void transform_test();
 //void copy_test();
@@ -114,21 +121,91 @@ int main()
 		return EXIT_FAILURE;
 	}
 
-	/*read_write_image_test();
+	read_write_image_test();
 	resize_test();
-	view_test();
-	transform_test();
-	copy_test();
-	fill_test();
-	alpha_blend_test();
-	grayscale_test();
-	binary_test();
-	contrast_test();
-	blur_test();
-	gradients_test();
-	edges_test();
-	combo_view_test();
-	rotate_test();*/
+	//view_test();
+	//transform_test();
+	//copy_test();
+	//fill_test();
+	//alpha_blend_test();
+	//grayscale_test();
+	//binary_test();
+	//contrast_test();
+	//blur_test();
+	//gradients_test();
+	//edges_test();
+	//combo_view_test();
+	//rotate_test();
+}
+
+
+void read_write_image_test()
+{
+	auto title = "read_write_image_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+
+	Image image;
+	img::read_image_from_file(CORVETTE_PATH, image);
+	img::write_image(image, out_dir / "corvette.bmp");
+
+	GrayImage gray;
+	img::read_image_from_file(CADILLAC_PATH, gray);
+	img::write_image(gray, out_dir / "cadillac_gray.bmp");
+
+	img::destroy_image(image);
+	img::destroy_image(gray);
+}
+
+
+void resize_test()
+{
+	auto title = "resize_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+
+	Image image;
+	img::read_image_from_file(CORVETTE_PATH, image);
+	auto width = image.width;
+	auto height = image.height;
+
+	Image vertical;
+	vertical.width = width / 2;
+	vertical.height = height * 2;
+	img::resize_image(image, vertical);
+	img::write_image(vertical, out_dir / "vertical.bmp");
+
+	Image horizontal;
+	horizontal.width = width * 2;
+	horizontal.height = height / 2;
+	img::resize_image(image, horizontal);
+	img::write_image(horizontal, out_dir / "horizontal.bmp");
+
+	GrayImage gray;
+	img::read_image_from_file(CADILLAC_PATH, gray);
+	width = gray.width;
+	height = gray.height;
+
+	GrayImage vertical_gray;
+	vertical_gray.width = width / 2;
+	vertical_gray.height = height * 2;
+	img::resize_image(gray, vertical_gray);
+	img::write_image(vertical_gray, out_dir / "vertical_gray.bmp");
+
+	GrayImage horizontal_gray;
+	horizontal_gray.width = width * 2;
+	horizontal_gray.height = height / 2;
+	img::resize_image(gray, horizontal_gray);
+	img::write_image(horizontal_gray, out_dir / "horizontal_gray.bmp");
+
+	img::destroy_image(image);
+	img::destroy_image(vertical);
+	img::destroy_image(horizontal);
+	img::destroy_image(gray);
+	img::destroy_image(vertical_gray);
+	img::destroy_image(horizontal_gray);
 }
 
 

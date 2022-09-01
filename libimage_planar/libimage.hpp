@@ -3,6 +3,8 @@
 #include "defines.hpp"
 
 
+
+
 namespace libimage
 {
 	constexpr auto RGB_CHANNELS = 3u;
@@ -351,19 +353,19 @@ namespace libimage
 	r32* row_begin(View1Cr32 const& view, u32 y, RGB channel);
 
 	r32* xy_at(View1Cr32 const& view, u32 x, u32 y, RGB channel);
-	
+
 
 
 	void read_image_from_file(const char* img_path_src, Image& image_dst);
 
-	void read_image_from_file(const char* file_path_src, Image& image_dst);
+	void read_image_from_file(const char* file_path_src, gray::Image& image_dst);
 
 
 #ifndef LIBIMAGE_NO_WRITE
 
 	void write_image(Image const& image_src, const char* file_path_dst);
 
-	void write_image(Image const& image_src, const char* file_path_dst);
+	void write_image(gray::Image const& image_src, const char* file_path_dst);
 
 #endif // !LIBIMAGE_NO_WRITE
 
@@ -372,10 +374,52 @@ namespace libimage
 
 	void resize_image(Image const& image_src, Image& image_dst);
 
-	void resize_image(Image const& image_src, Image& image_dst);
+	void resize_image(gray::Image const& image_src, gray::Image& image_dst);
 
 #endif // !LIBIMAGE_NO_RESIZE
+
+}
+
+#ifndef LIBIMAGE_NO_FILESYSTEM
+
+#include <filesystem>
+
+namespace fs = std::filesystem;
+
+
+namespace libimage
+{
+
+	inline void read_image_from_file(fs::path const& img_path_src, Image& image_dst)
+	{
+		return read_image_from_file(img_path_src.string().c_str(), image_dst);
+	}
+
+
+	inline void read_image_from_file(fs::path const& img_path_src, gray::Image& image_dst)
+	{
+		return read_image_from_file(img_path_src.string().c_str(), image_dst);
+	}
+
+#ifndef LIBIMAGE_NO_WRITE
+
+	inline void write_image(Image const& image_src, fs::path const& file_path_dst)
+	{
+		write_image(image_src, file_path_dst.string().c_str());
+	}
+
+	inline void write_image(gray::Image const& image_src, fs::path const& file_path_dst)
+	{
+		write_image(image_src, file_path_dst.string().c_str());
+	}
+
+#endif // !LIBIMAGE_NO_WRITE
+
+#endif // !LIBIMAGE_NO_FILESYSTEM
 	
 }
+
+
+
 
 
