@@ -84,10 +84,18 @@ namespace libimage
 		Pixel* image_data = 0;
 		u32 image_width = 0;
 
-		u32 x_begin = 0;
-		u32 x_end = 0;
-		u32 y_begin = 0;
-		u32 y_end = 0;
+		union
+		{
+			Range2Du32 range;
+
+			struct
+			{
+				u32 x_begin;
+				u32 x_end;
+				u32 y_begin;
+				u32 y_end;
+			};
+		};
 
 		u32 width = 0;
 		u32 height = 0;
@@ -159,10 +167,18 @@ namespace libimage
 			r32* image_channel_data[4];
 		};
 
-		u32 x_begin = 0;
-		u32 x_end = 0;
-		u32 y_begin = 0;
-		u32 y_end = 0;
+		union
+		{
+			Range2Du32 range;
+
+			struct
+			{
+				u32 x_begin;
+				u32 x_end;
+				u32 y_begin;
+				u32 y_end;
+			};
+		};
 
 		u32 width = 0;
 		u32 height = 0;
@@ -178,6 +194,10 @@ namespace libimage
 	r32* row_begin(View4Cr32 const& view, u32 y, RGBA channel);
 
 	r32* xy_at(View4Cr32 const& view, u32 x, u32 y, RGBA channel);
+
+	void convert(View4Cr32 const& src, Image const& dst);
+
+	void convert(Image const& src, View4Cr32 const& dst);
 
 
 	class Image3Cr32
@@ -232,10 +252,18 @@ namespace libimage
 			r32* image_channel_data[3];
 		};
 
-		u32 x_begin = 0;
-		u32 x_end = 0;
-		u32 y_begin = 0;
-		u32 y_end = 0;
+		union
+		{
+			Range2Du32 range;
+
+			struct
+			{
+				u32 x_begin;
+				u32 x_end;
+				u32 y_begin;
+				u32 y_end;
+			};
+		};
 
 		u32 width = 0;
 		u32 height = 0;
@@ -251,6 +279,10 @@ namespace libimage
 	r32* row_begin(View3Cr32 const& view, u32 y, RGB channel);
 
 	r32* xy_at(View3Cr32 const& view, u32 x, u32 y, RGB channel);
+
+	void convert(View3Cr32 const& src, Image const& dst);
+
+	void convert(Image const& src, View3Cr32 const& dst);
 
 
 	namespace gray
@@ -273,10 +305,18 @@ namespace libimage
 			u8* image_data = 0;
 			u32 image_width = 0;
 
-			u32 x_begin = 0;
-			u32 x_end = 0;
-			u32 y_begin = 0;
-			u32 y_end = 0;
+			union
+			{
+				Range2Du32 range;
+
+				struct
+				{
+					u32 x_begin;
+					u32 x_end;
+					u32 y_begin;
+					u32 y_end;
+				};
+			};
 
 			u32 width = 0;
 			u32 height = 0;
@@ -334,10 +374,18 @@ namespace libimage
 		r32* image_data = 0;
 		u32 image_width = 0;
 
-		u32 x_begin = 0;
-		u32 x_end = 0;
-		u32 y_begin = 0;
-		u32 y_end = 0;
+		union
+		{
+			Range2Du32 range;
+
+			struct
+			{
+				u32 x_begin;
+				u32 x_end;
+				u32 y_begin;
+				u32 y_end;
+			};
+		};
 
 		u32 width = 0;
 		u32 height = 0;
@@ -353,6 +401,10 @@ namespace libimage
 	r32* row_begin(View1Cr32 const& view, u32 y);
 
 	r32* xy_at(View1Cr32 const& view, u32 x, u32 y);
+
+	void convert(View1Cr32 const& src, gray::Image const& dst);
+
+	void convert(gray::Image const& src, View1Cr32 const& dst);
 
 
 

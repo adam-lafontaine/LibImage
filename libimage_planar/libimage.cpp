@@ -91,6 +91,28 @@ static void process_rows(u32 height, id_func_t const& row_func)
 }
 
 
+static void process_rows(u32 row_begin, u32 row_end, id_func_t const& row_func)
+{
+	assert(row_end > row_begin);
+
+	auto const height = row_end - row_begin;
+	auto const rows_per_thread = height / N_THREADS;
+
+	auto const thread_proc = [&](u32 id)
+	{
+		auto y_begin = row_begin + id * rows_per_thread;
+		auto y_end = row_begin + (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
+
+		for (u32 y = y_begin; y < y_end; ++y)
+		{
+			row_func(y);
+		}
+	};
+
+	execute_procs(make_proc_list(thread_proc));
+}
+
+
 static inline r32 to_channel_r32(u8 value)
 {
 	return value / 255.0f;
@@ -217,10 +239,7 @@ namespace libimage
 
 		view.image_data = image.data;
 		view.image_width = image.width;
-		view.x_begin = range.x_begin;
-		view.y_begin = range.y_begin;
-		view.x_end = range.x_end;
-		view.y_end = range.y_end;
+		view.range = range;
 		view.width = range.x_end - range.x_begin;
 		view.height = range.y_end - range.y_begin;
 
@@ -430,10 +449,7 @@ namespace libimage
 		view.image_blue = image.blue;
 		view.image_alpha = image.alpha;
 		view.image_width = image.width;
-		view.x_begin = range.x_begin;
-		view.y_begin = range.y_begin;
-		view.x_end = range.x_end;
-		view.y_end = range.y_end;
+		view.range = range;
 		view.width = range.x_end - range.x_begin;
 		view.height = range.y_end - range.y_begin;
 
@@ -500,6 +516,57 @@ namespace libimage
 		return row_begin(view, y, channel) + x;
 	}
 	
+
+	void convert(View4Cr32 const& src, Image const& dst)
+	{
+		assert(src.width == dst.width);
+		assert(src.height == dst.height);
+		assert(src.image_red);
+		assert(dst.data);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto r = row_begin(src, y, RGBA::R);
+			auto g = row_begin(src, y, RGBA::G);
+			auto b = row_begin(src, y, RGBA::B);
+			auto a = row_begin(src, y, RGBA::A);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = to_pixel(r[x], g[x], b[x], a[x]);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void convert(Image const& src, View4Cr32 const& dst)
+	{
+		assert(src.width == dst.width);
+		assert(src.height == dst.height);
+		assert(src.data);
+		assert(dst.image_red);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto r = row_begin(dst, y, RGBA::R);
+			auto g = row_begin(dst, y, RGBA::G);
+			auto b = row_begin(dst, y, RGBA::B);
+			auto a = row_begin(dst, y, RGBA::A);
+			auto s = row_begin(src, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				r[x] = to_channel_r32(s[x].red);
+				g[x] = to_channel_r32(s[x].green);
+				b[x] = to_channel_r32(s[x].blue);
+				a[x] = to_channel_r32(s[x].alpha);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
 
 	void make_image(Image3Cr32& image, u32 width, u32 height)
 	{
@@ -642,10 +709,7 @@ namespace libimage
 		view.image_green = image.green;
 		view.image_blue = image.blue;
 		view.image_width = image.width;
-		view.x_begin = range.x_begin;
-		view.y_begin = range.y_begin;
-		view.x_end = range.x_end;
-		view.y_end = range.y_end;
+		view.range = range;
 		view.width = range.x_end - range.x_begin;
 		view.height = range.y_end - range.y_begin;
 
@@ -709,6 +773,54 @@ namespace libimage
 		assert(x < view.width);
 
 		return row_begin(view, y, channel) + x;
+	}
+
+
+	void convert(View3Cr32 const& src, Image const& dst)
+	{
+		assert(src.width == dst.width);
+		assert(src.height == dst.height);
+		assert(src.image_red);
+		assert(dst.data);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto r = row_begin(src, y, RGB::R);
+			auto g = row_begin(src, y, RGB::G);
+			auto b = row_begin(src, y, RGB::B);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = to_pixel(r[x], g[x], b[x]);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void convert(Image const& src, View3Cr32 const& dst)
+	{
+		assert(src.width == dst.width);
+		assert(src.height == dst.height);
+		assert(src.data);
+		assert(dst.image_red);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto r = row_begin(dst, y, RGB::R);
+			auto g = row_begin(dst, y, RGB::G);
+			auto b = row_begin(dst, y, RGB::B);
+			auto s = row_begin(src, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				r[x] = to_channel_r32(s[x].red);
+				g[x] = to_channel_r32(s[x].green);
+				b[x] = to_channel_r32(s[x].blue);
+			}
+		};
+
+		process_rows(src.height, row_func);
 	}
 
 
@@ -791,10 +903,7 @@ namespace libimage
 
 		view.image_data = image.data;
 		view.image_width = image.width;
-		view.x_begin = range.x_begin;
-		view.y_begin = range.y_begin;
-		view.x_end = range.x_end;
-		view.y_end = range.y_end;
+		view.range = range;
 		view.width = range.x_end - range.x_begin;
 		view.height = range.y_end - range.y_begin;
 
@@ -965,8 +1074,8 @@ namespace libimage
 
 		return view;
 	}
-
-
+	
+	
 	View1Cr32 sub_view(Image1Cr32 const& image, Range2Du32 const& range)
 	{
 		assert(image.width);
@@ -977,10 +1086,7 @@ namespace libimage
 
 		view.image_data = image.data;
 		view.image_width = image.width;
-		view.x_begin = range.x_begin;
-		view.y_begin = range.y_begin;
-		view.x_end = range.x_end;
-		view.y_end = range.y_end;
+		view.range = range;
 		view.width = range.x_end - range.x_begin;
 		view.height = range.y_end - range.y_begin;
 
@@ -1041,6 +1147,47 @@ namespace libimage
 		return row_begin(view, y) + x;
 	}
 
+
+	void convert(View1Cr32 const& src, gray::Image const& dst)
+	{
+		assert(src.width == dst.width);
+		assert(src.height == dst.height);
+		assert(src.image_data);
+		assert(dst.data);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = to_channel_u8(s[x]);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void convert(gray::Image const& src, View1Cr32 const& dst)
+	{
+		assert(src.width == dst.width);
+		assert(src.height == dst.height);
+		assert(src.data);
+		assert(dst.image_data);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = to_channel_r32(s[x]);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
 }
 
 
