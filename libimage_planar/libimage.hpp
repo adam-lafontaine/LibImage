@@ -561,6 +561,21 @@ namespace libimage
 }
 
 
+/* select_channel */
+
+namespace libimage
+{
+	View1Cr32 select_channel(Image4Cr32 const& image, RGBA channel);
+
+	View1Cr32 select_channel(View4Cr32 const& image, RGBA channel);
+
+
+	View1Cr32 select_channel(Image3Cr32 const& image, RGB channel);
+
+	View1Cr32 select_channel(View3Cr32 const& image, RGB channel);
+}
+
+
 /* stb wrappers */
 
 namespace libimage

@@ -2053,3 +2053,90 @@ namespace libimage
 
 
 }
+
+
+/* select_channel */
+
+namespace libimage
+{
+	View1Cr32 select_channel(Image4Cr32 const& image, RGBA channel)
+	{
+		assert(verify(image));
+
+		auto ch = to_channel_index(channel);
+
+		View1Cr32 view1{};
+
+		view1.image_width = image.width;
+		view1.x_begin = 0;
+		view1.y_begin = 0;
+		view1.x_end = image.width;
+		view1.y_end = image.height;
+		view1.width = image.width;
+		view1.height = image.height;
+
+		view1.image_data = image.channel_data[ch];
+
+		return view1;
+	}
+
+
+	View1Cr32 select_channel(View4Cr32 const& view, RGBA channel)
+	{
+		assert(verify(view));
+
+		auto ch = to_channel_index(channel);
+
+		View1Cr32 view1{};
+
+		view1.image_width = view.image_width;
+		view1.range = view.range;
+		view1.width = view.width;
+		view1.height = view.height;
+
+		view1.image_data = view.image_channel_data[ch];
+
+		return view1;
+	}
+
+
+	View1Cr32 select_channel(Image3Cr32 const& image, RGB channel)
+	{
+		assert(verify(image));
+
+		auto ch = to_channel_index(channel);
+
+		View1Cr32 view1{};
+
+		view1.image_width = image.width;
+		view1.x_begin = 0;
+		view1.y_begin = 0;
+		view1.x_end = image.width;
+		view1.y_end = image.height;
+		view1.width = image.width;
+		view1.height = image.height;
+
+		view1.image_data = image.channel_data[ch];
+
+		return view1;
+	}
+
+
+	View1Cr32 select_channel(View3Cr32 const& view, RGB channel)
+	{
+		assert(verify(view));
+
+		auto ch = to_channel_index(channel);
+
+		View1Cr32 view1{};
+
+		view1.image_width = view.image_width;
+		view1.range = view.range;
+		view1.width = view.width;
+		view1.height = view.height;
+
+		view1.image_data = view.image_channel_data[ch];
+
+		return view1;
+	}
+}

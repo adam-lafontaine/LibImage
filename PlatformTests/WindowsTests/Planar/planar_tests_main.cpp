@@ -91,7 +91,7 @@ void view_test();
 void fill_test();
 void copy_test();
 void grayscale_test();
-
+void select_channel_test();
 
 //void transform_test();
 
@@ -128,7 +128,7 @@ int main()
 	fill_test();
 	copy_test();
 	grayscale_test();
-
+	select_channel_test();
 
 	//transform_test();	
 	//alpha_blend_test();
@@ -606,6 +606,52 @@ void grayscale_test()
 	img::destroy_image(image4);
 	img::destroy_image(dst);
 	img::destroy_image(image1);
+}
+
+
+void select_channel_test()
+{
+	auto title = "select_channel_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+
+	Image vette;
+	img::read_image_from_file(CORVETTE_PATH, vette);
+
+	img::Image3Cr32 vette3;
+	img::make_image(vette3, vette.width, vette.height);
+	img::convert(vette, vette3);
+
+	GrayImage vette_dst;
+	img::make_image(vette_dst, vette.width, vette.height);
+
+	Image caddy;
+	img::read_image_from_file(CADILLAC_PATH, caddy);
+
+	img::Image4Cr32 caddy4;
+	img::make_image(caddy4, caddy.width, caddy.height);
+	img::convert(caddy, caddy4);
+
+	GrayImage caddy_dst;
+	img::make_image(caddy_dst, caddy.width, caddy.height);
+
+	auto red = img::select_channel(vette3, img::RGB::R);
+	auto blue = img::select_channel(caddy4, img::RGBA::B);
+
+	img::convert(red, vette_dst);
+	write_image(vette_dst, "red.bmp");
+
+	img::convert(blue, caddy_dst);
+	write_image(caddy_dst, "blue.bmp");
+
+	img::destroy_image(vette);
+	img::destroy_image(vette3);
+	img::destroy_image(vette_dst);
+	img::destroy_image(caddy);
+	img::destroy_image(caddy4);
+	img::destroy_image(caddy_dst);
 }
 
 
