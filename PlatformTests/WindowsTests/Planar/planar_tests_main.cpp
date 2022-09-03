@@ -94,8 +94,9 @@ void resize_test();
 void convert_test();
 void view_test();
 void fill_test();
-//void transform_test();
 //void copy_test();
+//void transform_test();
+
 
 //void alpha_blend_test();
 //void grayscale_test();
@@ -128,8 +129,9 @@ int main()
 	convert_test();
 	view_test();
 	fill_test();
-	//transform_test();
 	//copy_test();
+	//transform_test();
+	
 	
 	//alpha_blend_test();
 	//grayscale_test();

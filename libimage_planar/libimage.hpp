@@ -479,6 +479,20 @@ namespace libimage
 }
 
 
+/* copy */
+
+namespace libimage
+{
+	void copy(gray::Image const& src, gray::Image const& dst);
+
+	void copy(gray::Image const& src, gray::View const& dst);
+
+	void copy(gray::View const& src, gray::Image const& dst);
+
+	void copy(gray::View const& src, gray::View const& dst);
+}
+
+
 
 /* stb wrappers */
 

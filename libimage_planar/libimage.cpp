@@ -910,16 +910,95 @@ namespace libimage
 }
 
 
+/* verify */
+
+#ifndef NDEBUG
+
+namespace libimage
+{
+	static bool verify(Image const& image)
+	{
+		return image.width && image.height && image.data;
+	}
+
+
+	static bool verify(View const& image)
+	{
+		return image.width && image.height && image.image_data;
+	}
+
+
+	static bool verify(Image4Cr32 const& image)
+	{
+		return image.width && image.height && image.red;
+	}
+
+
+	static bool verify(View4Cr32 const& image)
+	{
+		return image.width && image.height && image.image_red;
+	}
+
+
+	static bool verify(Image3Cr32 const& image)
+	{
+		return image.width && image.height && image.red;
+	}
+
+
+	static bool verify(View3Cr32 const& image)
+	{
+		return image.width && image.height && image.image_red;
+	}
+
+
+	static bool verify(gray::Image const& image)
+	{
+		return image.width && image.height && image.data;
+	}
+
+
+	static bool verify(gray::View const& image)
+	{
+		return image.width && image.height && image.image_data;
+	}
+
+
+	static bool verify(Image1Cr32 const& image)
+	{
+		return image.width && image.height && image.data;
+	}
+
+
+	static bool verify(View1Cr32 const& image)
+	{
+		return image.width && image.height && image.image_data;
+	}
+
+
+	template <class IMG_A, class IMG_B>
+	static bool verify(IMG_A const& lhs, IMG_B const& rhs)
+	{
+		return
+			verify(lhs) && verify(rhs) &&
+			lhs.width == rhs.width &&
+			lhs.height == rhs.height;
+	}
+}
+
+#endif // !NDEBUG
+
+
+
+
+
 /* convert */
 
 namespace libimage
 {
 	void convert(Image4Cr32 const& src, Image const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.red);
-		assert(dst.data);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -940,10 +1019,7 @@ namespace libimage
 
 	void convert(Image const& src, Image4Cr32 const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.data);
-		assert(dst.red);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -967,10 +1043,7 @@ namespace libimage
 
 	void convert(Image4Cr32 const& src, View const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.red);
-		assert(dst.image_data);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -991,10 +1064,7 @@ namespace libimage
 
 	void convert(View const& src, Image4Cr32 const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.image_data);
-		assert(dst.red);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1018,10 +1088,7 @@ namespace libimage
 
 	void convert(View4Cr32 const& src, Image const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.image_red);
-		assert(dst.data);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1042,10 +1109,7 @@ namespace libimage
 
 	void convert(Image const& src, View4Cr32 const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.data);
-		assert(dst.image_red);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1069,10 +1133,7 @@ namespace libimage
 
 	void convert(View4Cr32 const& src, View const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.image_red);
-		assert(dst.image_data);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1093,10 +1154,7 @@ namespace libimage
 
 	void convert(View const& src, View4Cr32 const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.image_data);
-		assert(dst.image_red);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1120,10 +1178,7 @@ namespace libimage
 
 	void convert(Image3Cr32 const& src, Image const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.red);
-		assert(dst.data);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1143,10 +1198,7 @@ namespace libimage
 
 	void convert(Image const& src, Image3Cr32 const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.data);
-		assert(dst.red);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1168,10 +1220,7 @@ namespace libimage
 
 	void convert(Image3Cr32 const& src, View const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.red);
-		assert(dst.image_data);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1191,10 +1240,7 @@ namespace libimage
 
 	void convert(View const& src, Image3Cr32 const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.image_data);
-		assert(dst.red);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1216,10 +1262,7 @@ namespace libimage
 
 	void convert(View3Cr32 const& src, Image const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.image_red);
-		assert(dst.data);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1239,10 +1282,7 @@ namespace libimage
 
 	void convert(Image const& src, View3Cr32 const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.data);
-		assert(dst.image_red);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1264,10 +1304,7 @@ namespace libimage
 
 	void convert(View3Cr32 const& src, View const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.image_red);
-		assert(dst.image_data);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1287,10 +1324,7 @@ namespace libimage
 
 	void convert(View const& src, View3Cr32 const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.image_data);
-		assert(dst.image_red);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1312,10 +1346,7 @@ namespace libimage
 
 	void convert(Image1Cr32 const& src, gray::Image const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.data);
-		assert(dst.data);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1333,10 +1364,7 @@ namespace libimage
 
 	void convert(gray::Image const& src, Image1Cr32 const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.data);
-		assert(dst.data);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1354,10 +1382,7 @@ namespace libimage
 
 	void convert(Image1Cr32 const& src, gray::View const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.data);
-		assert(dst.image_data);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1375,10 +1400,7 @@ namespace libimage
 
 	void convert(gray::View const& src, Image1Cr32 const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.image_data);
-		assert(dst.data);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1396,10 +1418,7 @@ namespace libimage
 
 	void convert(View1Cr32 const& src, gray::Image const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.image_data);
-		assert(dst.data);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1417,10 +1436,7 @@ namespace libimage
 
 	void convert(gray::Image const& src, View1Cr32 const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.data);
-		assert(dst.image_data);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1438,10 +1454,7 @@ namespace libimage
 
 	void convert(View1Cr32 const& src, gray::View const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.image_data);
-		assert(dst.image_data);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1459,10 +1472,7 @@ namespace libimage
 
 	void convert(gray::View const& src, View1Cr32 const& dst)
 	{
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.image_data);
-		assert(dst.image_data);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1486,9 +1496,7 @@ namespace libimage
 {
 	void fill(Image const& image, Pixel color)
 	{
-		assert(image.width);
-		assert(image.height);
-		assert(image.data);
+		assert(verify(image));
 
 		auto const row_func = [&](u32 y)
 		{			
@@ -1505,9 +1513,7 @@ namespace libimage
 
 	void fill(View const& view, Pixel color)
 	{
-		assert(view.width);
-		assert(view.height);
-		assert(view.image_data);
+		assert(verify(view));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1524,9 +1530,7 @@ namespace libimage
 
 	void fill(Image4Cr32 const& image, Pixel color)
 	{
-		assert(image.width);
-		assert(image.height);
-		assert(image.red);
+		assert(verify(image));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1549,9 +1553,7 @@ namespace libimage
 
 	void fill(View4Cr32 const& view, Pixel color)
 	{
-		assert(view.width);
-		assert(view.height);
-		assert(view.image_red);
+		assert(verify(view));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1574,9 +1576,7 @@ namespace libimage
 
 	void fill(Image3Cr32 const& image, Pixel color)
 	{
-		assert(image.width);
-		assert(image.height);
-		assert(image.red);
+		assert(verify(image));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1597,9 +1597,7 @@ namespace libimage
 
 	void fill(View3Cr32 const& view, Pixel color)
 	{
-		assert(view.width);
-		assert(view.height);
-		assert(view.image_red);
+		assert(verify(view));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1620,9 +1618,7 @@ namespace libimage
 
 	void fill(gray::Image const& image, u8 gray)
 	{
-		assert(image.width);
-		assert(image.height);
-		assert(image.data);
+		assert(verify(image));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1639,9 +1635,7 @@ namespace libimage
 
 	void fill(gray::View const& view, u8 gray)
 	{
-		assert(view.width);
-		assert(view.height);
-		assert(view.image_data);
+		assert(verify(view));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1658,9 +1652,7 @@ namespace libimage
 
 	void fill(Image1Cr32 const& image, u8 gray)
 	{
-		assert(image.width);
-		assert(image.height);
-		assert(image.data);
+		assert(verify(image));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1677,9 +1669,7 @@ namespace libimage
 
 	void fill(View1Cr32 const& view, u8 gray)
 	{
-		assert(view.width);
-		assert(view.height);
-		assert(view.image_data);
+		assert(verify(view));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1692,4 +1682,64 @@ namespace libimage
 
 		process_rows(view.height, row_func);
 	}
+}
+
+
+/* copy */
+
+namespace libimage
+{
+	void copy(gray::Image const& src, gray::Image const& dst)
+	{
+		assert(src.width);
+		assert(src.height);
+		assert(dst.width);
+		assert(dst.height);
+		assert(src.width == dst.width);
+		assert(src.height == dst.height);
+		assert(src.data);
+		assert(dst.data);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = s[x];
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void copy(gray::Image const& src, gray::View const& dst)
+	{
+		assert(src.width);
+		assert(src.height);
+		assert(dst.width);
+		assert(dst.height);
+		assert(src.width == dst.width);
+		assert(src.height == dst.height);
+		assert(src.data);
+		assert(dst.image_data);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = s[x];
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void copy(gray::View const& src, gray::Image const& dst);
+
+	void copy(gray::View const& src, gray::View const& dst);
 }
