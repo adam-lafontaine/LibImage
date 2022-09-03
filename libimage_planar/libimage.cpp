@@ -1476,4 +1476,220 @@ namespace libimage
 
 		process_rows(src.height, row_func);
 	}
+
+}
+
+
+/* fill */
+
+namespace libimage
+{
+	void fill(Image const& image, Pixel color)
+	{
+		assert(image.width);
+		assert(image.height);
+		assert(image.data);
+
+		auto const row_func = [&](u32 y)
+		{			
+			auto d = row_begin(image, y);
+			for (u32 x = 0; x < image.width; ++x)
+			{
+				d[x] = color;
+			}
+		};
+
+		process_rows(image.height, row_func);
+	}
+
+
+	void fill(View const& view, Pixel color)
+	{
+		assert(view.width);
+		assert(view.height);
+		assert(view.image_data);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto d = row_begin(view, y);
+			for (u32 x = 0; x < view.width; ++x)
+			{
+				d[x] = color;
+			}
+		};
+
+		process_rows(view.height, row_func);
+	}
+
+
+	void fill(Image4Cr32 const& image, Pixel color)
+	{
+		assert(image.width);
+		assert(image.height);
+		assert(image.red);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto r = row_begin(image, y, RGBA::R);
+			auto g = row_begin(image, y, RGBA::G);
+			auto b = row_begin(image, y, RGBA::B);
+			auto a = row_begin(image, y, RGBA::A);
+			for (u32 x = 0; x < image.width; ++x)
+			{
+				r[x] = to_channel_r32(color.red);
+				g[x] = to_channel_r32(color.green);
+				b[x] = to_channel_r32(color.blue);
+				a[x] = to_channel_r32(color.alpha);
+			}
+		};
+
+		process_rows(image.height, row_func);
+	}
+
+
+	void fill(View4Cr32 const& view, Pixel color)
+	{
+		assert(view.width);
+		assert(view.height);
+		assert(view.image_red);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto r = row_begin(view, y, RGBA::R);
+			auto g = row_begin(view, y, RGBA::G);
+			auto b = row_begin(view, y, RGBA::B);
+			auto a = row_begin(view, y, RGBA::A);
+			for (u32 x = 0; x < view.width; ++x)
+			{
+				r[x] = to_channel_r32(color.red);
+				g[x] = to_channel_r32(color.green);
+				b[x] = to_channel_r32(color.blue);
+				a[x] = to_channel_r32(color.alpha);
+			}
+		};
+
+		process_rows(view.height, row_func);
+	}
+
+
+	void fill(Image3Cr32 const& image, Pixel color)
+	{
+		assert(image.width);
+		assert(image.height);
+		assert(image.red);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto r = row_begin(image, y, RGB::R);
+			auto g = row_begin(image, y, RGB::G);
+			auto b = row_begin(image, y, RGB::B);
+			for (u32 x = 0; x < image.width; ++x)
+			{
+				r[x] = to_channel_r32(color.red);
+				g[x] = to_channel_r32(color.green);
+				b[x] = to_channel_r32(color.blue);
+			}
+		};
+
+		process_rows(image.height, row_func);
+	}
+
+
+	void fill(View3Cr32 const& view, Pixel color)
+	{
+		assert(view.width);
+		assert(view.height);
+		assert(view.image_red);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto r = row_begin(view, y, RGB::R);
+			auto g = row_begin(view, y, RGB::G);
+			auto b = row_begin(view, y, RGB::B);
+			for (u32 x = 0; x < view.width; ++x)
+			{
+				r[x] = to_channel_r32(color.red);
+				g[x] = to_channel_r32(color.green);
+				b[x] = to_channel_r32(color.blue);
+			}
+		};
+
+		process_rows(view.height, row_func);
+	}
+
+
+	void fill(gray::Image const& image, u8 gray)
+	{
+		assert(image.width);
+		assert(image.height);
+		assert(image.data);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto d = row_begin(image, y);
+			for (u32 x = 0; x < image.width; ++x)
+			{
+				d[x] = gray;
+			}
+		};
+
+		process_rows(image.height, row_func);
+	}
+
+
+	void fill(gray::View const& view, u8 gray)
+	{
+		assert(view.width);
+		assert(view.height);
+		assert(view.image_data);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto d = row_begin(view, y);
+			for (u32 x = 0; x < view.width; ++x)
+			{
+				d[x] = gray;
+			}
+		};
+
+		process_rows(view.height, row_func);
+	}
+
+
+	void fill(Image1Cr32 const& image, u8 gray)
+	{
+		assert(image.width);
+		assert(image.height);
+		assert(image.data);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto d = row_begin(image, y);
+			for (u32 x = 0; x < image.width; ++x)
+			{
+				d[x] = to_channel_r32(gray);
+			}
+		};
+
+		process_rows(image.height, row_func);
+	}
+
+
+	void fill(View1Cr32 const& view, u8 gray)
+	{
+		assert(view.width);
+		assert(view.height);
+		assert(view.image_data);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto d = row_begin(view, y);
+			for (u32 x = 0; x < view.width; ++x)
+			{
+				d[x] = to_channel_r32(gray);
+			}
+		};
+
+		process_rows(view.height, row_func);
+	}
 }

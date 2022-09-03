@@ -37,7 +37,7 @@ namespace libimage
 	} Pixel;
 
 
-	inline Pixel to_pixel(u8 r, u8 g, u8 b, u8 a)
+	constexpr inline Pixel to_pixel(u8 r, u8 g, u8 b, u8 a)
 	{
 		Pixel p{};
 		p.red = r;
@@ -49,9 +49,15 @@ namespace libimage
 	}
 
 
-	inline Pixel to_pixel(u8 r, u8 g, u8 b)
+	constexpr inline Pixel to_pixel(u8 r, u8 g, u8 b)
 	{
 		return to_pixel(r, g, b, 255);
+	}
+
+
+	constexpr inline Pixel to_pixel(u8 value)
+	{
+		return to_pixel(value, value, value, 255);
 	}
 
 
@@ -445,6 +451,34 @@ namespace libimage
 
 	void convert(gray::View const& src, View1Cr32 const& dst);
 }
+
+
+/* fill */
+
+namespace libimage
+{
+	void fill(Image const& image, Pixel color);
+
+	void fill(View const& view, Pixel color);
+
+	void fill(Image4Cr32 const& image, Pixel color);
+
+	void fill(View4Cr32 const& view, Pixel color);
+
+	void fill(Image3Cr32 const& image, Pixel color);
+
+	void fill(View3Cr32 const& view, Pixel color);
+
+	void fill(gray::Image const& image, u8 gray);
+
+	void fill(gray::View const& view, u8 gray);
+
+	void fill(Image1Cr32 const& image, u8 gray);
+
+	void fill(View1Cr32 const& image, u8 gray);
+}
+
+
 
 /* stb wrappers */
 
