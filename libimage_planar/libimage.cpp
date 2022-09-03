@@ -989,9 +989,6 @@ namespace libimage
 #endif // !NDEBUG
 
 
-
-
-
 /* convert */
 
 namespace libimage
@@ -1494,12 +1491,11 @@ namespace libimage
 
 namespace libimage
 {
-	void fill(Image const& image, Pixel color)
+	template <class IMG, typename PIXEL>
+	static void fill_1_channel(IMG const& image, PIXEL color)
 	{
-		assert(verify(image));
-
 		auto const row_func = [&](u32 y)
-		{			
+		{
 			auto d = row_begin(image, y);
 			for (u32 x = 0; x < image.width; ++x)
 			{
@@ -1511,20 +1507,19 @@ namespace libimage
 	}
 
 
+	void fill(Image const& image, Pixel color)
+	{
+		assert(verify(image));
+
+		fill_1_channel(image, color);
+	}
+
+
 	void fill(View const& view, Pixel color)
 	{
 		assert(verify(view));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto d = row_begin(view, y);
-			for (u32 x = 0; x < view.width; ++x)
-			{
-				d[x] = color;
-			}
-		};
-
-		process_rows(view.height, row_func);
+		fill_1_channel(view, color);
 	}
 
 
@@ -1620,16 +1615,7 @@ namespace libimage
 	{
 		assert(verify(image));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto d = row_begin(image, y);
-			for (u32 x = 0; x < image.width; ++x)
-			{
-				d[x] = gray;
-			}
-		};
-
-		process_rows(image.height, row_func);
+		fill_1_channel(image, gray);
 	}
 
 
@@ -1637,16 +1623,7 @@ namespace libimage
 	{
 		assert(verify(view));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto d = row_begin(view, y);
-			for (u32 x = 0; x < view.width; ++x)
-			{
-				d[x] = gray;
-			}
-		};
-
-		process_rows(view.height, row_func);
+		fill_1_channel(view, gray);
 	}
 
 
@@ -1654,16 +1631,7 @@ namespace libimage
 	{
 		assert(verify(image));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto d = row_begin(image, y);
-			for (u32 x = 0; x < image.width; ++x)
-			{
-				d[x] = to_channel_r32(gray);
-			}
-		};
-
-		process_rows(image.height, row_func);
+		fill_1_channel(image, gray);
 	}
 
 
@@ -1671,16 +1639,7 @@ namespace libimage
 	{
 		assert(verify(view));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto d = row_begin(view, y);
-			for (u32 x = 0; x < view.width; ++x)
-			{
-				d[x] = to_channel_r32(gray);
-			}
-		};
-
-		process_rows(view.height, row_func);
+		fill_1_channel(view, gray);
 	}
 }
 
@@ -1689,16 +1648,11 @@ namespace libimage
 
 namespace libimage
 {
+
+
 	void copy(gray::Image const& src, gray::Image const& dst)
 	{
-		assert(src.width);
-		assert(src.height);
-		assert(dst.width);
-		assert(dst.height);
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.data);
-		assert(dst.data);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1716,14 +1670,7 @@ namespace libimage
 
 	void copy(gray::Image const& src, gray::View const& dst)
 	{
-		assert(src.width);
-		assert(src.height);
-		assert(dst.width);
-		assert(dst.height);
-		assert(src.width == dst.width);
-		assert(src.height == dst.height);
-		assert(src.data);
-		assert(dst.image_data);
+		assert(verify(src, dst));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1739,7 +1686,62 @@ namespace libimage
 	}
 
 
-	void copy(gray::View const& src, gray::Image const& dst);
+	void copy(gray::View const& src, gray::Image const& dst)
+	{
+		assert(verify(src, dst));
 
-	void copy(gray::View const& src, gray::View const& dst);
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = s[x];
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void copy(gray::View const& src, gray::View const& dst)
+	{
+		assert(verify(src, dst));
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = s[x];
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void copy(Image1Cr32 const& src, Image1Cr32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = s[x];
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+	void copy(Image1Cr32 const& src, View1Cr32 const& dst);
+
+	void copy(View1Cr32 const& src, Image1Cr32 const& dst);
+
+	void copy(View1Cr32 const& src, View1Cr32 const& dst);
 }

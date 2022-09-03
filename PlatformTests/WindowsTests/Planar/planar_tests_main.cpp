@@ -439,9 +439,23 @@ void fill_test()
 	img::convert(image4, image);
 	img::write_image(image, out_dir / "fill_view4.bmp");
 
+	GrayImage gray;
+	img::make_image(gray, width, height);
+
+	auto gr_top_left_view = img::sub_view(gray, top_left);
+	auto gr_bottom_right_view = img::sub_view(gray, bottom_right);
+
+	img::fill(gray, 128);
+	img::write_image(gray, out_dir / "gray_fill_01.bmp");
+
+	img::fill(gr_top_left_view, 0);
+	img::fill(gr_bottom_right_view, 255);
+	img::write_image(gray, out_dir / "gray_fill_02.bmp");
+
 	img::destroy_image(image);
 	img::destroy_image(image3);
 	img::destroy_image(image4);
+	img::destroy_image(gray);
 }
 
 

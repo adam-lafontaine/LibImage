@@ -490,6 +490,15 @@ namespace libimage
 	void copy(gray::View const& src, gray::Image const& dst);
 
 	void copy(gray::View const& src, gray::View const& dst);
+
+
+	void copy(Image1Cr32 const& src, Image1Cr32 const& dst);
+
+	void copy(Image1Cr32 const& src, View1Cr32 const& dst);
+
+	void copy(View1Cr32 const& src, Image1Cr32 const& dst);
+
+	void copy(View1Cr32 const& src, View1Cr32 const& dst);
 }
 
 
