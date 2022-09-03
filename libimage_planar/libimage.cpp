@@ -134,6 +134,12 @@ static inline u8 to_channel_u8(r32 value)
 }
 
 
+static inline int to_channel_index(auto channel)
+{
+	return static_cast<int>(channel);
+}
+
+
 namespace libimage
 {
 	static Pixel to_pixel(r32 r, r32 g, r32 b, r32 a)
@@ -336,7 +342,7 @@ namespace libimage
 
 	r32* row_begin(Image4Cr32 const& image, u32 y, RGBA channel)
 	{
-		auto ch = static_cast<int>(channel);
+		auto ch = to_channel_index(channel);
 
 		assert(image.width);
 		assert(image.height);
@@ -443,7 +449,7 @@ namespace libimage
 
 	r32* row_begin(View4Cr32 const& view, u32 y, RGBA channel)
 	{
-		auto ch = static_cast<int>(channel);
+		auto ch = to_channel_index(channel);
 
 		assert(y < view.height);
 		assert(view.image_channel_data[ch]);
@@ -499,7 +505,7 @@ namespace libimage
 
 	r32* row_begin(Image3Cr32 const& image, u32 y, RGB channel)
 	{
-		auto ch = static_cast<int>(channel);
+		auto ch = to_channel_index(channel);
 
 		assert(image.width);
 		assert(image.height);
@@ -603,7 +609,7 @@ namespace libimage
 
 	r32* row_begin(View3Cr32 const& view, u32 y, RGB channel)
 	{
-		auto ch = static_cast<int>(channel);
+		auto ch = to_channel_index(channel);
 
 		assert(y < view.height);
 		assert(view.image_channel_data[ch]);
@@ -1874,4 +1880,176 @@ namespace libimage
 
 		copy_1_channel(src, dst);
 	}
+}
+
+
+/* grayscale */
+
+namespace libimage
+{
+	constexpr r32 COEFF_RED = 0.299f;
+	constexpr r32 COEFF_GREEN = 0.587f;
+	constexpr r32 COEFF_BLUE = 0.114f;
+
+
+	static constexpr r32 rgb_grayscale_standard(r32 red, r32 green, r32 blue)
+	{
+		return COEFF_RED * red + COEFF_GREEN * green + COEFF_BLUE * blue;
+	}
+
+
+	template <class IMG, class GRAY>
+	static void grayscale_platform(IMG const& src, GRAY const& dst)
+	{
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				auto r = (r32)(s[x].red);
+				auto g = (r32)(s[x].green);
+				auto b = (r32)(s[x].blue);
+				d[x] = (u8)rgb_grayscale_standard(r, g, b);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	template <class IMG, class GRAY>
+	static void grayscale_rgba(IMG const& src, GRAY const& dst)
+	{
+		auto const row_func = [&](u32 y)
+		{
+			auto r = row_begin(src, y, RGBA::R);
+			auto g = row_begin(src, y, RGBA::G);
+			auto b = row_begin(src, y, RGBA::B);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = rgb_grayscale_standard(r[x], g[x], b[x]);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	template <class IMG, class GRAY>
+	static void grayscale_rgb(IMG const& src, GRAY const& dst)
+	{
+		auto const row_func = [&](u32 y)
+		{
+			auto r = row_begin(src, y, RGB::R);
+			auto g = row_begin(src, y, RGB::G);
+			auto b = row_begin(src, y, RGB::B);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = rgb_grayscale_standard(r[x], g[x], b[x]);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void grayscale(Image const& src, gray::Image const& dst)
+	{
+		assert(verify(src, dst));
+
+		grayscale_platform(src, dst);
+	}
+
+	void grayscale(Image const& src, gray::View const& dst)
+	{
+		assert(verify(src, dst));
+
+		grayscale_platform(src, dst);
+	}
+
+
+	void grayscale(View const& src, gray::Image const& dst)
+	{
+		assert(verify(src, dst));
+
+		grayscale_platform(src, dst);
+	}
+
+
+	void grayscale(View const& src, gray::View const& dst)
+	{
+		assert(verify(src, dst));
+
+		grayscale_platform(src, dst);
+	}
+
+
+	void grayscale(Image4Cr32 const& src, Image1Cr32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		grayscale_rgba(src, dst);
+	}
+
+
+	void grayscale(Image4Cr32 const& src, View1Cr32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		grayscale_rgba(src, dst);
+	}
+
+
+	void grayscale(View4Cr32 const& src, Image1Cr32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		grayscale_rgba(src, dst);
+	}
+
+
+	void grayscale(View4Cr32 const& src, View1Cr32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		grayscale_rgba(src, dst);
+	}
+
+
+
+	void grayscale(Image3Cr32 const& src, Image1Cr32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		grayscale_rgb(src, dst);
+	}
+
+
+	void grayscale(Image3Cr32 const& src, View1Cr32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		grayscale_rgb(src, dst);
+	}
+
+
+	void grayscale(View3Cr32 const& src, Image1Cr32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		grayscale_rgb(src, dst);
+	}
+
+
+	void grayscale(View3Cr32 const& src, View1Cr32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		grayscale_rgb(src, dst);
+	}
+
+
 }

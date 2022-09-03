@@ -90,11 +90,13 @@ void convert_test();
 void view_test();
 void fill_test();
 void copy_test();
+void grayscale_test();
+
+
 //void transform_test();
 
 
 //void alpha_blend_test();
-//void grayscale_test();
 //void binary_test();
 //void contrast_test();
 //void blur_test();
@@ -125,9 +127,10 @@ int main()
 	view_test();
 	fill_test();
 	copy_test();
-	//transform_test();
-	
-	
+	grayscale_test();
+
+
+	//transform_test();	
 	//alpha_blend_test();
 	//grayscale_test();
 	//binary_test();
@@ -542,6 +545,69 @@ void copy_test()
 	img::destroy_image(image);
 	img::destroy_image(gray);
 }
+
+
+void grayscale_test()
+{
+	auto title = "grayscale_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+
+	Image image;
+	img::read_image_from_file(CORVETTE_PATH, image);
+	auto width = image.width;
+	auto height = image.height;
+
+	Range2Du32 left{};
+	left.x_begin = 0;
+	left.x_end = width / 2;
+	left.y_begin = 0;
+	left.y_end = height;
+
+	Range2Du32 right{};
+	right.x_begin = width / 2;
+	right.x_end = width;
+	right.y_begin = 0;
+	right.y_end = height;
+
+	auto left_view = img::sub_view(image, left);
+	auto right_view = img::sub_view(image, right);
+
+	img::Image3Cr32 image3;
+	img::make_image(image3, width / 2, height);
+
+	img::Image4Cr32 image4;
+	img::make_image(image4, width / 2, height);
+
+	img::convert(left_view, image3);
+	img::convert(right_view, image4);
+
+	GrayImage dst;
+	img::make_image(dst, width, height);
+
+	img::Image1Cr32 image1;
+	img::make_image(image1, width, height);
+
+	auto gr_left = img::sub_view(image1, left);
+	auto gr_right = img::sub_view(image1, right);
+
+	img::grayscale(image3, gr_right);
+	img::grayscale(image4, gr_left);
+
+	img::convert(image1, dst);
+
+	write_image(image, "image.bmp");
+	write_image(dst, "gray.bmp");
+
+	img::destroy_image(image);
+	img::destroy_image(image3);
+	img::destroy_image(image4);
+	img::destroy_image(dst);
+	img::destroy_image(image1);
+}
+
 
 
 void empty_dir(path_t const& dir)

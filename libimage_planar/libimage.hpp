@@ -529,6 +529,37 @@ namespace libimage
 }
 
 
+/* grayscale */
+
+namespace libimage
+{
+	void grayscale(Image const& src, gray::Image const& dst);
+
+	void grayscale(Image const& src, gray::View const& dst);
+
+	void grayscale(View const& src, gray::Image const& dst);
+
+	void grayscale(View const& src, gray::View const& dst);
+
+
+	void grayscale(Image4Cr32 const& src, Image1Cr32 const& dst);
+
+	void grayscale(Image4Cr32 const& src, View1Cr32 const& dst);
+
+	void grayscale(View4Cr32 const& src, Image1Cr32 const& dst);
+
+	void grayscale(View4Cr32 const& src, View1Cr32 const& dst);
+
+
+	void grayscale(Image3Cr32 const& src, Image1Cr32 const& dst);
+
+	void grayscale(Image3Cr32 const& src, View1Cr32 const& dst);
+
+	void grayscale(View3Cr32 const& src, Image1Cr32 const& dst);
+
+	void grayscale(View3Cr32 const& src, View1Cr32 const& dst);
+}
+
 
 /* stb wrappers */
 
