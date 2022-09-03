@@ -3,8 +3,6 @@
 #include "defines.hpp"
 
 
-
-
 namespace libimage
 {
 	constexpr auto RGB_CHANNELS = 3u;
@@ -141,11 +139,7 @@ namespace libimage
 
 	r32* row_begin(Image4Cr32 const& image, u32 y, RGBA channel);
 
-	r32* xy_at(Image4Cr32 const& image, u32 x, u32 y, RGBA channel);
-
-	void convert(Image4Cr32 const& src, Image const& dst);
-
-	void convert(Image const& src, Image4Cr32 const& dst);
+	r32* xy_at(Image4Cr32 const& image, u32 x, u32 y, RGBA channel);	
 
 
 	class View4Cr32
@@ -195,10 +189,6 @@ namespace libimage
 
 	r32* xy_at(View4Cr32 const& view, u32 x, u32 y, RGBA channel);
 
-	void convert(View4Cr32 const& src, Image const& dst);
-
-	void convert(Image const& src, View4Cr32 const& dst);
-
 
 	class Image3Cr32
 	{
@@ -228,10 +218,6 @@ namespace libimage
 	r32* row_begin(Image3Cr32 const& image, u32 y, RGB channel);
 
 	r32* xy_at(Image3Cr32 const& image, u32 x, u32 y, RGB channel);
-
-	void convert(Image3Cr32 const& src, Image const& dst);
-
-	void convert(Image const& src, Image3Cr32 const& dst);
 
 
 	class View3Cr32
@@ -279,10 +265,6 @@ namespace libimage
 	r32* row_begin(View3Cr32 const& view, u32 y, RGB channel);
 
 	r32* xy_at(View3Cr32 const& view, u32 x, u32 y, RGB channel);
-
-	void convert(View3Cr32 const& src, Image const& dst);
-
-	void convert(Image const& src, View3Cr32 const& dst);
 
 
 	namespace gray
@@ -362,10 +344,6 @@ namespace libimage
 
 	r32* xy_at(Image1Cr32 const& image, u32 x, u32 y, RGB channel);
 
-	void convert(Image1Cr32 const& src, gray::Image const& dst);
-
-	void convert(gray::Image const& src, Image1Cr32 const& dst);
-
 
 	class View1Cr32
 	{
@@ -400,14 +378,63 @@ namespace libimage
 
 	r32* row_begin(View1Cr32 const& view, u32 y);
 
-	r32* xy_at(View1Cr32 const& view, u32 x, u32 y);
+	r32* xy_at(View1Cr32 const& view, u32 x, u32 y);	
+}
+
+
+/* convert */
+
+namespace libimage
+{
+	void convert(Image4Cr32 const& src, Image const& dst);
+
+	void convert(Image const& src, Image4Cr32 const& dst);
+
+
+	void convert(View4Cr32 const& src, Image const& dst);
+
+	void convert(Image const& src, View4Cr32 const& dst);
+
+
+	void convert(View4Cr32 const& src, View const& dst);
+
+	void convert(View const& src, View4Cr32 const& dst);
+
+
+	void convert(Image3Cr32 const& src, Image const& dst);
+
+	void convert(Image const& src, Image3Cr32 const& dst);
+
+
+	void convert(View3Cr32 const& src, Image const& dst);
+
+	void convert(Image const& src, View3Cr32 const& dst);
+
+
+	void convert(View3Cr32 const& src, View const& dst);
+
+	void convert(View const& src, View3Cr32 const& dst);
+
+
+	void convert(Image1Cr32 const& src, gray::Image const& dst);
+
+	void convert(gray::Image const& src, Image1Cr32 const& dst);
+
+
+	void convert(Image1Cr32 const& src, gray::View const& dst);
+
+	void convert(gray::View const& src, Image1Cr32 const& dst);
+
 
 	void convert(View1Cr32 const& src, gray::Image const& dst);
 
 	void convert(gray::Image const& src, View1Cr32 const& dst);
+}
 
+/* stb wrappers */
 
-
+namespace libimage
+{
 	void read_image_from_file(const char* img_path_src, Image& image_dst);
 
 	void read_image_from_file(const char* file_path_src, gray::Image& image_dst);
