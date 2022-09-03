@@ -40,11 +40,6 @@ const auto CORVETTE_PATH = IMAGE_IN_PATH / "corvette.png";
 const auto CADILLAC_PATH = IMAGE_IN_PATH / "cadillac.png";
 const auto WEED_PATH = IMAGE_IN_PATH / "weed.png";
 
-const char* to_cstring(path_t const& path)
-{
-	return path.string().c_str();
-}
-
 
 bool directory_files_test()
 {
@@ -86,15 +81,15 @@ bool directory_files_test()
 
 
 void empty_dir(path_t const& dir);
-//void clear_image(Image const& img);
-//void clear_image(GrayImage const& img);
+void clear_image(Image const& img);
+void clear_image(GrayImage const& img);
 
 void read_write_image_test();
 void resize_test();
 void convert_test();
 void view_test();
 void fill_test();
-//void copy_test();
+void copy_test();
 //void transform_test();
 
 
@@ -129,7 +124,7 @@ int main()
 	convert_test();
 	view_test();
 	fill_test();
-	//copy_test();
+	copy_test();
 	//transform_test();
 	
 	
@@ -455,6 +450,96 @@ void fill_test()
 	img::destroy_image(image);
 	img::destroy_image(image3);
 	img::destroy_image(image4);
+	img::destroy_image(gray);
+}
+
+
+void copy_test()
+{
+	auto title = "copy_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+
+	Image image;
+	img::read_image_from_file(CORVETTE_PATH, image);
+	auto width = image.width;
+	auto height = image.height;
+
+	Range2Du32 left{};
+	left.x_begin = 0;
+	left.x_end = width / 2;
+	left.y_begin = 0;
+	left.y_end = height;
+
+	Range2Du32 right{};
+	right.x_begin = width / 2;
+	right.x_end = width;
+	right.y_begin = 0;
+	right.y_end = height;
+
+	auto left_view = img::sub_view(image, left);
+	auto right_view = img::sub_view(image, right);
+
+	img::Image3Cr32 image3;
+	img::make_image(image3, width, height);
+	img::convert(image, image3);
+	auto left_view3 = img::sub_view(image3, left);
+	auto right_view3 = img::sub_view(image3, right);
+
+	img::Image4Cr32 image4;
+	img::make_image(image4, width, height);
+	img::convert(image, image4);
+	auto left_view4 = img::sub_view(image4, left);
+	auto right_view4 = img::sub_view(image4, right);
+
+	img::copy(left_view3, right_view3);
+	img::copy(right_view4, left_view4);	
+
+	clear_image(image);
+
+	img::convert(right_view3, right_view);
+	img::convert(left_view4, left_view);
+	write_image(image, "image.bmp");
+
+	GrayImage gray;
+	img::read_image_from_file(CADILLAC_PATH, gray);
+	width = gray.width;
+	height = gray.height;
+
+	auto view_height = height / 3;
+
+	Range2Du32 top{};
+	top.x_begin = 0;
+	top.x_end = width;
+	top.y_begin = 0;
+	top.y_end = view_height;
+
+	Range2Du32 bottom{};
+	bottom.x_begin = 0;
+	bottom.x_end = width;
+	bottom.y_begin = height - view_height;
+	bottom.y_end = height;	
+
+	auto gr_top_view = img::sub_view(gray, top);
+	auto gr_bottom_view = img::sub_view(gray, bottom);
+
+	img::Image1Cr32 top1;
+	img::make_image(top1, width, view_height);
+	img::convert(gr_top_view, top1);
+
+	img::Image1Cr32 bottom1;
+	img::make_image(bottom1, width, view_height);
+	img::convert(gr_bottom_view, bottom1);
+
+	img::copy(bottom1, top1);
+
+	img::convert(top1, gr_top_view);
+
+	write_image(gray, "gray.bmp");
+
+	img::destroy_image(image);
 	img::destroy_image(gray);
 }
 

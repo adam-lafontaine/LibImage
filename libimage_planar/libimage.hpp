@@ -134,7 +134,7 @@ namespace libimage
 				r32* alpha;
 			};
 
-			r32* channel_data[4];
+			r32* channel_data[4] = {};
 		};
 	};
 
@@ -164,7 +164,7 @@ namespace libimage
 				r32* image_alpha;
 			};
 
-			r32* image_channel_data[4];
+			r32* image_channel_data[4] = {};
 		};
 
 		union
@@ -241,7 +241,7 @@ namespace libimage
 				r32* image_blue;
 			};
 
-			r32* image_channel_data[3];
+			r32* image_channel_data[3] = {};
 		};
 
 		union
@@ -483,6 +483,33 @@ namespace libimage
 
 namespace libimage
 {
+	void copy(Image const& src, Image const& dst);
+
+	void copy(Image const& src, View const& dst);
+
+	void copy(View const& src, Image const& dst);
+
+	void copy(View const& src, View const& dst);
+
+
+	void copy(Image4Cr32 const& src, Image4Cr32 const& dst);
+
+	void copy(Image4Cr32 const& src, View4Cr32 const& dst);
+
+	void copy(View4Cr32 const& src, Image4Cr32 const& dst);
+
+	void copy(View4Cr32 const& src, View4Cr32 const& dst);
+
+
+	void copy(Image3Cr32 const& src, Image3Cr32 const& dst);
+
+	void copy(Image3Cr32 const& src, View3Cr32 const& dst);
+
+	void copy(View3Cr32 const& src, Image3Cr32 const& dst);
+
+	void copy(View3Cr32 const& src, View3Cr32 const& dst);
+
+
 	void copy(gray::Image const& src, gray::Image const& dst);
 
 	void copy(gray::Image const& src, gray::View const& dst);

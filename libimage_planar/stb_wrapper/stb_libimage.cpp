@@ -71,6 +71,10 @@ namespace libimage
 
 			result = stbi_write_png(file_path_dst, width, height, channels, data, stride_in_bytes);
 		}
+		else
+		{
+			assert(false);
+		}
 
 		assert(result);
 	}
@@ -184,6 +188,10 @@ namespace libimage
 			int stride_in_bytes = width * channels;
 
 			result = stbi_write_png(file_path_dst, width, height, channels, data, stride_in_bytes);
+		}
+		else
+		{
+			assert(false);
 		}
 
 		assert(result);
