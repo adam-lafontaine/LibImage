@@ -391,6 +391,11 @@ namespace libimage
 	void convert(Image const& src, Image4Cr32 const& dst);
 
 
+	void convert(Image4Cr32 const& src, View const& dst);
+
+	void convert(View const& src, Image4Cr32 const& dst);
+
+
 	void convert(View4Cr32 const& src, Image const& dst);
 
 	void convert(Image const& src, View4Cr32 const& dst);
@@ -404,6 +409,11 @@ namespace libimage
 	void convert(Image3Cr32 const& src, Image const& dst);
 
 	void convert(Image const& src, Image3Cr32 const& dst);
+
+
+	void convert(Image3Cr32 const& src, View const& dst);
+
+	void convert(View const& src, Image3Cr32 const& dst);
 
 
 	void convert(View3Cr32 const& src, Image const& dst);
@@ -429,6 +439,11 @@ namespace libimage
 	void convert(View1Cr32 const& src, gray::Image const& dst);
 
 	void convert(gray::Image const& src, View1Cr32 const& dst);
+
+
+	void convert(View1Cr32 const& src, gray::View const& dst);
+
+	void convert(gray::View const& src, View1Cr32 const& dst);
 }
 
 /* stb wrappers */

@@ -965,6 +965,57 @@ namespace libimage
 	}
 
 
+	void convert(Image4Cr32 const& src, View const& dst)
+	{
+		assert(src.width == dst.width);
+		assert(src.height == dst.height);
+		assert(src.red);
+		assert(dst.image_data);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto r = row_begin(src, y, RGBA::R);
+			auto g = row_begin(src, y, RGBA::G);
+			auto b = row_begin(src, y, RGBA::B);
+			auto a = row_begin(src, y, RGBA::A);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = to_pixel(r[x], g[x], b[x], a[x]);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void convert(View const& src, Image4Cr32 const& dst)
+	{
+		assert(src.width == dst.width);
+		assert(src.height == dst.height);
+		assert(src.image_data);
+		assert(dst.red);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto r = row_begin(dst, y, RGBA::R);
+			auto g = row_begin(dst, y, RGBA::G);
+			auto b = row_begin(dst, y, RGBA::B);
+			auto a = row_begin(dst, y, RGBA::A);
+			auto s = row_begin(src, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				r[x] = to_channel_r32(s[x].red);
+				g[x] = to_channel_r32(s[x].green);
+				b[x] = to_channel_r32(s[x].blue);
+				a[x] = to_channel_r32(s[x].alpha);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
 	void convert(View4Cr32 const& src, Image const& dst)
 	{
 		assert(src.width == dst.width);
@@ -1095,6 +1146,54 @@ namespace libimage
 		assert(src.width == dst.width);
 		assert(src.height == dst.height);
 		assert(src.data);
+		assert(dst.red);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto r = row_begin(dst, y, RGB::R);
+			auto g = row_begin(dst, y, RGB::G);
+			auto b = row_begin(dst, y, RGB::B);
+			auto s = row_begin(src, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				r[x] = to_channel_r32(s[x].red);
+				g[x] = to_channel_r32(s[x].green);
+				b[x] = to_channel_r32(s[x].blue);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void convert(Image3Cr32 const& src, View const& dst)
+	{
+		assert(src.width == dst.width);
+		assert(src.height == dst.height);
+		assert(src.red);
+		assert(dst.image_data);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto r = row_begin(src, y, RGB::R);
+			auto g = row_begin(src, y, RGB::G);
+			auto b = row_begin(src, y, RGB::B);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = to_pixel(r[x], g[x], b[x]);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void convert(View const& src, Image3Cr32 const& dst)
+	{
+		assert(src.width == dst.width);
+		assert(src.height == dst.height);
+		assert(src.image_data);
 		assert(dst.red);
 
 		auto const row_func = [&](u32 y)
@@ -1321,6 +1420,48 @@ namespace libimage
 		assert(src.width == dst.width);
 		assert(src.height == dst.height);
 		assert(src.data);
+		assert(dst.image_data);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = to_channel_r32(s[x]);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void convert(View1Cr32 const& src, gray::View const& dst)
+	{
+		assert(src.width == dst.width);
+		assert(src.height == dst.height);
+		assert(src.image_data);
+		assert(dst.image_data);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = to_channel_u8(s[x]);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void convert(gray::View const& src, View1Cr32 const& dst)
+	{
+		assert(src.width == dst.width);
+		assert(src.height == dst.height);
+		assert(src.image_data);
 		assert(dst.image_data);
 
 		auto const row_func = [&](u32 y)

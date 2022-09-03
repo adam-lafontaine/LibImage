@@ -308,18 +308,35 @@ void view_test()
 
 	img::write_image(vette, out_dir / "swap.bmp");
 
+	GrayImage caddy;
+	img::read_image_from_file(CADILLAC_PATH, caddy);
+	width = caddy.width;
+	height = caddy.height;
 
-	/*GrayImage gray;
-	img::read_image_from_file(CADILLAC_PATH, gray);
-	width = gray.width;
-	height = gray.height;*/
+	img::Image1Cr32 caddy1;
+	img::make_image(caddy1, width, height);
+	img::convert(caddy, caddy1);
 
-	
+	r.x_begin = 0;
+	r.x_end = width / 2;
+	r.y_begin = 0;
+	r.y_end = height;
+
+	auto sub1 = img::sub_view(caddy1, r);
+
+	r.x_begin = width / 4;
+	r.x_end = width * 3 / 4;
+
+	auto dst1 = img::sub_view(caddy, r);
+
+	img::convert(sub1, dst1);
+
+	img::write_image(caddy, out_dir / "copy.bmp");		
 
 	img::destroy_image(vette);
 	img::destroy_image(vette3);
 	img::destroy_image(vette4);
-	//img::destroy_image(gray);
+	img::destroy_image(caddy);
 }
 
 
