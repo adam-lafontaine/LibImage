@@ -268,6 +268,10 @@ namespace libimage
 
 	View3Cr32 sub_view(View3Cr32 const& view, Range2Du32 const& range);
 
+	View3Cr32 make_rgb_view(Image4Cr32 const& image);
+
+	View3Cr32 make_rgb_view(View4Cr32 const& image);
+
 	r32* row_begin(View3Cr32 const& view, u32 y, RGB channel);
 
 	r32* xy_at(View3Cr32 const& view, u32 x, u32 y, RGB channel);
@@ -573,6 +577,37 @@ namespace libimage
 	View1Cr32 select_channel(Image3Cr32 const& image, RGB channel);
 
 	View1Cr32 select_channel(View3Cr32 const& image, RGB channel);
+}
+
+
+/* alpha_blend */
+
+namespace libimage
+{
+	void alpha_blend(Image4Cr32 const& src, Image3Cr32 const& cur, Image3Cr32 const& dst);
+
+	void alpha_blend(Image4Cr32 const& src, Image3Cr32 const& cur, View3Cr32 const& dst);
+
+	void alpha_blend(Image4Cr32 const& src, View3Cr32 const& cur, Image3Cr32 const& dst);
+
+	void alpha_blend(Image4Cr32 const& src, View3Cr32 const& cur, View3Cr32 const& dst);
+
+	void alpha_blend(View4Cr32 const& src, Image3Cr32 const& cur, Image3Cr32 const& dst);
+
+	void alpha_blend(View4Cr32 const& src, Image3Cr32 const& cur, View3Cr32 const& dst);
+
+	void alpha_blend(View4Cr32 const& src, View3Cr32 const& cur, Image3Cr32 const& dst);
+
+	void alpha_blend(View4Cr32 const& src, View3Cr32 const& cur, View3Cr32 const& dst);
+
+
+	void alpha_blend(Image4Cr32 const& src, Image3Cr32 const& cur_dst);
+
+	void alpha_blend(Image4Cr32 const& src, View3Cr32 const& cur_dst);
+
+	void alpha_blend(View4Cr32 const& src, Image3Cr32 const& cur_dst);
+
+	void alpha_blend(View4Cr32 const& src, View3Cr32 const& cur_dst);
 }
 
 

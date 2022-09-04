@@ -140,6 +140,85 @@ static inline int to_channel_index(auto channel)
 }
 
 
+/* verify */
+
+#ifndef NDEBUG
+
+namespace libimage
+{
+	static bool verify(Image const& image)
+	{
+		return image.width && image.height && image.data;
+	}
+
+
+	static bool verify(View const& image)
+	{
+		return image.width && image.height && image.image_data;
+	}
+
+
+	static bool verify(Image4Cr32 const& image)
+	{
+		return image.width && image.height && image.red;
+	}
+
+
+	static bool verify(View4Cr32 const& image)
+	{
+		return image.width && image.height && image.image_red;
+	}
+
+
+	static bool verify(Image3Cr32 const& image)
+	{
+		return image.width && image.height && image.red;
+	}
+
+
+	static bool verify(View3Cr32 const& image)
+	{
+		return image.width && image.height && image.image_red;
+	}
+
+
+	static bool verify(gray::Image const& image)
+	{
+		return image.width && image.height && image.data;
+	}
+
+
+	static bool verify(gray::View const& image)
+	{
+		return image.width && image.height && image.image_data;
+	}
+
+
+	static bool verify(Image1Cr32 const& image)
+	{
+		return image.width && image.height && image.data;
+	}
+
+
+	static bool verify(View1Cr32 const& image)
+	{
+		return image.width && image.height && image.image_data;
+	}
+
+
+	template <class IMG_A, class IMG_B>
+	static bool verify(IMG_A const& lhs, IMG_B const& rhs)
+	{
+		return
+			verify(lhs) && verify(rhs) &&
+			lhs.width == rhs.width &&
+			lhs.height == rhs.height;
+	}
+}
+
+#endif // !NDEBUG
+
+
 namespace libimage
 {
 	static Pixel to_pixel(r32 r, r32 g, r32 b, r32 a)
@@ -607,6 +686,45 @@ namespace libimage
 	}
 
 
+	View3Cr32 make_rgb_view(Image4Cr32 const& image)
+	{
+		assert(verify(image));
+
+		View3Cr32 view;
+
+		view.image_red = image.red;
+		view.image_green = image.green;
+		view.image_blue = image.blue;
+		view.image_width = image.width;
+		view.x_begin = 0;
+		view.y_begin = 0;
+		view.x_end = image.width;
+		view.y_end = image.height;
+		view.width = image.width;
+		view.height = image.height;
+
+		return view;
+	}
+
+
+	View3Cr32 make_rgb_view(View4Cr32 const& view)
+	{
+		assert(verify(view));
+
+		View3Cr32 view3;
+
+		view3.image_red = view.image_red;
+		view3.image_green = view.image_green;
+		view3.image_blue = view.image_blue;
+		view3.image_width = view.image_width;
+		view3.range = view.range;
+		view3.width = view.width;
+		view3.height = view.height;
+
+		return view3;
+	}
+
+
 	r32* row_begin(View3Cr32 const& view, u32 y, RGB channel)
 	{
 		auto ch = to_channel_index(channel);
@@ -914,85 +1032,6 @@ namespace libimage
 	}
 		
 }
-
-
-/* verify */
-
-#ifndef NDEBUG
-
-namespace libimage
-{
-	static bool verify(Image const& image)
-	{
-		return image.width && image.height && image.data;
-	}
-
-
-	static bool verify(View const& image)
-	{
-		return image.width && image.height && image.image_data;
-	}
-
-
-	static bool verify(Image4Cr32 const& image)
-	{
-		return image.width && image.height && image.red;
-	}
-
-
-	static bool verify(View4Cr32 const& image)
-	{
-		return image.width && image.height && image.image_red;
-	}
-
-
-	static bool verify(Image3Cr32 const& image)
-	{
-		return image.width && image.height && image.red;
-	}
-
-
-	static bool verify(View3Cr32 const& image)
-	{
-		return image.width && image.height && image.image_red;
-	}
-
-
-	static bool verify(gray::Image const& image)
-	{
-		return image.width && image.height && image.data;
-	}
-
-
-	static bool verify(gray::View const& image)
-	{
-		return image.width && image.height && image.image_data;
-	}
-
-
-	static bool verify(Image1Cr32 const& image)
-	{
-		return image.width && image.height && image.data;
-	}
-
-
-	static bool verify(View1Cr32 const& image)
-	{
-		return image.width && image.height && image.image_data;
-	}
-
-
-	template <class IMG_A, class IMG_B>
-	static bool verify(IMG_A const& lhs, IMG_B const& rhs)
-	{
-		return
-			verify(lhs) && verify(rhs) &&
-			lhs.width == rhs.width &&
-			lhs.height == rhs.height;
-	}
-}
-
-#endif // !NDEBUG
 
 
 /* convert */
@@ -2138,5 +2177,153 @@ namespace libimage
 		view1.image_data = view.image_channel_data[ch];
 
 		return view1;
+	}
+}
+
+
+/* alpha blend */
+
+namespace libimage
+{
+	static r32 blend_linear(r32 lhs, r32 rhs, r32 alpha)
+	{
+		assert(alpha >= 0.0f);
+		assert(alpha <= 1.0f);
+
+		return alpha * lhs + (1.0f - alpha) * rhs;
+	}
+
+
+	template <class IMG_4_SRC, class IMG_3_CUR, class IMG_3_DST>
+	static void do_alpha_blend(IMG_4_SRC const& src, IMG_3_CUR const& cur, IMG_3_DST const& dst)
+	{
+		auto const row_func = [&](u32 y)
+		{
+			auto sr = row_begin(src, y, RGBA::R);
+			auto sg = row_begin(src, y, RGBA::G);
+			auto sb = row_begin(src, y, RGBA::B);
+			auto sa = row_begin(src, y, RGBA::A);
+
+			auto cr = row_begin(cur, y, RGB::R);
+			auto cg = row_begin(cur, y, RGB::G);
+			auto cb = row_begin(cur, y, RGB::B);
+
+			auto dr = row_begin(dst, y, RGB::R);
+			auto dg = row_begin(dst, y, RGB::G);
+			auto db = row_begin(dst, y, RGB::B);
+
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				dr[x] = blend_linear(sr[x], cr[x], sa[x]);
+				dg[x] = blend_linear(sg[x], cg[x], sa[x]);
+				db[x] = blend_linear(sb[x], cb[x], sa[x]);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void alpha_blend(Image4Cr32 const& src, Image3Cr32 const& cur, Image3Cr32 const& dst)
+	{		
+		assert(verify(src, cur));
+		assert(verify(src, dst));
+
+		do_alpha_blend(src, cur, dst);
+	}
+
+
+	void alpha_blend(Image4Cr32 const& src, Image3Cr32 const& cur, View3Cr32 const& dst)
+	{
+		assert(verify(src, cur));
+		assert(verify(src, dst));
+
+		do_alpha_blend(src, cur, dst);
+	}
+
+
+	void alpha_blend(Image4Cr32 const& src, View3Cr32 const& cur, Image3Cr32 const& dst)
+	{
+		assert(verify(src, cur));
+		assert(verify(src, dst));
+
+		do_alpha_blend(src, cur, dst);
+	}
+
+
+	void alpha_blend(Image4Cr32 const& src, View3Cr32 const& cur, View3Cr32 const& dst)
+	{
+		assert(verify(src, cur));
+		assert(verify(src, dst));
+
+		do_alpha_blend(src, cur, dst);
+	}
+
+
+	void alpha_blend(View4Cr32 const& src, Image3Cr32 const& cur, Image3Cr32 const& dst)
+	{
+		assert(verify(src, cur));
+		assert(verify(src, dst));
+
+		do_alpha_blend(src, cur, dst);
+	}
+
+
+	void alpha_blend(View4Cr32 const& src, Image3Cr32 const& cur, View3Cr32 const& dst)
+	{
+		assert(verify(src, cur));
+		assert(verify(src, dst));
+
+		do_alpha_blend(src, cur, dst);
+	}
+
+
+	void alpha_blend(View4Cr32 const& src, View3Cr32 const& cur, Image3Cr32 const& dst)
+	{
+		assert(verify(src, cur));
+		assert(verify(src, dst));
+
+		do_alpha_blend(src, cur, dst);
+	}
+
+
+	void alpha_blend(View4Cr32 const& src, View3Cr32 const& cur, View3Cr32 const& dst)
+	{
+		assert(verify(src, cur));
+		assert(verify(src, dst));
+
+		do_alpha_blend(src, cur, dst);
+	}
+
+
+	void alpha_blend(Image4Cr32 const& src, Image3Cr32 const& cur_dst)
+	{
+		assert(verify(src, cur_dst));
+
+		do_alpha_blend(src, cur_dst, cur_dst);
+	}
+
+
+	void alpha_blend(Image4Cr32 const& src, View3Cr32 const& cur_dst)
+	{
+		assert(verify(src, cur_dst));
+
+		do_alpha_blend(src, cur_dst, cur_dst);
+	}
+
+
+	void alpha_blend(View4Cr32 const& src, Image3Cr32 const& cur_dst)
+	{
+		assert(verify(src, cur_dst));
+
+		do_alpha_blend(src, cur_dst, cur_dst);
+	}
+
+
+	void alpha_blend(View4Cr32 const& src, View3Cr32 const& cur_dst)
+	{
+		assert(verify(src, cur_dst));
+
+		do_alpha_blend(src, cur_dst, cur_dst);
 	}
 }
