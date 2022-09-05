@@ -2,6 +2,8 @@
 
 #include "defines.hpp"
 
+#include <functional>
+
 
 namespace libimage
 {
@@ -462,6 +464,26 @@ namespace libimage
 	void copy(View1Cr32 const& src, Image1Cr32 const& dst);
 
 	void copy(View1Cr32 const& src, View1Cr32 const& dst);
+}
+
+
+/* for_each_pixel */
+
+namespace libimage
+{
+	using u8_f = std::function<void(u8& p)>;
+
+	using r32_f = std::function<void(r32& p)>;
+
+
+	void for_each_pixel(gray::Image const& image, u8_f const& func);
+
+	void for_each_pixel(gray::View const& image, u8_f const& func);
+
+
+	void for_each_pixel(Image1Cr32 const& image, r32_f const& func);
+
+	void for_each_pixel(View1Cr32 const& image, r32_f const& func);
 }
 
 

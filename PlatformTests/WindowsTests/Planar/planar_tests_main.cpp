@@ -90,6 +90,7 @@ void convert_test();
 void view_test();
 void fill_test();
 void copy_test();
+void for_each_pixel_test();
 void grayscale_test();
 void select_channel_test();
 void alpha_blend_test();
@@ -123,6 +124,7 @@ int main()
 	view_test();
 	fill_test();
 	copy_test();
+	for_each_pixel_test();
 	grayscale_test();
 	select_channel_test();
 	alpha_blend_test();
@@ -540,6 +542,67 @@ void copy_test()
 }
 
 
+void for_each_pixel_test()
+{
+	auto title = "for_each_pixel_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+
+	GrayImage vette;
+	img::read_image_from_file(CORVETTE_PATH, vette);
+	auto width = vette.width;
+	auto height = vette.height;
+
+	img::for_each_pixel(vette, [](u8& p) { p = 255 - p; });
+	write_image(vette, "invert.bmp");
+	
+	Range2Du32 right{};
+	right.x_begin = width / 2;
+	right.x_end = width;
+	right.y_begin = 0;
+	right.y_end = height;
+
+	auto view = img::sub_view(vette, right);
+	img::for_each_pixel(view, [](u8& p) { p = 255 - p; });
+	write_image(vette, "invert_view.bmp");
+
+	GrayImage caddy;
+	img::read_image_from_file(CADILLAC_PATH, caddy);
+	width = caddy.width;
+	height = caddy.height;
+
+	Range2Du32 left{};
+	left.x_begin = 0;
+	left.x_end = width / 2;
+	left.y_begin = 0;
+	left.y_end = height;	
+
+	img::Image1Cr32 caddy1;
+	img::make_image(caddy1, width, height);
+	img::convert(caddy, caddy1);
+
+	auto caddy1_left = img::sub_view(caddy1, left);
+	auto caddy1_right = img::sub_view(caddy1, right);
+
+	img::for_each_pixel(caddy1_left, [](r32& p) { p = p < 0.1f ? 0.0f : p - 0.1f; });
+	img::for_each_pixel(caddy1_right, [](r32& p) { p = p > 0.9f ? 1.0f : p + 0.1f; });
+
+	auto caddy_left = img::sub_view(caddy, left);
+	auto caddy_right = img::sub_view(caddy, right);
+
+	img::convert(caddy1_left, caddy_left);
+	img::convert(caddy1_right, caddy_right);
+
+	write_image(caddy, "light_dark_1.bmp");
+
+	img::destroy_image(vette);
+	img::destroy_image(caddy);
+	img::destroy_image(caddy1);
+}
+
+
 void grayscale_test()
 {
 	auto title = "grayscale_test";
@@ -673,13 +736,8 @@ void alpha_blend_test()
 	img::make_image(vette4, width, height);
 	img::convert(vette, vette4);
 
-	//auto alpha_view = img::select_channel(vette4, img::RGBA::A);
-
-	auto alpha_ch = img::id_cast(img::RGBA::A);
-	for (u32 i = 0; i < width * height; ++i)
-	{
-		vette4.channel_data[alpha_ch][i] = 0.5f;
-	}
+	auto alpha_view = img::select_channel(vette4, img::RGBA::A);
+	img::for_each_pixel(alpha_view, [](r32& p) { p = 0.5f; });
 
 	img::Image4Cr32 caddy4;
 	img::make_image(caddy4, width, height);

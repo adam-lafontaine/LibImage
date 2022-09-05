@@ -2,7 +2,6 @@
 
 #include <cstdlib>
 #include <algorithm>
-#include <functional>
 #include <array>
 #include <cmath>
 
@@ -146,9 +145,9 @@ namespace libimage
 	}
 
 
-	static bool verify(View const& image)
+	static bool verify(View const& view)
 	{
-		return image.width && image.height && image.image_data;
+		return view.image_width && view.width && view.height && view.image_data;
 	}
 
 
@@ -172,9 +171,9 @@ namespace libimage
 	}
 
 
-	static bool verify(gray::View const& image)
+	static bool verify(gray::View const& view)
 	{
-		return image.width && image.height && image.image_data;
+		return view.image_width && view.width && view.height && view.image_data;
 	}
 
 
@@ -184,9 +183,9 @@ namespace libimage
 	}
 
 
-	static bool verify(View1Cr32 const& image)
+	static bool verify(View1Cr32 const& view)
 	{
-		return image.width && image.height && image.image_data;
+		return view.image_width && view.width && view.height && view.image_data;
 	}
 
 
@@ -411,21 +410,6 @@ namespace libimage
 	}
 
 
-	void make_image(Image4Cr32& image, u32 width, u32 height)
-	{
-		assert(width);
-		assert(height);
-
-		do_make_image(image, width, height);
-	}
-
-
-	void destroy_image(Image4Cr32& image)
-	{
-		do_destroy_image(image);
-	}
-
-
 	template <size_t N>
 	static ViewCHr32<N> do_make_view(ImageCHr32<N> const& image)
 	{
@@ -487,6 +471,36 @@ namespace libimage
 
 		return sub_view;
 	}
+
+
+	template <size_t N>
+	static std::array<r32*, N> channel_row_begin(ImageCHr32<N> const& image, u32 y)
+	{
+		auto offset = (size_t)(y * image.width);
+
+		std::array<r32*, N> data = {};
+		for (u32 ch = 0; ch < N; ++ch)
+		{
+			data[ch] = image.channel_data[ch] + offset;
+		}
+
+		return data;
+	}
+
+
+	template <size_t N>
+	static std::array<r32*, N> channel_row_begin(ViewCHr32<N> const& view, u32 y)
+	{
+		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin);
+
+		std::array<r32*, N> data = {};
+		for (u32 ch = 0; ch < N; ++ch)
+		{
+			data[ch] = view.image_channel_data[ch] + offset;
+		}
+
+		return data;
+	}
 }
 
 
@@ -494,6 +508,21 @@ namespace libimage
 
 namespace libimage
 {
+	void make_image(Image4Cr32& image, u32 width, u32 height)
+	{
+		assert(width);
+		assert(height);
+
+		do_make_image(image, width, height);
+	}
+
+
+	void destroy_image(Image4Cr32& image)
+	{
+		do_destroy_image(image);
+	}
+
+
 	View4Cr32 make_view(Image4Cr32 const& image)
 	{
 		assert(verify(image));
@@ -936,41 +965,6 @@ namespace libimage
 		return row_begin(view, y) + x;
 	}
 		
-}
-
-
-#include <array>
-
-namespace libimage
-{
-	template <size_t N>
-	static std::array<r32*, N> channel_row_begin(ImageCHr32<N> const& image, u32 y)
-	{
-		auto offset = (size_t)(y * image.width);
-
-		std::array<r32*, N> data = {};
-		for (u32 ch = 0; ch < N; ++ch)
-		{
-			data[ch] = image.channel_data[ch] + offset;
-		}
-
-		return data;
-	}
-
-
-	template <size_t N>
-	static std::array<r32*, N> channel_row_begin(ViewCHr32<N> const& view, u32 y)
-	{
-		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin);
-
-		std::array<r32*, N> data = {};
-		for (u32 ch = 0; ch < N; ++ch)
-		{
-			data[ch] = view.image_channel_data[ch] + offset;
-		}
-
-		return data;
-	}
 }
 
 
@@ -1455,57 +1449,6 @@ namespace libimage
 	}
 
 
-	/*template <class IMG_SRC, class IMG_DST>
-	static void copy_4_channels(IMG_SRC const& src, IMG_DST const& dst)
-	{
-		auto const row_func = [&](u32 y)
-		{
-			auto sr = row_begin(src, y, RGBA::R);
-			auto sg = row_begin(src, y, RGBA::G);
-			auto sb = row_begin(src, y, RGBA::B);
-			auto sa = row_begin(src, y, RGBA::A);
-
-			auto dr = row_begin(dst, y, RGBA::R);
-			auto dg = row_begin(dst, y, RGBA::G);
-			auto db = row_begin(dst, y, RGBA::B);
-			auto da = row_begin(dst, y, RGBA::A);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				dr[x] = sr[x];
-				dg[x] = sg[x];
-				db[x] = sb[x];
-				da[x] = sa[x];
-			}
-		};
-
-		process_rows(src.height, row_func);
-	}
-
-
-	template <class IMG_SRC, class IMG_DST>
-	static void copy_3_channels(IMG_SRC const& src, IMG_DST const& dst)
-	{
-		auto const row_func = [&](u32 y)
-		{
-			auto sr = row_begin(src, y, RGB::R);
-			auto sg = row_begin(src, y, RGB::G);
-			auto sb = row_begin(src, y, RGB::B);
-
-			auto dr = row_begin(dst, y, RGB::R);
-			auto dg = row_begin(dst, y, RGB::G);
-			auto db = row_begin(dst, y, RGB::B);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				dr[x] = sr[x];
-				dg[x] = sg[x];
-				db[x] = sb[x];
-			}
-		};
-
-		process_rows(src.height, row_func);
-	}*/
-
-
 	void copy(Image const& src, Image const& dst)
 	{
 		assert(verify(src, dst));
@@ -1665,6 +1608,95 @@ namespace libimage
 		assert(verify(src, dst));
 
 		copy_1_channel(src, dst);
+	}
+}
+
+
+/* for_each_pixel */
+
+namespace libimage
+{
+	template <class GRAY_IMG, class GRAY_F>
+	void do_for_each_pixel(GRAY_IMG const& image, GRAY_F const& func)
+	{
+		auto const row_func = [&](u32 y)
+		{
+			auto row = row_begin(image, y);
+			for (u32 x = 0; x < image.width; ++x)
+			{
+				func(row[x]);
+			}
+		};
+
+		process_rows(image.height, row_func);
+	}
+
+
+	void for_each_pixel(gray::Image const& image, u8_f const& func)
+	{
+		verify(image);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto row = row_begin(image, y);
+			for (u32 x = 0; x < image.width; ++x)
+			{
+				func(row[x]);
+			}
+		};
+
+		process_rows(image.height, row_func);
+	}
+
+
+	void for_each_pixel(gray::View const& view, u8_f const& func)
+	{
+		verify(view);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto row = row_begin(view, y);
+			for (u32 x = 0; x < view.width; ++x)
+			{
+				func(row[x]);
+			}
+		};
+
+		process_rows(view.height, row_func);
+	}
+
+
+	void for_each_pixel(Image1Cr32 const& image, r32_f const& func)
+	{
+		verify(image);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto row = row_begin(image, y);
+			for (u32 x = 0; x < image.width; ++x)
+			{
+				func(row[x]);
+			}
+		};
+
+		process_rows(image.height, row_func);
+	}
+
+
+	void for_each_pixel(View1Cr32 const& view, r32_f const& func)
+	{
+		verify(view);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto row = row_begin(view, y);
+			for (u32 x = 0; x < view.width; ++x)
+			{
+				func(row[x]);
+			}
+		};
+
+		process_rows(view.height, row_func);
 	}
 }
 
