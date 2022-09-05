@@ -1023,21 +1023,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		auto const row_func = [&](u32 y) 
-		{
-			auto s = channel_row_begin(src, y);
-			auto d = row_begin(dst, y);
-
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				for (u32 ch = 0; ch < s.size(); ++ch)
-				{
-					d[x].channels[ch] = to_channel_u8(s[ch][x]);
-				}
-			}
-		};
-
-		process_rows(src.height, row_func);		
+		planar_to_interleaved(src, dst);
 	}
 
 
@@ -1045,20 +1031,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto d = channel_row_begin(dst, y);
-			auto s = row_begin(src, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				for (u32 ch = 0; ch < d.size(); ++ch)
-				{
-					d[ch][x] = to_channel_r32(s[x].channels[ch]);
-				}
-			}
-		};
-
-		process_rows(src.height, row_func);
+		interleaved_to_planar(src, dst);
 	}
 
 
@@ -1066,21 +1039,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto s = channel_row_begin(src, y);
-			auto d = row_begin(dst, y);
-
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				for (u32 ch = 0; ch < s.size(); ++ch)
-				{
-					d[x].channels[ch] = to_channel_u8(s[ch][x]);
-				}
-			}
-		};
-
-		process_rows(src.height, row_func);
+		planar_to_interleaved(src, dst);
 	}
 
 
@@ -1088,20 +1047,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto d = channel_row_begin(dst, y);
-			auto s = row_begin(src, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				for (u32 ch = 0; ch < d.size(); ++ch)
-				{
-					d[ch][x] = to_channel_r32(s[x].channels[ch]);
-				}
-			}
-		};
-
-		process_rows(src.height, row_func);
+		interleaved_to_planar(src, dst);
 	}
 
 
@@ -1109,21 +1055,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto s = channel_row_begin(src, y);
-			auto d = row_begin(dst, y);
-
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				for (u32 ch = 0; ch < s.size(); ++ch)
-				{
-					d[x].channels[ch] = to_channel_u8(s[ch][x]);
-				}
-			}
-		};
-
-		process_rows(src.height, row_func);
+		planar_to_interleaved(src, dst);
 	}
 
 
@@ -1131,20 +1063,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto d = channel_row_begin(dst, y);
-			auto s = row_begin(src, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				for (u32 ch = 0; ch < d.size(); ++ch)
-				{
-					d[ch][x] = to_channel_r32(s[x].channels[ch]);
-				}
-			}
-		};
-
-		process_rows(src.height, row_func);
+		interleaved_to_planar(src, dst);
 	}
 
 
@@ -1152,21 +1071,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto s = channel_row_begin(src, y);
-			auto d = row_begin(dst, y);
-
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				for (u32 ch = 0; ch < s.size(); ++ch)
-				{
-					d[x].channels[ch] = to_channel_u8(s[ch][x]);
-				}
-			}
-		};
-
-		process_rows(src.height, row_func);
+		planar_to_interleaved(src, dst);
 	}
 
 
@@ -1174,20 +1079,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto d = channel_row_begin(dst, y);
-			auto s = row_begin(src, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				for (u32 ch = 0; ch < d.size(); ++ch)
-				{
-					d[ch][x] = to_channel_r32(s[x].channels[ch]);
-				}
-			}
-		};
-
-		process_rows(src.height, row_func);
+		interleaved_to_planar(src, dst);
 	}
 
 
@@ -1195,21 +1087,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto s = channel_row_begin(src, y);
-			auto d = row_begin(dst, y);
-
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				for (u32 ch = 0; ch < s.size(); ++ch)
-				{
-					d[x].channels[ch] = to_channel_u8(s[ch][x]);
-				}
-			}
-		};
-
-		process_rows(src.height, row_func);
+		planar_to_interleaved(src, dst);
 	}
 
 
@@ -1217,20 +1095,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto d = channel_row_begin(dst, y);
-			auto s = row_begin(src, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				for (u32 ch = 0; ch < d.size(); ++ch)
-				{
-					d[ch][x] = to_channel_r32(s[x].channels[ch]);
-				}
-			}
-		};
-
-		process_rows(src.height, row_func);
+		interleaved_to_planar(src, dst);
 	}
 
 
@@ -1238,21 +1103,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto s = channel_row_begin(src, y);
-			auto d = row_begin(dst, y);
-
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				for (u32 ch = 0; ch < s.size(); ++ch)
-				{
-					d[x].channels[ch] = to_channel_u8(s[ch][x]);
-				}
-			}
-		};
-
-		process_rows(src.height, row_func);
+		planar_to_interleaved(src, dst);
 	}
 
 
@@ -1260,20 +1111,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto d = channel_row_begin(dst, y);
-			auto s = row_begin(src, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				for (u32 ch = 0; ch < d.size(); ++ch)
-				{
-					d[ch][x] = to_channel_r32(s[x].channels[ch]);
-				}
-			}
-		};
-
-		process_rows(src.height, row_func);
+		interleaved_to_planar(src, dst);
 	}
 
 
@@ -1281,21 +1119,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto s = channel_row_begin(src, y);
-			auto d = row_begin(dst, y);
-
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				for (u32 ch = 0; ch < s.size(); ++ch)
-				{
-					d[x].channels[ch] = to_channel_u8(s[ch][x]);
-				}
-			}
-		};
-
-		process_rows(src.height, row_func);
+		planar_to_interleaved(src, dst);
 	}
 
 
@@ -1303,20 +1127,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto d = channel_row_begin(dst, y);
-			auto s = row_begin(src, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				for (u32 ch = 0; ch < d.size(); ++ch)
-				{
-					d[ch][x] = to_channel_r32(s[x].channels[ch]);
-				}
-			}
-		};
-
-		process_rows(src.height, row_func);
+		interleaved_to_planar(src, dst);
 	}
 
 
@@ -1324,21 +1135,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto s = channel_row_begin(src, y);
-			auto d = row_begin(dst, y);
-
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				for (u32 ch = 0; ch < s.size(); ++ch)
-				{
-					d[x].channels[ch] = to_channel_u8(s[ch][x]);
-				}
-			}
-		};
-
-		process_rows(src.height, row_func);
+		planar_to_interleaved(src, dst);
 	}
 
 
@@ -1346,20 +1143,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto d = channel_row_begin(dst, y);
-			auto s = row_begin(src, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				for (u32 ch = 0; ch < d.size(); ++ch)
-				{
-					d[ch][x] = to_channel_r32(s[x].channels[ch]);
-				}
-			}
-		};
-
-		process_rows(src.height, row_func);
+		interleaved_to_planar(src, dst);
 	}
 
 
@@ -1530,7 +1314,7 @@ namespace libimage
 
 
 	template <class IMG, typename PIXEL>
-	static void fill_n_image_channels(IMG const& image, PIXEL color)
+	static void fill_n_channels(IMG const& image, PIXEL color)
 	{
 		auto const row_func = [&](u32 y)
 		{
@@ -1569,19 +1353,7 @@ namespace libimage
 	{
 		assert(verify(image));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto d = channel_row_begin(image, y);
-			for (u32 x = 0; x < image.width; ++x)
-			{
-				for (u32 ch = 0; ch < d.size(); ++ch)
-				{
-					d[ch][x] = to_channel_r32(color.channels[ch]);
-				}
-			}
-		};
-
-		process_rows(image.height, row_func);
+		fill_n_channels(image, color);
 	}
 
 
@@ -1589,19 +1361,7 @@ namespace libimage
 	{
 		assert(verify(view));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto d = channel_row_begin(view, y);
-			for (u32 x = 0; x < view.width; ++x)
-			{
-				for (u32 ch = 0; ch < d.size(); ++ch)
-				{
-					d[ch][x] = to_channel_r32(color.channels[ch]);
-				}
-			}
-		};
-
-		process_rows(view.height, row_func);
+		fill_n_channels(view, color);
 	}
 
 
@@ -1609,19 +1369,7 @@ namespace libimage
 	{
 		assert(verify(image));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto d = channel_row_begin(image, y);
-			for (u32 x = 0; x < image.width; ++x)
-			{
-				for (u32 ch = 0; ch < d.size(); ++ch)
-				{
-					d[ch][x] = to_channel_r32(color.channels[ch]);
-				}
-			}
-		};
-
-		process_rows(image.height, row_func);
+		fill_n_channels(image, color);
 	}
 
 
@@ -1629,19 +1377,7 @@ namespace libimage
 	{
 		assert(verify(view));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto d = channel_row_begin(view, y);
-			for (u32 x = 0; x < view.width; ++x)
-			{
-				for (u32 ch = 0; ch < d.size(); ++ch)
-				{
-					d[ch][x] = to_channel_r32(color.channels[ch]);
-				}
-			}
-		};
-
-		process_rows(view.height, row_func);
+		fill_n_channels(view, color);
 	}
 
 
