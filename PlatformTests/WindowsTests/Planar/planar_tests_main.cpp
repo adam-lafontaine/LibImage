@@ -673,6 +673,8 @@ void alpha_blend_test()
 	img::make_image(vette4, width, height);
 	img::convert(vette, vette4);
 
+	//auto alpha_view = img::select_channel(vette4, img::RGBA::A);
+
 	auto alpha_ch = img::id_cast(img::RGBA::A);
 	for (u32 i = 0; i < width * height; ++i)
 	{

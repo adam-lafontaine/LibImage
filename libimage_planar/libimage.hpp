@@ -28,14 +28,6 @@ namespace libimage
 
 	typedef union pixel_t
 	{
-		/*struct
-		{
-			u8 red;
-			u8 green;
-			u8 blue;
-			u8 alpha;
-		};*/
-
 		u8 channels[4] = {};
 
 		u32 value;
@@ -50,10 +42,6 @@ namespace libimage
 		p.channels[id_cast(RGBA::G)] = g;
 		p.channels[id_cast(RGBA::B)] = b;
 		p.channels[id_cast(RGBA::A)] = a;
-		/*p.red = r;
-		p.green = g;
-		p.blue = b;
-		p.alpha = a;*/
 
 		return p;
 	}
@@ -141,28 +129,6 @@ namespace libimage
 	using Image4Cr32 = ImageCHr32<4>;
 
 
-	/*class Image4Cr32
-	{
-	public:
-
-		u32 width = 0;
-		u32 height = 0;
-
-		union
-		{
-			struct
-			{
-				r32* red;
-				r32* green;
-				r32* blue;
-				r32* alpha;
-			};
-
-			r32* channel_data[4] = {};
-		};
-	};*/
-
-
 	void make_image(Image4Cr32& image, u32 width, u32 height);
 
 	void destroy_image(Image4Cr32& image);
@@ -202,43 +168,6 @@ namespace libimage
 	using View4Cr32 = ViewCHr32<4>;
 
 
-	/*class View4Cr32
-	{
-	public:
-
-		u32 image_width = 0;
-
-		union
-		{
-			struct
-			{
-				r32* image_red;
-				r32* image_green;
-				r32* image_blue;
-				r32* image_alpha;
-			};
-
-			r32* image_channel_data[4] = {};
-		};
-
-		union
-		{
-			Range2Du32 range;
-
-			struct
-			{
-				u32 x_begin;
-				u32 x_end;
-				u32 y_begin;
-				u32 y_end;
-			};
-		};
-
-		u32 width = 0;
-		u32 height = 0;
-	};*/
-
-
 	View4Cr32 make_view(Image4Cr32 const& image);
 
 	View4Cr32 sub_view(Image4Cr32 const& image, Range2Du32 const& range);
@@ -247,28 +176,7 @@ namespace libimage
 
 	//r32* row_begin(View4Cr32 const& view, u32 y, RGBA channel);
 
-	//r32* xy_at(View4Cr32 const& view, u32 x, u32 y, RGBA channel);
-
-
-	/*class Image3Cr32
-	{
-	public:
-
-		u32 width = 0;
-		u32 height = 0;
-
-		union
-		{
-			struct
-			{
-				r32* red;
-				r32* green;
-				r32* blue;
-			};
-
-			r32* channel_data[3];
-		};
-	};*/
+	//r32* xy_at(View4Cr32 const& view, u32 x, u32 y, RGBA channel);	
 
 
 	using Image3Cr32 = ImageCHr32<3>;
@@ -284,41 +192,6 @@ namespace libimage
 
 
 	using View3Cr32 = ViewCHr32<3>;
-
-	/*class View3Cr32
-	{
-	public:
-
-		u32 image_width = 0;
-
-		union
-		{
-			struct
-			{
-				r32* image_red;
-				r32* image_green;
-				r32* image_blue;
-			};
-
-			r32* image_channel_data[3] = {};
-		};
-
-		union
-		{
-			Range2Du32 range;
-
-			struct
-			{
-				u32 x_begin;
-				u32 x_end;
-				u32 y_begin;
-				u32 y_end;
-			};
-		};
-
-		u32 width = 0;
-		u32 height = 0;
-	};*/
 
 
 	View3Cr32 make_view(Image3Cr32 const& image);
