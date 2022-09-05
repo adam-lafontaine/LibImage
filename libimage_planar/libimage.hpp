@@ -20,17 +20,23 @@ namespace libimage
 	};
 
 
-	typedef union
+	constexpr inline int id_cast(auto channel)
 	{
-		struct
+		return static_cast<int>(channel);
+	}
+
+
+	typedef union pixel_t
+	{
+		/*struct
 		{
 			u8 red;
 			u8 green;
 			u8 blue;
 			u8 alpha;
-		};
+		};*/
 
-		u8 channels[4];
+		u8 channels[4] = {};
 
 		u32 value;
 
@@ -40,10 +46,14 @@ namespace libimage
 	constexpr inline Pixel to_pixel(u8 r, u8 g, u8 b, u8 a)
 	{
 		Pixel p{};
-		p.red = r;
+		p.channels[id_cast(RGBA::R)] = r;
+		p.channels[id_cast(RGBA::G)] = g;
+		p.channels[id_cast(RGBA::B)] = b;
+		p.channels[id_cast(RGBA::A)] = a;
+		/*p.red = r;
 		p.green = g;
 		p.blue = b;
-		p.alpha = a;
+		p.alpha = a;*/
 
 		return p;
 	}
@@ -117,7 +127,21 @@ namespace libimage
 	Pixel* xy_at(View const& view, u32 x, u32 y);
 
 
-	class Image4Cr32
+	template <size_t N>
+	class ImageCHr32
+	{
+	public:
+		u32 width = 0;
+		u32 height = 0;
+
+		r32* channel_data[N] = {};
+	};
+
+
+	using Image4Cr32 = ImageCHr32<4>;
+
+
+	/*class Image4Cr32
 	{
 	public:
 
@@ -136,19 +160,49 @@ namespace libimage
 
 			r32* channel_data[4] = {};
 		};
-	};
+	};*/
 
 
 	void make_image(Image4Cr32& image, u32 width, u32 height);
 
 	void destroy_image(Image4Cr32& image);
 
-	r32* row_begin(Image4Cr32 const& image, u32 y, RGBA channel);
+	//r32* row_begin(Image4Cr32 const& image, u32 y, RGBA channel);
 
-	r32* xy_at(Image4Cr32 const& image, u32 x, u32 y, RGBA channel);	
+	//r32* xy_at(Image4Cr32 const& image, u32 x, u32 y, RGBA channel);
 
 
-	class View4Cr32
+	template <size_t N>
+	class ViewCHr32
+	{
+	public:
+
+		u32 image_width = 0;
+
+		r32* image_channel_data[N] = {};
+
+		union
+		{
+			Range2Du32 range;
+
+			struct
+			{
+				u32 x_begin;
+				u32 x_end;
+				u32 y_begin;
+				u32 y_end;
+			};
+		};
+
+		u32 width = 0;
+		u32 height = 0;
+	};
+
+
+	using View4Cr32 = ViewCHr32<4>;
+
+
+	/*class View4Cr32
 	{
 	public:
 
@@ -182,7 +236,7 @@ namespace libimage
 
 		u32 width = 0;
 		u32 height = 0;
-	};
+	};*/
 
 
 	View4Cr32 make_view(Image4Cr32 const& image);
@@ -191,12 +245,12 @@ namespace libimage
 
 	View4Cr32 sub_view(View4Cr32 const& view, Range2Du32 const& range);
 
-	r32* row_begin(View4Cr32 const& view, u32 y, RGBA channel);
+	//r32* row_begin(View4Cr32 const& view, u32 y, RGBA channel);
 
-	r32* xy_at(View4Cr32 const& view, u32 x, u32 y, RGBA channel);
+	//r32* xy_at(View4Cr32 const& view, u32 x, u32 y, RGBA channel);
 
 
-	class Image3Cr32
+	/*class Image3Cr32
 	{
 	public:
 
@@ -214,19 +268,24 @@ namespace libimage
 
 			r32* channel_data[3];
 		};
-	};
+	};*/
+
+
+	using Image3Cr32 = ImageCHr32<3>;
 
 
 	void make_image(Image3Cr32& image, u32 width, u32 height);
 
 	void destroy_image(Image3Cr32& image);
 
-	r32* row_begin(Image3Cr32 const& image, u32 y, RGB channel);
+	//r32* row_begin(Image3Cr32 const& image, u32 y, RGB channel);
 
-	r32* xy_at(Image3Cr32 const& image, u32 x, u32 y, RGB channel);
+	//r32* xy_at(Image3Cr32 const& image, u32 x, u32 y, RGB channel);
 
 
-	class View3Cr32
+	using View3Cr32 = ViewCHr32<3>;
+
+	/*class View3Cr32
 	{
 	public:
 
@@ -259,7 +318,7 @@ namespace libimage
 
 		u32 width = 0;
 		u32 height = 0;
-	};
+	};*/
 
 
 	View3Cr32 make_view(Image3Cr32 const& image);
@@ -272,9 +331,9 @@ namespace libimage
 
 	View3Cr32 make_rgb_view(View4Cr32 const& image);
 
-	r32* row_begin(View3Cr32 const& view, u32 y, RGB channel);
+	//r32* row_begin(View3Cr32 const& view, u32 y, RGB channel);
 
-	r32* xy_at(View3Cr32 const& view, u32 x, u32 y, RGB channel);
+	//r32* xy_at(View3Cr32 const& view, u32 x, u32 y, RGB channel);
 
 
 	namespace gray

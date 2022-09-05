@@ -125,10 +125,7 @@ int main()
 	copy_test();
 	grayscale_test();
 	select_channel_test();
-
-	//transform_test();	
 	alpha_blend_test();
-	//grayscale_test();
 	//binary_test();
 	//contrast_test();
 	//blur_test();
@@ -675,9 +672,11 @@ void alpha_blend_test()
 	img::Image4Cr32 vette4;
 	img::make_image(vette4, width, height);
 	img::convert(vette, vette4);
+
+	auto alpha_ch = img::id_cast(img::RGBA::A);
 	for (u32 i = 0; i < width * height; ++i)
 	{
-		vette4.alpha[i] = 0.5f;
+		vette4.channel_data[alpha_ch][i] = 0.5f;
 	}
 
 	img::Image4Cr32 caddy4;
@@ -706,6 +705,9 @@ void alpha_blend_test()
 	img::destroy_image(caddy4);
 	img::destroy_image(dst3);
 }
+
+
+
 
 
 
