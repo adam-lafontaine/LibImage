@@ -410,7 +410,7 @@ namespace libimage
 	template <size_t N>
 	static void do_destroy_image(ImageCHr32<N>& image)
 	{
-		if (image.channel_data[0] != nullptr)
+		if (image.channel_data[0])
 		{
 			free(image.channel_data[0]);
 			for (u32 ch = 0; ch < N; ++ch)
@@ -1695,14 +1695,19 @@ namespace libimage
 	}
 
 
-	/*template <class IMG, class GRAY>
-	static void grayscale_rgba(IMG const& src, GRAY const& dst)
+	template <class IMG, class GRAY>
+	static void grayscale_rgb(IMG const& src, GRAY const& dst)
 	{
+		constexpr static auto red = id_cast(RGB::R);
+		constexpr static auto green = id_cast(RGB::G);
+		constexpr static auto blue = id_cast(RGB::B);
+
 		auto const row_func = [&](u32 y)
 		{
-			auto r = row_begin(src, y, RGBA::R);
-			auto g = row_begin(src, y, RGBA::G);
-			auto b = row_begin(src, y, RGBA::B);
+			auto s = channel_row_begin(src, y);
+			auto r = s[red];
+			auto g = s[green];
+			auto b = s[blue];
 			auto d = row_begin(dst, y);
 			for (u32 x = 0; x < src.width; ++x)
 			{
@@ -1712,25 +1717,6 @@ namespace libimage
 
 		process_rows(src.height, row_func);
 	}
-
-
-	template <class IMG, class GRAY>
-	static void grayscale_rgb(IMG const& src, GRAY const& dst)
-	{
-		auto const row_func = [&](u32 y)
-		{
-			auto r = row_begin(src, y, RGB::R);
-			auto g = row_begin(src, y, RGB::G);
-			auto b = row_begin(src, y, RGB::B);
-			auto d = row_begin(dst, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				d[x] = rgb_grayscale_standard(r[x], g[x], b[x]);
-			}
-		};
-
-		process_rows(src.height, row_func);
-	}*/
 
 
 	void grayscale(Image const& src, gray::Image const& dst)
@@ -1768,26 +1754,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		//grayscale_rgba(src, dst);
-
-		constexpr static auto red = id_cast(RGB::R);
-		constexpr static auto green = id_cast(RGB::G);
-		constexpr static auto blue = id_cast(RGB::B);
-
-		auto const row_func = [&](u32 y)
-		{
-			auto s = channel_row_begin(src, y);
-			auto r = s[red];
-			auto g = s[green];
-			auto b = s[blue];
-			auto d = row_begin(dst, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				d[x] = rgb_grayscale_standard(r[x], g[x], b[x]);
-			}
-		};
-
-		process_rows(src.height, row_func);
+		grayscale_rgb(src, dst);
 	}
 
 
@@ -1795,26 +1762,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		//grayscale_rgba(src, dst);
-
-		constexpr static auto red = id_cast(RGB::R);
-		constexpr static auto green = id_cast(RGB::G);
-		constexpr static auto blue = id_cast(RGB::B);
-
-		auto const row_func = [&](u32 y)
-		{
-			auto s = channel_row_begin(src, y);
-			auto r = s[red];
-			auto g = s[green];
-			auto b = s[blue];
-			auto d = row_begin(dst, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				d[x] = rgb_grayscale_standard(r[x], g[x], b[x]);
-			}
-		};
-
-		process_rows(src.height, row_func);
+		grayscale_rgb(src, dst);
 	}
 
 
@@ -1822,26 +1770,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		//grayscale_rgba(src, dst);
-
-		constexpr static auto red = id_cast(RGB::R);
-		constexpr static auto green = id_cast(RGB::G);
-		constexpr static auto blue = id_cast(RGB::B);
-
-		auto const row_func = [&](u32 y)
-		{
-			auto s = channel_row_begin(src, y);
-			auto r = s[red];
-			auto g = s[green];
-			auto b = s[blue];
-			auto d = row_begin(dst, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				d[x] = rgb_grayscale_standard(r[x], g[x], b[x]);
-			}
-		};
-
-		process_rows(src.height, row_func);
+		grayscale_rgb(src, dst);
 	}
 
 
@@ -1849,26 +1778,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		//grayscale_rgba(src, dst);
-
-		constexpr static auto red = id_cast(RGB::R);
-		constexpr static auto green = id_cast(RGB::G);
-		constexpr static auto blue = id_cast(RGB::B);
-
-		auto const row_func = [&](u32 y)
-		{
-			auto s = channel_row_begin(src, y);
-			auto r = s[red];
-			auto g = s[green];
-			auto b = s[blue];
-			auto d = row_begin(dst, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				d[x] = rgb_grayscale_standard(r[x], g[x], b[x]);
-			}
-		};
-
-		process_rows(src.height, row_func);
+		grayscale_rgb(src, dst);
 	}
 
 
@@ -1877,26 +1787,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		//grayscale_rgb(src, dst);
-
-		constexpr static auto red = id_cast(RGB::R);
-		constexpr static auto green = id_cast(RGB::G);
-		constexpr static auto blue = id_cast(RGB::B);
-
-		auto const row_func = [&](u32 y)
-		{
-			auto s = channel_row_begin(src, y);
-			auto r = s[red];
-			auto g = s[green];
-			auto b = s[blue];
-			auto d = row_begin(dst, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				d[x] = rgb_grayscale_standard(r[x], g[x], b[x]);
-			}
-		};
-
-		process_rows(src.height, row_func);
+		grayscale_rgb(src, dst);
 	}
 
 
@@ -1904,26 +1795,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		//grayscale_rgb(src, dst);
-
-		constexpr static auto red = id_cast(RGB::R);
-		constexpr static auto green = id_cast(RGB::G);
-		constexpr static auto blue = id_cast(RGB::B);
-
-		auto const row_func = [&](u32 y)
-		{
-			auto s = channel_row_begin(src, y);
-			auto r = s[red];
-			auto g = s[green];
-			auto b = s[blue];
-			auto d = row_begin(dst, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				d[x] = rgb_grayscale_standard(r[x], g[x], b[x]);
-			}
-		};
-
-		process_rows(src.height, row_func);
+		grayscale_rgb(src, dst);
 	}
 
 
@@ -1931,26 +1803,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		//grayscale_rgb(src, dst);
-
-		constexpr static auto red = id_cast(RGB::R);
-		constexpr static auto green = id_cast(RGB::G);
-		constexpr static auto blue = id_cast(RGB::B);
-
-		auto const row_func = [&](u32 y)
-		{
-			auto s = channel_row_begin(src, y);
-			auto r = s[red];
-			auto g = s[green];
-			auto b = s[blue];
-			auto d = row_begin(dst, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				d[x] = rgb_grayscale_standard(r[x], g[x], b[x]);
-			}
-		};
-
-		process_rows(src.height, row_func);
+		grayscale_rgb(src, dst);
 	}
 
 
@@ -1958,26 +1811,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		//grayscale_rgb(src, dst);
-
-		constexpr static auto red = id_cast(RGB::R);
-		constexpr static auto green = id_cast(RGB::G);
-		constexpr static auto blue = id_cast(RGB::B);
-
-		auto const row_func = [&](u32 y)
-		{
-			auto s = channel_row_begin(src, y);
-			auto r = s[red];
-			auto g = s[green];
-			auto b = s[blue];
-			auto d = row_begin(dst, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				d[x] = rgb_grayscale_standard(r[x], g[x], b[x]);
-			}
-		};
-
-		process_rows(src.height, row_func);
+		grayscale_rgb(src, dst);
 	}
 
 
@@ -2006,6 +1840,8 @@ namespace libimage
 
 		view1.image_data = image.channel_data[ch];
 
+		assert(verify(view1));
+
 		return view1;
 	}
 
@@ -2024,6 +1860,8 @@ namespace libimage
 		view1.height = view.height;
 
 		view1.image_data = view.image_channel_data[ch];
+
+		assert(verify(view1));
 
 		return view1;
 	}
@@ -2047,6 +1885,8 @@ namespace libimage
 
 		view1.image_data = image.channel_data[ch];
 
+		assert(verify(view1));
+
 		return view1;
 	}
 
@@ -2065,6 +1905,8 @@ namespace libimage
 		view1.height = view.height;
 
 		view1.image_data = view.image_channel_data[ch];
+
+		assert(verify(view1));
 
 		return view1;
 	}
@@ -2225,4 +2067,143 @@ namespace libimage
 
 		do_alpha_blend(src, cur_dst, cur_dst);
 	}
+}
+
+
+/* transform */
+
+namespace libimage
+{
+	lut_t to_lut(u8_to_u8_f const& f)
+	{
+		lut_t lut = { 0 };
+
+		for (u32 i = 0; i < 256; ++i)
+		{
+			lut[i] = f(i);
+		}
+
+		//process_rows(256, [&](u32 i) { lut[i] = f(i); });
+
+		return lut;
+	}
+
+
+	using lut_r32_t = std::array<r32, 256>;
+
+
+	static lut_r32_t to_lut_r32(lut_t const& lut)
+	{
+		lut_r32_t lut_r32 = { 0 };
+
+		for (u32 i = 0; i < 256; ++i)
+		{
+			lut_r32[i] = to_channel_r32(lut[i]);
+		}
+
+		//process_rows(256, [&](u32 i) { lut_r32[i] = to_channel_r32(lut[i]); });
+
+		return lut_r32;
+	}
+
+
+	template <class IMG_S, class IMG_D>
+	static void do_transform_lut(IMG_S const& src, IMG_D const& dst, lut_t const& lut)
+	{
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = lut[s[x]];
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	template <class IMG_S, class IMG_D>
+	static void do_transform_lut_r32(IMG_S const& src, IMG_D const& dst, lut_t const& lut)
+	{
+		auto lut_r32 = to_lut_r32(lut);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = lut_r32[s[x]];
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void transform(gray::Image const& src, gray::Image const& dst, lut_t const& lut)
+	{
+		assert(verify(src, dst));
+
+		do_transform_lut(src, dst, lut);
+	}
+
+
+	void transform(gray::Image const& src, gray::View const& dst, lut_t const& lut)
+	{
+		assert(verify(src, dst));
+
+		do_transform_lut(src, dst, lut);
+	}
+
+
+	void transform(gray::View const& src, gray::Image const& dst, lut_t const& lut)
+	{
+		assert(verify(src, dst));
+
+		do_transform_lut(src, dst, lut);
+	}
+
+
+	void transform(gray::View const& src, gray::View const& dst, lut_t const& lut)
+	{
+		assert(verify(src, dst));
+
+		do_transform_lut(src, dst, lut);
+	}
+
+
+	void transform(Image1Cr32 const& src, Image1Cr32 const& dst, lut_t const& lut)
+	{
+		assert(verify(src, dst));
+
+		do_transform_lut_r32(src, dst, lut);
+	}
+
+
+	void transform(Image1Cr32 const& src, View1Cr32 const& dst, lut_t const& lut)
+	{
+		assert(verify(src, dst));
+
+		do_transform_lut_r32(src, dst, lut);
+	}
+
+
+	void transform(View1Cr32 const& src, Image1Cr32 const& dst, lut_t const& lut)
+	{
+		assert(verify(src, dst));
+
+		do_transform_lut_r32(src, dst, lut);
+	}
+
+
+	void transform(View1Cr32 const& src, View1Cr32 const& dst, lut_t const& lut)
+	{
+		assert(verify(src, dst));
+
+		do_transform_lut_r32(src, dst, lut);
+	}
+
 }

@@ -128,6 +128,13 @@ namespace libimage
 	};
 
 
+	template <size_t N>
+	inline r32* get_channel(ImageCHr32<N> const& image, RGBA ch)
+	{
+		return image.channel_data[id_cast(ch)];
+	}
+
+
 	using Image4Cr32 = ImageCHr32<4>;
 
 
@@ -562,6 +569,36 @@ namespace libimage
 	void alpha_blend(View4Cr32 const& src, Image3Cr32 const& cur_dst);
 
 	void alpha_blend(View4Cr32 const& src, View3Cr32 const& cur_dst);
+}
+
+
+/* transform */
+
+namespace libimage
+{
+	using lut_t = std::array<u8, 256>;
+
+	using u8_to_u8_f = std::function<u8(u8)>;
+
+	lut_t to_lut(u8_to_u8_f const& f);
+
+
+	void transform(gray::Image const& src, gray::Image const& dst, lut_t const& lut);
+
+	void transform(gray::Image const& src, gray::View const& dst, lut_t const& lut);
+
+	void transform(gray::View const& src, gray::Image const& dst, lut_t const& lut);
+
+	void transform(gray::View const& src, gray::View const& dst, lut_t const& lut);
+
+
+	void transform(Image1Cr32 const& src, Image1Cr32 const& dst, lut_t const& lut);
+
+	void transform(Image1Cr32 const& src, View1Cr32 const& dst, lut_t const& lut);
+
+	void transform(View1Cr32 const& src, Image1Cr32 const& dst, lut_t const& lut);
+
+	void transform(View1Cr32 const& src, View1Cr32 const& dst, lut_t const& lut);
 }
 
 
