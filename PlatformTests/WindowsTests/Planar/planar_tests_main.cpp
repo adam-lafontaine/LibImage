@@ -602,9 +602,27 @@ void for_each_pixel_test()
 
 	write_image(caddy, "light_dark_1.bmp");
 
+	Image rgba;
+	img::read_image_from_file(CORVETTE_PATH, rgba);
+	width = rgba.width;
+	height = rgba.height;
+	
+	img::Image3Cr32 rgb;
+	img::make_image(rgb, width, height);
+	auto red = img::select_channel(rgb, img::RGB::R);
+
+	img::convert(rgba, rgb);
+
+	img::for_each_pixel(red, [](r32& p) { p = 1.0f - p; });
+
+	img::convert(rgb, rgba);
+	write_image(rgba, "invert_green.bmp");
+
 	img::destroy_image(vette);
 	img::destroy_image(caddy);
 	img::destroy_image(caddy1);
+	img::destroy_image(rgba);
+	img::destroy_image(rgb);
 }
 
 
