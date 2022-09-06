@@ -197,6 +197,20 @@ namespace libimage
 			lhs.width == rhs.width &&
 			lhs.height == rhs.height;
 	}
+
+
+	template <class IMG>
+	static bool verify(IMG const& image, Range2Du32 const& range)
+	{
+		return
+			verify(image) &&
+			range.x_begin < range.x_end &&
+			range.y_begin < range.y_end &&
+			range.x_begin < image.width &&
+			range.x_end <= image.width &&
+			range.y_begin < image.height &&
+			range.y_end <= image.height;
+	}
 }
 
 #endif // !NDEBUG
@@ -537,7 +551,7 @@ namespace libimage
 
 	View4Cr32 sub_view(Image4Cr32 const& image, Range2Du32 const& range)
 	{
-		assert(verify(image));
+		assert(verify(image, range));
 
 		auto view = do_sub_view(image, range);
 
@@ -590,7 +604,7 @@ namespace libimage
 
 	View3Cr32 sub_view(Image3Cr32 const& image, Range2Du32 const& range)
 	{
-		assert(verify(image));
+		assert(verify(image, range));
 
 		auto view = do_sub_view(image, range);
 
@@ -602,7 +616,7 @@ namespace libimage
 
 	View3Cr32 sub_view(View3Cr32 const& view, Range2Du32 const& range)
 	{
-		assert(verify(view));
+		assert(verify(view, range));
 
 		auto sub_view = do_sub_view(view, range);
 
@@ -653,7 +667,7 @@ namespace libimage
 			view3.image_channel_data[ch] = view.image_channel_data[ch];
 		}
 
-		assert(verify(view));
+		assert(verify(view3));
 
 		return view3;
 	}
@@ -734,9 +748,7 @@ namespace libimage
 
 	gray::View make_view(gray::Image const& image)
 	{
-		assert(image.width);
-		assert(image.height);
-		assert(image.data);
+		assert(verify(image));
 
 		gray::View view;
 
@@ -749,15 +761,15 @@ namespace libimage
 		view.width = image.width;
 		view.height = image.height;
 
+		assert(verify(view));
+
 		return view;
 	}
 
 
 	gray::View sub_view(gray::Image const& image, Range2Du32 const& range)
 	{
-		assert(image.width);
-		assert(image.height);
-		assert(image.data);
+		assert(verify(image, range));
 
 		gray::View view;
 
@@ -767,8 +779,7 @@ namespace libimage
 		view.width = range.x_end - range.x_begin;
 		view.height = range.y_end - range.y_begin;
 
-		assert(view.width);
-		assert(view.height);
+		assert(verify(view));
 
 		return view;
 	}
@@ -776,14 +787,7 @@ namespace libimage
 
 	gray::View sub_view(gray::View const& view, Range2Du32 const& range)
 	{
-		assert(view.width);
-		assert(view.height);
-		assert(view.image_data);
-
-		assert(range.x_begin >= view.x_begin);
-		assert(range.x_end <= view.x_end);
-		assert(range.y_begin >= view.y_begin);
-		assert(range.y_end <= view.y_end);
+		assert(verify(view, range));
 
 		gray::View sub_view;
 
@@ -796,8 +800,7 @@ namespace libimage
 		sub_view.width = range.x_end - range.x_begin;
 		sub_view.height = range.y_end - range.y_begin;
 
-		assert(sub_view.width);
-		assert(sub_view.height);
+		assert(verify(sub_view));
 
 		return sub_view;
 	}
@@ -875,9 +878,7 @@ namespace libimage
 
 	View1Cr32 make_view(Image1Cr32 const& image)
 	{
-		assert(image.width);
-		assert(image.height);
-		assert(image.data);
+		assert(verify(image));
 
 		View1Cr32 view;
 
@@ -896,9 +897,7 @@ namespace libimage
 	
 	View1Cr32 sub_view(Image1Cr32 const& image, Range2Du32 const& range)
 	{
-		assert(image.width);
-		assert(image.height);
-		assert(image.data);
+		assert(verify(image, range));
 
 		View1Cr32 view;
 
@@ -917,14 +916,7 @@ namespace libimage
 
 	View1Cr32 sub_view(View1Cr32 const& view, Range2Du32 const& range)
 	{
-		assert(view.width);
-		assert(view.height);
-		assert(view.image_data);
-
-		assert(range.x_begin >= view.x_begin);
-		assert(range.x_end <= view.x_end);
-		assert(range.y_begin >= view.y_begin);
-		assert(range.y_end <= view.y_end);
+		assert(verify(view, range));
 
 		View1Cr32 sub_view;
 
@@ -1636,16 +1628,7 @@ namespace libimage
 	{
 		verify(image);
 
-		auto const row_func = [&](u32 y)
-		{
-			auto row = row_begin(image, y);
-			for (u32 x = 0; x < image.width; ++x)
-			{
-				func(row[x]);
-			}
-		};
-
-		process_rows(image.height, row_func);
+		do_for_each_pixel(image, func);
 	}
 
 
@@ -1653,16 +1636,7 @@ namespace libimage
 	{
 		verify(view);
 
-		auto const row_func = [&](u32 y)
-		{
-			auto row = row_begin(view, y);
-			for (u32 x = 0; x < view.width; ++x)
-			{
-				func(row[x]);
-			}
-		};
-
-		process_rows(view.height, row_func);
+		do_for_each_pixel(view, func);
 	}
 
 
@@ -1670,16 +1644,7 @@ namespace libimage
 	{
 		verify(image);
 
-		auto const row_func = [&](u32 y)
-		{
-			auto row = row_begin(image, y);
-			for (u32 x = 0; x < image.width; ++x)
-			{
-				func(row[x]);
-			}
-		};
-
-		process_rows(image.height, row_func);
+		do_for_each_pixel(image, func);
 	}
 
 
@@ -1687,16 +1652,7 @@ namespace libimage
 	{
 		verify(view);
 
-		auto const row_func = [&](u32 y)
-		{
-			auto row = row_begin(view, y);
-			for (u32 x = 0; x < view.width; ++x)
-			{
-				func(row[x]);
-			}
-		};
-
-		process_rows(view.height, row_func);
+		do_for_each_pixel(view, func);
 	}
 }
 

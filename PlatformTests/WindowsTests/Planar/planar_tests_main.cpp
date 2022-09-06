@@ -573,6 +573,11 @@ void for_each_pixel_test()
 	width = caddy.width;
 	height = caddy.height;
 
+	right.x_begin = width / 2;
+	right.x_end = width;
+	right.y_begin = 0;
+	right.y_end = height;
+
 	Range2Du32 left{};
 	left.x_begin = 0;
 	left.x_end = width / 2;
@@ -586,8 +591,8 @@ void for_each_pixel_test()
 	auto caddy1_left = img::sub_view(caddy1, left);
 	auto caddy1_right = img::sub_view(caddy1, right);
 
-	img::for_each_pixel(caddy1_left, [](r32& p) { p = p < 0.1f ? 0.0f : p - 0.1f; });
-	img::for_each_pixel(caddy1_right, [](r32& p) { p = p > 0.9f ? 1.0f : p + 0.1f; });
+	img::for_each_pixel(caddy1_left, [](r32& p) { p = (p < 0.1f) ? 0.0f : (p - 0.1f); });
+	img::for_each_pixel(caddy1_right, [](r32& p) { p = (p > 0.9f) ? 1.0f : (p + 0.1f); });
 
 	auto caddy_left = img::sub_view(caddy, left);
 	auto caddy_right = img::sub_view(caddy, right);
