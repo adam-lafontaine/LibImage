@@ -2,7 +2,6 @@
 
 #include <cstdlib>
 #include <algorithm>
-#include <array>
 #include <cmath>
 
 
@@ -1517,8 +1516,6 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		//copy_3_channels(src, dst);
-
 		copy_n_channels(src, dst);
 	}
 
@@ -2089,24 +2086,6 @@ namespace libimage
 	}
 
 
-	using lut_r32_t = std::array<r32, 256>;
-
-
-	static lut_r32_t to_lut_r32(lut_t const& lut)
-	{
-		lut_r32_t lut_r32 = { 0 };
-
-		for (u32 i = 0; i < 256; ++i)
-		{
-			lut_r32[i] = to_channel_r32(lut[i]);
-		}
-
-		//process_rows(256, [&](u32 i) { lut_r32[i] = to_channel_r32(lut[i]); });
-
-		return lut_r32;
-	}
-
-
 	template <class IMG_S, class IMG_D>
 	static void do_transform_lut(IMG_S const& src, IMG_D const& dst, lut_t const& lut)
 	{
@@ -2124,18 +2103,16 @@ namespace libimage
 	}
 
 
-	template <class IMG_S, class IMG_D>
-	static void do_transform_lut_r32(IMG_S const& src, IMG_D const& dst, lut_t const& lut)
+	template <class IMG_1C_SRC, class IMG_1C_DST>
+	static void do_transform_r32(IMG_1C_SRC const& src, IMG_1C_DST const& dst, r32_to_r32_f const& func)
 	{
-		auto lut_r32 = to_lut_r32(lut);
-
 		auto const row_func = [&](u32 y)
 		{
 			auto s = row_begin(src, y);
 			auto d = row_begin(dst, y);
 			for (u32 x = 0; x < src.width; ++x)
 			{
-				d[x] = lut_r32[s[x]];
+				d[x] = func(s[x]);
 			}
 		};
 
@@ -2175,35 +2152,35 @@ namespace libimage
 	}
 
 
-	void transform(Image1Cr32 const& src, Image1Cr32 const& dst, lut_t const& lut)
+	void transform(Image1Cr32 const& src, Image1Cr32 const& dst, r32_to_r32_f const& func)
 	{
 		assert(verify(src, dst));
 
-		do_transform_lut_r32(src, dst, lut);
+		do_transform_r32(src, dst, func);
 	}
 
 
-	void transform(Image1Cr32 const& src, View1Cr32 const& dst, lut_t const& lut)
+	void transform(Image1Cr32 const& src, View1Cr32 const& dst, r32_to_r32_f const& func)
 	{
 		assert(verify(src, dst));
 
-		do_transform_lut_r32(src, dst, lut);
+		do_transform_r32(src, dst, func);
 	}
 
 
-	void transform(View1Cr32 const& src, Image1Cr32 const& dst, lut_t const& lut)
+	void transform(View1Cr32 const& src, Image1Cr32 const& dst, r32_to_r32_f const& func)
 	{
 		assert(verify(src, dst));
 
-		do_transform_lut_r32(src, dst, lut);
+		do_transform_r32(src, dst, func);
 	}
 
 
-	void transform(View1Cr32 const& src, View1Cr32 const& dst, lut_t const& lut)
+	void transform(View1Cr32 const& src, View1Cr32 const& dst, r32_to_r32_f const& func)
 	{
 		assert(verify(src, dst));
 
-		do_transform_lut_r32(src, dst, lut);
+		do_transform_r32(src, dst, func);
 	}
 
 }

@@ -3,6 +3,7 @@
 #include "defines.hpp"
 
 #include <functional>
+#include <array>
 
 
 namespace libimage
@@ -158,7 +159,7 @@ namespace libimage
 
 		union
 		{
-			Range2Du32 range;
+			Range2Du32 range = {};
 
 			struct
 			{
@@ -582,6 +583,8 @@ namespace libimage
 
 	lut_t to_lut(u8_to_u8_f const& f);
 
+	using r32_to_r32_f = std::function<r32(r32)>;
+
 
 	void transform(gray::Image const& src, gray::Image const& dst, lut_t const& lut);
 
@@ -592,13 +595,13 @@ namespace libimage
 	void transform(gray::View const& src, gray::View const& dst, lut_t const& lut);
 
 
-	void transform(Image1Cr32 const& src, Image1Cr32 const& dst, lut_t const& lut);
+	void transform(Image1Cr32 const& src, Image1Cr32 const& dst, r32_to_r32_f const& func);
 
-	void transform(Image1Cr32 const& src, View1Cr32 const& dst, lut_t const& lut);
+	void transform(Image1Cr32 const& src, View1Cr32 const& dst, r32_to_r32_f const& func);
 
-	void transform(View1Cr32 const& src, Image1Cr32 const& dst, lut_t const& lut);
+	void transform(View1Cr32 const& src, Image1Cr32 const& dst, r32_to_r32_f const& func);
 
-	void transform(View1Cr32 const& src, View1Cr32 const& dst, lut_t const& lut);
+	void transform(View1Cr32 const& src, View1Cr32 const& dst, r32_to_r32_f const& func);
 }
 
 

@@ -94,6 +94,7 @@ void for_each_pixel_test();
 void grayscale_test();
 void select_channel_test();
 void alpha_blend_test();
+void transform_test();
 //void binary_test();
 //void contrast_test();
 //void blur_test();
@@ -128,6 +129,7 @@ int main()
 	grayscale_test();
 	select_channel_test();
 	alpha_blend_test();
+	transform_test();
 	//binary_test();
 	//contrast_test();
 	//blur_test();
@@ -140,18 +142,19 @@ int main()
 
 void read_write_image_test()
 {
-	auto title = "read_write_image_test";
+	auto title = "read_write_test";
 	printf("\n%s:\n", title);
 	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
 	Image image;
 	img::read_image_from_file(CORVETTE_PATH, image);
-	img::write_image(image, out_dir / "corvette.bmp");
+	write_image(image, "corvette.bmp");
 
 	GrayImage gray;
 	img::read_image_from_file(CADILLAC_PATH, gray);
-	img::write_image(gray, out_dir / "cadillac_gray.bmp");
+	write_image(gray, "cadillac_gray.bmp");
 
 	img::destroy_image(image);
 	img::destroy_image(gray);
@@ -164,6 +167,7 @@ void resize_test()
 	printf("\n%s:\n", title);
 	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
 	Image image;
 	img::read_image_from_file(CORVETTE_PATH, image);
@@ -174,13 +178,13 @@ void resize_test()
 	vertical.width = width / 2;
 	vertical.height = height * 2;
 	img::resize_image(image, vertical);
-	img::write_image(vertical, out_dir / "vertical.bmp");
+	write_image(vertical, "vertical.bmp");
 
 	Image horizontal;
 	horizontal.width = width * 2;
 	horizontal.height = height / 2;
 	img::resize_image(image, horizontal);
-	img::write_image(horizontal, out_dir / "horizontal.bmp");
+	write_image(horizontal, "horizontal.bmp");
 
 	GrayImage gray;
 	img::read_image_from_file(CADILLAC_PATH, gray);
@@ -191,13 +195,13 @@ void resize_test()
 	vertical_gray.width = width / 2;
 	vertical_gray.height = height * 2;
 	img::resize_image(gray, vertical_gray);
-	img::write_image(vertical_gray, out_dir / "vertical_gray.bmp");
+	write_image(vertical_gray, "vertical_gray.bmp");
 
 	GrayImage horizontal_gray;
 	horizontal_gray.width = width * 2;
 	horizontal_gray.height = height / 2;
 	img::resize_image(gray, horizontal_gray);
-	img::write_image(horizontal_gray, out_dir / "horizontal_gray.bmp");
+	write_image(horizontal_gray, "horizontal_gray.bmp");
 
 	img::destroy_image(image);
 	img::destroy_image(vertical);
@@ -214,6 +218,7 @@ void convert_test()
 	printf("\n%s:\n", title);
 	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
 	Image image;
 	img::read_image_from_file(CORVETTE_PATH, image);
@@ -229,7 +234,7 @@ void convert_test()
 	img::convert(image, image4);
 	img::convert(image4, image_dst);
 
-	img::write_image(image_dst, out_dir / "convert4.bmp");
+	write_image(image_dst, "convert4.bmp");
 
 	img::Image3Cr32 image3;
 	img::make_image(image3, width, height);
@@ -237,7 +242,7 @@ void convert_test()
 	img::convert(image, image3);
 	img::convert(image3, image_dst);
 
-	img::write_image(image_dst, out_dir / "convert3.bmp");
+	write_image(image_dst, "convert3.bmp");
 
 	GrayImage gray;
 	img::read_image_from_file(CADILLAC_PATH, gray);
@@ -253,7 +258,7 @@ void convert_test()
 	img::convert(gray, image1);
 	img::convert(image1, gray_dst);
 
-	img::write_image(gray_dst, out_dir / "convert1.bmp");
+	write_image(gray_dst, "convert1.bmp");
 
 	img::destroy_image(image);
 	img::destroy_image(image_dst);
@@ -271,6 +276,7 @@ void view_test()
 	printf("\n%s:\n", title);
 	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
 	Image vette;
 	img::read_image_from_file(CORVETTE_PATH, vette);
@@ -303,7 +309,7 @@ void view_test()
 	img::convert(sub3, dst3);
 	img::convert(sub4, dst4);
 
-	img::write_image(vette, out_dir / "swap.bmp");
+	write_image(vette, "swap.bmp");
 
 	GrayImage caddy;
 	img::read_image_from_file(CADILLAC_PATH, caddy);
@@ -328,7 +334,7 @@ void view_test()
 
 	img::convert(sub1, dst1);
 
-	img::write_image(caddy, out_dir / "copy.bmp");		
+	write_image(caddy, "copy.bmp");		
 
 	img::destroy_image(vette);
 	img::destroy_image(vette3);
@@ -343,6 +349,7 @@ void fill_test()
 	printf("\n%s:\n", title);
 	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
 	u32 width = 800;
 	u32 height = 800;
@@ -379,22 +386,22 @@ void fill_test()
 	auto bottom_right_view = img::sub_view(image, bottom_right);
 
 	img::fill(image, red);
-	img::write_image(image, out_dir / "fill_01.bmp");
+	write_image(image, "fill_01.bmp");
 
 	img::fill(left_view, green);
-	img::write_image(image, out_dir / "fill_02.bmp");
+	write_image(image, "fill_02.bmp");
 
 	img::Image3Cr32 image3;
 	img::make_image(image3, width / 2, height / 2);
 	img::fill(image3, blue);
 	img::convert(image3, top_left_view);
-	img::write_image(image, out_dir / "fill_03.bmp");
+	write_image(image, "fill_03.bmp");
 
 	img::Image4Cr32 image4;	
 	img::make_image(image4, width / 2, height / 2);
 	img::fill(image4, white);
 	img::convert(image4, bottom_right_view);
-	img::write_image(image, out_dir / "fill_04.bmp");
+	write_image(image, "fill_04.bmp");
 
 	img::destroy_image(image3);
 	img::destroy_image(image4);
@@ -414,7 +421,7 @@ void fill_test()
 		img::fill(view, img::to_pixel(red, 255, 0));
 	}
 	img::convert(image3, image);
-	img::write_image(image, out_dir / "fill_view3.bmp");
+	write_image(image, "fill_view3.bmp");
 
 	img::make_image(image4, width, height);
 	u32 y_step = height / 5;
@@ -430,7 +437,7 @@ void fill_test()
 		img::fill(view, img::to_pixel(255, 0, blue));
 	}
 	img::convert(image4, image);
-	img::write_image(image, out_dir / "fill_view4.bmp");
+	write_image(image, "fill_view4.bmp");
 
 	GrayImage gray;
 	img::make_image(gray, width, height);
@@ -439,11 +446,11 @@ void fill_test()
 	auto gr_bottom_right_view = img::sub_view(gray, bottom_right);
 
 	img::fill(gray, 128);
-	img::write_image(gray, out_dir / "gray_fill_01.bmp");
+	write_image(gray, "gray_fill_01.bmp");
 
 	img::fill(gr_top_left_view, 0);
 	img::fill(gr_bottom_right_view, 255);
-	img::write_image(gray, out_dir / "gray_fill_02.bmp");
+	write_image(gray, "gray_fill_02.bmp");
 
 	img::destroy_image(image);
 	img::destroy_image(image3);
@@ -790,7 +797,60 @@ void alpha_blend_test()
 }
 
 
+void transform_test()
+{
+	auto title = "transform_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
+	auto const invert = [](u8 p) { return 255 - p; };
+	auto const lut = img::to_lut(invert);
+
+	GrayImage vette;
+	img::read_image_from_file(CORVETTE_PATH, vette);
+	auto width = vette.width;
+	auto height = vette.height;
+
+	GrayImage gr_read;
+	img::read_image_from_file(CADILLAC_PATH, gr_read);
+
+	GrayImage caddy;
+	caddy.width = width;
+	caddy.height = height;
+	img::resize_image(gr_read, caddy);
+
+	GrayImage gr_dst;
+	img::make_image(gr_dst, width, height);
+
+	Range2Du32 right{};
+	right.x_begin = width / 2;
+	right.x_end = width;
+	right.y_begin = 0;
+	right.y_end = height;
+
+	Range2Du32 left{};
+	left.x_begin = 0;
+	left.x_end = width / 2;
+	left.y_begin = 0;
+	left.y_end = height;
+
+	auto vette_right = img::sub_view(vette, right);
+	auto caddy_left = img::sub_view(caddy, left);
+	auto gr_dst_right = img::sub_view(gr_dst, right);
+	auto gr_dst_left = img::sub_view(gr_dst, left);
+
+	img::transform(caddy_left, gr_dst_left, lut);
+	img::transform(vette_right, gr_dst_right, lut);
+
+	write_image(gr_dst, "transform_gray.bmp");
+
+	img::destroy_image(vette);
+	img::destroy_image(gr_read);
+	img::destroy_image(caddy);
+	img::destroy_image(gr_dst);
+}
 
 
 
