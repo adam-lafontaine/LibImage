@@ -846,10 +846,38 @@ void transform_test()
 
 	write_image(gr_dst, "transform_gray.bmp");
 
+	img::Image1Cr32 vette1;
+	img::make_image(vette1, width, height);
+	img::convert(vette, vette1);
+
+	img::Image1Cr32 caddy1;
+	img::make_image(caddy1, width, height);
+	img::convert(caddy, caddy1);
+
+	img::Image1Cr32 gr_dst1;
+	img::make_image(gr_dst1, width, height);
+
+	auto vette1_right = img::sub_view(vette1, right);
+	auto caddy1_left = img::sub_view(caddy1, left);
+	auto gr_dst1_right = img::sub_view(gr_dst1, right);
+	auto gr_dst1_left = img::sub_view(gr_dst1, left);
+
+	auto const invert1 = [](r32 p) { return 1.0f - p; };
+
+	img::transform(caddy1_left, gr_dst1_right, invert1);
+	img::transform(vette1_right, gr_dst1_left, invert1);
+
+	img::convert(gr_dst1, gr_dst);
+
+	write_image(gr_dst, "transform_gray1.bmp");
+
 	img::destroy_image(vette);
 	img::destroy_image(gr_read);
 	img::destroy_image(caddy);
 	img::destroy_image(gr_dst);
+	img::destroy_image(vette1);
+	img::destroy_image(caddy1);
+	img::destroy_image(gr_dst1);
 }
 
 
