@@ -432,24 +432,6 @@ namespace libimage
 	void copy(View const& src, View const& dst);
 
 
-	void copy(Image4Cr32 const& src, Image4Cr32 const& dst);
-
-	void copy(Image4Cr32 const& src, View4Cr32 const& dst);
-
-	void copy(View4Cr32 const& src, Image4Cr32 const& dst);
-
-	void copy(View4Cr32 const& src, View4Cr32 const& dst);
-
-
-	void copy(Image3Cr32 const& src, Image3Cr32 const& dst);
-
-	void copy(Image3Cr32 const& src, View3Cr32 const& dst);
-
-	void copy(View3Cr32 const& src, Image3Cr32 const& dst);
-
-	void copy(View3Cr32 const& src, View3Cr32 const& dst);
-
-
 	void copy(gray::Image const& src, gray::Image const& dst);
 
 	void copy(gray::Image const& src, gray::View const& dst);
@@ -459,11 +441,9 @@ namespace libimage
 	void copy(gray::View const& src, gray::View const& dst);
 
 
-	void copy(Image1Cr32 const& src, Image1Cr32 const& dst);
+	void copy(View4Cr32 const& src, View4Cr32 const& dst);
 
-	void copy(Image1Cr32 const& src, View1Cr32 const& dst);
-
-	void copy(View1Cr32 const& src, Image1Cr32 const& dst);
+	void copy(View3Cr32 const& src, View3Cr32 const& dst);
 
 	void copy(View1Cr32 const& src, View1Cr32 const& dst);
 }
@@ -482,8 +462,6 @@ namespace libimage
 
 	void for_each_pixel(gray::View const& image, u8_f const& func);
 
-
-	void for_each_pixel(Image1Cr32 const& image, r32_f const& func);
 
 	void for_each_pixel(View1Cr32 const& image, r32_f const& func);
 
@@ -507,19 +485,11 @@ namespace libimage
 	void for_each_xy(gray::View const& view, xy_f const& func);
 
 
-	void for_each_xy(Image4Cr32 const& image, xy_f const& func);
-
 	void for_each_xy(View4Cr32 const& view, xy_f const& func);
 
+	void for_each_xy(View3Cr32 const& image, xy_f const& func);
 
-	void for_each_xy(Image3Cr32 const& image, xy_f const& func);
-
-	void for_each_xy(Image3Cr32 const& view, xy_f const& func);
-
-
-	void for_each_xy(Image1Cr32 const& image, xy_f const& func);
-
-	void for_each_xy(Image1Cr32 const& view, xy_f const& func);
+	void for_each_xy(View1Cr32 const& view, xy_f const& func);
 }
 
 
@@ -536,20 +506,7 @@ namespace libimage
 	void grayscale(View const& src, gray::View const& dst);
 
 
-	void grayscale(Image4Cr32 const& src, Image1Cr32 const& dst);
-
-	void grayscale(Image4Cr32 const& src, View1Cr32 const& dst);
-
-	void grayscale(View4Cr32 const& src, Image1Cr32 const& dst);
-
 	void grayscale(View4Cr32 const& src, View1Cr32 const& dst);
-
-
-	void grayscale(Image3Cr32 const& src, Image1Cr32 const& dst);
-
-	void grayscale(Image3Cr32 const& src, View1Cr32 const& dst);
-
-	void grayscale(View3Cr32 const& src, Image1Cr32 const& dst);
 
 	void grayscale(View3Cr32 const& src, View1Cr32 const& dst);
 }
@@ -559,12 +516,7 @@ namespace libimage
 
 namespace libimage
 {
-	View1Cr32 select_channel(Image4Cr32 const& image, RGBA channel);
-
 	View1Cr32 select_channel(View4Cr32 const& image, RGBA channel);
-
-
-	View1Cr32 select_channel(Image3Cr32 const& image, RGB channel);
 
 	View1Cr32 select_channel(View3Cr32 const& image, RGB channel);
 }
@@ -574,28 +526,7 @@ namespace libimage
 
 namespace libimage
 {
-	void alpha_blend(Image4Cr32 const& src, Image3Cr32 const& cur, Image3Cr32 const& dst);
-
-	void alpha_blend(Image4Cr32 const& src, Image3Cr32 const& cur, View3Cr32 const& dst);
-
-	void alpha_blend(Image4Cr32 const& src, View3Cr32 const& cur, Image3Cr32 const& dst);
-
-	void alpha_blend(Image4Cr32 const& src, View3Cr32 const& cur, View3Cr32 const& dst);
-
-	void alpha_blend(View4Cr32 const& src, Image3Cr32 const& cur, Image3Cr32 const& dst);
-
-	void alpha_blend(View4Cr32 const& src, Image3Cr32 const& cur, View3Cr32 const& dst);
-
-	void alpha_blend(View4Cr32 const& src, View3Cr32 const& cur, Image3Cr32 const& dst);
-
 	void alpha_blend(View4Cr32 const& src, View3Cr32 const& cur, View3Cr32 const& dst);
-
-
-	void alpha_blend(Image4Cr32 const& src, Image3Cr32 const& cur_dst);
-
-	void alpha_blend(Image4Cr32 const& src, View3Cr32 const& cur_dst);
-
-	void alpha_blend(View4Cr32 const& src, Image3Cr32 const& cur_dst);
 
 	void alpha_blend(View4Cr32 const& src, View3Cr32 const& cur_dst);
 }
@@ -623,12 +554,6 @@ namespace libimage
 	void transform(gray::View const& src, gray::View const& dst, lut_t const& lut);
 
 
-	void transform(Image1Cr32 const& src, Image1Cr32 const& dst, r32_to_r32_f const& func);
-
-	void transform(Image1Cr32 const& src, View1Cr32 const& dst, r32_to_r32_f const& func);
-
-	void transform(View1Cr32 const& src, Image1Cr32 const& dst, r32_to_r32_f const& func);
-
 	void transform(View1Cr32 const& src, View1Cr32 const& dst, r32_to_r32_f const& func);
 }
 
@@ -638,10 +563,6 @@ namespace libimage
 namespace libimage
 {
 	using r32_to_bool_f = std::function<bool(r32)>;
-
-
-
-	void binarize(View1Cr32 const& src, View1Cr32 const& dst);
 }
 
 

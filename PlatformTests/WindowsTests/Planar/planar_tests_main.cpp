@@ -537,13 +537,15 @@ void copy_test()
 
 	img::Image1Cr32 top1;
 	img::make_image(top1, width, view_height);
+	img::View1Cr32 top_view1 = img::make_view(top1);
 	img::convert(gr_top_view, top1);
 
 	img::Image1Cr32 bottom1;
 	img::make_image(bottom1, width, view_height);
-	img::convert(gr_bottom_view, bottom1);
+	img::View1Cr32 bottom_view1 = img::make_view(bottom1);
+	img::convert(gr_bottom_view, bottom_view1);
 
-	img::copy(bottom1, top1);
+	img::copy(bottom_view1, top_view1);
 
 	img::convert(top1, gr_top_view);
 
@@ -551,6 +553,8 @@ void copy_test()
 
 	img::destroy_image(image);
 	img::destroy_image(gray);
+	img::destroy_image(top1);
+	img::destroy_image(bottom1);
 }
 
 
@@ -621,7 +625,8 @@ void for_each_pixel_test()
 	
 	img::Image3Cr32 rgb;
 	img::make_image(rgb, width, height);
-	auto red = img::select_channel(rgb, img::RGB::R);
+	img::View3Cr32 rgb_view = img::make_view(rgb);
+	auto red = img::select_channel(rgb_view, img::RGB::R);
 
 	img::convert(rgba, rgb);
 
@@ -680,9 +685,11 @@ void grayscale_test()
 
 	img::Image3Cr32 image3;
 	img::make_image(image3, width / 2, height);
+	img::View3Cr32 view3 = img::make_view(image3);
 
 	img::Image4Cr32 image4;
 	img::make_image(image4, width / 2, height);
+	img::View4Cr32 view4 = img::make_view(image4);
 
 	img::convert(left_view, image3);
 	img::convert(right_view, image4);
@@ -696,8 +703,8 @@ void grayscale_test()
 	auto gr_left = img::sub_view(image1, left);
 	auto gr_right = img::sub_view(image1, right);
 
-	img::grayscale(image3, gr_right);
-	img::grayscale(image4, gr_left);
+	img::grayscale(view3, gr_right);
+	img::grayscale(view4, gr_left);
 
 	img::convert(image1, dst);
 
@@ -723,8 +730,9 @@ void select_channel_test()
 	Image vette;
 	img::read_image_from_file(CORVETTE_PATH, vette);
 
-	img::Image3Cr32 vette3;
-	img::make_image(vette3, vette.width, vette.height);
+	img::Image3Cr32 vette_img3;
+	img::make_image(vette_img3, vette.width, vette.height);
+	img::View3Cr32 vette3 = img::make_view(vette_img3);
 	img::convert(vette, vette3);
 
 	GrayImage vette_dst;
@@ -733,8 +741,9 @@ void select_channel_test()
 	Image caddy;
 	img::read_image_from_file(CADILLAC_PATH, caddy);
 
-	img::Image4Cr32 caddy4;
-	img::make_image(caddy4, caddy.width, caddy.height);
+	img::Image4Cr32 caddy_img4;
+	img::make_image(caddy_img4, caddy.width, caddy.height);
+	img::View4Cr32 caddy4 = img::make_view(caddy_img4);
 	img::convert(caddy, caddy4);
 
 	GrayImage caddy_dst;
@@ -750,10 +759,10 @@ void select_channel_test()
 	write_image(caddy_dst, "blue.bmp");
 
 	img::destroy_image(vette);
-	img::destroy_image(vette3);
+	img::destroy_image(vette_img3);
 	img::destroy_image(vette_dst);
 	img::destroy_image(caddy);
-	img::destroy_image(caddy4);
+	img::destroy_image(caddy_img4);
 	img::destroy_image(caddy_dst);
 }
 
@@ -779,19 +788,22 @@ void alpha_blend_test()
 	caddy.height = height;
 	img::resize_image(caddy_read, caddy);
 
-	img::Image4Cr32 vette4;
-	img::make_image(vette4, width, height);
+	img::Image4Cr32 vette_img4;
+	img::make_image(vette_img4, width, height);
+	img::View4Cr32 vette4 = img::make_view(vette_img4);
 	img::convert(vette, vette4);
 
 	auto alpha_view = img::select_channel(vette4, img::RGBA::A);
 	img::for_each_pixel(alpha_view, [](r32& p) { p = 0.5f; });
 
-	img::Image4Cr32 caddy4;
-	img::make_image(caddy4, width, height);
+	img::Image4Cr32 caddy_img4;
+	img::make_image(caddy_img4, width, height);
+	img::View4Cr32 caddy4 = img::make_view(caddy_img4);
 	img::convert(caddy, caddy4);
 
-	img::Image3Cr32 dst3;
-	img::make_image(dst3, width, height);
+	img::Image3Cr32 dst_img3;
+	img::make_image(dst_img3, width, height);
+	img::View3Cr32 dst3 = img::make_view(dst_img3);
 
 	img::alpha_blend(vette4, img::make_rgb_view(caddy4), dst3);
 
@@ -808,9 +820,9 @@ void alpha_blend_test()
 	img::destroy_image(vette);
 	img::destroy_image(caddy_read);
 	img::destroy_image(caddy);
-	img::destroy_image(vette4);
-	img::destroy_image(caddy4);
-	img::destroy_image(dst3);
+	img::destroy_image(vette_img4);
+	img::destroy_image(caddy_img4);
+	img::destroy_image(dst_img3);
 }
 
 

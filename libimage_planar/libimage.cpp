@@ -1456,70 +1456,6 @@ namespace libimage
 	}
 
 
-	void copy(Image4Cr32 const& src, Image4Cr32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		copy_n_channels(src, dst);
-	}
-
-
-	void copy(Image4Cr32 const& src, View4Cr32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		copy_n_channels(src, dst);
-	}
-
-
-	void copy(View4Cr32 const& src, Image4Cr32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		copy_n_channels(src, dst);
-	}
-
-
-	void copy(View4Cr32 const& src, View4Cr32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		copy_n_channels(src, dst);
-	}
-
-
-	void copy(Image3Cr32 const& src, Image3Cr32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		copy_n_channels(src, dst);
-	}
-
-
-	void copy(Image3Cr32 const& src, View3Cr32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		copy_n_channels(src, dst);
-	}
-
-
-	void copy(View3Cr32 const& src, Image3Cr32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		copy_n_channels(src, dst);
-	}
-
-
-	void copy(View3Cr32 const& src, View3Cr32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		copy_n_channels(src, dst);
-	}
-
-
 	void copy(gray::Image const& src, gray::View const& dst)
 	{
 		assert(verify(src, dst));
@@ -1544,27 +1480,19 @@ namespace libimage
 	}
 
 
-	void copy(Image1Cr32 const& src, Image1Cr32 const& dst)
+	void copy(View4Cr32 const& src, View4Cr32 const& dst)
 	{
 		assert(verify(src, dst));
 
-		copy_1_channel(src, dst);
+		copy_n_channels(src, dst);
 	}
 
 
-	void copy(Image1Cr32 const& src, View1Cr32 const& dst)
+	void copy(View3Cr32 const& src, View3Cr32 const& dst)
 	{
 		assert(verify(src, dst));
 
-		copy_1_channel(src, dst);
-	}
-
-
-	void copy(View1Cr32 const& src, Image1Cr32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		copy_1_channel(src, dst);
+		copy_n_channels(src, dst);
 	}
 
 
@@ -1610,14 +1538,6 @@ namespace libimage
 		verify(view);
 
 		do_for_each_pixel(view, func);
-	}
-
-
-	void for_each_pixel(Image1Cr32 const& image, r32_f const& func)
-	{
-		verify(image);
-
-		do_for_each_pixel(image, func);
 	}
 
 
@@ -1680,35 +1600,11 @@ namespace libimage
 	}
 
 
-	void for_each_xy(Image4Cr32 const& image, xy_f const& func)
-	{
-		assert(verify(image));
-
-		do_for_each_xy(image, func);
-	}
-
-
 	void for_each_xy(View4Cr32 const& view, xy_f const& func)
 	{
 		assert(verify(view));
 
 		do_for_each_xy(view, func);
-	}
-
-
-	void for_each_xy(Image3Cr32 const& image, xy_f const& func)
-	{
-		assert(verify(image));
-
-		do_for_each_xy(image, func);
-	}
-
-
-	void for_each_xy(Image1Cr32 const& image, xy_f const& func)
-	{
-		assert(verify(image));
-
-		do_for_each_xy(image, func);
 	}
 }
 
@@ -1806,56 +1702,7 @@ namespace libimage
 	}
 
 
-	void grayscale(Image4Cr32 const& src, Image1Cr32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		grayscale_rgb(src, dst);
-	}
-
-
-	void grayscale(Image4Cr32 const& src, View1Cr32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		grayscale_rgb(src, dst);
-	}
-
-
-	void grayscale(View4Cr32 const& src, Image1Cr32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		grayscale_rgb(src, dst);
-	}
-
-
 	void grayscale(View4Cr32 const& src, View1Cr32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		grayscale_rgb(src, dst);
-	}
-
-
-
-	void grayscale(Image3Cr32 const& src, Image1Cr32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		grayscale_rgb(src, dst);
-	}
-
-
-	void grayscale(Image3Cr32 const& src, View1Cr32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		grayscale_rgb(src, dst);
-	}
-
-
-	void grayscale(View3Cr32 const& src, Image1Cr32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1878,7 +1725,7 @@ namespace libimage
 
 namespace libimage
 {
-	View1Cr32 select_channel(Image4Cr32 const& image, RGBA channel)
+	/*View1Cr32 select_channel(Image4Cr32 const& image, RGBA channel)
 	{
 		assert(verify(image));
 
@@ -1899,7 +1746,7 @@ namespace libimage
 		assert(verify(view1));
 
 		return view1;
-	}
+	}*/
 
 
 	View1Cr32 select_channel(View4Cr32 const& view, RGBA channel)
@@ -1923,7 +1770,7 @@ namespace libimage
 	}
 
 
-	View1Cr32 select_channel(Image3Cr32 const& image, RGB channel)
+	/*View1Cr32 select_channel(Image3Cr32 const& image, RGB channel)
 	{
 		assert(verify(image));
 
@@ -1944,7 +1791,7 @@ namespace libimage
 		assert(verify(view1));
 
 		return view1;
-	}
+	}*/
 
 
 	View1Cr32 select_channel(View3Cr32 const& view, RGB channel)
@@ -2021,99 +1868,12 @@ namespace libimage
 	}
 
 
-	void alpha_blend(Image4Cr32 const& src, Image3Cr32 const& cur, Image3Cr32 const& dst)
-	{		
-		assert(verify(src, cur));
-		assert(verify(src, dst));
-
-		do_alpha_blend(src, cur, dst);
-	}
-
-
-	void alpha_blend(Image4Cr32 const& src, Image3Cr32 const& cur, View3Cr32 const& dst)
-	{
-		assert(verify(src, cur));
-		assert(verify(src, dst));
-
-		do_alpha_blend(src, cur, dst);
-	}
-
-
-	void alpha_blend(Image4Cr32 const& src, View3Cr32 const& cur, Image3Cr32 const& dst)
-	{
-		assert(verify(src, cur));
-		assert(verify(src, dst));
-
-		do_alpha_blend(src, cur, dst);
-	}
-
-
-	void alpha_blend(Image4Cr32 const& src, View3Cr32 const& cur, View3Cr32 const& dst)
-	{
-		assert(verify(src, cur));
-		assert(verify(src, dst));
-
-		do_alpha_blend(src, cur, dst);
-	}
-
-
-	void alpha_blend(View4Cr32 const& src, Image3Cr32 const& cur, Image3Cr32 const& dst)
-	{
-		assert(verify(src, cur));
-		assert(verify(src, dst));
-
-		do_alpha_blend(src, cur, dst);
-	}
-
-
-	void alpha_blend(View4Cr32 const& src, Image3Cr32 const& cur, View3Cr32 const& dst)
-	{
-		assert(verify(src, cur));
-		assert(verify(src, dst));
-
-		do_alpha_blend(src, cur, dst);
-	}
-
-
-	void alpha_blend(View4Cr32 const& src, View3Cr32 const& cur, Image3Cr32 const& dst)
-	{
-		assert(verify(src, cur));
-		assert(verify(src, dst));
-
-		do_alpha_blend(src, cur, dst);
-	}
-
-
 	void alpha_blend(View4Cr32 const& src, View3Cr32 const& cur, View3Cr32 const& dst)
 	{
 		assert(verify(src, cur));
 		assert(verify(src, dst));
 
 		do_alpha_blend(src, cur, dst);
-	}
-
-
-	void alpha_blend(Image4Cr32 const& src, Image3Cr32 const& cur_dst)
-	{
-		assert(verify(src, cur_dst));
-
-		do_alpha_blend(src, cur_dst, cur_dst);
-	}
-
-
-	void alpha_blend(Image4Cr32 const& src, View3Cr32 const& cur_dst)
-	{
-		assert(verify(src, cur_dst));
-
-		do_alpha_blend(src, cur_dst, cur_dst);
-	}
-
-
-	void alpha_blend(View4Cr32 const& src, Image3Cr32 const& cur_dst)
-	{
-		assert(verify(src, cur_dst));
-
-		do_alpha_blend(src, cur_dst, cur_dst);
 	}
 
 
@@ -2208,30 +1968,6 @@ namespace libimage
 		assert(verify(src, dst));
 
 		do_transform_lut(src, dst, lut);
-	}
-
-
-	void transform(Image1Cr32 const& src, Image1Cr32 const& dst, r32_to_r32_f const& func)
-	{
-		assert(verify(src, dst));
-
-		do_transform_r32(src, dst, func);
-	}
-
-
-	void transform(Image1Cr32 const& src, View1Cr32 const& dst, r32_to_r32_f const& func)
-	{
-		assert(verify(src, dst));
-
-		do_transform_r32(src, dst, func);
-	}
-
-
-	void transform(View1Cr32 const& src, Image1Cr32 const& dst, r32_to_r32_f const& func)
-	{
-		assert(verify(src, dst));
-
-		do_transform_r32(src, dst, func);
 	}
 
 
