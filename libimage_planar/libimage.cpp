@@ -1334,38 +1334,6 @@ namespace libimage
 	}
 
 
-	void fill(Image4Cr32 const& image, Pixel color)
-	{
-		assert(verify(image));
-
-		fill_n_channels(image, color);
-	}
-
-
-	void fill(View4Cr32 const& view, Pixel color)
-	{
-		assert(verify(view));
-
-		fill_n_channels(view, color);
-	}
-
-
-	void fill(Image3Cr32 const& image, Pixel color)
-	{
-		assert(verify(image));
-
-		fill_n_channels(image, color);
-	}
-
-
-	void fill(View3Cr32 const& view, Pixel color)
-	{
-		assert(verify(view));
-
-		fill_n_channels(view, color);
-	}
-
-
 	void fill(gray::Image const& image, u8 gray)
 	{
 		assert(verify(image));
@@ -1382,11 +1350,19 @@ namespace libimage
 	}
 
 
-	void fill(Image1Cr32 const& image, u8 gray)
+	void fill(View4Cr32 const& view, Pixel color)
 	{
-		assert(verify(image));
+		assert(verify(view));
 
-		fill_1_channel(image, gray);
+		fill_n_channels(view, color);
+	}
+
+
+	void fill(View3Cr32 const& view, Pixel color)
+	{
+		assert(verify(view));
+
+		fill_n_channels(view, color);
 	}
 
 
@@ -1650,6 +1626,89 @@ namespace libimage
 		verify(view);
 
 		do_for_each_pixel(view, func);
+	}
+}
+
+
+/* for_each_xy */
+
+namespace libimage
+{
+	template <class IMG>
+	static void do_for_each_xy(IMG const& image, xy_f const& func)
+	{
+		auto const row_func = [&](u32 y)
+		{
+			for (u32 x = 0; x < image.width; ++x)
+			{
+				func(x, y);
+			}
+		};
+
+		process_rows(image.height, row_func);
+	}
+
+	void for_each_xy(Image const& image, xy_f const& func)
+	{
+		assert(verify(image));
+
+		do_for_each_xy(image, func);
+	}
+
+
+	void for_each_xy(View const& view, xy_f const& func)
+	{
+		assert(verify(view));
+
+		do_for_each_xy(view, func);
+	}
+
+
+	void for_each_xy(gray::Image const& image, xy_f const& func)
+	{
+		assert(verify(image));
+
+		do_for_each_xy(image, func);
+	}
+
+
+	void for_each_xy(gray::View const& view, xy_f const& func)
+	{
+		assert(verify(view));
+
+		do_for_each_xy(view, func);
+	}
+
+
+	void for_each_xy(Image4Cr32 const& image, xy_f const& func)
+	{
+		assert(verify(image));
+
+		do_for_each_xy(image, func);
+	}
+
+
+	void for_each_xy(View4Cr32 const& view, xy_f const& func)
+	{
+		assert(verify(view));
+
+		do_for_each_xy(view, func);
+	}
+
+
+	void for_each_xy(Image3Cr32 const& image, xy_f const& func)
+	{
+		assert(verify(image));
+
+		do_for_each_xy(image, func);
+	}
+
+
+	void for_each_xy(Image1Cr32 const& image, xy_f const& func)
+	{
+		assert(verify(image));
+
+		do_for_each_xy(image, func);
 	}
 }
 
@@ -2184,3 +2243,5 @@ namespace libimage
 	}
 
 }
+
+

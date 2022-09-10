@@ -91,6 +91,7 @@ void view_test();
 void fill_test();
 void copy_test();
 void for_each_pixel_test();
+void for_each_xy_test();
 void grayscale_test();
 void select_channel_test();
 void alpha_blend_test();
@@ -126,6 +127,7 @@ int main()
 	fill_test();
 	copy_test();
 	for_each_pixel_test();
+	//for_each_xy_test();
 	grayscale_test();
 	select_channel_test();
 	alpha_blend_test();
@@ -393,14 +395,17 @@ void fill_test()
 
 	img::Image3Cr32 image3;
 	img::make_image(image3, width / 2, height / 2);
-	img::fill(image3, blue);
-	img::convert(image3, top_left_view);
+	img::View3Cr32 view3 = img::make_view(image3);
+	img::fill(view3, blue);
+	img::convert(view3, top_left_view);
 	write_image(image, "fill_03.bmp");
 
 	img::Image4Cr32 image4;	
 	img::make_image(image4, width / 2, height / 2);
-	img::fill(image4, white);
-	img::convert(image4, bottom_right_view);
+	img::View4Cr32 view4 = img::make_view(image4);
+
+	img::fill(view4, white);
+	img::convert(view4, bottom_right_view);
 	write_image(image, "fill_04.bmp");
 
 	img::destroy_image(image3);
@@ -630,6 +635,18 @@ void for_each_pixel_test()
 	img::destroy_image(caddy1);
 	img::destroy_image(rgba);
 	img::destroy_image(rgb);
+}
+
+
+void for_each_xy_test()
+{
+	auto title = "for_each_xy_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+
+
 }
 
 

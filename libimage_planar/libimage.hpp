@@ -407,19 +407,13 @@ namespace libimage
 
 	void fill(View const& view, Pixel color);
 
-	void fill(Image4Cr32 const& image, Pixel color);
-
-	void fill(View4Cr32 const& view, Pixel color);
-
-	void fill(Image3Cr32 const& image, Pixel color);
-
-	void fill(View3Cr32 const& view, Pixel color);
-
 	void fill(gray::Image const& image, u8 gray);
 
 	void fill(gray::View const& view, u8 gray);
 
-	void fill(Image1Cr32 const& image, u8 gray);
+	void fill(View4Cr32 const& view, Pixel color);
+
+	void fill(View3Cr32 const& view, Pixel color);
 
 	void fill(View1Cr32 const& image, u8 gray);
 }
@@ -492,6 +486,40 @@ namespace libimage
 	void for_each_pixel(Image1Cr32 const& image, r32_f const& func);
 
 	void for_each_pixel(View1Cr32 const& image, r32_f const& func);
+
+}
+
+
+/* for_each_xy */
+
+namespace libimage
+{
+	using xy_f = std::function<void(u32 x, u32 y)>;
+
+
+	void for_each_xy(Image const& image, xy_f const& func);
+
+	void for_each_xy(View const& view, xy_f const& func);
+
+
+	void for_each_xy(gray::Image const& image, xy_f const& func);
+
+	void for_each_xy(gray::View const& view, xy_f const& func);
+
+
+	void for_each_xy(Image4Cr32 const& image, xy_f const& func);
+
+	void for_each_xy(View4Cr32 const& view, xy_f const& func);
+
+
+	void for_each_xy(Image3Cr32 const& image, xy_f const& func);
+
+	void for_each_xy(Image3Cr32 const& view, xy_f const& func);
+
+
+	void for_each_xy(Image1Cr32 const& image, xy_f const& func);
+
+	void for_each_xy(Image1Cr32 const& view, xy_f const& func);
 }
 
 
@@ -602,6 +630,18 @@ namespace libimage
 	void transform(View1Cr32 const& src, Image1Cr32 const& dst, r32_to_r32_f const& func);
 
 	void transform(View1Cr32 const& src, View1Cr32 const& dst, r32_to_r32_f const& func);
+}
+
+
+/* binarize */
+
+namespace libimage
+{
+	using r32_to_bool_f = std::function<bool(r32)>;
+
+
+
+	void binarize(View1Cr32 const& src, View1Cr32 const& dst);
 }
 
 
