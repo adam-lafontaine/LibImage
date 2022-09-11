@@ -176,13 +176,13 @@ namespace libimage
 	}
 
 
-	static bool verify(Image1Cr32 const& image)
+	static bool verify(Image1r32 const& image)
 	{
 		return image.width && image.height && image.data;
 	}
 
 
-	static bool verify(View1Cr32 const& view)
+	static bool verify(View1r32 const& view)
 	{
 		return view.image_width && view.width && view.height && view.image_data;
 	}
@@ -380,322 +380,7 @@ namespace libimage
 
 		return row_begin(view, y) + x;
 	}
-}
 
-
-/* image templates */
-
-namespace libimage
-{
-
-	template <size_t N>
-	void do_make_image(ImageCHr32<N>& image, u32 width, u32 height)
-	{
-		auto n_pixels = width * height;
-
-		auto data = (r32*)malloc(sizeof(r32) * N * n_pixels);
-		assert(data);
-
-		image.width = width;
-		image.height = height;
-
-		for (u32 ch = 0; ch < N; ++ch)
-		{
-			image.channel_data[ch] = data + ch * n_pixels;
-		}
-	}
-
-
-	template <size_t N>
-	static void do_destroy_image(ImageCHr32<N>& image)
-	{
-		if (image.channel_data[0])
-		{
-			free(image.channel_data[0]);
-			for (u32 ch = 0; ch < N; ++ch)
-			{
-				image.channel_data[ch] = nullptr;
-			}
-		}
-
-		image.width = 0;
-		image.height = 0;
-	}
-
-
-	template <size_t N>
-	static ViewCHr32<N> do_make_view(ImageCHr32<N> const& image)
-	{
-		ViewCHr32<N> view;
-
-		view.image_width = image.width;
-		view.x_begin = 0;
-		view.y_begin = 0;
-		view.x_end = image.width;
-		view.y_end = image.height;
-		view.width = image.width;
-		view.height = image.height;
-
-		for (u32 ch = 0; ch < N; ++ch)
-		{
-			view.image_channel_data[ch] = image.channel_data[ch];
-		}
-
-		return view;
-	}
-
-
-	template <size_t N>
-	static ViewCHr32<N> do_sub_view(ImageCHr32<N> const& image, Range2Du32 const& range)
-	{
-		ViewCHr32<N> view;
-
-		view.image_width = image.width;
-		view.range = range;
-		view.width = range.x_end - range.x_begin;
-		view.height = range.y_end - range.y_begin;
-
-		for (u32 ch = 0; ch < N; ++ch)
-		{
-			view.image_channel_data[ch] = image.channel_data[ch];
-		}
-
-		return view;
-	}
-
-
-	template <size_t N>
-	static ViewCHr32<N> do_sub_view(ViewCHr32<N> const& view, Range2Du32 const& range)
-	{
-		ViewCHr32<N> sub_view;
-
-		sub_view.image_width = view.image_width;
-		sub_view.x_begin = view.x_begin + range.x_begin;
-		sub_view.y_begin = view.y_begin + range.y_begin;
-		sub_view.x_end = view.x_begin + range.x_end;
-		sub_view.y_end = view.y_begin + range.y_end;
-		sub_view.width = range.x_end - range.x_begin;
-		sub_view.height = range.y_end - range.y_begin;
-
-		for (u32 ch = 0; ch < N; ++ch)
-		{
-			sub_view.image_channel_data[ch] = view.image_channel_data[ch];
-		}
-
-		return sub_view;
-	}
-
-
-	template <size_t N>
-	static std::array<r32*, N> channel_row_begin(ImageCHr32<N> const& image, u32 y)
-	{
-		auto offset = (size_t)(y * image.width);
-
-		std::array<r32*, N> data = {};
-		for (u32 ch = 0; ch < N; ++ch)
-		{
-			data[ch] = image.channel_data[ch] + offset;
-		}
-
-		return data;
-	}
-
-
-	template <size_t N>
-	static std::array<r32*, N> channel_row_begin(ViewCHr32<N> const& view, u32 y)
-	{
-		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin);
-
-		std::array<r32*, N> data = {};
-		for (u32 ch = 0; ch < N; ++ch)
-		{
-			data[ch] = view.image_channel_data[ch] + offset;
-		}
-
-		return data;
-	}
-}
-
-
-/* Images */
-
-namespace libimage
-{
-	void make_image(Image4Cr32& image, u32 width, u32 height)
-	{
-		assert(width);
-		assert(height);
-
-		do_make_image(image, width, height);
-	}
-
-
-	void destroy_image(Image4Cr32& image)
-	{
-		do_destroy_image(image);
-	}
-
-
-	View4Cr32 make_view(Image4Cr32 const& image)
-	{
-		assert(verify(image));
-
-		auto view = do_make_view(image);
-
-		assert(verify(view));
-
-		return view;
-	}
-
-
-	View4Cr32 sub_view(Image4Cr32 const& image, Range2Du32 const& range)
-	{
-		assert(verify(image, range));
-
-		auto view = do_sub_view(image, range);
-
-		assert(verify(view));
-
-		return view;
-	}
-
-
-	View4Cr32 sub_view(View4Cr32 const& view, Range2Du32 const& range)
-	{
-		assert(verify(view));
-
-		auto sub_view = do_sub_view(view, range);
-
-		assert(verify(sub_view));
-
-		return sub_view;
-	}
-	
-
-	void make_image(Image3Cr32& image, u32 width, u32 height)
-	{
-		assert(width);
-		assert(height);
-
-		do_make_image(image, width, height);
-
-		assert(verify(image));
-	}
-
-
-	void destroy_image(Image3Cr32& image)
-	{
-		do_destroy_image(image);
-	}
-	
-
-	View3Cr32 make_view(Image3Cr32 const& image)
-	{
-		assert(verify(image));
-
-		auto view = do_make_view(image);
-
-		assert(verify(view));
-
-		return view;
-	}
-
-
-	View3Cr32 sub_view(Image3Cr32 const& image, Range2Du32 const& range)
-	{
-		assert(verify(image, range));
-
-		auto view = do_sub_view(image, range);
-
-		assert(verify(view));
-
-		return view;
-	}
-
-
-	View3Cr32 sub_view(View3Cr32 const& view, Range2Du32 const& range)
-	{
-		assert(verify(view, range));
-
-		auto sub_view = do_sub_view(view, range);
-
-		assert(verify(sub_view));
-
-		return sub_view;
-	}
-
-
-	View3Cr32 make_rgb_view(Image4Cr32 const& image)
-	{
-		assert(verify(image));
-
-		View3Cr32 view;
-
-		view.image_width = image.width;
-		view.x_begin = 0;
-		view.y_begin = 0;
-		view.x_end = image.width;
-		view.y_end = image.height;
-		view.width = image.width;
-		view.height = image.height;
-
-		for (u32 ch = 0; ch < 3; ++ch)
-		{
-			view.image_channel_data[ch] = image.channel_data[ch];
-		}
-
-		assert(verify(view));
-
-		return view;
-	}
-
-
-	View3Cr32 make_rgb_view(View4Cr32 const& view)
-	{
-		assert(verify(view));
-
-		View3Cr32 view3;
-
-		view3.image_width = view.image_width;
-		view3.range = view.range;
-		view3.width = view.width;
-		view3.height = view.height;
-
-		for (u32 ch = 0; ch < 3; ++ch)
-		{
-			view3.image_channel_data[ch] = view.image_channel_data[ch];
-		}
-
-		assert(verify(view3));
-
-		return view3;
-	}
-
-
-	/*r32* row_begin(View3Cr32 const& view, u32 y, RGB channel)
-	{
-		auto ch = id_cast(channel);
-
-		assert(y < view.height);
-		assert(view.image_channel_data[ch]);
-
-		auto offset = (view.y_begin + y) * view.image_width + view.x_begin;
-
-		auto ptr = view.image_channel_data[ch] + (u64)(offset);
-		assert(ptr);
-
-		return ptr;
-	}*/
-
-
-	/*r32* xy_at(View3Cr32 const& view, u32 x, u32 y, RGB channel)
-	{
-		assert(y < view.height);
-		assert(x < view.width);
-
-		return row_begin(view, y, channel) + x;
-	}*/
-	
 
 	void make_image(gray::Image& image, u32 width, u32 height)
 	{
@@ -825,9 +510,192 @@ namespace libimage
 
 		return row_begin(view, y) + x;
 	}
+}
 
 
-	void make_image(Image1Cr32& image, u32 width, u32 height)
+/* image templates */
+
+namespace libimage
+{
+
+	template <size_t N>
+	void do_make_image(ImageCHr32<N>& image, u32 width, u32 height)
+	{
+		auto n_pixels = width * height;
+
+		auto data = (r32*)malloc(sizeof(r32) * N * n_pixels);
+		assert(data);
+
+		image.width = width;
+		image.height = height;
+
+		for (u32 ch = 0; ch < N; ++ch)
+		{
+			image.channel_data[ch] = data + ch * n_pixels;
+		}
+	}
+
+
+	template <size_t N>
+	static void do_destroy_image(ImageCHr32<N>& image)
+	{
+		if (image.channel_data[0])
+		{
+			free(image.channel_data[0]);
+			for (u32 ch = 0; ch < N; ++ch)
+			{
+				image.channel_data[ch] = nullptr;
+			}
+		}
+
+		image.width = 0;
+		image.height = 0;
+	}	
+
+
+	template <size_t N>
+	static std::array<r32*, N> channel_row_begin(ImageCHr32<N> const& image, u32 y)
+	{
+		auto offset = (size_t)(y * image.width);
+
+		std::array<r32*, N> data = {};
+		for (u32 ch = 0; ch < N; ++ch)
+		{
+			data[ch] = image.channel_data[ch] + offset;
+		}
+
+		return data;
+	}
+
+
+	template <size_t N>
+	static std::array<r32*, N> channel_row_begin(ViewCHr32<N> const& view, u32 y)
+	{
+		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin);
+
+		std::array<r32*, N> data = {};
+		for (u32 ch = 0; ch < N; ++ch)
+		{
+			data[ch] = view.image_channel_data[ch] + offset;
+		}
+
+		return data;
+	}
+}
+
+
+/* Images */
+
+namespace libimage
+{
+	void make_image(Image4r32& image, u32 width, u32 height)
+	{
+		assert(width);
+		assert(height);
+
+		do_make_image(image, width, height);
+	}
+
+
+	void destroy_image(Image4r32& image)
+	{
+		do_destroy_image(image);
+	}
+	
+
+	void make_image(Image3r32& image, u32 width, u32 height)
+	{
+		assert(width);
+		assert(height);
+
+		do_make_image(image, width, height);
+
+		assert(verify(image));
+	}
+
+
+	void destroy_image(Image3r32& image)
+	{
+		do_destroy_image(image);
+	}
+
+
+	View3r32 make_rgb_view(Image4r32 const& image)
+	{
+		assert(verify(image));
+
+		View3r32 view;
+
+		view.image_width = image.width;
+		view.x_begin = 0;
+		view.y_begin = 0;
+		view.x_end = image.width;
+		view.y_end = image.height;
+		view.width = image.width;
+		view.height = image.height;
+
+		for (u32 ch = 0; ch < 3; ++ch)
+		{
+			view.image_channel_data[ch] = image.channel_data[ch];
+		}
+
+		assert(verify(view));
+
+		return view;
+	}
+
+
+	View3r32 make_rgb_view(View4r32 const& view)
+	{
+		assert(verify(view));
+
+		View3r32 view3;
+
+		view3.image_width = view.image_width;
+		view3.range = view.range;
+		view3.width = view.width;
+		view3.height = view.height;
+
+		for (u32 ch = 0; ch < 3; ++ch)
+		{
+			view3.image_channel_data[ch] = view.image_channel_data[ch];
+		}
+
+		assert(verify(view3));
+
+		return view3;
+	}
+
+
+	/*r32* row_begin(View3r32 const& view, u32 y, RGB channel)
+	{
+		auto ch = id_cast(channel);
+
+		assert(y < view.height);
+		assert(view.image_channel_data[ch]);
+
+		auto offset = (view.y_begin + y) * view.image_width + view.x_begin;
+
+		auto ptr = view.image_channel_data[ch] + (u64)(offset);
+		assert(ptr);
+
+		return ptr;
+	}*/
+
+
+	/*r32* xy_at(View3r32 const& view, u32 x, u32 y, RGB channel)
+	{
+		assert(y < view.height);
+		assert(x < view.width);
+
+		return row_begin(view, y, channel) + x;
+	}*/
+	
+
+	
+
+
+	void make_image(Image1r32& image, u32 width, u32 height)
 	{
 		assert(width);
 		assert(height);
@@ -840,7 +708,7 @@ namespace libimage
 	}
 
 
-	void destroy_image(Image1Cr32& image)
+	void destroy_image(Image1r32& image)
 	{
 		if (image.data != nullptr)
 		{
@@ -850,7 +718,7 @@ namespace libimage
 	}
 
 
-	r32* row_begin(Image1Cr32 const& image, u32 y)
+	r32* row_begin(Image1r32 const& image, u32 y)
 	{
 		assert(image.width);
 		assert(image.height);
@@ -866,20 +734,112 @@ namespace libimage
 	}
 
 
-	r32* xy_at(Image1Cr32 const& image, u32 x, u32 y)
+	r32* xy_at(Image1r32 const& image, u32 x, u32 y)
 	{
 		assert(y < image.height);
 		assert(x < image.width);
 
 		return row_begin(image, y) + x;
+	}	
+
+
+	r32* row_begin(View1r32 const& view, u32 y)
+	{
+		assert(y < view.height);
+
+		auto offset = (view.y_begin + y) * view.image_width + view.x_begin;
+
+		auto ptr = view.image_data + (u64)(offset);
+		assert(ptr);
+
+		return ptr;
+	}
+
+
+	r32* xy_at(View1r32 const& view, u32 x, u32 y)
+	{
+		assert(y < view.height);
+		assert(x < view.width);
+
+		return row_begin(view, y) + x;
 	}
 		
+}
 
-	View1Cr32 make_view(Image1Cr32 const& image)
+
+/* make_view */
+
+namespace libimage
+{
+	template <size_t N>
+	static ViewCHr32<N> do_make_view(ImageCHr32<N> const& image)
+	{
+		ViewCHr32<N> view;
+
+		view.image_width = image.width;
+		view.x_begin = 0;
+		view.y_begin = 0;
+		view.x_end = image.width;
+		view.y_end = image.height;
+		view.width = image.width;
+		view.height = image.height;
+
+		for (u32 ch = 0; ch < N; ++ch)
+		{
+			view.image_channel_data[ch] = image.channel_data[ch];
+		}
+
+		return view;
+	}
+
+
+	template <size_t N>
+	static void do_make_view(ViewCHr32<N>& view, u32 width, u32 height, Buffer32& buffer)
+	{
+		view.image_width = width;
+		view.x_begin = 0;
+		view.y_begin = 0;
+		view.x_end = width;
+		view.y_end = height;
+		view.width = width;
+		view.height = height;
+
+		for (u32 ch = 0; ch < N; ++ch)
+		{
+			view.image_channel_data[ch] = push_elements(buffer, width * height);
+		}
+	}
+
+
+	View4r32 make_view(Image4r32 const& image)
 	{
 		assert(verify(image));
 
-		View1Cr32 view;
+		auto view = do_make_view(image);
+
+		assert(verify(view));
+
+		return view;
+	}
+
+
+	View3r32 make_view(Image3r32 const& image)
+	{
+		assert(verify(image));
+
+		auto view = do_make_view(image);
+
+		assert(verify(view));
+
+		return view;
+	}
+
+
+	View1r32 make_view(Image1r32 const& image)
+	{
+		assert(verify(image));
+
+		View1r32 view;
 
 		view.image_data = image.data;
 		view.image_width = image.width;
@@ -892,13 +852,132 @@ namespace libimage
 
 		return view;
 	}
-	
-	
-	View1Cr32 sub_view(Image1Cr32 const& image, Range2Du32 const& range)
+
+
+	void make_view(View4r32& view, u32 width, u32 height, Buffer32& buffer)
+	{
+		do_make_view(view, width, height, buffer);
+	}
+
+
+	void make_view(View3r32& view, u32 width, u32 height, Buffer32& buffer)
+	{
+		do_make_view(view, width, height, buffer);
+	}
+
+
+	void make_view(View1r32& view, u32 width, u32 height, Buffer32& buffer)
+	{
+		view.image_data = push_elements(buffer, width * height);
+		view.image_width = width;
+		view.x_begin = 0;
+		view.y_begin = 0;
+		view.x_end = width;
+		view.y_end = height;
+		view.width = width;
+		view.height = height;
+	}
+}
+
+
+/* sub_view */
+
+namespace libimage
+{
+	template <size_t N>
+	static ViewCHr32<N> do_sub_view(ImageCHr32<N> const& image, Range2Du32 const& range)
+	{
+		ViewCHr32<N> view;
+
+		view.image_width = image.width;
+		view.range = range;
+		view.width = range.x_end - range.x_begin;
+		view.height = range.y_end - range.y_begin;
+
+		for (u32 ch = 0; ch < N; ++ch)
+		{
+			view.image_channel_data[ch] = image.channel_data[ch];
+		}
+
+		return view;
+	}
+
+
+	template <size_t N>
+	static ViewCHr32<N> do_sub_view(ViewCHr32<N> const& view, Range2Du32 const& range)
+	{
+		ViewCHr32<N> sub_view;
+
+		sub_view.image_width = view.image_width;
+		sub_view.x_begin = view.x_begin + range.x_begin;
+		sub_view.y_begin = view.y_begin + range.y_begin;
+		sub_view.x_end = view.x_begin + range.x_end;
+		sub_view.y_end = view.y_begin + range.y_end;
+		sub_view.width = range.x_end - range.x_begin;
+		sub_view.height = range.y_end - range.y_begin;
+
+		for (u32 ch = 0; ch < N; ++ch)
+		{
+			sub_view.image_channel_data[ch] = view.image_channel_data[ch];
+		}
+
+		return sub_view;
+	}
+
+
+	View4r32 sub_view(Image4r32 const& image, Range2Du32 const& range)
 	{
 		assert(verify(image, range));
 
-		View1Cr32 view;
+		auto view = do_sub_view(image, range);
+
+		assert(verify(view));
+
+		return view;
+	}
+
+
+	View4r32 sub_view(View4r32 const& view, Range2Du32 const& range)
+	{
+		assert(verify(view));
+
+		auto sub_view = do_sub_view(view, range);
+
+		assert(verify(sub_view));
+
+		return sub_view;
+	}
+
+
+	View3r32 sub_view(Image3r32 const& image, Range2Du32 const& range)
+	{
+		assert(verify(image, range));
+
+		auto view = do_sub_view(image, range);
+
+		assert(verify(view));
+
+		return view;
+	}
+
+
+	View3r32 sub_view(View3r32 const& view, Range2Du32 const& range)
+	{
+		assert(verify(view, range));
+
+		auto sub_view = do_sub_view(view, range);
+
+		assert(verify(sub_view));
+
+		return sub_view;
+	}
+
+
+	View1r32 sub_view(Image1r32 const& image, Range2Du32 const& range)
+	{
+		assert(verify(image, range));
+
+		View1r32 view;
 
 		view.image_data = image.data;
 		view.image_width = image.width;
@@ -913,11 +992,11 @@ namespace libimage
 	}
 
 
-	View1Cr32 sub_view(View1Cr32 const& view, Range2Du32 const& range)
+	View1r32 sub_view(View1r32 const& view, Range2Du32 const& range)
 	{
 		assert(verify(view, range));
 
-		View1Cr32 sub_view;
+		View1r32 sub_view;
 
 		sub_view.image_data = view.image_data;
 		sub_view.image_width = view.image_width;
@@ -933,29 +1012,6 @@ namespace libimage
 
 		return sub_view;
 	}
-
-
-	r32* row_begin(View1Cr32 const& view, u32 y)
-	{
-		assert(y < view.height);
-
-		auto offset = (view.y_begin + y) * view.image_width + view.x_begin;
-
-		auto ptr = view.image_data + (u64)(offset);
-		assert(ptr);
-
-		return ptr;
-	}
-
-
-	r32* xy_at(View1Cr32 const& view, u32 x, u32 y)
-	{
-		assert(y < view.height);
-		assert(x < view.width);
-
-		return row_begin(view, y) + x;
-	}
-		
 }
 
 
@@ -1004,7 +1060,7 @@ namespace libimage
 	}
 
 
-	void convert(Image4Cr32 const& src, Image const& dst)
+	void convert(Image4r32 const& src, Image const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1012,7 +1068,7 @@ namespace libimage
 	}
 
 
-	void convert(Image const& src, Image4Cr32 const& dst)
+	void convert(Image const& src, Image4r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1020,7 +1076,7 @@ namespace libimage
 	}
 
 
-	void convert(Image4Cr32 const& src, View const& dst)
+	void convert(Image4r32 const& src, View const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1028,7 +1084,7 @@ namespace libimage
 	}
 
 
-	void convert(View const& src, Image4Cr32 const& dst)
+	void convert(View const& src, Image4r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1036,7 +1092,7 @@ namespace libimage
 	}
 
 
-	void convert(View4Cr32 const& src, Image const& dst)
+	void convert(View4r32 const& src, Image const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1044,7 +1100,7 @@ namespace libimage
 	}
 
 
-	void convert(Image const& src, View4Cr32 const& dst)
+	void convert(Image const& src, View4r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1052,7 +1108,7 @@ namespace libimage
 	}
 
 
-	void convert(View4Cr32 const& src, View const& dst)
+	void convert(View4r32 const& src, View const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1060,7 +1116,7 @@ namespace libimage
 	}
 
 
-	void convert(View const& src, View4Cr32 const& dst)
+	void convert(View const& src, View4r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1068,7 +1124,7 @@ namespace libimage
 	}
 
 
-	void convert(Image3Cr32 const& src, Image const& dst)
+	void convert(Image3r32 const& src, Image const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1076,7 +1132,7 @@ namespace libimage
 	}
 
 
-	void convert(Image const& src, Image3Cr32 const& dst)
+	void convert(Image const& src, Image3r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1084,7 +1140,7 @@ namespace libimage
 	}
 
 
-	void convert(Image3Cr32 const& src, View const& dst)
+	void convert(Image3r32 const& src, View const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1092,7 +1148,7 @@ namespace libimage
 	}
 
 
-	void convert(View const& src, Image3Cr32 const& dst)
+	void convert(View const& src, Image3r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1100,7 +1156,7 @@ namespace libimage
 	}
 
 
-	void convert(View3Cr32 const& src, Image const& dst)
+	void convert(View3r32 const& src, Image const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1108,7 +1164,7 @@ namespace libimage
 	}
 
 
-	void convert(Image const& src, View3Cr32 const& dst)
+	void convert(Image const& src, View3r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1116,7 +1172,7 @@ namespace libimage
 	}
 
 
-	void convert(View3Cr32 const& src, View const& dst)
+	void convert(View3r32 const& src, View const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1124,7 +1180,7 @@ namespace libimage
 	}
 
 
-	void convert(View const& src, View3Cr32 const& dst)
+	void convert(View const& src, View3r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1132,7 +1188,7 @@ namespace libimage
 	}
 
 
-	void convert(Image1Cr32 const& src, gray::Image const& dst)
+	void convert(Image1r32 const& src, gray::Image const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1150,7 +1206,7 @@ namespace libimage
 	}
 
 
-	void convert(gray::Image const& src, Image1Cr32 const& dst)
+	void convert(gray::Image const& src, Image1r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1168,7 +1224,7 @@ namespace libimage
 	}
 
 
-	void convert(Image1Cr32 const& src, gray::View const& dst)
+	void convert(Image1r32 const& src, gray::View const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1186,7 +1242,7 @@ namespace libimage
 	}
 
 
-	void convert(gray::View const& src, Image1Cr32 const& dst)
+	void convert(gray::View const& src, Image1r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1204,7 +1260,7 @@ namespace libimage
 	}
 
 
-	void convert(View1Cr32 const& src, gray::Image const& dst)
+	void convert(View1r32 const& src, gray::Image const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1222,7 +1278,7 @@ namespace libimage
 	}
 
 
-	void convert(gray::Image const& src, View1Cr32 const& dst)
+	void convert(gray::Image const& src, View1r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1240,7 +1296,7 @@ namespace libimage
 	}
 
 
-	void convert(View1Cr32 const& src, gray::View const& dst)
+	void convert(View1r32 const& src, gray::View const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1258,7 +1314,7 @@ namespace libimage
 	}
 
 
-	void convert(gray::View const& src, View1Cr32 const& dst)
+	void convert(gray::View const& src, View1r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1350,7 +1406,7 @@ namespace libimage
 	}
 
 
-	void fill(View4Cr32 const& view, Pixel color)
+	void fill(View4r32 const& view, Pixel color)
 	{
 		assert(verify(view));
 
@@ -1358,7 +1414,7 @@ namespace libimage
 	}
 
 
-	void fill(View3Cr32 const& view, Pixel color)
+	void fill(View3r32 const& view, Pixel color)
 	{
 		assert(verify(view));
 
@@ -1366,7 +1422,7 @@ namespace libimage
 	}
 
 
-	void fill(View1Cr32 const& view, u8 gray)
+	void fill(View1r32 const& view, u8 gray)
 	{
 		assert(verify(view));
 
@@ -1480,7 +1536,7 @@ namespace libimage
 	}
 
 
-	void copy(View4Cr32 const& src, View4Cr32 const& dst)
+	void copy(View4r32 const& src, View4r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1488,7 +1544,7 @@ namespace libimage
 	}
 
 
-	void copy(View3Cr32 const& src, View3Cr32 const& dst)
+	void copy(View3r32 const& src, View3r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1496,7 +1552,7 @@ namespace libimage
 	}
 
 
-	void copy(View1Cr32 const& src, View1Cr32 const& dst)
+	void copy(View1r32 const& src, View1r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1541,7 +1597,7 @@ namespace libimage
 	}
 
 
-	void for_each_pixel(View1Cr32 const& view, r32_f const& func)
+	void for_each_pixel(View1r32 const& view, r32_f const& func)
 	{
 		verify(view);
 
@@ -1600,7 +1656,7 @@ namespace libimage
 	}
 
 
-	void for_each_xy(View4Cr32 const& view, xy_f const& func)
+	void for_each_xy(View4r32 const& view, xy_f const& func)
 	{
 		assert(verify(view));
 
@@ -1702,7 +1758,7 @@ namespace libimage
 	}
 
 
-	void grayscale(View4Cr32 const& src, View1Cr32 const& dst)
+	void grayscale(View4r32 const& src, View1r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1710,7 +1766,7 @@ namespace libimage
 	}
 
 
-	void grayscale(View3Cr32 const& src, View1Cr32 const& dst)
+	void grayscale(View3r32 const& src, View1r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1725,13 +1781,13 @@ namespace libimage
 
 namespace libimage
 {
-	/*View1Cr32 select_channel(Image4Cr32 const& image, RGBA channel)
+	/*View1r32 select_channel(Image4r32 const& image, RGBA channel)
 	{
 		assert(verify(image));
 
 		auto ch = id_cast(channel);
 
-		View1Cr32 view1{};
+		View1r32 view1{};
 
 		view1.image_width = image.width;
 		view1.x_begin = 0;
@@ -1749,13 +1805,13 @@ namespace libimage
 	}*/
 
 
-	View1Cr32 select_channel(View4Cr32 const& view, RGBA channel)
+	View1r32 select_channel(View4r32 const& view, RGBA channel)
 	{
 		assert(verify(view));
 
 		auto ch = id_cast(channel);
 
-		View1Cr32 view1{};
+		View1r32 view1{};
 
 		view1.image_width = view.image_width;
 		view1.range = view.range;
@@ -1770,13 +1826,13 @@ namespace libimage
 	}
 
 
-	/*View1Cr32 select_channel(Image3Cr32 const& image, RGB channel)
+	/*View1r32 select_channel(Image3r32 const& image, RGB channel)
 	{
 		assert(verify(image));
 
 		auto ch = id_cast(channel);
 
-		View1Cr32 view1{};
+		View1r32 view1{};
 
 		view1.image_width = image.width;
 		view1.x_begin = 0;
@@ -1794,13 +1850,13 @@ namespace libimage
 	}*/
 
 
-	View1Cr32 select_channel(View3Cr32 const& view, RGB channel)
+	View1r32 select_channel(View3r32 const& view, RGB channel)
 	{
 		assert(verify(view));
 
 		auto ch = id_cast(channel);
 
-		View1Cr32 view1{};
+		View1r32 view1{};
 
 		view1.image_width = view.image_width;
 		view1.range = view.range;
@@ -1868,7 +1924,7 @@ namespace libimage
 	}
 
 
-	void alpha_blend(View4Cr32 const& src, View3Cr32 const& cur, View3Cr32 const& dst)
+	void alpha_blend(View4r32 const& src, View3r32 const& cur, View3r32 const& dst)
 	{
 		assert(verify(src, cur));
 		assert(verify(src, dst));
@@ -1877,7 +1933,7 @@ namespace libimage
 	}
 
 
-	void alpha_blend(View4Cr32 const& src, View3Cr32 const& cur_dst)
+	void alpha_blend(View4r32 const& src, View3r32 const& cur_dst)
 	{
 		assert(verify(src, cur_dst));
 
@@ -1971,7 +2027,7 @@ namespace libimage
 	}
 
 
-	void transform(View1Cr32 const& src, View1Cr32 const& dst, r32_to_r32_f const& func)
+	void transform(View1r32 const& src, View1r32 const& dst, r32_to_r32_f const& func)
 	{
 		assert(verify(src, dst));
 

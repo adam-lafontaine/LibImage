@@ -118,105 +118,7 @@ namespace libimage
 	Pixel* xy_at(View const& view, u32 x, u32 y);
 
 
-	template <size_t N>
-	class ImageCHr32
-	{
-	public:
-		u32 width = 0;
-		u32 height = 0;
-
-		r32* channel_data[N] = {};
-	};
-
-
-	template <size_t N>
-	inline r32* get_channel(ImageCHr32<N> const& image, RGBA ch)
-	{
-		return image.channel_data[id_cast(ch)];
-	}
-
-
-	using Image4Cr32 = ImageCHr32<4>;
-
-
-	void make_image(Image4Cr32& image, u32 width, u32 height);
-
-	void destroy_image(Image4Cr32& image);
-
-	//r32* row_begin(Image4Cr32 const& image, u32 y, RGBA channel);
-
-	//r32* xy_at(Image4Cr32 const& image, u32 x, u32 y, RGBA channel);
-
-
-	template <size_t N>
-	class ViewCHr32
-	{
-	public:
-
-		u32 image_width = 0;
-
-		r32* image_channel_data[N] = {};
-
-		union
-		{
-			Range2Du32 range = {};
-
-			struct
-			{
-				u32 x_begin;
-				u32 x_end;
-				u32 y_begin;
-				u32 y_end;
-			};
-		};
-
-		u32 width = 0;
-		u32 height = 0;
-	};
-
-
-	using View4Cr32 = ViewCHr32<4>;
-
-
-	View4Cr32 make_view(Image4Cr32 const& image);
-
-	View4Cr32 sub_view(Image4Cr32 const& image, Range2Du32 const& range);
-
-	View4Cr32 sub_view(View4Cr32 const& view, Range2Du32 const& range);
-
-	//r32* row_begin(View4Cr32 const& view, u32 y, RGBA channel);
-
-	//r32* xy_at(View4Cr32 const& view, u32 x, u32 y, RGBA channel);	
-
-
-	using Image3Cr32 = ImageCHr32<3>;
-
-
-	void make_image(Image3Cr32& image, u32 width, u32 height);
-
-	void destroy_image(Image3Cr32& image);
-
-	//r32* row_begin(Image3Cr32 const& image, u32 y, RGB channel);
-
-	//r32* xy_at(Image3Cr32 const& image, u32 x, u32 y, RGB channel);
-
-
-	using View3Cr32 = ViewCHr32<3>;
-
-
-	View3Cr32 make_view(Image3Cr32 const& image);
-
-	View3Cr32 sub_view(Image3Cr32 const& image, Range2Du32 const& range);
-
-	View3Cr32 sub_view(View3Cr32 const& view, Range2Du32 const& range);
-
-	View3Cr32 make_rgb_view(Image4Cr32 const& image);
-
-	View3Cr32 make_rgb_view(View4Cr32 const& image);
-
-	//r32* row_begin(View3Cr32 const& view, u32 y, RGB channel);
-
-	//r32* xy_at(View3Cr32 const& view, u32 x, u32 y, RGB channel);
+	
 
 
 	namespace gray
@@ -277,7 +179,92 @@ namespace libimage
 	u8* xy_at(gray::View const& view, u32 x, u32 y);
 
 
-	class Image1Cr32
+	
+
+
+	void make_image(Image& image, u32 width, u32 height, Buffer32& buffer);
+
+	void make_image(gray::Image& image, u32 width, u32 height, Buffer32& buffer);
+}
+
+
+/* planar */
+
+namespace libimage
+{
+	template <size_t N>
+	class ImageCHr32
+	{
+	public:
+		u32 width = 0;
+		u32 height = 0;
+
+		r32* channel_data[N] = {};
+	};
+
+
+	template <size_t N>
+	inline r32* get_channel(ImageCHr32<N> const& image, RGBA ch)
+	{
+		return image.channel_data[id_cast(ch)];
+	}
+
+
+	using Image4r32 = ImageCHr32<4>;
+
+
+	void make_image(Image4r32& image, u32 width, u32 height);
+
+	void destroy_image(Image4r32& image);
+
+
+	template <size_t N>
+	class ViewCHr32
+	{
+	public:
+
+		u32 image_width = 0;
+
+		r32* image_channel_data[N] = {};
+
+		union
+		{
+			Range2Du32 range = {};
+
+			struct
+			{
+				u32 x_begin;
+				u32 x_end;
+				u32 y_begin;
+				u32 y_end;
+			};
+		};
+
+		u32 width = 0;
+		u32 height = 0;
+	};
+
+
+	using View4r32 = ViewCHr32<4>;
+
+
+	using Image3r32 = ImageCHr32<3>;
+
+
+	void make_image(Image3r32& image, u32 width, u32 height);
+
+	void destroy_image(Image3r32& image);
+
+
+	using View3r32 = ViewCHr32<3>;
+	
+
+	View3r32 make_rgb_view(Image4r32 const& image);
+
+	View3r32 make_rgb_view(View4r32 const& image);
+
+
+	class Image1r32
 	{
 	public:
 
@@ -288,16 +275,16 @@ namespace libimage
 	};
 
 
-	void make_image(Image1Cr32& image, u32 width, u32 height);
+	void make_image(Image1r32& image, u32 width, u32 height);
 
-	void destroy_image(Image1Cr32& image);
+	void destroy_image(Image1r32& image);
 
-	r32* row_begin(Image1Cr32 const& image, u32 y, RGB channel);
+	r32* row_begin(Image1r32 const& image, u32 y, RGB channel);
 
-	r32* xy_at(Image1Cr32 const& image, u32 x, u32 y, RGB channel);
+	r32* xy_at(Image1r32 const& image, u32 x, u32 y, RGB channel);
 
 
-	class View1Cr32
+	class View1r32
 	{
 	public:
 
@@ -319,18 +306,55 @@ namespace libimage
 
 		u32 width = 0;
 		u32 height = 0;
-	};
+	};	
+
+	r32* row_begin(View1r32 const& view, u32 y);
+
+	r32* xy_at(View1r32 const& view, u32 x, u32 y);
+
+}
 
 
-	View1Cr32 make_view(Image1Cr32 const& image);
+/* make_view */
 
-	View1Cr32 sub_view(Image1Cr32 const& image, Range2Du32 const& range);
+namespace libimage
+{
+	View4r32 make_view(Image4r32 const& image);
 
-	View1Cr32 sub_view(View1Cr32 const& view, Range2Du32 const& range);
+	View3r32 make_view(Image3r32 const& image);
 
-	r32* row_begin(View1Cr32 const& view, u32 y);
+	View1r32 make_view(Image1r32 const& image);
 
-	r32* xy_at(View1Cr32 const& view, u32 x, u32 y);	
+
+	using Buffer32 = MemoryBuffer<r32>;
+
+
+	void make_view(View4r32& view, u32 width, u32 height, Buffer32& buffer);
+
+	void make_view(View3r32& view, u32 width, u32 height, Buffer32& buffer);
+
+	void make_view(View1r32& view, u32 width, u32 height, Buffer32& buffer);
+
+
+	
+}
+
+
+/* sub_view */
+
+namespace libimage
+{
+	View4r32 sub_view(Image4r32 const& image, Range2Du32 const& range);
+
+	View4r32 sub_view(View4r32 const& view, Range2Du32 const& range);
+
+	View3r32 sub_view(Image3r32 const& image, Range2Du32 const& range);
+
+	View3r32 sub_view(View3r32 const& view, Range2Du32 const& range);
+
+	View1r32 sub_view(Image1r32 const& image, Range2Du32 const& range);
+
+	View1r32 sub_view(View1r32 const& view, Range2Du32 const& range);
 }
 
 
@@ -338,64 +362,64 @@ namespace libimage
 
 namespace libimage
 {
-	void convert(Image4Cr32 const& src, Image const& dst);
+	/*void convert(Image4r32 const& src, Image const& dst);
 
-	void convert(Image const& src, Image4Cr32 const& dst);
-
-
-	void convert(Image4Cr32 const& src, View const& dst);
-
-	void convert(View const& src, Image4Cr32 const& dst);
+	void convert(Image const& src, Image4r32 const& dst);
 
 
-	void convert(View4Cr32 const& src, Image const& dst);
+	void convert(Image4r32 const& src, View const& dst);
 
-	void convert(Image const& src, View4Cr32 const& dst);
-
-
-	void convert(View4Cr32 const& src, View const& dst);
-
-	void convert(View const& src, View4Cr32 const& dst);
+	void convert(View const& src, Image4r32 const& dst);*/
 
 
-	void convert(Image3Cr32 const& src, Image const& dst);
+	void convert(View4r32 const& src, Image const& dst);
 
-	void convert(Image const& src, Image3Cr32 const& dst);
-
-
-	void convert(Image3Cr32 const& src, View const& dst);
-
-	void convert(View const& src, Image3Cr32 const& dst);
+	void convert(Image const& src, View4r32 const& dst);
 
 
-	void convert(View3Cr32 const& src, Image const& dst);
+	void convert(View4r32 const& src, View const& dst);
 
-	void convert(Image const& src, View3Cr32 const& dst);
-
-
-	void convert(View3Cr32 const& src, View const& dst);
-
-	void convert(View const& src, View3Cr32 const& dst);
+	void convert(View const& src, View4r32 const& dst);
 
 
-	void convert(Image1Cr32 const& src, gray::Image const& dst);
+	/*void convert(Image3r32 const& src, Image const& dst);
 
-	void convert(gray::Image const& src, Image1Cr32 const& dst);
-
-
-	void convert(Image1Cr32 const& src, gray::View const& dst);
-
-	void convert(gray::View const& src, Image1Cr32 const& dst);
+	void convert(Image const& src, Image3r32 const& dst);
 
 
-	void convert(View1Cr32 const& src, gray::Image const& dst);
+	void convert(Image3r32 const& src, View const& dst);
 
-	void convert(gray::Image const& src, View1Cr32 const& dst);
+	void convert(View const& src, Image3r32 const& dst);*/
 
 
-	void convert(View1Cr32 const& src, gray::View const& dst);
+	void convert(View3r32 const& src, Image const& dst);
 
-	void convert(gray::View const& src, View1Cr32 const& dst);
+	void convert(Image const& src, View3r32 const& dst);
+
+
+	void convert(View3r32 const& src, View const& dst);
+
+	void convert(View const& src, View3r32 const& dst);
+
+
+	/*void convert(Image1r32 const& src, gray::Image const& dst);
+
+	void convert(gray::Image const& src, Image1r32 const& dst);
+
+
+	void convert(Image1r32 const& src, gray::View const& dst);
+
+	void convert(gray::View const& src, Image1r32 const& dst);*/
+
+
+	void convert(View1r32 const& src, gray::Image const& dst);
+
+	void convert(gray::Image const& src, View1r32 const& dst);
+
+
+	void convert(View1r32 const& src, gray::View const& dst);
+
+	void convert(gray::View const& src, View1r32 const& dst);
 }
 
 
@@ -411,11 +435,11 @@ namespace libimage
 
 	void fill(gray::View const& view, u8 gray);
 
-	void fill(View4Cr32 const& view, Pixel color);
+	void fill(View4r32 const& view, Pixel color);
 
-	void fill(View3Cr32 const& view, Pixel color);
+	void fill(View3r32 const& view, Pixel color);
 
-	void fill(View1Cr32 const& image, u8 gray);
+	void fill(View1r32 const& image, u8 gray);
 }
 
 
@@ -441,11 +465,11 @@ namespace libimage
 	void copy(gray::View const& src, gray::View const& dst);
 
 
-	void copy(View4Cr32 const& src, View4Cr32 const& dst);
+	void copy(View4r32 const& src, View4r32 const& dst);
 
-	void copy(View3Cr32 const& src, View3Cr32 const& dst);
+	void copy(View3r32 const& src, View3r32 const& dst);
 
-	void copy(View1Cr32 const& src, View1Cr32 const& dst);
+	void copy(View1r32 const& src, View1r32 const& dst);
 }
 
 
@@ -463,7 +487,7 @@ namespace libimage
 	void for_each_pixel(gray::View const& image, u8_f const& func);
 
 
-	void for_each_pixel(View1Cr32 const& image, r32_f const& func);
+	void for_each_pixel(View1r32 const& image, r32_f const& func);
 
 }
 
@@ -485,11 +509,11 @@ namespace libimage
 	void for_each_xy(gray::View const& view, xy_f const& func);
 
 
-	void for_each_xy(View4Cr32 const& view, xy_f const& func);
+	void for_each_xy(View4r32 const& view, xy_f const& func);
 
-	void for_each_xy(View3Cr32 const& image, xy_f const& func);
+	void for_each_xy(View3r32 const& image, xy_f const& func);
 
-	void for_each_xy(View1Cr32 const& view, xy_f const& func);
+	void for_each_xy(View1r32 const& view, xy_f const& func);
 }
 
 
@@ -506,9 +530,9 @@ namespace libimage
 	void grayscale(View const& src, gray::View const& dst);
 
 
-	void grayscale(View4Cr32 const& src, View1Cr32 const& dst);
+	void grayscale(View4r32 const& src, View1r32 const& dst);
 
-	void grayscale(View3Cr32 const& src, View1Cr32 const& dst);
+	void grayscale(View3r32 const& src, View1r32 const& dst);
 }
 
 
@@ -516,9 +540,9 @@ namespace libimage
 
 namespace libimage
 {
-	View1Cr32 select_channel(View4Cr32 const& image, RGBA channel);
+	View1r32 select_channel(View4r32 const& image, RGBA channel);
 
-	View1Cr32 select_channel(View3Cr32 const& image, RGB channel);
+	View1r32 select_channel(View3r32 const& image, RGB channel);
 }
 
 
@@ -526,9 +550,9 @@ namespace libimage
 
 namespace libimage
 {
-	void alpha_blend(View4Cr32 const& src, View3Cr32 const& cur, View3Cr32 const& dst);
+	void alpha_blend(View4r32 const& src, View3r32 const& cur, View3r32 const& dst);
 
-	void alpha_blend(View4Cr32 const& src, View3Cr32 const& cur_dst);
+	void alpha_blend(View4r32 const& src, View3r32 const& cur_dst);
 }
 
 
@@ -554,7 +578,7 @@ namespace libimage
 	void transform(gray::View const& src, gray::View const& dst, lut_t const& lut);
 
 
-	void transform(View1Cr32 const& src, View1Cr32 const& dst, r32_to_r32_f const& func);
+	void transform(View1r32 const& src, View1r32 const& dst, r32_to_r32_f const& func);
 }
 
 

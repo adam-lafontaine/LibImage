@@ -87,3 +87,75 @@ public:
 	u32 y_begin;
 	u32 y_end;   // one past last y
 };
+
+
+template <typename T>
+class MemoryBuffer
+{
+public:
+	T* data = nullptr;
+	size_t capacity = 0;
+	size_t size = 0;
+};
+
+
+template <typename T>
+void make_buffer(MemoryBuffer<T>& buffer, size_t n_elements)
+{
+	auto data = malloc(sizeof(T) * n_elements);
+	
+	assert(data);
+
+	buffer.data = (T*)data;
+	buffer.capacity = n_elements;
+	buffer.size = 0;
+}
+
+
+template <typename T>
+void buffer_free(MemoryBuffer<T>& buffer)
+{
+	if (buffer.data)
+	{
+		free(buffer.data);
+		buffer.data = nullptr;
+	}
+
+	buffer.capacity = 0;
+	buffer.size = 0;
+}
+
+
+template <typename T>
+T* push_elements(MemoryBuffer<T>& buffer, size_t n_elements)
+{
+	assert(buffer.data);
+	assert(buffer.capacity);
+	assert(buffer.size < buffer.capacity);
+
+	auto is_valid =
+		buffer.data &&
+		buffer.capacity &&
+		buffer.size < buffer.capacity;
+
+	auto elements_available = (buffer.capacity - buffer.size) >= n_elements;
+	assert(elements_available);
+
+	if (!is_valid || !elements_available)
+	{
+		return nullptr;
+	}
+
+	auto data = buffer.data + buffer.size;
+
+	buffer.size += n_elements;
+
+	return data;
+}
+
+
+template <typename T>
+void reset_buffer(MemoryBuffer<T>& buffer)
+{
+	buffer.size = 0;
+}
