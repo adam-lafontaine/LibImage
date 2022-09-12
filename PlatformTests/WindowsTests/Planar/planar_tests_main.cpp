@@ -89,7 +89,7 @@ void resize_test();
 void convert_test();
 void sub_view_test();
 void fill_test();
-//void copy_test();
+void copy_test();
 //void for_each_pixel_test();
 //void for_each_xy_test();
 //void grayscale_test();
@@ -125,7 +125,7 @@ int main()
 	convert_test();
 	sub_view_test();
 	fill_test();
-	//copy_test();
+	copy_test();
 	//for_each_pixel_test();
 	//for_each_xy_test();
 	//grayscale_test();
@@ -472,98 +472,100 @@ void fill_test()
 }
 
 
-//void copy_test()
-//{
-//	auto title = "copy_test";
-//	printf("\n%s:\n", title);
-//	auto out_dir = IMAGE_OUT_PATH / title;
-//	empty_dir(out_dir);
-//	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
-//
-//	Image image;
-//	img::read_image_from_file(CORVETTE_PATH, image);
-//	auto width = image.width;
-//	auto height = image.height;
-//
-//	Range2Du32 left{};
-//	left.x_begin = 0;
-//	left.x_end = width / 2;
-//	left.y_begin = 0;
-//	left.y_end = height;
-//
-//	Range2Du32 right{};
-//	right.x_begin = width / 2;
-//	right.x_end = width;
-//	right.y_begin = 0;
-//	right.y_end = height;
-//
-//	auto left_view = img::sub_view(image, left);
-//	auto right_view = img::sub_view(image, right);
-//
-//	img::Image3Cr32 image3;
-//	img::make_image(image3, width, height);
-//	img::convert(image, image3);
-//	auto left_view3 = img::sub_view(image3, left);
-//	auto right_view3 = img::sub_view(image3, right);
-//
-//	img::Image4Cr32 image4;
-//	img::make_image(image4, width, height);
-//	img::convert(image, image4);
-//	auto left_view4 = img::sub_view(image4, left);
-//	auto right_view4 = img::sub_view(image4, right);
-//
-//	img::copy(left_view3, right_view3);
-//	img::copy(right_view4, left_view4);	
-//
-//	clear_image(image);
-//
-//	img::convert(right_view3, right_view);
-//	img::convert(left_view4, left_view);
-//	write_image(image, "image.bmp");
-//
-//	GrayImage gray;
-//	img::read_image_from_file(CADILLAC_PATH, gray);
-//	width = gray.width;
-//	height = gray.height;
-//
-//	auto view_height = height / 3;
-//
-//	Range2Du32 top{};
-//	top.x_begin = 0;
-//	top.x_end = width;
-//	top.y_begin = 0;
-//	top.y_end = view_height;
-//
-//	Range2Du32 bottom{};
-//	bottom.x_begin = 0;
-//	bottom.x_end = width;
-//	bottom.y_begin = height - view_height;
-//	bottom.y_end = height;	
-//
-//	auto gr_top_view = img::sub_view(gray, top);
-//	auto gr_bottom_view = img::sub_view(gray, bottom);
-//
-//	img::Image1Cr32 top1;
-//	img::make_image(top1, width, view_height);
-//	img::View1Cr32 top_view1 = img::make_view(top1);
-//	img::convert(gr_top_view, top1);
-//
-//	img::Image1Cr32 bottom1;
-//	img::make_image(bottom1, width, view_height);
-//	img::View1Cr32 bottom_view1 = img::make_view(bottom1);
-//	img::convert(gr_bottom_view, bottom_view1);
-//
-//	img::copy(bottom_view1, top_view1);
-//
-//	img::convert(top1, gr_top_view);
-//
-//	write_image(gray, "gray.bmp");
-//
-//	img::destroy_image(image);
-//	img::destroy_image(gray);
-//	img::destroy_image(top1);
-//	img::destroy_image(bottom1);
-//}
+void copy_test()
+{
+	auto title = "copy_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+
+	Image image;
+	img::read_image_from_file(CORVETTE_PATH, image);
+	auto width = image.width;
+	auto height = image.height;
+
+	Range2Du32 left{};
+	left.x_begin = 0;
+	left.x_end = width / 2;
+	left.y_begin = 0;
+	left.y_end = height;
+
+	Range2Du32 right{};
+	right.x_begin = width / 2;
+	right.x_end = width;
+	right.y_begin = 0;
+	right.y_end = height;
+
+	auto left_view = img::sub_view(image, left);
+	auto right_view = img::sub_view(image, right);
+
+	img::Buffer32 buffer;
+	make_buffer(buffer, width * height * 7);
+
+	img::View3r32 view3;
+	img::make_view(view3, width, height, buffer);
+	img::convert(image, view3);
+	auto left_view3 = img::sub_view(view3, left);
+	auto right_view3 = img::sub_view(view3, right);
+
+	img::View4r32 view4;
+	img::make_view(view4, width, height, buffer);
+	img::convert(image, view4);
+	auto left_view4 = img::sub_view(view4, left);
+	auto right_view4 = img::sub_view(view4, right);
+
+	img::copy(left_view3, right_view3);
+	img::copy(right_view4, left_view4);	
+
+	clear_image(image);
+
+	img::convert(right_view3, right_view);
+	img::convert(left_view4, left_view);
+	write_image(image, "image.bmp");
+
+	reset_buffer(buffer);
+
+	GrayImage gray;
+	img::read_image_from_file(CADILLAC_PATH, gray);
+	width = gray.width;
+	height = gray.height;
+
+	auto view_height = height / 3;
+
+	Range2Du32 top{};
+	top.x_begin = 0;
+	top.x_end = width;
+	top.y_begin = 0;
+	top.y_end = view_height;
+
+	Range2Du32 bottom{};
+	bottom.x_begin = 0;
+	bottom.x_end = width;
+	bottom.y_begin = height - view_height;
+	bottom.y_end = height;	
+
+	auto gr_top_view = img::sub_view(gray, top);
+	auto gr_bottom_view = img::sub_view(gray, bottom);
+
+	img::View1r32 top1;
+	img::make_view(top1, width, view_height, buffer);
+	img::convert(gr_top_view, top1);
+
+	img::View1r32 bottom1;
+	img::make_view(bottom1, width, view_height, buffer);
+	img::convert(gr_bottom_view, bottom1);
+
+	img::copy(bottom1, top1);
+
+	img::convert(top1, gr_top_view);
+
+	write_image(gray, "gray.bmp");
+
+	img::destroy_image(image);
+	img::destroy_image(gray);
+	buffer_free(buffer);
+}
 
 
 //void for_each_pixel_test()
