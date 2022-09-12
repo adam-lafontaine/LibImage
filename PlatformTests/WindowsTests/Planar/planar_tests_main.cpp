@@ -87,7 +87,7 @@ void clear_image(GrayImage const& img);
 void read_write_image_test();
 void resize_test();
 void convert_test();
-//void view_test();
+void sub_view_test();
 //void fill_test();
 //void copy_test();
 //void for_each_pixel_test();
@@ -123,7 +123,7 @@ int main()
 	read_write_image_test();
 	resize_test();
 	convert_test();
-	//view_test();
+	sub_view_test();
 	//fill_test();
 	//copy_test();
 	//for_each_pixel_test();
@@ -239,21 +239,23 @@ void convert_test()
 	img::make_image(gray_dst, gr_width, gr_height);
 
 	img::Buffer32 buffer;
-	make_buffer(buffer, width * height * 7 + gr_width * gr_height);
+	make_buffer(buffer, width * height * 4);
 
 	img::View4r32 view4;
 	img::make_view(view4, width, height, buffer);
 
 	img::convert(image, view4);
 	img::convert(view4, image_dst);
+	reset_buffer(buffer);
 
-	write_image(image_dst, "convert4.bmp");
+	write_image(image_dst, "convert4.bmp");	
 
 	img::View3r32 view3;
 	img::make_view(view3, width, height, buffer);
 
 	img::convert(image, view3);
 	img::convert(view3, image_dst);
+	reset_buffer(buffer);
 
 	write_image(image_dst, "convert3.bmp");
 
@@ -262,6 +264,7 @@ void convert_test()
 
 	img::convert(gray, view1);
 	img::convert(view1, gray_dst);
+	reset_buffer(buffer);
 
 	write_image(gray_dst, "convert1.bmp");
 
@@ -273,77 +276,80 @@ void convert_test()
 }
 
 
-//void view_test()
-//{
-//	auto title = "view_test";
-//	printf("\n%s:\n", title);
-//	auto out_dir = IMAGE_OUT_PATH / title;
-//	empty_dir(out_dir);
-//	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
-//
-//	Image vette;
-//	img::read_image_from_file(CORVETTE_PATH, vette);
-//	auto width = vette.width;
-//	auto height = vette.height;
-//
-//	img::Image3Cr32 vette3;
-//	img::make_image(vette3, width, height);
-//	img::convert(vette, vette3);
-//
-//	img::Image4Cr32 vette4;
-//	img::make_image(vette4, width, height);
-//	img::convert(vette, vette4);
-//
-//	Range2Du32 r{};
-//	r.x_begin = 0;
-//	r.x_end = width / 4;
-//	r.y_begin = 0;
-//	r.y_end = height;
-//
-//	auto dst4 = img::sub_view(vette, r);
-//	auto sub3 = img::sub_view(vette3, r);	
-//
-//	r.x_begin = width * 3 / 4;
-//	r.x_end = width;
-//
-//	auto dst3 = img::sub_view(vette, r);
-//	auto sub4 = img::sub_view(vette4, r);
-//
-//	img::convert(sub3, dst3);
-//	img::convert(sub4, dst4);
-//
-//	write_image(vette, "swap.bmp");
-//
-//	GrayImage caddy;
-//	img::read_image_from_file(CADILLAC_PATH, caddy);
-//	width = caddy.width;
-//	height = caddy.height;
-//
-//	img::Image1Cr32 caddy1;
-//	img::make_image(caddy1, width, height);
-//	img::convert(caddy, caddy1);
-//
-//	r.x_begin = 0;
-//	r.x_end = width / 2;
-//	r.y_begin = 0;
-//	r.y_end = height;
-//
-//	auto sub1 = img::sub_view(caddy1, r);
-//
-//	r.x_begin = width / 4;
-//	r.x_end = width * 3 / 4;
-//
-//	auto dst1 = img::sub_view(caddy, r);
-//
-//	img::convert(sub1, dst1);
-//
-//	write_image(caddy, "copy.bmp");		
-//
-//	img::destroy_image(vette);
-//	img::destroy_image(vette3);
-//	img::destroy_image(vette4);
-//	img::destroy_image(caddy);
-//}
+void sub_view_test()
+{
+	auto title = "sub_view_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+
+	Image vette;
+	img::read_image_from_file(CORVETTE_PATH, vette);
+	auto width = vette.width;
+	auto height = vette.height;
+
+	img::Buffer32 buffer;
+	make_buffer(buffer, width * height * 7);
+
+	img::View3r32 vette3;
+	img::make_view(vette3, width, height, buffer);
+	img::convert(vette, vette3);
+
+	img::View4r32 vette4;
+	img::make_view(vette4, width, height, buffer);
+	img::convert(vette, vette4);
+
+	Range2Du32 r{};
+	r.x_begin = 0;
+	r.x_end = width / 4;
+	r.y_begin = 0;
+	r.y_end = height;
+
+	auto dst4 = img::sub_view(vette, r);
+	auto sub3 = img::sub_view(vette3, r);	
+
+	r.x_begin = width * 3 / 4;
+	r.x_end = width;
+
+	auto dst3 = img::sub_view(vette, r);
+	auto sub4 = img::sub_view(vette4, r);
+
+	img::convert(sub3, dst3);
+	img::convert(sub4, dst4);
+	reset_buffer(buffer);
+
+	write_image(vette, "swap.bmp");
+
+	GrayImage caddy;
+	img::read_image_from_file(CADILLAC_PATH, caddy);
+	width = caddy.width;
+	height = caddy.height;
+
+	img::View1r32 caddy1;
+	img::make_view(caddy1, width, height, buffer);
+	img::convert(caddy, caddy1);
+
+	r.x_begin = 0;
+	r.x_end = width / 2;
+	r.y_begin = 0;
+	r.y_end = height;
+
+	auto sub1 = img::sub_view(caddy1, r);
+
+	r.x_begin = width / 4;
+	r.x_end = width * 3 / 4;
+
+	auto dst1 = img::sub_view(caddy, r);
+
+	img::convert(sub1, dst1);
+
+	write_image(caddy, "copy.bmp");		
+
+	img::destroy_image(vette);
+	img::destroy_image(caddy);
+	buffer_free(buffer);
+}
 
 
 //void fill_test()
