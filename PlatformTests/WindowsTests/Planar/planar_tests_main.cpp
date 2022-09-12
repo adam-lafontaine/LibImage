@@ -88,7 +88,7 @@ void read_write_image_test();
 void resize_test();
 void convert_test();
 void sub_view_test();
-//void fill_test();
+void fill_test();
 //void copy_test();
 //void for_each_pixel_test();
 //void for_each_xy_test();
@@ -124,7 +124,7 @@ int main()
 	resize_test();
 	convert_test();
 	sub_view_test();
-	//fill_test();
+	fill_test();
 	//copy_test();
 	//for_each_pixel_test();
 	//for_each_xy_test();
@@ -352,123 +352,124 @@ void sub_view_test()
 }
 
 
-//void fill_test()
-//{
-//	auto title = "fill_test";
-//	printf("\n%s:\n", title);
-//	auto out_dir = IMAGE_OUT_PATH / title;
-//	empty_dir(out_dir);
-//	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
-//
-//	u32 width = 800;
-//	u32 height = 800;
-//
-//	auto const red = img::to_pixel(255, 0, 0);
-//	auto const green = img::to_pixel(0, 255, 0);
-//	auto const blue = img::to_pixel(0, 0, 255);
-//	auto const black = img::to_pixel(0, 0, 0);
-//	auto const white = img::to_pixel(255, 255, 255);
-//
-//	Range2Du32 left{};
-//	left.x_begin = 0;
-//	left.x_end = width / 2;
-//	left.y_begin = 0;
-//	left.y_end = height;
-//
-//	Range2Du32 top_left{};
-//	top_left.x_begin = 0;
-//	top_left.x_end = width / 2;
-//	top_left.y_begin = 0;
-//	top_left.y_end = height / 2;
-//
-//	Range2Du32 bottom_right{};
-//	bottom_right.x_begin = width / 2;
-//	bottom_right.x_end = width;
-//	bottom_right.y_begin = height / 2;
-//	bottom_right.y_end = height;
-//
-//	Image image;
-//	img::make_image(image, width, height);
-//
-//	auto left_view = img::sub_view(image, left);
-//	auto top_left_view = img::sub_view(image, top_left);
-//	auto bottom_right_view = img::sub_view(image, bottom_right);
-//
-//	img::fill(image, red);
-//	write_image(image, "fill_01.bmp");
-//
-//	img::fill(left_view, green);
-//	write_image(image, "fill_02.bmp");
-//
-//	img::Image3Cr32 image3;
-//	img::make_image(image3, width / 2, height / 2);
-//	img::View3Cr32 view3 = img::make_view(image3);
-//	img::fill(view3, blue);
-//	img::convert(view3, top_left_view);
-//	write_image(image, "fill_03.bmp");
-//
-//	img::Image4Cr32 image4;	
-//	img::make_image(image4, width / 2, height / 2);
-//	img::View4Cr32 view4 = img::make_view(image4);
-//
-//	img::fill(view4, white);
-//	img::convert(view4, bottom_right_view);
-//	write_image(image, "fill_04.bmp");
-//
-//	img::destroy_image(image3);
-//	img::destroy_image(image4);
-//
-//	img::make_image(image3, width, height);
-//	u32 x_step = width / 5;
-//	Range2Du32 r{};
-//	r.y_begin = 0;
-//	r.y_end = height;
-//	for (u32 x = 0; x < width; x +=x_step)
-//	{
-//		r.x_begin = x;
-//		r.x_end = x + x_step;
-//
-//		auto view = img::sub_view(image3, r);
-//		auto red = (u8)(255.0f * r.x_end / width);
-//		img::fill(view, img::to_pixel(red, 255, 0));
-//	}
-//	img::convert(image3, image);
-//	write_image(image, "fill_view3.bmp");
-//
-//	img::make_image(image4, width, height);
-//	u32 y_step = height / 5;
-//	r.x_begin = 0;
-//	r.x_end = width;
-//	for (u32 y = 0; y < height; y += y_step)
-//	{
-//		r.y_begin = y;
-//		r.y_end = y + y_step;
-//
-//		auto view = img::sub_view(image4, r);
-//		auto blue = (u8)(255.0f * r.y_end / height);
-//		img::fill(view, img::to_pixel(255, 0, blue));
-//	}
-//	img::convert(image4, image);
-//	write_image(image, "fill_view4.bmp");
-//
-//	GrayImage gray;
-//	img::make_image(gray, width, height);
-//
-//	auto gr_top_left_view = img::sub_view(gray, top_left);
-//	auto gr_bottom_right_view = img::sub_view(gray, bottom_right);
-//
-//	img::fill(gray, 128);
-//	write_image(gray, "gray_fill_01.bmp");
-//
-//	img::fill(gr_top_left_view, 0);
-//	img::fill(gr_bottom_right_view, 255);
-//	write_image(gray, "gray_fill_02.bmp");
-//
-//	img::destroy_image(image);
-//	img::destroy_image(image3);
-//	img::destroy_image(image4);
-//	img::destroy_image(gray);
-//}
+void fill_test()
+{
+	auto title = "fill_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+
+	u32 width = 800;
+	u32 height = 800;
+
+	auto const red = img::to_pixel(255, 0, 0);
+	auto const green = img::to_pixel(0, 255, 0);
+	auto const blue = img::to_pixel(0, 0, 255);
+	auto const black = img::to_pixel(0, 0, 0);
+	auto const white = img::to_pixel(255, 255, 255);
+
+	Range2Du32 left{};
+	left.x_begin = 0;
+	left.x_end = width / 2;
+	left.y_begin = 0;
+	left.y_end = height;
+
+	Range2Du32 top_left{};
+	top_left.x_begin = 0;
+	top_left.x_end = width / 2;
+	top_left.y_begin = 0;
+	top_left.y_end = height / 2;
+
+	Range2Du32 bottom_right{};
+	bottom_right.x_begin = width / 2;
+	bottom_right.x_end = width;
+	bottom_right.y_begin = height / 2;
+	bottom_right.y_end = height;
+
+	Image image;
+	img::make_image(image, width, height);
+
+	auto left_view = img::sub_view(image, left);
+	auto top_left_view = img::sub_view(image, top_left);
+	auto bottom_right_view = img::sub_view(image, bottom_right);
+
+	img::fill(image, red);
+	write_image(image, "fill_01.bmp");
+
+	img::fill(left_view, green);
+	write_image(image, "fill_02.bmp");
+
+	GrayImage gray;
+	img::make_image(gray, width, height);
+
+	auto gr_top_left_view = img::sub_view(gray, top_left);
+	auto gr_bottom_right_view = img::sub_view(gray, bottom_right);
+
+	img::fill(gray, 128);
+	write_image(gray, "gray_fill_01.bmp");
+
+	img::fill(gr_top_left_view, 0);
+	img::fill(gr_bottom_right_view, 255);
+	write_image(gray, "gray_fill_02.bmp");
+
+	img::Buffer32 buffer;
+	make_buffer(buffer, width * height * 4);
+	
+	img::View3r32 view3;
+	img::make_view(view3, width / 2, height / 2, buffer);
+	img::fill(view3, blue);
+	img::convert(view3, top_left_view);
+	reset_buffer(buffer);
+	write_image(image, "fill_03.bmp");
+
+	img::View4r32 view4;
+	img::make_view(view4, width / 2, height / 2, buffer);
+
+	img::fill(view4, white);
+	img::convert(view4, bottom_right_view);
+	reset_buffer(buffer);
+	write_image(image, "fill_04.bmp");
+
+
+	img::make_view(view3, width, height, buffer);
+	u32 x_step = width / 5;
+	Range2Du32 r{};
+	r.y_begin = 0;
+	r.y_end = height;
+	for (u32 x = 0; x < width; x +=x_step)
+	{
+		r.x_begin = x;
+		r.x_end = x + x_step;
+
+		auto view = img::sub_view(view3, r);
+		auto red = (u8)(255.0f * r.x_end / width);
+		img::fill(view, img::to_pixel(red, 255, 0));
+	}
+	img::convert(view3, image);
+	reset_buffer(buffer);
+	write_image(image, "fill_view3.bmp");
+
+	img::make_view(view4, width, height, buffer);
+	u32 y_step = height / 5;
+	r.x_begin = 0;
+	r.x_end = width;
+	for (u32 y = 0; y < height; y += y_step)
+	{
+		r.y_begin = y;
+		r.y_end = y + y_step;
+
+		auto view = img::sub_view(view4, r);
+		auto blue = (u8)(255.0f * r.y_end / height);
+		img::fill(view, img::to_pixel(255, 0, blue));
+	}
+	img::convert(view4, image);
+	reset_buffer(buffer);
+	write_image(image, "fill_view4.bmp");	
+
+	img::destroy_image(image);
+	img::destroy_image(gray);
+}
 
 
 //void copy_test()
