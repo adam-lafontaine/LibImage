@@ -264,18 +264,6 @@ namespace libimage
 }
 
 
-/* sub_view */
-
-namespace libimage
-{
-	View4r32 sub_view(View4r32 const& view, Range2Du32 const& range);
-
-	View3r32 sub_view(View3r32 const& view, Range2Du32 const& range);
-
-	View1r32 sub_view(View1r32 const& view, Range2Du32 const& range);
-}
-
-
 /* convert */
 
 namespace libimage
@@ -308,6 +296,18 @@ namespace libimage
 	void convert(View1r32 const& src, gray::View const& dst);
 
 	void convert(gray::View const& src, View1r32 const& dst);
+}
+
+
+/* sub_view */
+
+namespace libimage
+{
+	View4r32 sub_view(View4r32 const& view, Range2Du32 const& range);
+
+	View3r32 sub_view(View3r32 const& view, Range2Du32 const& range);
+
+	View1r32 sub_view(View1r32 const& view, Range2Du32 const& range);
 }
 
 

@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cassert>
 #include <cstdint>
+#include <cstdlib>
 
 #define LIBIMAGE_PNG
 #define LIBIMAGE_BMP

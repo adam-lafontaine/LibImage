@@ -631,79 +631,6 @@ namespace libimage
 }
 
 
-/* sub_view */
-
-namespace libimage
-{	
-	template <size_t N>
-	static ViewCHr32<N> do_sub_view(ViewCHr32<N> const& view, Range2Du32 const& range)
-	{
-		ViewCHr32<N> sub_view;
-
-		sub_view.image_width = view.image_width;
-		sub_view.x_begin = view.x_begin + range.x_begin;
-		sub_view.y_begin = view.y_begin + range.y_begin;
-		sub_view.x_end = view.x_begin + range.x_end;
-		sub_view.y_end = view.y_begin + range.y_end;
-		sub_view.width = range.x_end - range.x_begin;
-		sub_view.height = range.y_end - range.y_begin;
-
-		for (u32 ch = 0; ch < N; ++ch)
-		{
-			sub_view.image_channel_data[ch] = view.image_channel_data[ch];
-		}
-
-		return sub_view;
-	}
-
-
-	View4r32 sub_view(View4r32 const& view, Range2Du32 const& range)
-	{
-		assert(verify(view));
-
-		auto sub_view = do_sub_view(view, range);
-
-		assert(verify(sub_view));
-
-		return sub_view;
-	}
-
-
-	View3r32 sub_view(View3r32 const& view, Range2Du32 const& range)
-	{
-		assert(verify(view, range));
-
-		auto sub_view = do_sub_view(view, range);
-
-		assert(verify(sub_view));
-
-		return sub_view;
-	}
-
-
-	View1r32 sub_view(View1r32 const& view, Range2Du32 const& range)
-	{
-		assert(verify(view, range));
-
-		View1r32 sub_view;
-
-		sub_view.image_data = view.image_data;
-		sub_view.image_width = view.image_width;
-		sub_view.x_begin = view.x_begin + range.x_begin;
-		sub_view.y_begin = view.y_begin + range.y_begin;
-		sub_view.x_end = view.x_begin + range.x_end;
-		sub_view.y_end = view.y_begin + range.y_end;
-		sub_view.width = range.x_end - range.x_begin;
-		sub_view.height = range.y_end - range.y_begin;
-
-		assert(sub_view.width);
-		assert(sub_view.height);
-
-		return sub_view;
-	}
-}
-
-
 /* convert */
 
 namespace libimage
@@ -880,6 +807,78 @@ namespace libimage
 
 }
 
+
+/* sub_view */
+
+namespace libimage
+{
+	template <size_t N>
+	static ViewCHr32<N> do_sub_view(ViewCHr32<N> const& view, Range2Du32 const& range)
+	{
+		ViewCHr32<N> sub_view;
+
+		sub_view.image_width = view.image_width;
+		sub_view.x_begin = view.x_begin + range.x_begin;
+		sub_view.y_begin = view.y_begin + range.y_begin;
+		sub_view.x_end = view.x_begin + range.x_end;
+		sub_view.y_end = view.y_begin + range.y_end;
+		sub_view.width = range.x_end - range.x_begin;
+		sub_view.height = range.y_end - range.y_begin;
+
+		for (u32 ch = 0; ch < N; ++ch)
+		{
+			sub_view.image_channel_data[ch] = view.image_channel_data[ch];
+		}
+
+		return sub_view;
+	}
+
+
+	View4r32 sub_view(View4r32 const& view, Range2Du32 const& range)
+	{
+		assert(verify(view));
+
+		auto sub_view = do_sub_view(view, range);
+
+		assert(verify(sub_view));
+
+		return sub_view;
+	}
+
+
+	View3r32 sub_view(View3r32 const& view, Range2Du32 const& range)
+	{
+		assert(verify(view, range));
+
+		auto sub_view = do_sub_view(view, range);
+
+		assert(verify(sub_view));
+
+		return sub_view;
+	}
+
+
+	View1r32 sub_view(View1r32 const& view, Range2Du32 const& range)
+	{
+		assert(verify(view, range));
+
+		View1r32 sub_view;
+
+		sub_view.image_data = view.image_data;
+		sub_view.image_width = view.image_width;
+		sub_view.x_begin = view.x_begin + range.x_begin;
+		sub_view.y_begin = view.y_begin + range.y_begin;
+		sub_view.x_end = view.x_begin + range.x_end;
+		sub_view.y_end = view.y_begin + range.y_end;
+		sub_view.width = range.x_end - range.x_begin;
+		sub_view.height = range.y_end - range.y_begin;
+
+		assert(sub_view.width);
+		assert(sub_view.height);
+
+		return sub_view;
+	}
+}
 
 /* fill */
 
