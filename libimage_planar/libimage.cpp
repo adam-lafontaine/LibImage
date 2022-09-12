@@ -150,11 +150,11 @@ namespace libimage
 	}
 
 
-	template <size_t N>
+	/*template <size_t N>
 	static bool verify(ImageCHr32<N> const& image)
 	{
 		return image.width && image.height && image.channel_data[0];
-	}
+	}*/
 
 
 	template <size_t N>
@@ -176,10 +176,10 @@ namespace libimage
 	}
 
 
-	static bool verify(Image1r32 const& image)
+	/*static bool verify(Image1r32 const& image)
 	{
 		return image.width && image.height && image.data;
-	}
+	}*/
 
 
 	static bool verify(View1r32 const& view)
@@ -517,57 +517,6 @@ namespace libimage
 
 namespace libimage
 {
-
-	template <size_t N>
-	void do_make_image(ImageCHr32<N>& image, u32 width, u32 height)
-	{
-		auto n_pixels = width * height;
-
-		auto data = (r32*)malloc(sizeof(r32) * N * n_pixels);
-		assert(data);
-
-		image.width = width;
-		image.height = height;
-
-		for (u32 ch = 0; ch < N; ++ch)
-		{
-			image.channel_data[ch] = data + ch * n_pixels;
-		}
-	}
-
-
-	template <size_t N>
-	static void do_destroy_image(ImageCHr32<N>& image)
-	{
-		if (image.channel_data[0])
-		{
-			free(image.channel_data[0]);
-			for (u32 ch = 0; ch < N; ++ch)
-			{
-				image.channel_data[ch] = nullptr;
-			}
-		}
-
-		image.width = 0;
-		image.height = 0;
-	}	
-
-
-	template <size_t N>
-	static std::array<r32*, N> channel_row_begin(ImageCHr32<N> const& image, u32 y)
-	{
-		auto offset = (size_t)(y * image.width);
-
-		std::array<r32*, N> data = {};
-		for (u32 ch = 0; ch < N; ++ch)
-		{
-			data[ch] = image.channel_data[ch] + offset;
-		}
-
-		return data;
-	}
-
-
 	template <size_t N>
 	static std::array<r32*, N> channel_row_begin(ViewCHr32<N> const& view, u32 y)
 	{
@@ -588,63 +537,6 @@ namespace libimage
 
 namespace libimage
 {
-	void make_image(Image4r32& image, u32 width, u32 height)
-	{
-		assert(width);
-		assert(height);
-
-		do_make_image(image, width, height);
-	}
-
-
-	void destroy_image(Image4r32& image)
-	{
-		do_destroy_image(image);
-	}
-	
-
-	void make_image(Image3r32& image, u32 width, u32 height)
-	{
-		assert(width);
-		assert(height);
-
-		do_make_image(image, width, height);
-
-		assert(verify(image));
-	}
-
-
-	void destroy_image(Image3r32& image)
-	{
-		do_destroy_image(image);
-	}
-
-
-	View3r32 make_rgb_view(Image4r32 const& image)
-	{
-		assert(verify(image));
-
-		View3r32 view;
-
-		view.image_width = image.width;
-		view.x_begin = 0;
-		view.y_begin = 0;
-		view.x_end = image.width;
-		view.y_end = image.height;
-		view.width = image.width;
-		view.height = image.height;
-
-		for (u32 ch = 0; ch < 3; ++ch)
-		{
-			view.image_channel_data[ch] = image.channel_data[ch];
-		}
-
-		assert(verify(view));
-
-		return view;
-	}
-
-
 	View3r32 make_rgb_view(View4r32 const& view)
 	{
 		assert(verify(view));
@@ -665,82 +557,6 @@ namespace libimage
 
 		return view3;
 	}
-
-
-	/*r32* row_begin(View3r32 const& view, u32 y, RGB channel)
-	{
-		auto ch = id_cast(channel);
-
-		assert(y < view.height);
-		assert(view.image_channel_data[ch]);
-
-		auto offset = (view.y_begin + y) * view.image_width + view.x_begin;
-
-		auto ptr = view.image_channel_data[ch] + (u64)(offset);
-		assert(ptr);
-
-		return ptr;
-	}*/
-
-
-	/*r32* xy_at(View3r32 const& view, u32 x, u32 y, RGB channel)
-	{
-		assert(y < view.height);
-		assert(x < view.width);
-
-		return row_begin(view, y, channel) + x;
-	}*/
-	
-
-	
-
-
-	void make_image(Image1r32& image, u32 width, u32 height)
-	{
-		assert(width);
-		assert(height);
-
-		image.data = (r32*)malloc(sizeof(r32) * width * height);
-		assert(image.data);
-
-		image.width = width;
-		image.height = height;
-	}
-
-
-	void destroy_image(Image1r32& image)
-	{
-		if (image.data != nullptr)
-		{
-			free(image.data);
-			image.data = nullptr;
-		}
-	}
-
-
-	r32* row_begin(Image1r32 const& image, u32 y)
-	{
-		assert(image.width);
-		assert(image.height);
-		assert(image.data);
-		assert(y < image.height);
-
-		auto offset = y * image.width;
-
-		auto ptr = image.data + (u64)(offset);
-		assert(ptr);
-
-		return ptr;
-	}
-
-
-	r32* xy_at(Image1r32 const& image, u32 x, u32 y)
-	{
-		assert(y < image.height);
-		assert(x < image.width);
-
-		return row_begin(image, y) + x;
-	}	
 
 
 	r32* row_begin(View1r32 const& view, u32 y)
@@ -772,28 +588,6 @@ namespace libimage
 namespace libimage
 {
 	template <size_t N>
-	static ViewCHr32<N> do_make_view(ImageCHr32<N> const& image)
-	{
-		ViewCHr32<N> view;
-
-		view.image_width = image.width;
-		view.x_begin = 0;
-		view.y_begin = 0;
-		view.x_end = image.width;
-		view.y_end = image.height;
-		view.width = image.width;
-		view.height = image.height;
-
-		for (u32 ch = 0; ch < N; ++ch)
-		{
-			view.image_channel_data[ch] = image.channel_data[ch];
-		}
-
-		return view;
-	}
-
-
-	template <size_t N>
 	static void do_make_view(ViewCHr32<N>& view, u32 width, u32 height, Buffer32& buffer)
 	{
 		view.image_width = width;
@@ -808,49 +602,6 @@ namespace libimage
 		{
 			view.image_channel_data[ch] = push_elements(buffer, width * height);
 		}
-	}
-
-
-	View4r32 make_view(Image4r32 const& image)
-	{
-		assert(verify(image));
-
-		auto view = do_make_view(image);
-
-		assert(verify(view));
-
-		return view;
-	}
-
-
-	View3r32 make_view(Image3r32 const& image)
-	{
-		assert(verify(image));
-
-		auto view = do_make_view(image);
-
-		assert(verify(view));
-
-		return view;
-	}
-
-
-	View1r32 make_view(Image1r32 const& image)
-	{
-		assert(verify(image));
-
-		View1r32 view;
-
-		view.image_data = image.data;
-		view.image_width = image.width;
-		view.x_begin = 0;
-		view.y_begin = 0;
-		view.x_end = image.width;
-		view.y_end = image.height;
-		view.width = image.width;
-		view.height = image.height;
-
-		return view;
 	}
 
 
@@ -883,26 +634,7 @@ namespace libimage
 /* sub_view */
 
 namespace libimage
-{
-	template <size_t N>
-	static ViewCHr32<N> do_sub_view(ImageCHr32<N> const& image, Range2Du32 const& range)
-	{
-		ViewCHr32<N> view;
-
-		view.image_width = image.width;
-		view.range = range;
-		view.width = range.x_end - range.x_begin;
-		view.height = range.y_end - range.y_begin;
-
-		for (u32 ch = 0; ch < N; ++ch)
-		{
-			view.image_channel_data[ch] = image.channel_data[ch];
-		}
-
-		return view;
-	}
-
-
+{	
 	template <size_t N>
 	static ViewCHr32<N> do_sub_view(ViewCHr32<N> const& view, Range2Du32 const& range)
 	{
@@ -925,18 +657,6 @@ namespace libimage
 	}
 
 
-	View4r32 sub_view(Image4r32 const& image, Range2Du32 const& range)
-	{
-		assert(verify(image, range));
-
-		auto view = do_sub_view(image, range);
-
-		assert(verify(view));
-
-		return view;
-	}
-
-
 	View4r32 sub_view(View4r32 const& view, Range2Du32 const& range)
 	{
 		assert(verify(view));
@@ -949,18 +669,6 @@ namespace libimage
 	}
 
 
-	View3r32 sub_view(Image3r32 const& image, Range2Du32 const& range)
-	{
-		assert(verify(image, range));
-
-		auto view = do_sub_view(image, range);
-
-		assert(verify(view));
-
-		return view;
-	}
-
-
 	View3r32 sub_view(View3r32 const& view, Range2Du32 const& range)
 	{
 		assert(verify(view, range));
@@ -970,25 +678,6 @@ namespace libimage
 		assert(verify(sub_view));
 
 		return sub_view;
-	}
-
-
-	View1r32 sub_view(Image1r32 const& image, Range2Du32 const& range)
-	{
-		assert(verify(image, range));
-
-		View1r32 view;
-
-		view.image_data = image.data;
-		view.image_width = image.width;
-		view.range = range;
-		view.width = range.x_end - range.x_begin;
-		view.height = range.y_end - range.y_begin;
-
-		assert(view.width);
-		assert(view.height);
-
-		return view;
 	}
 
 
@@ -1060,35 +749,37 @@ namespace libimage
 	}
 
 
-	void convert(Image4r32 const& src, Image const& dst)
+	template <class IMG_U8, class IMG_R32>
+	static void channel_r32_to_u8(IMG_R32 const& src, IMG_U8 const& dst)
 	{
-		assert(verify(src, dst));
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = to_channel_u8(s[x]);
+			}
+		};
 
-		planar_to_interleaved(src, dst);
+		process_rows(src.height, row_func);
 	}
 
 
-	void convert(Image const& src, Image4r32 const& dst)
+	template <class IMG_U8, class IMG_R32>
+	static void channel_u8_to_r32(IMG_U8 const& src, IMG_R32 const& dst)
 	{
-		assert(verify(src, dst));
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = to_channel_r32(s[x]);
+			}
+		};
 
-		interleaved_to_planar(src, dst);
-	}
-
-
-	void convert(Image4r32 const& src, View const& dst)
-	{
-		assert(verify(src, dst));
-
-		planar_to_interleaved(src, dst);
-	}
-
-
-	void convert(View const& src, Image4r32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		interleaved_to_planar(src, dst);
+		process_rows(src.height, row_func);
 	}
 
 
@@ -1117,38 +808,6 @@ namespace libimage
 
 
 	void convert(View const& src, View4r32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		interleaved_to_planar(src, dst);
-	}
-
-
-	void convert(Image3r32 const& src, Image const& dst)
-	{
-		assert(verify(src, dst));
-
-		planar_to_interleaved(src, dst);
-	}
-
-
-	void convert(Image const& src, Image3r32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		interleaved_to_planar(src, dst);
-	}
-
-
-	void convert(Image3r32 const& src, View const& dst)
-	{
-		assert(verify(src, dst));
-
-		planar_to_interleaved(src, dst);
-	}
-
-
-	void convert(View const& src, Image3r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1188,93 +847,11 @@ namespace libimage
 	}
 
 
-	void convert(Image1r32 const& src, gray::Image const& dst)
-	{
-		assert(verify(src, dst));
-
-		auto const row_func = [&](u32 y)
-		{
-			auto s = row_begin(src, y);
-			auto d = row_begin(dst, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				d[x] = to_channel_u8(s[x]);
-			}
-		};
-
-		process_rows(src.height, row_func);
-	}
-
-
-	void convert(gray::Image const& src, Image1r32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		auto const row_func = [&](u32 y)
-		{
-			auto s = row_begin(src, y);
-			auto d = row_begin(dst, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				d[x] = to_channel_r32(s[x]);
-			}
-		};
-
-		process_rows(src.height, row_func);
-	}
-
-
-	void convert(Image1r32 const& src, gray::View const& dst)
-	{
-		assert(verify(src, dst));
-
-		auto const row_func = [&](u32 y)
-		{
-			auto s = row_begin(src, y);
-			auto d = row_begin(dst, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				d[x] = to_channel_u8(s[x]);
-			}
-		};
-
-		process_rows(src.height, row_func);
-	}
-
-
-	void convert(gray::View const& src, Image1r32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		auto const row_func = [&](u32 y)
-		{
-			auto s = row_begin(src, y);
-			auto d = row_begin(dst, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				d[x] = to_channel_r32(s[x]);
-			}
-		};
-
-		process_rows(src.height, row_func);
-	}
-
-
 	void convert(View1r32 const& src, gray::Image const& dst)
 	{
 		assert(verify(src, dst));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto s = row_begin(src, y);
-			auto d = row_begin(dst, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				d[x] = to_channel_u8(s[x]);
-			}
-		};
-
-		process_rows(src.height, row_func);
+		channel_r32_to_u8(src, dst);
 	}
 
 
@@ -1282,17 +859,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto s = row_begin(src, y);
-			auto d = row_begin(dst, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				d[x] = to_channel_r32(s[x]);
-			}
-		};
-
-		process_rows(src.height, row_func);
+		channel_u8_to_r32(src, dst);
 	}
 
 
@@ -1300,17 +867,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto s = row_begin(src, y);
-			auto d = row_begin(dst, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				d[x] = to_channel_u8(s[x]);
-			}
-		};
-
-		process_rows(src.height, row_func);
+		channel_r32_to_u8(src, dst);
 	}
 
 
@@ -1318,17 +875,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		auto const row_func = [&](u32 y)
-		{
-			auto s = row_begin(src, y);
-			auto d = row_begin(dst, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				d[x] = to_channel_r32(s[x]);
-			}
-		};
-
-		process_rows(src.height, row_func);
+		channel_u8_to_r32(src, dst);
 	}
 
 }
@@ -1354,9 +901,15 @@ namespace libimage
 	}
 
 
-	template <class IMG, typename PIXEL>
-	static void fill_n_channels(IMG const& image, PIXEL color)
+	template <size_t N>
+	static void fill_n_channels(ViewCHr32<N> const& image, Pixel color)
 	{
+		r32 channels[N] = {};
+		for (u32 ch = 0; ch < N; ++ch)
+		{
+			channels[ch] = to_channel_r32(color.channels[ch]);
+		}
+
 		auto const row_func = [&](u32 y)
 		{
 			auto d = channel_row_begin(image, y);
@@ -1364,14 +917,13 @@ namespace libimage
 			{
 				for (u32 ch = 0; ch < d.size(); ++ch)
 				{
-					d[ch][x] = to_channel_r32(color.channels[ch]);
+					d[ch][x] = channels[ch];
 				}
 			}
 		};
 
 		process_rows(image.height, row_func);
 	}
-
 
 
 	void fill(Image const& image, Pixel color)
@@ -1426,7 +978,18 @@ namespace libimage
 	{
 		assert(verify(view));
 
-		fill_1_channel(view, gray);
+		auto const gray32 = to_channel_r32(gray);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto d = row_begin(view, y);
+			for (u32 x = 0; x < view.width; ++x)
+			{
+				d[x] = gray32;
+			}
+		};
+
+		process_rows(view.height, row_func);
 	}
 }
 

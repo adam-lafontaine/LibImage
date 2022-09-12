@@ -177,47 +177,13 @@ namespace libimage
 	u8* row_begin(gray::View const& view, u32 y);
 
 	u8* xy_at(gray::View const& view, u32 x, u32 y);
-
-
-	
-
-
-	void make_image(Image& image, u32 width, u32 height, Buffer32& buffer);
-
-	void make_image(gray::Image& image, u32 width, u32 height, Buffer32& buffer);
 }
 
 
 /* planar */
 
 namespace libimage
-{
-	template <size_t N>
-	class ImageCHr32
-	{
-	public:
-		u32 width = 0;
-		u32 height = 0;
-
-		r32* channel_data[N] = {};
-	};
-
-
-	template <size_t N>
-	inline r32* get_channel(ImageCHr32<N> const& image, RGBA ch)
-	{
-		return image.channel_data[id_cast(ch)];
-	}
-
-
-	using Image4r32 = ImageCHr32<4>;
-
-
-	void make_image(Image4r32& image, u32 width, u32 height);
-
-	void destroy_image(Image4r32& image);
-
-
+{	
 	template <size_t N>
 	class ViewCHr32
 	{
@@ -246,42 +212,10 @@ namespace libimage
 
 
 	using View4r32 = ViewCHr32<4>;
-
-
-	using Image3r32 = ImageCHr32<3>;
-
-
-	void make_image(Image3r32& image, u32 width, u32 height);
-
-	void destroy_image(Image3r32& image);
-
-
 	using View3r32 = ViewCHr32<3>;
-	
 
-	View3r32 make_rgb_view(Image4r32 const& image);
 
 	View3r32 make_rgb_view(View4r32 const& image);
-
-
-	class Image1r32
-	{
-	public:
-
-		u32 width;
-		u32 height;
-
-		r32* data = nullptr;
-	};
-
-
-	void make_image(Image1r32& image, u32 width, u32 height);
-
-	void destroy_image(Image1r32& image);
-
-	r32* row_begin(Image1r32 const& image, u32 y, RGB channel);
-
-	r32* xy_at(Image1r32 const& image, u32 x, u32 y, RGB channel);
 
 
 	class View1r32
@@ -318,14 +252,7 @@ namespace libimage
 /* make_view */
 
 namespace libimage
-{
-	View4r32 make_view(Image4r32 const& image);
-
-	View3r32 make_view(Image3r32 const& image);
-
-	View1r32 make_view(Image1r32 const& image);
-
-
+{	
 	using Buffer32 = MemoryBuffer<r32>;
 
 
@@ -333,10 +260,7 @@ namespace libimage
 
 	void make_view(View3r32& view, u32 width, u32 height, Buffer32& buffer);
 
-	void make_view(View1r32& view, u32 width, u32 height, Buffer32& buffer);
-
-
-	
+	void make_view(View1r32& view, u32 width, u32 height, Buffer32& buffer);	
 }
 
 
@@ -344,15 +268,9 @@ namespace libimage
 
 namespace libimage
 {
-	View4r32 sub_view(Image4r32 const& image, Range2Du32 const& range);
-
 	View4r32 sub_view(View4r32 const& view, Range2Du32 const& range);
 
-	View3r32 sub_view(Image3r32 const& image, Range2Du32 const& range);
-
 	View3r32 sub_view(View3r32 const& view, Range2Du32 const& range);
-
-	View1r32 sub_view(Image1r32 const& image, Range2Du32 const& range);
 
 	View1r32 sub_view(View1r32 const& view, Range2Du32 const& range);
 }
@@ -362,16 +280,6 @@ namespace libimage
 
 namespace libimage
 {
-	/*void convert(Image4r32 const& src, Image const& dst);
-
-	void convert(Image const& src, Image4r32 const& dst);
-
-
-	void convert(Image4r32 const& src, View const& dst);
-
-	void convert(View const& src, Image4r32 const& dst);*/
-
-
 	void convert(View4r32 const& src, Image const& dst);
 
 	void convert(Image const& src, View4r32 const& dst);
@@ -382,16 +290,6 @@ namespace libimage
 	void convert(View const& src, View4r32 const& dst);
 
 
-	/*void convert(Image3r32 const& src, Image const& dst);
-
-	void convert(Image const& src, Image3r32 const& dst);
-
-
-	void convert(Image3r32 const& src, View const& dst);
-
-	void convert(View const& src, Image3r32 const& dst);*/
-
-
 	void convert(View3r32 const& src, Image const& dst);
 
 	void convert(Image const& src, View3r32 const& dst);
@@ -400,16 +298,6 @@ namespace libimage
 	void convert(View3r32 const& src, View const& dst);
 
 	void convert(View const& src, View3r32 const& dst);
-
-
-	/*void convert(Image1r32 const& src, gray::Image const& dst);
-
-	void convert(gray::Image const& src, Image1r32 const& dst);
-
-
-	void convert(Image1r32 const& src, gray::View const& dst);
-
-	void convert(gray::View const& src, Image1r32 const& dst);*/
 
 
 	void convert(View1r32 const& src, gray::Image const& dst);
