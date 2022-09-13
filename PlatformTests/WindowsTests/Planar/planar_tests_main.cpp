@@ -97,8 +97,7 @@ void select_channel_test();
 void alpha_blend_test();
 void transform_test();
 void threshold_test();
-//void binary_test();
-//void contrast_test();
+void contrast_test();
 //void blur_test();
 //void gradients_test();
 //void edges_test();
@@ -134,8 +133,7 @@ int main()
 	alpha_blend_test();
 	transform_test();
 	threshold_test();
-	//binary_test();
-	//contrast_test();
+	contrast_test();
 	//blur_test();
 	//gradients_test();
 	//edges_test();
@@ -968,6 +966,50 @@ void threshold_test()
 	buffer_free(buffer);
 }
 
+
+void contrast_test()
+{
+	auto title = "contrast_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+
+	GrayImage vette;
+	img::read_image_from_file(CORVETTE_PATH, vette);
+	auto width = vette.width;
+	auto height = vette.height;
+
+	GrayImage gr_dst;
+	img::make_image(gr_dst, width, height);
+
+	img::contrast(vette, gr_dst, 10, 175);
+
+	write_image(gr_dst, "contrast.bmp");
+
+	img::Buffer32 buffer;
+	make_buffer(buffer, width * height);
+
+	img::View1r32 vette1;
+	img::make_view(vette1, width, height, buffer);
+	img::convert(vette, vette1);
+
+	Range2Du32 left{};
+	left.x_begin = 0;
+	left.x_end = width / 2;
+	left.y_begin = 0;
+	left.y_end = height;
+
+	auto vette_left = img::sub_view(vette1, left);
+
+	img::contrast(vette_left, vette_left, 0.1f, 0.75f);
+	img::convert(vette1, gr_dst);
+	write_image(gr_dst, "contrast1.bmp");
+
+	img::destroy_image(vette);
+	img::destroy_image(gr_dst);
+	buffer_free(buffer);
+}
 
 
 void empty_dir(path_t const& dir)

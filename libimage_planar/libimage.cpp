@@ -1598,3 +1598,117 @@ namespace libimage
 		process_rows(src.height, row_func);
 	}
 }
+
+
+/* contrast */
+
+namespace libimage
+{
+	static constexpr u8 lerp_clamp(u8 src_low, u8 src_high, u8 dst_low, u8 dst_high, u8 val)
+	{
+		if (val < src_low)
+		{
+			return dst_low;
+		}
+		else if (val > src_high)
+		{
+			return dst_high;
+		}
+
+		auto const ratio = (r32)(val - src_low) / (src_high - src_low);
+
+		assert(ratio >= 0.0f);
+		assert(ratio <= 1.0f);
+
+		auto const diff = ratio * (dst_high - dst_low);
+
+		return dst_low + (u8)diff;
+	}
+
+
+	static constexpr r32 lerp_clamp(r32 src_low, r32 src_high, r32 dst_low, r32 dst_high, r32 val)
+	{
+		if (val < src_low)
+		{
+			return dst_low;
+		}
+		else if (val > src_high)
+		{
+			return dst_high;
+		}
+
+		auto const ratio = (r32)(val - src_low) / (src_high - src_low);
+
+		assert(ratio >= 0.0f);
+		assert(ratio <= 1.0f);
+
+		auto const diff = ratio * (dst_high - dst_low);
+
+		return dst_low + (r32)diff;
+	}
+
+
+	void contrast(gray::Image const& src, gray::Image const& dst, u8 min, u8 max)
+	{
+		assert(verify(src, dst));
+		assert(min < max);
+
+		auto const lut = to_lut([&](u8 p) { return lerp_clamp(min, max, 0, 255, p); });
+
+		do_transform_lut(src, dst, lut);
+	}
+
+
+	void contrast(gray::Image const& src, gray::View const& dst, u8 min, u8 max)
+	{
+		assert(verify(src, dst));
+		assert(min < max);
+
+		auto const lut = to_lut([&](u8 p) { return lerp_clamp(min, max, 0, 255, p); });
+
+		do_transform_lut(src, dst, lut);
+	}
+
+
+	void contrast(gray::View const& src, gray::Image const& dst, u8 min, u8 max)
+	{
+		assert(verify(src, dst));
+		assert(min < max);
+
+		auto const lut = to_lut([&](u8 p) { return lerp_clamp(min, max, 0, 255, p); });
+
+		do_transform_lut(src, dst, lut);
+	}
+
+
+	void contrast(gray::View const& src, gray::View const& dst, u8 min, u8 max)
+	{
+		assert(verify(src, dst));
+		assert(min < max);
+
+		auto const lut = to_lut([&](u8 p) { return lerp_clamp(min, max, 0, 255, p); });
+
+		do_transform_lut(src, dst, lut);
+	}
+
+
+	void contrast(View1r32 const& src, View1r32 const& dst, r32 min, r32 max)
+	{
+		assert(verify(src, dst));
+		assert(min >= 0.0f && min <= 1.0f);
+		assert(max >= 0.0f && max <= 1.0f);
+		assert(min < max);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = lerp_clamp(min, max, 0.0f, 1.0f, s[x]);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+}

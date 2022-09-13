@@ -216,14 +216,6 @@ namespace libimage
 		assert(result);
 	}
 
-
-	/*gray::View make_resized_view(gray::Image const& image_src, gray::Image& image_dst)
-	{
-		resize_image(image_src, image_dst);
-
-		return make_view(image_dst);
-	}*/
-
 #endif // !LIBIMAGE_NO_RESIZE
 
 }
