@@ -93,9 +93,9 @@ void copy_test();
 void for_each_pixel_test();
 //void for_each_xy_test();
 void grayscale_test();
-//void select_channel_test();
-//void alpha_blend_test();
-//void transform_test();
+void select_channel_test();
+void alpha_blend_test();
+void transform_test();
 //void binary_test();
 //void contrast_test();
 //void blur_test();
@@ -129,9 +129,9 @@ int main()
 	for_each_pixel_test();
 	//for_each_xy_test();
 	grayscale_test();
-	//select_channel_test();
-	//alpha_blend_test();
-	//transform_test();
+	select_channel_test();
+	alpha_blend_test();
+	transform_test();
 	//binary_test();
 	//contrast_test();
 	//blur_test();
@@ -730,195 +730,196 @@ void grayscale_test()
 }
 
 
-//void select_channel_test()
-//{
-//	auto title = "select_channel_test";
-//	printf("\n%s:\n", title);
-//	auto out_dir = IMAGE_OUT_PATH / title;
-//	empty_dir(out_dir);
-//	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
-//
-//	Image vette;
-//	img::read_image_from_file(CORVETTE_PATH, vette);
-//
-//	img::Image3Cr32 vette_img3;
-//	img::make_image(vette_img3, vette.width, vette.height);
-//	img::View3Cr32 vette3 = img::make_view(vette_img3);
-//	img::convert(vette, vette3);
-//
-//	GrayImage vette_dst;
-//	img::make_image(vette_dst, vette.width, vette.height);
-//
-//	Image caddy;
-//	img::read_image_from_file(CADILLAC_PATH, caddy);
-//
-//	img::Image4Cr32 caddy_img4;
-//	img::make_image(caddy_img4, caddy.width, caddy.height);
-//	img::View4Cr32 caddy4 = img::make_view(caddy_img4);
-//	img::convert(caddy, caddy4);
-//
-//	GrayImage caddy_dst;
-//	img::make_image(caddy_dst, caddy.width, caddy.height);
-//
-//	auto red = img::select_channel(vette3, img::RGB::R);
-//	auto blue = img::select_channel(caddy4, img::RGBA::B);
-//
-//	img::convert(red, vette_dst);
-//	write_image(vette_dst, "red.bmp");
-//
-//	img::convert(blue, caddy_dst);
-//	write_image(caddy_dst, "blue.bmp");
-//
-//	img::destroy_image(vette);
-//	img::destroy_image(vette_img3);
-//	img::destroy_image(vette_dst);
-//	img::destroy_image(caddy);
-//	img::destroy_image(caddy_img4);
-//	img::destroy_image(caddy_dst);
-//}
+void select_channel_test()
+{
+	auto title = "select_channel_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+
+	Image vette;
+	img::read_image_from_file(CORVETTE_PATH, vette);
+	auto width = vette.width;
+	auto height = vette.height;
+
+	img::Buffer32 buffer;
+	make_buffer(buffer, width * height * 7);
+
+	img::View3r32 vette3;
+	img::make_view(vette3, width, height, buffer);
+	img::convert(vette, vette3);
+
+	GrayImage vette_dst;
+	img::make_image(vette_dst, vette.width, vette.height);
+
+	Image caddy;
+	img::read_image_from_file(CADILLAC_PATH, caddy);
+
+	img::View4r32 caddy4;
+	img::make_view(caddy4, caddy.width, caddy.height, buffer);
+	img::convert(caddy, caddy4);
+
+	GrayImage caddy_dst;
+	img::make_image(caddy_dst, caddy.width, caddy.height);
+
+	auto red = img::select_channel(vette3, img::RGB::R);
+	auto blue = img::select_channel(caddy4, img::RGBA::B);
+
+	img::convert(red, vette_dst);
+	write_image(vette_dst, "red.bmp");
+
+	img::convert(blue, caddy_dst);
+	write_image(caddy_dst, "blue.bmp");
+
+	img::destroy_image(vette);
+	img::destroy_image(vette_dst);
+	img::destroy_image(caddy);
+	img::destroy_image(caddy_dst);
+	buffer_free(buffer);
+}
 
 
-//void alpha_blend_test()
-//{
-//	auto title = "alpha_blend_test";
-//	printf("\n%s:\n", title);
-//	auto out_dir = IMAGE_OUT_PATH / title;
-//	empty_dir(out_dir);
-//	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
-//
-//	Image vette;
-//	img::read_image_from_file(CORVETTE_PATH, vette);
-//	auto width = vette.width;
-//	auto height = vette.height;
-//
-//	Image caddy_read;
-//	img::read_image_from_file(CADILLAC_PATH, caddy_read);
-//
-//	Image caddy;
-//	caddy.width = width;
-//	caddy.height = height;
-//	img::resize_image(caddy_read, caddy);
-//
-//	img::Image4Cr32 vette_img4;
-//	img::make_image(vette_img4, width, height);
-//	img::View4Cr32 vette4 = img::make_view(vette_img4);
-//	img::convert(vette, vette4);
-//
-//	auto alpha_view = img::select_channel(vette4, img::RGBA::A);
-//	img::for_each_pixel(alpha_view, [](r32& p) { p = 0.5f; });
-//
-//	img::Image4Cr32 caddy_img4;
-//	img::make_image(caddy_img4, width, height);
-//	img::View4Cr32 caddy4 = img::make_view(caddy_img4);
-//	img::convert(caddy, caddy4);
-//
-//	img::Image3Cr32 dst_img3;
-//	img::make_image(dst_img3, width, height);
-//	img::View3Cr32 dst3 = img::make_view(dst_img3);
-//
-//	img::alpha_blend(vette4, img::make_rgb_view(caddy4), dst3);
-//
-//	clear_image(vette);
-//	img::convert(dst3, vette);
-//	write_image(vette, "blend_01.bmp");
-//
-//	img::alpha_blend(vette4, img::make_rgb_view(caddy4));
-//
-//	clear_image(vette);
-//	img::convert(caddy4, vette);
-//	write_image(vette, "blend_02.bmp");
-//
-//	img::destroy_image(vette);
-//	img::destroy_image(caddy_read);
-//	img::destroy_image(caddy);
-//	img::destroy_image(vette_img4);
-//	img::destroy_image(caddy_img4);
-//	img::destroy_image(dst_img3);
-//}
+void alpha_blend_test()
+{
+	auto title = "alpha_blend_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+
+	Image vette;
+	img::read_image_from_file(CORVETTE_PATH, vette);
+	auto width = vette.width;
+	auto height = vette.height;
+
+	Image caddy_read;
+	img::read_image_from_file(CADILLAC_PATH, caddy_read);
+
+	Image caddy;
+	caddy.width = width;
+	caddy.height = height;
+	img::resize_image(caddy_read, caddy);
+
+	img::Buffer32 buffer;
+	make_buffer(buffer, width * height * 11);
+
+	img::View4r32 vette4;
+	img::make_view(vette4, width, height, buffer);
+	img::convert(vette, vette4);
+
+	auto alpha_view = img::select_channel(vette4, img::RGBA::A);
+	img::for_each_pixel(alpha_view, [](r32& p) { p = 0.5f; });
+
+	img::View4r32 caddy4;
+	img::make_view(caddy4, width, height, buffer);
+	img::convert(caddy, caddy4);
+
+	img::View3r32 dst3;
+	img::make_view(dst3, width, height, buffer);
+
+	img::alpha_blend(vette4, img::make_rgb_view(caddy4), dst3);
+
+	clear_image(vette);
+	img::convert(dst3, vette);
+	write_image(vette, "blend_01.bmp");
+
+	img::alpha_blend(vette4, img::make_rgb_view(caddy4));
+
+	clear_image(vette);
+	img::convert(caddy4, vette);
+	write_image(vette, "blend_02.bmp");
+
+	img::destroy_image(vette);
+	img::destroy_image(caddy_read);
+	img::destroy_image(caddy);
+	buffer_free(buffer);
+}
 
 
-//void transform_test()
-//{
-//	auto title = "transform_test";
-//	printf("\n%s:\n", title);
-//	auto out_dir = IMAGE_OUT_PATH / title;
-//	empty_dir(out_dir);
-//	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
-//
-//	auto const invert = [](u8 p) { return 255 - p; };
-//	auto const lut = img::to_lut(invert);
-//
-//	GrayImage vette;
-//	img::read_image_from_file(CORVETTE_PATH, vette);
-//	auto width = vette.width;
-//	auto height = vette.height;
-//
-//	GrayImage gr_read;
-//	img::read_image_from_file(CADILLAC_PATH, gr_read);
-//
-//	GrayImage caddy;
-//	caddy.width = width;
-//	caddy.height = height;
-//	img::resize_image(gr_read, caddy);
-//
-//	GrayImage gr_dst;
-//	img::make_image(gr_dst, width, height);
-//
-//	Range2Du32 right{};
-//	right.x_begin = width / 2;
-//	right.x_end = width;
-//	right.y_begin = 0;
-//	right.y_end = height;
-//
-//	Range2Du32 left{};
-//	left.x_begin = 0;
-//	left.x_end = width / 2;
-//	left.y_begin = 0;
-//	left.y_end = height;
-//
-//	auto vette_right = img::sub_view(vette, right);
-//	auto caddy_left = img::sub_view(caddy, left);
-//	auto gr_dst_right = img::sub_view(gr_dst, right);
-//	auto gr_dst_left = img::sub_view(gr_dst, left);
-//
-//	img::transform(caddy_left, gr_dst_left, lut);
-//	img::transform(vette_right, gr_dst_right, lut);
-//
-//	write_image(gr_dst, "transform_gray.bmp");
-//
-//	img::Image1Cr32 vette1;
-//	img::make_image(vette1, width, height);
-//	img::convert(vette, vette1);
-//
-//	img::Image1Cr32 caddy1;
-//	img::make_image(caddy1, width, height);
-//	img::convert(caddy, caddy1);
-//
-//	img::Image1Cr32 gr_dst1;
-//	img::make_image(gr_dst1, width, height);
-//
-//	auto vette1_right = img::sub_view(vette1, right);
-//	auto caddy1_left = img::sub_view(caddy1, left);
-//	auto gr_dst1_right = img::sub_view(gr_dst1, right);
-//	auto gr_dst1_left = img::sub_view(gr_dst1, left);
-//
-//	auto const invert1 = [](r32 p) { return 1.0f - p; };
-//
-//	img::transform(caddy1_left, gr_dst1_right, invert1);
-//	img::transform(vette1_right, gr_dst1_left, invert1);
-//
-//	img::convert(gr_dst1, gr_dst);
-//
-//	write_image(gr_dst, "transform_gray1.bmp");
-//
-//	img::destroy_image(vette);
-//	img::destroy_image(gr_read);
-//	img::destroy_image(caddy);
-//	img::destroy_image(gr_dst);
-//	img::destroy_image(vette1);
-//	img::destroy_image(caddy1);
-//	img::destroy_image(gr_dst1);
-//}
+void transform_test()
+{
+	auto title = "transform_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+
+	auto const invert = [](u8 p) { return 255 - p; };
+	auto const lut = img::to_lut(invert);
+
+	GrayImage vette;
+	img::read_image_from_file(CORVETTE_PATH, vette);
+	auto width = vette.width;
+	auto height = vette.height;
+
+	GrayImage gr_read;
+	img::read_image_from_file(CADILLAC_PATH, gr_read);
+
+	GrayImage caddy;
+	caddy.width = width;
+	caddy.height = height;
+	img::resize_image(gr_read, caddy);
+
+	GrayImage gr_dst;
+	img::make_image(gr_dst, width, height);
+
+	Range2Du32 right{};
+	right.x_begin = width / 2;
+	right.x_end = width;
+	right.y_begin = 0;
+	right.y_end = height;
+
+	Range2Du32 left{};
+	left.x_begin = 0;
+	left.x_end = width / 2;
+	left.y_begin = 0;
+	left.y_end = height;
+
+	auto vette_right = img::sub_view(vette, right);
+	auto caddy_left = img::sub_view(caddy, left);
+	auto gr_dst_right = img::sub_view(gr_dst, right);
+	auto gr_dst_left = img::sub_view(gr_dst, left);
+
+	img::transform(caddy_left, gr_dst_left, lut);
+	img::transform(vette_right, gr_dst_right, lut);
+
+	write_image(gr_dst, "transform_gray.bmp");
+
+	img::Buffer32 buffer;
+	make_buffer(buffer, width * height * 3);
+
+	img::View1r32 vette1;
+	img::make_view(vette1, width, height, buffer);
+	img::convert(vette, vette1);
+
+	img::View1r32 caddy1;
+	img::make_view(caddy1, width, height, buffer);
+	img::convert(caddy, caddy1);
+
+	img::View1r32 gr_dst1;
+	img::make_view(gr_dst1, width, height, buffer);
+
+	auto vette1_right = img::sub_view(vette1, right);
+	auto caddy1_left = img::sub_view(caddy1, left);
+	auto gr_dst1_right = img::sub_view(gr_dst1, right);
+	auto gr_dst1_left = img::sub_view(gr_dst1, left);
+
+	auto const invert1 = [](r32 p) { return 1.0f - p; };
+
+	img::transform(caddy1_left, gr_dst1_right, invert1);
+	img::transform(vette1_right, gr_dst1_left, invert1);
+
+	img::convert(gr_dst1, gr_dst);
+
+	write_image(gr_dst, "transform_gray1.bmp");
+
+	img::destroy_image(vette);
+	img::destroy_image(gr_read);
+	img::destroy_image(caddy);
+	img::destroy_image(gr_dst);
+	buffer_free(buffer);
+}
 
 
 
