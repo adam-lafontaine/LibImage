@@ -5,6 +5,7 @@
 #include <cmath>
 
 
+
 template <class LIST_T, class FUNC_T>
 static void do_for_each_seq(LIST_T const& list, FUNC_T const& func)
 {
@@ -513,26 +514,6 @@ namespace libimage
 }
 
 
-/* image templates */
-
-namespace libimage
-{
-	template <size_t N>
-	static std::array<r32*, N> channel_row_begin(ViewCHr32<N> const& view, u32 y)
-	{
-		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin);
-
-		std::array<r32*, N> data = {};
-		for (u32 ch = 0; ch < N; ++ch)
-		{
-			data[ch] = view.image_channel_data[ch] + offset;
-		}
-
-		return data;
-	}
-}
-
-
 /* Images */
 
 namespace libimage
@@ -640,11 +621,11 @@ namespace libimage
 	{
 		auto const row_func = [&](u32 y)
 		{
-			auto d = channel_row_begin(dst, y);
+			auto d = channel_row_begin(dst, y).channels;
 			auto s = row_begin(src, y);
 			for (u32 x = 0; x < src.width; ++x)
 			{
-				for (u32 ch = 0; ch < d.size(); ++ch)
+				for (u32 ch = 0; ch < N; ++ch)
 				{
 					d[ch][x] = to_channel_r32(s[x].channels[ch]);
 				}
@@ -660,12 +641,12 @@ namespace libimage
 	{
 		auto const row_func = [&](u32 y)
 		{
-			auto s = channel_row_begin(src, y);
+			auto s = channel_row_begin(src, y).channels;
 			auto d = row_begin(dst, y);
 
 			for (u32 x = 0; x < src.width; ++x)
 			{
-				for (u32 ch = 0; ch < s.size(); ++ch)
+				for (u32 ch = 0; ch < N; ++ch)
 				{
 					d[x].channels[ch] = to_channel_u8(s[ch][x]);
 				}
@@ -880,6 +861,7 @@ namespace libimage
 	}
 }
 
+
 /* fill */
 
 namespace libimage
@@ -911,10 +893,10 @@ namespace libimage
 
 		auto const row_func = [&](u32 y)
 		{
-			auto d = channel_row_begin(image, y);
+			auto d = channel_row_begin(image, y).channels;
 			for (u32 x = 0; x < image.width; ++x)
 			{
-				for (u32 ch = 0; ch < d.size(); ++ch)
+				for (u32 ch = 0; ch < N; ++ch)
 				{
 					d[ch][x] = channels[ch];
 				}
@@ -1021,11 +1003,11 @@ namespace libimage
 
 		auto const row_func = [&](u32 y)
 		{
-			auto s = channel_row_begin(src, y);
-			auto d = channel_row_begin(dst, y);
+			auto s = channel_row_begin(src, y).channels;
+			auto d = channel_row_begin(dst, y).channels;
 			for (u32 x = 0; x < src.width; ++x)
 			{
-				for (u32 ch = 0; ch < d.size(); ++ch)
+				for (u32 ch = 0; ch < ND; ++ch)
 				{
 					d[ch][x] = s[ch][x];
 				}
@@ -1277,7 +1259,7 @@ namespace libimage
 
 		auto const row_func = [&](u32 y)
 		{
-			auto s = channel_row_begin(src, y);
+			auto s = channel_row_begin(src, y).channels;
 			auto r = s[red];
 			auto g = s[green];
 			auto b = s[blue];
@@ -1411,9 +1393,9 @@ namespace libimage
 
 		auto const row_func = [&](u32 y)
 		{
-			auto s = channel_row_begin(src, y);
-			auto c = channel_row_begin(cur, y);
-			auto d = channel_row_begin(dst, y);
+			auto s = channel_row_begin(src, y).channels;
+			auto c = channel_row_begin(cur, y).channels;
+			auto d = channel_row_begin(dst, y).channels;
 
 			auto sr = s[red];
 			auto sg = s[green];
