@@ -184,6 +184,35 @@ namespace libimage
 
 namespace libimage
 {	
+	class View1r32
+	{
+	public:
+
+		r32* image_data = 0;
+		u32 image_width = 0;
+
+		union
+		{
+			Range2Du32 range;
+
+			struct
+			{
+				u32 x_begin;
+				u32 x_end;
+				u32 y_begin;
+				u32 y_end;
+			};
+		};
+
+		u32 width = 0;
+		u32 height = 0;
+	};	
+
+	r32* row_begin(View1r32 const& view, u32 y);
+
+	r32* xy_at(View1r32 const& view, u32 x, u32 y);
+
+
 	template <size_t N>
 	class ViewCHr32
 	{
@@ -216,36 +245,6 @@ namespace libimage
 
 
 	View3r32 make_rgb_view(View4r32 const& image);
-
-
-	class View1r32
-	{
-	public:
-
-		r32* image_data = 0;
-		u32 image_width = 0;
-
-		union
-		{
-			Range2Du32 range;
-
-			struct
-			{
-				u32 x_begin;
-				u32 x_end;
-				u32 y_begin;
-				u32 y_end;
-			};
-		};
-
-		u32 width = 0;
-		u32 height = 0;
-	};	
-
-	r32* row_begin(View1r32 const& view, u32 y);
-
-	r32* xy_at(View1r32 const& view, u32 x, u32 y);
-
 }
 
 

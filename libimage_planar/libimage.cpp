@@ -635,8 +635,8 @@ namespace libimage
 
 namespace libimage
 {
-	template <class IMG_INT, class IMG_PLA>
-	static void interleaved_to_planar(IMG_INT const& src, IMG_PLA const& dst)
+	template <class IMG_INT, size_t N>
+	static void interleaved_to_planar(IMG_INT const& src, ViewCHr32<N> const& dst)
 	{
 		auto const row_func = [&](u32 y)
 		{
@@ -655,8 +655,8 @@ namespace libimage
 	}
 
 
-	template <class IMG_INT, class IMG_PLA>
-	static void planar_to_interleaved(IMG_PLA const& src, IMG_INT const& dst)
+	template <class IMG_INT, size_t N>
+	static void planar_to_interleaved(ViewCHr32<N> const& src, IMG_INT const& dst)
 	{
 		auto const row_func = [&](u32 y)
 		{
@@ -676,8 +676,8 @@ namespace libimage
 	}
 
 
-	template <class IMG_U8, class IMG_R32>
-	static void channel_r32_to_u8(IMG_R32 const& src, IMG_U8 const& dst)
+	template <class IMG_U8>
+	static void channel_r32_to_u8(View1r32 const& src, IMG_U8 const& dst)
 	{
 		auto const row_func = [&](u32 y)
 		{
@@ -693,8 +693,8 @@ namespace libimage
 	}
 
 
-	template <class IMG_U8, class IMG_R32>
-	static void channel_u8_to_r32(IMG_U8 const& src, IMG_R32 const& dst)
+	template <class IMG_U8>
+	static void channel_u8_to_r32(IMG_U8 const& src, View1r32 const& dst)
 	{
 		auto const row_func = [&](u32 y)
 		{
@@ -1014,9 +1014,11 @@ namespace libimage
 	}
 
 
-	template <class IMG_SRC, class IMG_DST>
-	static void copy_n_channels(IMG_SRC const& src, IMG_DST const& dst)
+	template <size_t NS, size_t ND>
+	static void copy_n_channels(ViewCHr32<NS> const& src, ViewCHr32<ND> const& dst)
 	{
+		static_assert(NS >= ND);
+
 		auto const row_func = [&](u32 y)
 		{
 			auto s = channel_row_begin(src, y);
@@ -1248,6 +1250,7 @@ namespace libimage
 		constexpr static auto red = id_cast(RGB::R);
 		constexpr static auto green = id_cast(RGB::G);
 		constexpr static auto blue = id_cast(RGB::B);
+
 		auto const row_func = [&](u32 y)
 		{
 			auto s = row_begin(src, y);
@@ -1265,8 +1268,8 @@ namespace libimage
 	}
 
 
-	template <class IMG, class GRAY>
-	static void grayscale_rgb(IMG const& src, GRAY const& dst)
+	template <size_t N>
+	static void grayscale_rgb(ViewCHr32<N> const& src, View1r32 const& dst)
 	{
 		constexpr static auto red = id_cast(RGB::R);
 		constexpr static auto green = id_cast(RGB::G);
@@ -1343,30 +1346,6 @@ namespace libimage
 
 namespace libimage
 {
-	/*View1r32 select_channel(Image4r32 const& image, RGBA channel)
-	{
-		assert(verify(image));
-
-		auto ch = id_cast(channel);
-
-		View1r32 view1{};
-
-		view1.image_width = image.width;
-		view1.x_begin = 0;
-		view1.y_begin = 0;
-		view1.x_end = image.width;
-		view1.y_end = image.height;
-		view1.width = image.width;
-		view1.height = image.height;
-
-		view1.image_data = image.channel_data[ch];
-
-		assert(verify(view1));
-
-		return view1;
-	}*/
-
-
 	View1r32 select_channel(View4r32 const& view, RGBA channel)
 	{
 		assert(verify(view));
@@ -1386,30 +1365,6 @@ namespace libimage
 
 		return view1;
 	}
-
-
-	/*View1r32 select_channel(Image3r32 const& image, RGB channel)
-	{
-		assert(verify(image));
-
-		auto ch = id_cast(channel);
-
-		View1r32 view1{};
-
-		view1.image_width = image.width;
-		view1.x_begin = 0;
-		view1.y_begin = 0;
-		view1.x_end = image.width;
-		view1.y_end = image.height;
-		view1.width = image.width;
-		view1.height = image.height;
-
-		view1.image_data = image.channel_data[ch];
-
-		assert(verify(view1));
-
-		return view1;
-	}*/
 
 
 	View1r32 select_channel(View3r32 const& view, RGB channel)
@@ -1447,8 +1402,7 @@ namespace libimage
 	}
 
 
-	template <class IMG_4_SRC, class IMG_3_CUR, class IMG_3_DST>
-	static void do_alpha_blend(IMG_4_SRC const& src, IMG_3_CUR const& cur, IMG_3_DST const& dst)
+	static void do_alpha_blend(View4r32 const& src, View3r32 const& cur, View3r32 const& dst)
 	{
 		constexpr static auto red = id_cast(RGBA::R);
 		constexpr static auto green = id_cast(RGBA::G);
@@ -1540,23 +1494,6 @@ namespace libimage
 	}
 
 
-	template <class IMG_1C_SRC, class IMG_1C_DST>
-	static void do_transform_r32(IMG_1C_SRC const& src, IMG_1C_DST const& dst, r32_to_r32_f const& func)
-	{
-		auto const row_func = [&](u32 y)
-		{
-			auto s = row_begin(src, y);
-			auto d = row_begin(dst, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				d[x] = func(s[x]);
-			}
-		};
-
-		process_rows(src.height, row_func);
-	}
-
-
 	void transform(gray::Image const& src, gray::Image const& dst, lut_t const& lut)
 	{
 		assert(verify(src, dst));
@@ -1593,7 +1530,17 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		do_transform_r32(src, dst, func);
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = func(s[x]);
+			}
+		};
+
+		process_rows(src.height, row_func);
 	}
 
 }
