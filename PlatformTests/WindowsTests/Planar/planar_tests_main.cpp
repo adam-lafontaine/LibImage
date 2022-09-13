@@ -96,6 +96,7 @@ void grayscale_test();
 void select_channel_test();
 void alpha_blend_test();
 void transform_test();
+void threshold_test();
 //void binary_test();
 //void contrast_test();
 //void blur_test();
@@ -132,6 +133,7 @@ int main()
 	select_channel_test();
 	alpha_blend_test();
 	transform_test();
+	threshold_test();
 	//binary_test();
 	//contrast_test();
 	//blur_test();
@@ -917,6 +919,51 @@ void transform_test()
 	img::destroy_image(vette);
 	img::destroy_image(gr_read);
 	img::destroy_image(caddy);
+	img::destroy_image(gr_dst);
+	buffer_free(buffer);
+}
+
+
+void threshold_test()
+{
+	auto title = "threshold_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+
+	GrayImage vette;
+	img::read_image_from_file(CORVETTE_PATH, vette);
+	auto width = vette.width;
+	auto height = vette.height;
+
+	GrayImage gr_dst;
+	img::make_image(gr_dst, width, height);
+
+	img::threshold(vette, gr_dst, 127, 255);
+
+	write_image(gr_dst, "threshold.bmp");
+
+	img::Buffer32 buffer;
+	make_buffer(buffer, width * height);
+
+	img::View1r32 vette1;
+	img::make_view(vette1, width, height, buffer);
+	img::convert(vette, vette1);
+
+	Range2Du32 left{};
+	left.x_begin = 0;
+	left.x_end = width / 2;
+	left.y_begin = 0;
+	left.y_end = height;
+
+	auto vette_left = img::sub_view(vette1, left);
+
+	img::threshold(vette_left, vette_left, 0.0f, 0.5f);
+	img::convert(vette1, gr_dst);
+	write_image(gr_dst, "threshold1.bmp");
+
+	img::destroy_image(vette);
 	img::destroy_image(gr_dst);
 	buffer_free(buffer);
 }

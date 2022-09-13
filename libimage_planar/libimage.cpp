@@ -1253,6 +1253,8 @@ namespace libimage
 	template <size_t N>
 	static void grayscale_rgb(ViewCHr32<N> const& src, View1r32 const& dst)
 	{
+		static_assert(N >= 3);
+
 		constexpr static auto red = id_cast(RGB::R);
 		constexpr static auto green = id_cast(RGB::G);
 		constexpr static auto blue = id_cast(RGB::B);
@@ -1528,3 +1530,71 @@ namespace libimage
 }
 
 
+/* threshold */
+
+namespace libimage
+{
+	void threshold(gray::Image const& src, gray::Image const& dst, u8 min, u8 max)
+	{
+		assert(verify(src, dst));
+		assert(min < max);
+
+		auto const lut = to_lut([&](u8 p) { return p >= min && p <= max ? 255 : 0; });		
+
+		do_transform_lut(src, dst, lut);
+	}
+
+
+	void threshold(gray::Image const& src, gray::View const& dst, u8 min, u8 max)
+	{
+		assert(verify(src, dst));
+		assert(min < max);
+
+		auto const lut = to_lut([&](u8 p) { return p >= min && p <= max ? 255 : 0; });
+
+		do_transform_lut(src, dst, lut);
+	}
+
+
+	void threshold(gray::View const& src, gray::Image const& dst, u8 min, u8 max)
+	{
+		assert(verify(src, dst));
+		assert(min < max);
+
+		auto const lut = to_lut([&](u8 p) { return p >= min && p <= max ? 255 : 0; });
+
+		do_transform_lut(src, dst, lut);
+	}
+
+
+	void threshold(gray::View const& src, gray::View const& dst, u8 min, u8 max)
+	{
+		assert(verify(src, dst));
+		assert(min < max);
+
+		auto const lut = to_lut([&](u8 p) { return p >= min && p <= max ? 255 : 0; });
+
+		do_transform_lut(src, dst, lut);
+	}
+
+
+	void threshold(View1r32 const& src, View1r32 const& dst, r32 min, r32 max)
+	{
+		assert(verify(src, dst));
+		assert(min >= 0.0f && min <= 1.0f);
+		assert(max >= 0.0f && max <= 1.0f);
+		assert(min < max);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = s[x] >= min && s[x] <= max ? 1.0f : 0.0f;
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+}
