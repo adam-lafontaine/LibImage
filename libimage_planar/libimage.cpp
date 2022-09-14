@@ -112,9 +112,24 @@ static void process_rows(u32 row_begin, u32 row_end, id_func_t const& row_func)
 }
 
 
+static constexpr std::array<r32, 256> channel_r32_lut()
+{
+	std::array<r32, 256> lut = {};
+
+	for (u32 i = 0; i < 256; ++i)
+	{
+		lut[i] = i / 256.0f;
+	}
+
+	return lut;
+}
+
+
 static constexpr r32 to_channel_r32(u8 value)
 {
-	return value / 255.0f;
+	constexpr auto lut = channel_r32_lut();
+
+	return lut[value];
 }
 
 
@@ -1706,6 +1721,87 @@ namespace libimage
 			for (u32 x = 0; x < src.width; ++x)
 			{
 				d[x] = lerp_clamp(min, max, 0.0f, 1.0f, s[x]);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+}
+
+
+/* convolve */
+
+namespace libimage
+{
+	constexpr r32 D3 = 16.0f;
+	constexpr std::array<r32, 9> GAUSS_3X3
+	{
+		(1 / D3), (2 / D3), (1 / D3),
+		(2 / D3), (4 / D3), (2 / D3),
+		(1 / D3), (2 / D3), (1 / D3),
+	};
+
+	constexpr r32 D5 = 256.0f;
+	constexpr std::array<r32, 25> GAUSS_5X5
+	{
+		(1 / D5), (4 / D5),  (6 / D5),  (4 / D5),  (1 / D5),
+		(4 / D5), (16 / D5), (24 / D5), (16 / D5), (4 / D5),
+		(6 / D5), (24 / D5), (36 / D5), (24 / D5), (6 / D5),
+		(4 / D5), (16 / D5), (24 / D5), (16 / D5), (4 / D5),
+		(1 / D5), (4 / D5),  (6 / D5),  (4 / D5),  (1 / D5),
+	};
+
+
+	constexpr std::array<r32, 9> GRAD_X_3X3
+	{
+		-0.25f,  0.0f,  0.25f,
+		-0.50f,  0.0f,  0.50f,
+		-0.25f,  0.0f,  0.25f,
+	};
+
+
+	constexpr std::array<r32, 9> GRAD_Y_3X3
+	{
+		-0.25f, -0.50f, -0.25f,
+		 0.0f,   0.0f,   0.0f,
+		 0.25f,  0.50f,  0.25f,
+	};
+
+
+	static void convolve_gradients_3x3(View1r32 const& src, View1r32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		auto const row_func = [&](u32 y) 
+		{
+			int ry_begin = -1;
+			int ry_end = 2;
+			int rx_begin = -1;
+			int rx_end = 2;
+
+			u32 w = 0;
+			r32 gx = 0.0f;
+			r32 gy = 0.0f;
+			
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				w = 0;
+				gx = 0.0f;
+				gy = 0.0f;
+
+				for (int ry = ry_begin; ry < ry_end; ++ry)
+				{
+					auto s = row_begin(src, y + ry);
+					for (int rx = rx_begin; rx < rx_end; ++rx)
+					{
+						gx += s[x + rx] * GRAD_X_3X3[w];
+						gy += s[x + rx] * GRAD_Y_3X3[w];
+						++w;
+					}
+				}
+
+				d[x] = gx > gy ? gx : gy;
 			}
 		};
 

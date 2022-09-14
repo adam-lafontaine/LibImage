@@ -528,6 +528,14 @@ namespace libimage
 }
 
 
+/* convolve */
+
+namespace libimage
+{
+
+}
+
+
 /* stb wrappers */
 
 namespace libimage
