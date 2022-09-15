@@ -575,6 +575,17 @@ namespace libimage
 
 		return row_begin(view, y) + x;
 	}
+
+
+	static r32* row_offset_begin(View1r32 const& view, int y_offset)
+	{
+		auto offset = (view.y_begin + y_offset) * view.image_width + view.x_begin;
+
+		auto ptr = view.image_data + (u64)(offset);
+		assert(ptr);
+
+		return ptr;
+	}
 		
 }
 
@@ -1729,11 +1740,11 @@ namespace libimage
 }
 
 
-/* convolve */
+/* gradients edges */
 
 namespace libimage
 {
-	constexpr r32 D3 = 16.0f;
+	/*constexpr r32 D3 = 16.0f;
 	constexpr std::array<r32, 9> GAUSS_3X3
 	{
 		(1 / D3), (2 / D3), (1 / D3),
@@ -1749,10 +1760,10 @@ namespace libimage
 		(6 / D5), (24 / D5), (36 / D5), (24 / D5), (6 / D5),
 		(4 / D5), (16 / D5), (24 / D5), (16 / D5), (4 / D5),
 		(1 / D5), (4 / D5),  (6 / D5),  (4 / D5),  (1 / D5),
-	};
+	};*/
 
 
-	constexpr std::array<r32, 9> GRAD_X_3X3
+	static constexpr r32 GRAD_X_3X3[9]
 	{
 		-0.25f,  0.0f,  0.25f,
 		-0.50f,  0.0f,  0.50f,
@@ -1760,7 +1771,7 @@ namespace libimage
 	};
 
 
-	constexpr std::array<r32, 9> GRAD_Y_3X3
+	static constexpr r32 GRAD_Y_3X3[9]
 	{
 		-0.25f, -0.50f, -0.25f,
 		 0.0f,   0.0f,   0.0f,
@@ -1768,9 +1779,39 @@ namespace libimage
 	};
 
 
+	static void zero_outer(View1r32 const& view)
+	{
+		auto const top_bottom = [&]() 
+		{
+			auto top = row_begin(view, 0);
+			auto bottom = row_begin(view, view.height - 1);
+			for (u32 x = 0; x < view.width; ++x)
+			{
+				top[x] = bottom[x] = 0.0f;
+			}
+		};
+		
+		auto const left_right = [&]() 
+		{
+			for (u32 y = 1; y < view.height - 1; ++y)
+			{
+				auto row = row_begin(view, y);
+				row[0] = row[view.width - 1] = 0.0f;
+			}
+		};
+
+		std::array<std::function<void()>, 2> f_list
+		{
+			top_bottom, left_right
+		};
+
+		do_for_each(f_list, [](auto const& f) { f(); });
+	}
+
+
 	static void convolve_gradients_3x3(View1r32 const& src, View1r32 const& dst)
 	{
-		assert(verify(src, dst));
+		// TODO: simd
 
 		auto const row_func = [&](u32 y) 
 		{
@@ -1792,11 +1833,11 @@ namespace libimage
 
 				for (int ry = ry_begin; ry < ry_end; ++ry)
 				{
-					auto s = row_begin(src, y + ry);
+					auto s = row_offset_begin(src, y + ry);
 					for (int rx = rx_begin; rx < rx_end; ++rx)
 					{
-						gx += s[x + rx] * GRAD_X_3X3[w];
-						gy += s[x + rx] * GRAD_Y_3X3[w];
+						gx += (s + rx)[x] * GRAD_X_3X3[w];
+						gy += (s + rx)[x] * GRAD_Y_3X3[w];
 						++w;
 					}
 				}
@@ -1806,5 +1847,79 @@ namespace libimage
 		};
 
 		process_rows(src.height, row_func);
+	}
+
+
+	static void convolve_edges_3x3(View1r32 const& src, View1r32 const& dst, r32 threshold)
+	{
+		// TODO: simd
+
+		auto const row_func = [&](u32 y)
+		{
+			int ry_begin = -1;
+			int ry_end = 2;
+			int rx_begin = -1;
+			int rx_end = 2;
+
+			u32 w = 0;
+			r32 gx = 0.0f;
+			r32 gy = 0.0f;
+
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				w = 0;
+				gx = 0.0f;
+				gy = 0.0f;
+
+				for (int ry = ry_begin; ry < ry_end; ++ry)
+				{
+					auto s = row_offset_begin(src, y + ry);
+					for (int rx = rx_begin; rx < rx_end; ++rx)
+					{
+						gx += (s + rx)[x] * GRAD_X_3X3[w];
+						gy += (s + rx)[x] * GRAD_Y_3X3[w];
+						++w;
+					}
+				}
+
+				d[x] = (gx > gy ? gx : gy) >= threshold ? 1.0f : 0.0f;
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void gradients(View1r32 const& src, View1r32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		zero_outer(dst);
+
+		Range2Du32 inner{};
+		inner.x_begin = 1;
+		inner.x_end = src.width - 1;
+		inner.y_begin = 1;
+		inner.y_end = src.height - 1;
+
+		convolve_gradients_3x3(sub_view(src, inner), sub_view(dst, inner));
+	}
+
+
+	void edges(View1r32 const& src, View1r32 const& dst, r32 threshold)
+	{
+		assert(verify(src, dst));
+		assert(threshold >= 0.0f && threshold <= 1.0f);
+
+		zero_outer(dst);
+
+		Range2Du32 inner{};
+		inner.x_begin = 1;
+		inner.x_end = src.width - 1;
+		inner.y_begin = 1;
+		inner.y_end = src.height - 1;
+
+		convolve_edges_3x3(sub_view(src, inner), sub_view(dst, inner), threshold);
 	}
 }

@@ -99,8 +99,8 @@ void transform_test();
 void threshold_test();
 void contrast_test();
 //void blur_test();
-//void gradients_test();
-//void edges_test();
+void gradients_test();
+void edges_test();
 //void combo_view_test();
 //void rotate_test();
 
@@ -135,8 +135,8 @@ int main()
 	threshold_test();
 	contrast_test();
 	//blur_test();
-	//gradients_test();
-	//edges_test();
+	gradients_test();
+	edges_test();
 	//combo_view_test();
 	//rotate_test();
 }
@@ -1008,6 +1008,76 @@ void contrast_test()
 
 	img::destroy_image(vette);
 	img::destroy_image(gr_dst);
+	buffer_free(buffer);
+}
+
+
+void gradients_test()
+{
+	auto title = "gradients_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+
+	GrayImage vette;
+	img::read_image_from_file(CORVETTE_PATH, vette);
+	auto width = vette.width;
+	auto height = vette.height;
+
+	img::Buffer32 buffer{};
+	make_buffer(buffer, width * height * 2);
+
+	img::View1r32 src;
+	img::make_view(src, width, height, buffer);
+
+	img::View1r32 dst;
+	img::make_view(dst, width, height, buffer);
+
+	img::convert(vette, src);
+
+	img::gradients(src, dst);
+
+	img::convert(dst, vette);
+
+	write_image(vette, "gradients.bmp");
+
+	img::destroy_image(vette);
+	buffer_free(buffer);
+}
+
+
+void edges_test()
+{
+	auto title = "edges_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+
+	GrayImage vette;
+	img::read_image_from_file(CORVETTE_PATH, vette);
+	auto width = vette.width;
+	auto height = vette.height;
+
+	img::Buffer32 buffer{};
+	make_buffer(buffer, width * height * 2);
+
+	img::View1r32 src;
+	img::make_view(src, width, height, buffer);
+
+	img::View1r32 dst;
+	img::make_view(dst, width, height, buffer);
+
+	img::convert(vette, src);
+
+	img::edges(src, dst, 0.2f);
+
+	img::convert(dst, vette);
+
+	write_image(vette, "edges.bmp");
+
+	img::destroy_image(vette);
 	buffer_free(buffer);
 }
 

@@ -528,11 +528,19 @@ namespace libimage
 }
 
 
-/* convolve */
+/* gradients */
 
 namespace libimage
 {
+	void gradients(View1r32 const& src, View1r32 const& dst);	
+}
 
+
+/* edges */
+
+namespace libimage
+{
+	void edges(View1r32 const& src, View1r32 const& dst, r32 threshold);
 }
 
 
