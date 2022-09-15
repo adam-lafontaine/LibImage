@@ -532,7 +532,7 @@ namespace libimage
 
 namespace libimage
 {
-	void gradients(View1r32 const& src, View1r32 const& dst);	
+	void gradients(View1r32 const& src, View1r32 const& dst);
 }
 
 
@@ -541,6 +541,14 @@ namespace libimage
 namespace libimage
 {
 	void edges(View1r32 const& src, View1r32 const& dst, r32 threshold);
+}
+
+
+/* blur */
+
+namespace libimage
+{
+	void blur(View1r32 const& src, View1r32 const& dst);
 }
 
 

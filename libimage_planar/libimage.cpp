@@ -1744,25 +1744,6 @@ namespace libimage
 
 namespace libimage
 {
-	/*constexpr r32 D3 = 16.0f;
-	constexpr std::array<r32, 9> GAUSS_3X3
-	{
-		(1 / D3), (2 / D3), (1 / D3),
-		(2 / D3), (4 / D3), (2 / D3),
-		(1 / D3), (2 / D3), (1 / D3),
-	};
-
-	constexpr r32 D5 = 256.0f;
-	constexpr std::array<r32, 25> GAUSS_5X5
-	{
-		(1 / D5), (4 / D5),  (6 / D5),  (4 / D5),  (1 / D5),
-		(4 / D5), (16 / D5), (24 / D5), (16 / D5), (4 / D5),
-		(6 / D5), (24 / D5), (36 / D5), (24 / D5), (6 / D5),
-		(4 / D5), (16 / D5), (24 / D5), (16 / D5), (4 / D5),
-		(1 / D5), (4 / D5),  (6 / D5),  (4 / D5),  (1 / D5),
-	};*/
-
-
 	static constexpr r32 GRAD_X_3X3[9]
 	{
 		-0.25f,  0.0f,  0.25f,
@@ -1921,5 +1902,171 @@ namespace libimage
 		inner.y_end = src.height - 1;
 
 		convolve_edges_3x3(sub_view(src, inner), sub_view(dst, inner), threshold);
+	}
+}
+
+
+/* blur */
+
+namespace libimage
+{
+	constexpr r32 D3 = 16.0f;
+	constexpr r32 GAUSS_3X3[9]
+	{
+		(1 / D3), (2 / D3), (1 / D3),
+		(2 / D3), (4 / D3), (2 / D3),
+		(1 / D3), (2 / D3), (1 / D3),
+	};
+
+	constexpr r32 D5 = 256.0f;
+	constexpr r32 GAUSS_5X5[25]
+	{
+		(1 / D5), (4 / D5),  (6 / D5),  (4 / D5),  (1 / D5),
+		(4 / D5), (16 / D5), (24 / D5), (16 / D5), (4 / D5),
+		(6 / D5), (24 / D5), (36 / D5), (24 / D5), (6 / D5),
+		(4 / D5), (16 / D5), (24 / D5), (16 / D5), (4 / D5),
+		(1 / D5), (4 / D5),  (6 / D5),  (4 / D5),  (1 / D5),
+	};
+
+
+	static void copy_outer(View1r32 const& src, View1r32 const& dst)
+	{
+		auto const width = src.width;
+		auto const height = src.height;
+
+		auto const top_bottom = [&]()
+		{
+			auto s_top = row_begin(src, 0);
+			auto s_bottom = row_begin(src, height - 1);
+			auto d_top = row_begin(dst, 0);
+			auto d_bottom = row_begin(dst, height - 1);
+			for (u32 x = 0; x < width; ++x)
+			{
+				d_top[x] = s_top[x];
+				d_bottom[x] = s_bottom[x];
+			}
+		};
+
+		auto const left_right = [&]()
+		{
+			for (u32 y = 1; y < height - 1; ++y)
+			{
+				auto s_row = row_begin(src, y);
+				auto d_row = row_begin(dst, y);
+
+				d_row[0] = s_row[0];
+				d_row[width - 1] = s_row[width - 1];
+			}
+		};
+
+		std::array<std::function<void()>, 2> f_list
+		{
+			top_bottom, left_right
+		};
+
+		do_for_each(f_list, [](auto const& f) { f(); });
+	}
+
+
+	static void convolve_gauss_3x3_outer(View1r32 const& src, View1r32 const& dst)
+	{
+		auto const width = src.width;
+		auto const height = src.height;
+
+		int ry_begin = -1;
+		int ry_end = 2;
+		int rx_begin = -1;
+		int rx_end = 2;
+
+		auto const top_bottom = [&]()
+		{
+			u32 w = 0;
+			r32 b_top = 0.0f;
+			r32 b_bottom = 0.0f;
+
+			auto d_top = row_begin(dst, 0);
+			auto d_bottom = row_begin(dst, height - 1);
+			for (u32 x = 0; x < width; ++x)
+			{
+				w = 0;
+				b_top = 0.0f;
+				b_bottom = 0.0f;
+
+				for (int ry = ry_begin; ry < ry_end; ++ry)
+				{
+					auto s_top = row_offset_begin(src, 0 + ry);
+					auto s_bottom = row_offset_begin(src, height - 1 + ry);
+					for (int rx = rx_begin; rx < rx_end; ++rx)
+					{
+						b_top += (s_top + rx)[x] * GAUSS_3X3[w];
+						b_bottom += (s_bottom + rx)[x] * GAUSS_3X3[w];
+						++w;
+					}
+				}
+
+				d_top[x] = b_top;
+				d_bottom[x] = b_bottom;
+			}
+		};
+
+		auto const left_right = [&]() 
+		{
+			u32 w = 0;
+			r32 b_left = 0.0f;
+			r32 b_right = 0.0f;
+
+			for (u32 y = 1; y < height - 1; ++y)
+			{
+				w = 0;
+				b_left = 0.0f;
+				b_right = 0.0f;
+				
+				auto d_left = row_begin(dst, y);
+				auto d_right = d_left + width - 1;
+
+				for (int ry = ry_begin; ry < ry_end; ++ry)
+				{
+					auto s_left = row_begin(src, y + ry);
+					auto s_right = s_left + width - 1;
+
+					for (int rx = rx_begin; rx < rx_end; ++rx)
+					{
+						b_left += *(s_left + rx) * GAUSS_3X3[w];
+						b_right += *(s_right + rx) * GAUSS_3X3[w];
+						++w;
+					}
+				}
+
+				*d_left = b_left;
+				*d_right = b_right;
+			}
+		};
+
+		std::array<std::function<void()>, 2> f_list
+		{
+			top_bottom, left_right
+		};
+
+		do_for_each(f_list, [](auto const& f) { f(); });
+	}
+
+
+	static void convolve_gauss_5x5(View1r32 const& src, View1r32 const& dst)
+	{
+
+	}
+
+
+	void blur(View1r32 const& src, View1r32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		Range2Du32 inner{};
+		inner.x_begin = 1;
+		inner.x_end = src.width - 1;
+		inner.y_begin = 1;
+		inner.y_end = src.height - 1;
+
+		convolve_gauss_3x3_outer(sub_view(src, inner), sub_view(dst, inner));
 	}
 }
