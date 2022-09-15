@@ -1794,13 +1794,13 @@ namespace libimage
 	{
 		// TODO: simd
 
+		int const ry_begin = -1;
+		int const ry_end = 2;
+		int const rx_begin = -1;
+		int const rx_end = 2;
+
 		auto const row_func = [&](u32 y) 
 		{
-			int ry_begin = -1;
-			int ry_end = 2;
-			int rx_begin = -1;
-			int rx_end = 2;
-
 			u32 w = 0;
 			r32 gx = 0.0f;
 			r32 gy = 0.0f;
@@ -1835,13 +1835,13 @@ namespace libimage
 	{
 		// TODO: simd
 
+		int const ry_begin = -1;
+		int const ry_end = 2;
+		int const rx_begin = -1;
+		int const rx_end = 2;
+
 		auto const row_func = [&](u32 y)
 		{
-			int ry_begin = -1;
-			int ry_end = 2;
-			int rx_begin = -1;
-			int rx_end = 2;
-
 			u32 w = 0;
 			r32 gx = 0.0f;
 			r32 gy = 0.0f;
@@ -1973,10 +1973,10 @@ namespace libimage
 		auto const width = src.width;
 		auto const height = src.height;
 
-		int ry_begin = -1;
-		int ry_end = 2;
-		int rx_begin = -1;
-		int rx_end = 2;
+		int const ry_begin = -1;
+		int const ry_end = 2;
+		int const rx_begin = -1;
+		int const rx_end = 2;
 
 		auto const top_bottom = [&]()
 		{
@@ -2053,13 +2053,50 @@ namespace libimage
 
 	static void convolve_gauss_5x5(View1r32 const& src, View1r32 const& dst)
 	{
+		assert(verify(src, dst));
 
+		auto const width = src.width;
+		auto const height = src.height;
+
+		int const ry_begin = -2;
+		int const ry_end = 3;
+		int const rx_begin = -2;
+		int const rx_end = 3;
+
+		auto const row_func = [&](u32 y) 
+		{
+			u32 w = 0;
+			r32 g = 0.0f;
+
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				w = 0;
+				g = 0.0f;
+
+				for (int ry = ry_begin; ry < ry_end; ++ry)
+				{
+					auto s = row_offset_begin(src, y + ry);
+					for (int rx = rx_begin; rx < rx_end; ++rx)
+					{
+						g += (s + rx)[x] * GAUSS_5X5[w];
+						++w;
+					}
+				}
+
+				d[x] = g;
+			}
+		};
+
+		process_rows(src.height, row_func);
 	}
 
 
 	void blur(View1r32 const& src, View1r32 const& dst)
 	{
 		assert(verify(src, dst));
+
+		copy_outer(src, dst);
 
 		Range2Du32 inner{};
 		inner.x_begin = 1;
@@ -2068,5 +2105,12 @@ namespace libimage
 		inner.y_end = src.height - 1;
 
 		convolve_gauss_3x3_outer(sub_view(src, inner), sub_view(dst, inner));
+
+		inner.x_begin = 2;
+		inner.x_end = src.width - 2;
+		inner.y_begin = 2;
+		inner.y_end = src.height - 2;
+
+		convolve_gauss_5x5(sub_view(src, inner), sub_view(dst, inner));
 	}
 }
