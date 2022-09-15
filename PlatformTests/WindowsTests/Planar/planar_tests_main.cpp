@@ -101,8 +101,7 @@ void contrast_test();
 void gradients_test();
 void blur_test();
 void edges_test();
-//void combo_view_test();
-//void rotate_test();
+void rotate_test();
 
 
 int main()
@@ -137,8 +136,7 @@ int main()
 	gradients_test();
 	edges_test();
 	blur_test();
-	//combo_view_test();
-	//rotate_test();
+	rotate_test();
 }
 
 
@@ -1131,6 +1129,65 @@ void blur_test()
 
 	img::convert(dst3, caddy);
 	write_image(caddy, "blur3.bmp");
+
+	img::destroy_image(vette);
+	img::destroy_image(caddy);
+	buffer_free(buffer);
+}
+
+
+void rotate_test()
+{
+	auto title = "rotate_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+
+	GrayImage vette;
+	img::read_image_from_file(CORVETTE_PATH, vette);
+	auto width = vette.width;
+	auto height = vette.height;
+
+	img::Buffer32 buffer{};
+	make_buffer(buffer, width * height * 6);
+
+	img::View1r32 src;
+	img::make_view(src, width, height, buffer);
+
+	img::View1r32 dst;
+	img::make_view(dst, width, height, buffer);
+
+	img::convert(vette, src);
+
+	Point2Du32 origin = { width / 2, height / 2 };
+	r32 theta = 0.6f * 2 * 3.14159f;
+
+	img::rotate(src, dst, origin, theta);
+	
+	img::convert(dst, vette);
+	write_image(vette, "rotate1.bmp");
+
+	reset_buffer(buffer);
+
+	Image caddy;
+	img::read_image_from_file(CADILLAC_PATH, caddy);
+	width = caddy.width;
+	height = caddy.height;
+
+	img::View3r32 src3;
+	img::make_view(src3, width, height, buffer);
+
+	img::convert(caddy, src3);
+
+	img::View3r32 dst3;
+	img::make_view(dst3, width, height, buffer);
+
+	img::rotate(src3, dst3, origin, theta);
+
+	img::convert(dst3, caddy);
+
+	write_image(caddy, "rotate3.bmp");
 
 	img::destroy_image(vette);
 	img::destroy_image(caddy);

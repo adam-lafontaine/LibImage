@@ -614,6 +614,24 @@ namespace libimage
 
 
 	template <size_t N>
+	static ChannelData<N> channel_xy_at(ViewCHr32<N> const& view, u32 x, u32 y)
+	{
+		assert(y < view.height);
+		assert(x < view.width);
+
+		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin) + x;
+
+		ChannelData<N> data{};
+		for (u32 ch = 0; ch < N; ++ch)
+		{
+			data.channels[ch] = view.image_channel_data[ch] + offset;
+		}
+
+		return data;
+	}
+
+
+	template <size_t N>
 	static ChannelData<N> channel_row_offset_begin(ViewCHr32<N> const& view, int y)
 	{
 		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin);
@@ -2369,5 +2387,112 @@ namespace libimage
 		inner.y_end = src.height - 2;
 
 		convolve_gauss_5x5(sub_view(src, inner), sub_view(dst, inner));
+	}
+}
+
+
+/* rotate */
+
+namespace libimage
+{
+	static Point2Dr32 find_rotation_src(Point2Du32 const& pt, Point2Du32 const& origin, r32 radians)
+	{
+		auto dx_dst = (r32)pt.x - (r32)origin.x;
+		auto dy_dst = (r32)pt.y - (r32)origin.y;
+
+		auto radius = std::hypotf(dx_dst, dy_dst);
+
+		auto theta_dst = atan2f(dy_dst, dx_dst);
+		auto theta_src = theta_dst - radians;
+
+		auto dx_src = radius * cosf(theta_src);
+		auto dy_src = radius * sinf(theta_src);
+
+		Point2Dr32 pt_src{};
+		pt_src.x = (r32)origin.x + dx_src;
+		pt_src.y = (r32)origin.y + dy_src;
+
+		return pt_src;
+	}
+
+
+	template <size_t N>
+	void do_rotate(ViewCHr32<N> const& src, ViewCHr32<N> const& dst, Point2Du32 origin, r32 radians)
+	{
+		auto const zero = 0.0f;
+		auto const width = (r32)src.width;
+		auto const height = (r32)src.height;
+
+		auto const row_func = [&](u32 y)
+		{
+			auto d = channel_row_begin(dst, y).channels;
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				auto src_xy = find_rotation_src({ x, y }, origin, radians);
+				if (src_xy.x < zero || src_xy.x >= width || src_xy.y < zero || src_xy.y >= height)
+				{
+					for (u32 ch = 0; ch < N; ++ch)
+					{
+						d[ch][x] = 0.0f; // alpha?
+					}
+				}
+				else
+				{
+					auto s = channel_xy_at(src, (u32)floorf(src_xy.x), (u32)floorf(src_xy.y)).channels;
+					for (u32 ch = 0; ch < N; ++ch)
+					{
+						d[ch][x] = *s[ch];
+					}
+				}
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void rotate(View4r32 const& src, View4r32 const& dst, Point2Du32 origin, r32 radians)
+	{
+		assert(verify(src, dst));
+
+		do_rotate(src, dst, origin, radians);
+	}
+
+
+	void rotate(View3r32 const& src, View3r32 const& dst, Point2Du32 origin, r32 radians)
+	{
+		assert(verify(src, dst));
+
+		do_rotate(src, dst, origin, radians);		
+	}
+
+
+	void rotate(View1r32 const& src, View1r32 const& dst, Point2Du32 origin, r32 radians)
+	{
+		assert(verify(src, dst));
+
+		auto const zero = 0.0f;
+		auto const width = (r32)src.width;
+		auto const height = (r32)src.height;
+
+		auto const row_func = [&](u32 y) 
+		{
+			auto d = row_begin(dst, y);
+			for(u32 x = 0; x < src.width; ++x)
+			{
+				auto src_xy = find_rotation_src({ x, y }, origin, radians);
+
+				if (src_xy.x < zero || src_xy.x >= width || src_xy.y < zero || src_xy.y >= height)
+				{
+					d[x] = 0.0f;
+				}
+				else
+				{
+					d[x] = *xy_at(src, (u32)floorf(src_xy.x), (u32)floorf(src_xy.y));
+				}
+			}
+		};
+
+		process_rows(src.height, row_func);
 	}
 }

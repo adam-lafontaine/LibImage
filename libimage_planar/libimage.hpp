@@ -529,6 +529,18 @@ namespace libimage
 }
 
 
+/* rotate */
+
+namespace libimage
+{
+	void rotate(View4r32 const& src, View4r32 const& dst, Point2Du32 origin, r32 radians);
+
+	void rotate(View3r32 const& src, View3r32 const& dst, Point2Du32 origin, r32 radians);
+
+	void rotate(View1r32 const& src, View1r32 const& dst, Point2Du32 origin, r32 radians);
+}
+
+
 /* stb wrappers */
 
 namespace libimage
