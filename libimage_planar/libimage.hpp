@@ -238,31 +238,6 @@ namespace libimage
 		u32 width = 0;
 		u32 height = 0;
 	};
-	
-
-	template <size_t N>
-	class ChannelData
-	{
-	public:
-		static constexpr u32 n_channels = N;
-
-		r32* channels[N] = {};
-	};
-
-
-	template <size_t N>
-	static ChannelData<N> channel_row_begin(ViewCHr32<N> const& view, u32 y)
-	{
-		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin);
-
-		ChannelData<N> data{};
-		for (u32 ch = 0; ch < N; ++ch)
-		{
-			data.channels[ch] = view.image_channel_data[ch] + offset;
-		}
-
-		return data;
-	}
 
 
 	using View4r32 = ViewCHr32<4>;
@@ -549,6 +524,8 @@ namespace libimage
 namespace libimage
 {
 	void blur(View1r32 const& src, View1r32 const& dst);
+
+	void blur(View3r32 const& src, View3r32 const& dst);
 }
 
 

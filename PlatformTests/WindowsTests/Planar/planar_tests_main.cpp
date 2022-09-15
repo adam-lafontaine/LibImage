@@ -1096,7 +1096,7 @@ void blur_test()
 	auto height = vette.height;
 
 	img::Buffer32 buffer{};
-	make_buffer(buffer, width * height * 2);
+	make_buffer(buffer, width * height * 6);
 
 	img::View1r32 src;
 	img::make_view(src, width, height, buffer);
@@ -1112,7 +1112,28 @@ void blur_test()
 
 	write_image(vette, "blur1.bmp");
 
+	reset_buffer(buffer);
+
+	Image caddy;
+	img::read_image_from_file(CADILLAC_PATH, caddy);
+	width = caddy.width;
+	height = caddy.height;
+
+	img::View3r32 src3;
+	img::make_view(src3, width, height, buffer);
+
+	img::convert(caddy, src3);
+
+	img::View3r32 dst3;
+	img::make_view(dst3, width, height, buffer);
+
+	img::blur(src3, dst3);
+
+	img::convert(dst3, caddy);
+	write_image(caddy, "blur3.bmp");
+
 	img::destroy_image(vette);
+	img::destroy_image(caddy);
 	buffer_free(buffer);
 }
 

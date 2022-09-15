@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <algorithm>
 #include <cmath>
-
+#include <cstring>
 
 
 template <class LIST_T, class FUNC_T>
@@ -585,6 +585,46 @@ namespace libimage
 		assert(ptr);
 
 		return ptr;
+	}
+
+
+	template <size_t N>
+	class ChannelData
+	{
+	public:
+		static constexpr u32 n_channels = N;
+
+		r32* channels[N] = {};
+	};
+
+
+	template <size_t N>
+	static ChannelData<N> channel_row_begin(ViewCHr32<N> const& view, u32 y)
+	{
+		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin);
+
+		ChannelData<N> data{};
+		for (u32 ch = 0; ch < N; ++ch)
+		{
+			data.channels[ch] = view.image_channel_data[ch] + offset;
+		}
+
+		return data;
+	}
+
+
+	template <size_t N>
+	static ChannelData<N> channel_row_offset_begin(ViewCHr32<N> const& view, int y)
+	{
+		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin);
+
+		ChannelData<N> data{};
+		for (u32 ch = 0; ch < N; ++ch)
+		{
+			data.channels[ch] = view.image_channel_data[ch] + offset;
+		}
+
+		return data;
 	}
 		
 }
@@ -1929,6 +1969,200 @@ namespace libimage
 	};
 
 
+	template <size_t N>
+	static void copy_outer(ViewCHr32<N> const& src, ViewCHr32<N> const& dst)
+	{
+		auto const width = src.width;
+		auto const height = src.height;
+
+		auto const top_bottom = [&]()
+		{
+			auto s_top = channel_row_begin(src, 0).channels;
+			auto s_bottom = channel_row_begin(src, height - 1).channels;
+			auto d_top = channel_row_begin(dst, 0).channels;
+			auto d_bottom = channel_row_begin(dst, height - 1).channels;
+			for (u32 x = 0; x < width; ++x)
+			{
+				for (u32 ch = 0; ch < N; ++ch)
+				{
+					d_top[ch][x] = s_top[ch][x];
+					d_bottom[ch][x] = s_bottom[ch][x];
+				}				
+			}
+		};
+
+		auto const left_right = [&]()
+		{
+			for (u32 y = 1; y < height - 1; ++y)
+			{
+				auto s_row = channel_row_begin(src, y).channels;
+				auto d_row = channel_row_begin(dst, y).channels;
+
+				for (u32 ch = 0; ch < N; ++ch)
+				{
+					d_row[ch][0] = s_row[ch][0];
+					d_row[ch][width - 1] = s_row[ch][width - 1];
+				}				
+			}
+		};
+
+		std::array<std::function<void()>, 2> f_list
+		{
+			top_bottom, left_right
+		};
+
+		do_for_each(f_list, [](auto const& f) { f(); });
+	}
+
+
+	template <size_t N>
+	static void convolve_gauss_3x3_outer(ViewCHr32<N> const& src, ViewCHr32<N> const& dst)
+	{
+		auto const width = src.width;
+		auto const height = src.height;
+
+		int const ry_begin = -1;
+		int const ry_end = 2;
+		int const rx_begin = -1;
+		int const rx_end = 2;
+
+		auto const top_bottom = [&]()
+		{
+			u32 w = 0;
+			r32 b_top[N] = { 0 };
+			r32 b_bottom[N] = { 0 };
+
+			auto d_top = channel_row_begin(dst, 0).channels;
+			auto d_bottom = channel_row_begin(dst, height - 1).channels;
+			for (u32 x = 0; x < width; ++x)
+			{
+				w = 0;
+
+				for (int ry = ry_begin; ry < ry_end; ++ry)
+				{
+					auto s_top = channel_row_offset_begin(src, 0 + ry).channels;
+					auto s_bottom = channel_row_offset_begin(src, height - 1 + ry).channels;
+					for (int rx = rx_begin; rx < rx_end; ++rx)
+					{
+						for (u32 ch = 0; ch < N; ++ch)
+						{
+							b_top[ch] += (s_top[ch] + rx)[x] * GAUSS_3X3[w];
+							b_bottom[ch] += (s_bottom[ch] + rx)[x] * GAUSS_3X3[w];
+						}						
+						++w;
+					}
+				}
+
+				for (u32 ch = 0; ch < N; ++ch)
+				{
+					d_top[ch][x] = b_top[ch];
+					d_bottom[ch][x] = b_bottom[ch];
+					b_top[ch] = b_bottom[ch] = 0.0f;
+				}
+			}
+		};
+
+		auto const left_right = [&]() 
+		{
+			u32 w = 0;
+			r32 b_left[N] = { 0 };
+			r32 b_right[N] = {0};
+
+			for (u32 y = 1; y < height - 1; ++y)
+			{
+				w = 0;
+				
+				auto d_row = channel_row_begin(dst, y).channels;
+
+				for (int ry = ry_begin; ry < ry_end; ++ry)
+				{
+					auto s_row = channel_row_begin(src, y + ry).channels;
+
+					for (int rx = rx_begin; rx < rx_end; ++rx)
+					{
+						for (u32 ch = 0; ch < N; ++ch)
+						{
+							auto s_left = s_row[ch];
+							auto s_right = s_left + width - 1;
+
+							b_left[ch] += *(s_left + rx) * GAUSS_3X3[w];
+							b_right[ch] += *(s_right + rx) * GAUSS_3X3[w];
+						}
+						
+						++w;
+					}
+				}				
+
+				for (u32 ch = 0; ch < N; ++ch)
+				{
+					auto d_left = d_row[ch];
+					auto d_right = d_left + width - 1;
+
+					*d_left = b_left[ch];
+					*d_right = b_right[ch];
+
+					b_left[ch] = b_right[ch] = 0.0f;
+				}
+			}
+		};
+
+		std::array<std::function<void()>, 2> f_list
+		{
+			top_bottom, left_right
+		};
+
+		do_for_each(f_list, [](auto const& f) { f(); });
+	}
+
+
+	template <size_t N>
+	static void convolve_gauss_5x5(ViewCHr32<N> const& src, ViewCHr32<N> const& dst)
+	{
+		assert(verify(src, dst));
+
+		auto const width = src.width;
+		auto const height = src.height;
+
+		int const ry_begin = -2;
+		int const ry_end = 3;
+		int const rx_begin = -2;
+		int const rx_end = 3;
+
+		auto const row_func = [&](u32 y) 
+		{
+			u32 w = 0;
+			r32 b[N] = { 0 };
+
+			auto d = channel_row_begin(dst, y).channels;
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				w = 0;
+
+				for (int ry = ry_begin; ry < ry_end; ++ry)
+				{
+					auto s = channel_row_offset_begin(src, y + ry).channels;
+					for (int rx = rx_begin; rx < rx_end; ++rx)
+					{
+						for (u32 ch = 0; ch < N; ++ch)
+						{
+							b[ch] += (s[ch] + rx)[x] * GAUSS_5X5[w];
+						}
+						++w;
+					}
+				}
+
+				for (u32 ch = 0; ch < N; ++ch)
+				{
+					d[ch][x] = b[ch];
+					b[ch] = 0.0f;
+				}
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
 	static void copy_outer(View1r32 const& src, View1r32 const& dst)
 	{
 		auto const width = src.width;
@@ -2009,7 +2243,7 @@ namespace libimage
 			}
 		};
 
-		auto const left_right = [&]() 
+		auto const left_right = [&]()
 		{
 			u32 w = 0;
 			r32 b_left = 0.0f;
@@ -2020,7 +2254,7 @@ namespace libimage
 				w = 0;
 				b_left = 0.0f;
 				b_right = 0.0f;
-				
+
 				auto d_left = row_begin(dst, y);
 				auto d_right = d_left + width - 1;
 
@@ -2063,7 +2297,7 @@ namespace libimage
 		int const rx_begin = -2;
 		int const rx_end = 3;
 
-		auto const row_func = [&](u32 y) 
+		auto const row_func = [&](u32 y)
 		{
 			u32 w = 0;
 			r32 g = 0.0f;
@@ -2093,6 +2327,29 @@ namespace libimage
 
 
 	void blur(View1r32 const& src, View1r32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		copy_outer(src, dst);
+
+		Range2Du32 inner{};
+		inner.x_begin = 1;
+		inner.x_end = src.width - 1;
+		inner.y_begin = 1;
+		inner.y_end = src.height - 1;
+
+		convolve_gauss_3x3_outer(sub_view(src, inner), sub_view(dst, inner));
+
+		inner.x_begin = 2;
+		inner.x_end = src.width - 2;
+		inner.y_begin = 2;
+		inner.y_end = src.height - 2;
+
+		convolve_gauss_5x5(sub_view(src, inner), sub_view(dst, inner));
+	}
+
+
+	void blur(View3r32 const& src, View3r32 const& dst)
 	{
 		assert(verify(src, dst));
 
