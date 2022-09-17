@@ -236,15 +236,14 @@ void convert_test()
 	GrayImage gray_dst;
 	img::make_image(gray_dst, gr_width, gr_height);
 
-	img::Buffer32 buffer;
-	make_buffer(buffer, width * height * 4);
+	img::Buffer32 buffer(width * height * 4);
 
 	img::View4r32 view4;
 	img::make_view(view4, width, height, buffer);
 
 	img::convert(image, view4);
 	img::convert(view4, image_dst);
-	reset_buffer(buffer);
+	buffer.reset();
 
 	write_image(image_dst, "convert4.bmp");	
 
@@ -253,7 +252,7 @@ void convert_test()
 
 	img::convert(image, view3);
 	img::convert(view3, image_dst);
-	reset_buffer(buffer);
+	buffer.reset();
 
 	write_image(image_dst, "convert3.bmp");
 
@@ -262,7 +261,7 @@ void convert_test()
 
 	img::convert(gray, view1);
 	img::convert(view1, gray_dst);
-	reset_buffer(buffer);
+	buffer.reset();
 
 	write_image(gray_dst, "convert1.bmp");
 
@@ -270,7 +269,7 @@ void convert_test()
 	img::destroy_image(image_dst);
 	img::destroy_image(gray);
 	img::destroy_image(gray_dst);
-	buffer_free(buffer);
+	buffer.free();
 }
 
 
@@ -286,9 +285,8 @@ void sub_view_test()
 	img::read_image_from_file(CORVETTE_PATH, vette);
 	auto width = vette.width;
 	auto height = vette.height;
-
-	img::Buffer32 buffer;
-	make_buffer(buffer, width * height * 7);
+	
+	img::Buffer32 buffer(width * height * 7);
 
 	img::View3r32 vette3;
 	img::make_view(vette3, width, height, buffer);
@@ -315,7 +313,7 @@ void sub_view_test()
 
 	img::convert(sub3, dst3);
 	img::convert(sub4, dst4);
-	reset_buffer(buffer);
+	buffer.reset();
 
 	write_image(vette, "swap.bmp");
 
@@ -346,7 +344,7 @@ void sub_view_test()
 
 	img::destroy_image(vette);
 	img::destroy_image(caddy);
-	buffer_free(buffer);
+	buffer.free();
 }
 
 
@@ -410,15 +408,14 @@ void fill_test()
 	img::fill(gr_top_left_view, 0);
 	img::fill(gr_bottom_right_view, 255);
 	write_image(gray, "gray_fill_02.bmp");
-
-	img::Buffer32 buffer;
-	make_buffer(buffer, width * height * 4);
+	
+	img::Buffer32 buffer(width * height * 4);
 	
 	img::View3r32 view3;
 	img::make_view(view3, width / 2, height / 2, buffer);
 	img::fill(view3, blue);
 	img::convert(view3, top_left_view);
-	reset_buffer(buffer);
+	buffer.reset();
 	write_image(image, "fill_03.bmp");
 
 	img::View4r32 view4;
@@ -426,7 +423,7 @@ void fill_test()
 
 	img::fill(view4, white);
 	img::convert(view4, bottom_right_view);
-	reset_buffer(buffer);
+	buffer.reset();
 	write_image(image, "fill_04.bmp");
 
 
@@ -445,7 +442,7 @@ void fill_test()
 		img::fill(view, img::to_pixel(red, 255, 0));
 	}
 	img::convert(view3, image);
-	reset_buffer(buffer);
+	buffer.reset();
 	write_image(image, "fill_view3.bmp");
 
 	img::make_view(view4, width, height, buffer);
@@ -462,7 +459,7 @@ void fill_test()
 		img::fill(view, img::to_pixel(255, 0, blue));
 	}
 	img::convert(view4, image);
-	reset_buffer(buffer);
+	buffer.reset();
 	write_image(image, "fill_view4.bmp");	
 
 	img::destroy_image(image);
@@ -497,9 +494,8 @@ void copy_test()
 
 	auto left_view = img::sub_view(image, left);
 	auto right_view = img::sub_view(image, right);
-
-	img::Buffer32 buffer;
-	make_buffer(buffer, width * height * 7);
+	
+	img::Buffer32 buffer(width * height * 7);
 
 	img::View3r32 view3;
 	img::make_view(view3, width, height, buffer);
@@ -522,7 +518,7 @@ void copy_test()
 	img::convert(left_view4, left_view);
 	write_image(image, "image.bmp");
 
-	reset_buffer(buffer);
+	buffer.reset();
 
 	GrayImage gray;
 	img::read_image_from_file(CADILLAC_PATH, gray);
@@ -562,7 +558,7 @@ void copy_test()
 
 	img::destroy_image(image);
 	img::destroy_image(gray);
-	buffer_free(buffer);
+	buffer.free();
 }
 
 
@@ -608,8 +604,8 @@ void for_each_pixel_test()
 	left.y_begin = 0;
 	left.y_end = height;
 
-	img::Buffer32 buffer;
-	make_buffer(buffer, width * height * 4);
+	
+	img::Buffer32 buffer(width * height * 4);
 
 	img::View1r32 caddy1;
 	img::make_view(caddy1, width, height, buffer);
@@ -626,7 +622,7 @@ void for_each_pixel_test()
 
 	img::convert(caddy1_left, caddy_left);
 	img::convert(caddy1_right, caddy_right);
-	reset_buffer(buffer);
+	buffer.reset();
 
 	write_image(caddy, "light_dark_1.bmp");
 
@@ -649,7 +645,7 @@ void for_each_pixel_test()
 	img::destroy_image(vette);
 	img::destroy_image(caddy);
 	img::destroy_image(rgba);
-	buffer_free(buffer);
+	buffer.free();
 }
 
 
@@ -692,9 +688,8 @@ void grayscale_test()
 
 	auto left_view = img::sub_view(image, left);
 	auto right_view = img::sub_view(image, right);
-
-	img::Buffer32 buffer;
-	make_buffer(buffer, width * height * 5);
+	
+	img::Buffer32 buffer(width * height * 5);
 
 	img::View3r32 view3;
 	img::make_view(view3, width / 2, height, buffer);
@@ -724,7 +719,7 @@ void grayscale_test()
 
 	img::destroy_image(image);
 	img::destroy_image(dst);
-	buffer_free(buffer);
+	buffer.free();
 }
 
 
@@ -740,9 +735,8 @@ void select_channel_test()
 	img::read_image_from_file(CORVETTE_PATH, vette);
 	auto width = vette.width;
 	auto height = vette.height;
-
-	img::Buffer32 buffer;
-	make_buffer(buffer, width * height * 7);
+	
+	img::Buffer32 buffer(width * height * 7);
 
 	img::View3r32 vette3;
 	img::make_view(vette3, width, height, buffer);
@@ -774,7 +768,7 @@ void select_channel_test()
 	img::destroy_image(vette_dst);
 	img::destroy_image(caddy);
 	img::destroy_image(caddy_dst);
-	buffer_free(buffer);
+	buffer.free();
 }
 
 
@@ -798,9 +792,8 @@ void alpha_blend_test()
 	caddy.width = width;
 	caddy.height = height;
 	img::resize_image(caddy_read, caddy);
-
-	img::Buffer32 buffer;
-	make_buffer(buffer, width * height * 11);
+	
+	img::Buffer32 buffer(width * height * 11);
 
 	img::View4r32 vette4;
 	img::make_view(vette4, width, height, buffer);
@@ -831,7 +824,7 @@ void alpha_blend_test()
 	img::destroy_image(vette);
 	img::destroy_image(caddy_read);
 	img::destroy_image(caddy);
-	buffer_free(buffer);
+	buffer.free();
 }
 
 
@@ -883,9 +876,8 @@ void transform_test()
 	img::transform(vette_right, gr_dst_right, lut);
 
 	write_image(gr_dst, "transform_gray.bmp");
-
-	img::Buffer32 buffer;
-	make_buffer(buffer, width * height * 3);
+	
+	img::Buffer32 buffer(width * height * 3);
 
 	img::View1r32 vette1;
 	img::make_view(vette1, width, height, buffer);
@@ -916,7 +908,7 @@ void transform_test()
 	img::destroy_image(gr_read);
 	img::destroy_image(caddy);
 	img::destroy_image(gr_dst);
-	buffer_free(buffer);
+	buffer.free();
 }
 
 
@@ -939,9 +931,8 @@ void threshold_test()
 	img::threshold(vette, gr_dst, 127, 255);
 
 	write_image(gr_dst, "threshold.bmp");
-
-	img::Buffer32 buffer;
-	make_buffer(buffer, width * height);
+	
+	img::Buffer32 buffer(width * height);
 
 	img::View1r32 vette1;
 	img::make_view(vette1, width, height, buffer);
@@ -961,7 +952,7 @@ void threshold_test()
 
 	img::destroy_image(vette);
 	img::destroy_image(gr_dst);
-	buffer_free(buffer);
+	buffer.free();
 }
 
 
@@ -984,9 +975,8 @@ void contrast_test()
 	img::contrast(vette, gr_dst, 10, 175);
 
 	write_image(gr_dst, "contrast.bmp");
-
-	img::Buffer32 buffer;
-	make_buffer(buffer, width * height);
+	
+	img::Buffer32 buffer(width * height);
 
 	img::View1r32 vette1;
 	img::make_view(vette1, width, height, buffer);
@@ -1006,7 +996,7 @@ void contrast_test()
 
 	img::destroy_image(vette);
 	img::destroy_image(gr_dst);
-	buffer_free(buffer);
+	buffer.free();
 }
 
 
@@ -1023,8 +1013,7 @@ void gradients_test()
 	auto width = vette.width;
 	auto height = vette.height;
 
-	img::Buffer32 buffer{};
-	make_buffer(buffer, width * height * 2);
+	img::Buffer32 buffer(width * height * 2);
 
 	img::View1r32 src;
 	img::make_view(src, width, height, buffer);
@@ -1041,7 +1030,7 @@ void gradients_test()
 	write_image(vette, "gradients.bmp");
 
 	img::destroy_image(vette);
-	buffer_free(buffer);
+	buffer.free();
 }
 
 
@@ -1058,8 +1047,7 @@ void edges_test()
 	auto width = vette.width;
 	auto height = vette.height;
 
-	img::Buffer32 buffer{};
-	make_buffer(buffer, width * height * 2);
+	img::Buffer32 buffer(width * height * 2);
 
 	img::View1r32 src;
 	img::make_view(src, width, height, buffer);
@@ -1076,7 +1064,7 @@ void edges_test()
 	write_image(vette, "edges.bmp");
 
 	img::destroy_image(vette);
-	buffer_free(buffer);
+	buffer.free();
 }
 
 
@@ -1093,8 +1081,7 @@ void blur_test()
 	auto width = vette.width;
 	auto height = vette.height;
 
-	img::Buffer32 buffer{};
-	make_buffer(buffer, width * height * 6);
+	img::Buffer32 buffer(width * height * 6);
 
 	img::View1r32 src;
 	img::make_view(src, width, height, buffer);
@@ -1110,7 +1097,7 @@ void blur_test()
 
 	write_image(vette, "blur1.bmp");
 
-	reset_buffer(buffer);
+	buffer.reset();
 
 	Image caddy;
 	img::read_image_from_file(CADILLAC_PATH, caddy);
@@ -1132,7 +1119,7 @@ void blur_test()
 
 	img::destroy_image(vette);
 	img::destroy_image(caddy);
-	buffer_free(buffer);
+	buffer.free();
 }
 
 
@@ -1149,8 +1136,7 @@ void rotate_test()
 	auto width = vette.width;
 	auto height = vette.height;
 
-	img::Buffer32 buffer{};
-	make_buffer(buffer, width * height * 6);
+	img::Buffer32 buffer(width * height * 6);
 
 	img::View1r32 src;
 	img::make_view(src, width, height, buffer);
@@ -1168,7 +1154,7 @@ void rotate_test()
 	img::convert(dst, vette);
 	write_image(vette, "rotate1.bmp");
 
-	reset_buffer(buffer);
+	buffer.reset();
 
 	Image caddy;
 	img::read_image_from_file(CADILLAC_PATH, caddy);
@@ -1191,7 +1177,7 @@ void rotate_test()
 
 	img::destroy_image(vette);
 	img::destroy_image(caddy);
-	buffer_free(buffer);
+	buffer.free();
 }
 
 

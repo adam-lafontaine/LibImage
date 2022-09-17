@@ -93,70 +93,64 @@ public:
 template <typename T>
 class MemoryBuffer
 {
+private:
+	T* data_ = nullptr;
+	size_t capacity_ = 0;
+	size_t size_ = 0;
+
 public:
-	T* data = nullptr;
-	size_t capacity = 0;
-	size_t size = 0;
+	MemoryBuffer(size_t n_elements)
+	{
+		auto data = std::malloc(sizeof(T) * n_elements);
+		assert(data);
+
+		data_ = (T*)data;
+		capacity_ = n_elements;
+	}
+
+
+	T* push(size_t n_elements)
+	{
+		assert(data_);
+		assert(capacity_);
+		assert(size_ < capacity_);
+
+		auto is_valid =
+			data_ &&
+			capacity_ &&
+			size_ < capacity_;
+
+		auto elements_available = (capacity_ - size_) >= n_elements;
+		assert(elements_available);
+
+		if (!is_valid || !elements_available)
+		{
+			return nullptr;
+		}
+
+		auto data = data_ + size_;
+
+		size_ += n_elements;
+
+		return data;
+	}
+
+
+	void reset()
+	{
+		size_ = 0;
+	}
+
+
+	void free()
+	{
+		if (data_)
+		{
+			std::free(data_);
+			data_ = nullptr;
+		}
+
+		capacity_ = 0;
+		size_ = 0;
+	}
 };
-
-
-template <typename T>
-void make_buffer(MemoryBuffer<T>& buffer, size_t n_elements)
-{
-	auto data = malloc(sizeof(T) * n_elements);
-	
-	assert(data);
-
-	buffer.data = (T*)data;
-	buffer.capacity = n_elements;
-	buffer.size = 0;
-}
-
-
-template <typename T>
-void buffer_free(MemoryBuffer<T>& buffer)
-{
-	if (buffer.data)
-	{
-		free(buffer.data);
-		buffer.data = nullptr;
-	}
-
-	buffer.capacity = 0;
-	buffer.size = 0;
-}
-
-
-template <typename T>
-T* push_elements(MemoryBuffer<T>& buffer, size_t n_elements)
-{
-	assert(buffer.data);
-	assert(buffer.capacity);
-	assert(buffer.size < buffer.capacity);
-
-	auto is_valid =
-		buffer.data &&
-		buffer.capacity &&
-		buffer.size < buffer.capacity;
-
-	auto elements_available = (buffer.capacity - buffer.size) >= n_elements;
-	assert(elements_available);
-
-	if (!is_valid || !elements_available)
-	{
-		return nullptr;
-	}
-
-	auto data = buffer.data + buffer.size;
-
-	buffer.size += n_elements;
-
-	return data;
-}
-
-
-template <typename T>
-void reset_buffer(MemoryBuffer<T>& buffer)
-{
-	buffer.size = 0;
-}

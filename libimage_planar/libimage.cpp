@@ -665,7 +665,7 @@ namespace libimage
 
 		for (u32 ch = 0; ch < N; ++ch)
 		{
-			view.image_channel_data[ch] = push_elements(buffer, width * height);
+			view.image_channel_data[ch] = buffer.push(width * height);
 		}
 	}
 
@@ -684,7 +684,7 @@ namespace libimage
 
 	void make_view(View1r32& view, u32 width, u32 height, Buffer32& buffer)
 	{
-		view.image_data = push_elements(buffer, width * height);
+		view.image_data = buffer.push(width * height);
 		view.image_width = width;
 		view.x_begin = 0;
 		view.y_begin = 0;
@@ -1213,7 +1213,7 @@ namespace libimage
 
 	void for_each_pixel(gray::Image const& image, u8_f const& func)
 	{
-		verify(image);
+		assert(verify(image));
 
 		do_for_each_pixel(image, func);
 	}
@@ -1221,7 +1221,7 @@ namespace libimage
 
 	void for_each_pixel(gray::View const& view, u8_f const& func)
 	{
-		verify(view);
+		assert(verify(view));
 
 		do_for_each_pixel(view, func);
 	}
@@ -1229,7 +1229,7 @@ namespace libimage
 
 	void for_each_pixel(View1r32 const& view, r32_f const& func)
 	{
-		verify(view);
+		assert(verify(view));
 
 		do_for_each_pixel(view, func);
 	}
