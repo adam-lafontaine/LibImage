@@ -6,13 +6,6 @@
 #include <cstring>
 
 
-template <class LIST_T, class FUNC_T>
-static void do_for_each_seq(LIST_T const& list, FUNC_T const& func)
-{
-	std::for_each(list.begin(), list.end(), func);
-}
-
-
 #ifndef LIBIMAGE_NO_PARALLEL
 
 #include <execution>
@@ -30,7 +23,7 @@ static void do_for_each(LIST_T const& list, FUNC_T const& func)
 template <class LIST_T, class FUNC_T>
 static void do_for_each(LIST_T const& list, FUNC_T const& func)
 {
-	do_for_each_seq(list, func);
+	std::for_each(list.begin(), list.end(), func);
 }
 
 #endif // !LIBIMAGE_NO_PARALLEL
@@ -90,35 +83,13 @@ static void process_rows(u32 height, id_func_t const& row_func)
 }
 
 
-static void process_rows(u32 row_begin, u32 row_end, id_func_t const& row_func)
-{
-	assert(row_end > row_begin);
-
-	auto const height = row_end - row_begin;
-	auto const rows_per_thread = height / N_THREADS;
-
-	auto const thread_proc = [&](u32 id)
-	{
-		auto y_begin = row_begin + id * rows_per_thread;
-		auto y_end = row_begin + (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
-
-		for (u32 y = y_begin; y < y_end; ++y)
-		{
-			row_func(y);
-		}
-	};
-
-	execute_procs(make_proc_list(thread_proc));
-}
-
-
 static constexpr std::array<r32, 256> channel_r32_lut()
 {
 	std::array<r32, 256> lut = {};
 
 	for (u32 i = 0; i < 256; ++i)
 	{
-		lut[i] = i / 256.0f;
+		lut[i] = i / 255.0f;
 	}
 
 	return lut;
@@ -166,13 +137,6 @@ namespace libimage
 	}
 
 
-	/*template <size_t N>
-	static bool verify(ImageCHr32<N> const& image)
-	{
-		return image.width && image.height && image.channel_data[0];
-	}*/
-
-
 	template <size_t N>
 	static bool verify(ViewCHr32<N> const& view)
 	{
@@ -190,12 +154,6 @@ namespace libimage
 	{
 		return view.image_width && view.width && view.height && view.image_data;
 	}
-
-
-	/*static bool verify(Image1r32 const& image)
-	{
-		return image.width && image.height && image.data;
-	}*/
 
 
 	static bool verify(View1r32 const& view)
@@ -707,9 +665,10 @@ namespace libimage
 		{
 			auto d = channel_row_begin(dst, y).channels;
 			auto s = row_begin(src, y);
-			for (u32 x = 0; x < src.width; ++x)
+
+			for (u32 ch = 0; ch < N; ++ch)
 			{
-				for (u32 ch = 0; ch < N; ++ch)
+				for (u32 x = 0; x < src.width; ++x)
 				{
 					d[ch][x] = to_channel_r32(s[x].channels[ch]);
 				}
@@ -728,9 +687,9 @@ namespace libimage
 			auto s = channel_row_begin(src, y).channels;
 			auto d = row_begin(dst, y);
 
-			for (u32 x = 0; x < src.width; ++x)
+			for (u32 ch = 0; ch < N; ++ch)
 			{
-				for (u32 ch = 0; ch < N; ++ch)
+				for (u32 x = 0; x < src.width; ++x)
 				{
 					d[x].channels[ch] = to_channel_u8(s[ch][x]);
 				}
@@ -978,9 +937,10 @@ namespace libimage
 		auto const row_func = [&](u32 y)
 		{
 			auto d = channel_row_begin(image, y).channels;
-			for (u32 x = 0; x < image.width; ++x)
+
+			for (u32 ch = 0; ch < N; ++ch)
 			{
-				for (u32 ch = 0; ch < N; ++ch)
+				for (u32 x = 0; x < image.width; ++x)
 				{
 					d[ch][x] = channels[ch];
 				}
@@ -1089,9 +1049,10 @@ namespace libimage
 		{
 			auto s = channel_row_begin(src, y).channels;
 			auto d = channel_row_begin(dst, y).channels;
-			for (u32 x = 0; x < src.width; ++x)
+
+			for (u32 ch = 0; ch < ND; ++ch)
 			{
-				for (u32 ch = 0; ch < ND; ++ch)
+				for (u32 x = 0; x < src.width; ++x)
 				{
 					d[ch][x] = s[ch][x];
 				}
@@ -1999,13 +1960,14 @@ namespace libimage
 			auto s_bottom = channel_row_begin(src, height - 1).channels;
 			auto d_top = channel_row_begin(dst, 0).channels;
 			auto d_bottom = channel_row_begin(dst, height - 1).channels;
-			for (u32 x = 0; x < width; ++x)
+
+			for (u32 ch = 0; ch < N; ++ch)
 			{
-				for (u32 ch = 0; ch < N; ++ch)
+				for (u32 x = 0; x < width; ++x)
 				{
-					d_top[ch][x] = s_top[ch][x];
+					d_top[ch][x] = s_top[ch][x]; // TODO: simd
 					d_bottom[ch][x] = s_bottom[ch][x];
-				}				
+				}
 			}
 		};
 
@@ -2047,35 +2009,32 @@ namespace libimage
 		auto const top_bottom = [&]()
 		{
 			u32 w = 0;
-			r32 b_top[N] = { 0 };
-			r32 b_bottom[N] = { 0 };
 
-			auto d_top = channel_row_begin(dst, 0).channels;
-			auto d_bottom = channel_row_begin(dst, height - 1).channels;
-			for (u32 x = 0; x < width; ++x)
+			auto d_top_row = channel_row_begin(dst, 0).channels;
+			auto d_bottom_row = channel_row_begin(dst, height - 1).channels;
+
+			for (u32 ch = 0; ch < N; ++ch)
 			{
-				w = 0;
-
-				for (int ry = ry_begin; ry < ry_end; ++ry)
+				for (u32 x = 0; x < width; ++x)
 				{
-					auto s_top = channel_row_offset_begin(src, 0 + ry).channels;
-					auto s_bottom = channel_row_offset_begin(src, height - 1 + ry).channels;
-					for (int rx = rx_begin; rx < rx_end; ++rx)
+					w = 0;
+					auto& d_top = d_top_row[ch][x];
+					auto& d_bottom = d_bottom_row[ch][x];
+					d_top = d_bottom = 0.0f;
+
+					for (int ry = ry_begin; ry < ry_end; ++ry)
 					{
-						for (u32 ch = 0; ch < N; ++ch)
-						{
-							b_top[ch] += (s_top[ch] + rx)[x] * GAUSS_3X3[w];
-							b_bottom[ch] += (s_bottom[ch] + rx)[x] * GAUSS_3X3[w];
-						}						
-						++w;
-					}
-				}
+						auto s_top = channel_row_offset_begin(src, 0 + ry).channels;
+						auto s_bottom = channel_row_offset_begin(src, height - 1 + ry).channels;
 
-				for (u32 ch = 0; ch < N; ++ch)
-				{
-					d_top[ch][x] = b_top[ch];
-					d_bottom[ch][x] = b_bottom[ch];
-					b_top[ch] = b_bottom[ch] = 0.0f;
+						for (int rx = rx_begin; rx < rx_end; ++rx)
+						{
+							d_top += (s_top[ch] + rx)[x] * GAUSS_3X3[w];
+							d_bottom += (s_bottom[ch] + rx)[x] * GAUSS_3X3[w];
+
+							++w;
+						}						
+					}
 				}
 			}
 		};
@@ -2083,43 +2042,34 @@ namespace libimage
 		auto const left_right = [&]() 
 		{
 			u32 w = 0;
-			r32 b_left[N] = { 0 };
-			r32 b_right[N] = {0};
 
 			for (u32 y = 1; y < height - 1; ++y)
-			{
-				w = 0;
-				
+			{				
 				auto d_row = channel_row_begin(dst, y).channels;
 
-				for (int ry = ry_begin; ry < ry_end; ++ry)
+				for (u32 ch = 0; ch < N; ++ch)
 				{
-					auto s_row = channel_row_begin(src, y + ry).channels;
+					w = 0;
+					auto& d_left = d_row[ch][0];
+					auto& d_right = d_row[ch][width - 1];
 
-					for (int rx = rx_begin; rx < rx_end; ++rx)
+					d_left = d_right = 0.0f;
+
+					for (int ry = ry_begin; ry < ry_end; ++ry)
 					{
-						for (u32 ch = 0; ch < N; ++ch)
+						auto s_row = channel_row_begin(src, y + ry).channels;
+
+						for (int rx = rx_begin; rx < rx_end; ++rx)
 						{
 							auto s_left = s_row[ch];
 							auto s_right = s_left + width - 1;
 
-							b_left[ch] += *(s_left + rx) * GAUSS_3X3[w];
-							b_right[ch] += *(s_right + rx) * GAUSS_3X3[w];
+							d_left += *(s_left + rx) * GAUSS_3X3[w];
+							d_right += *(s_right + rx) * GAUSS_3X3[w];
+
+							++w;
 						}
-						
-						++w;
 					}
-				}				
-
-				for (u32 ch = 0; ch < N; ++ch)
-				{
-					auto d_left = d_row[ch];
-					auto d_right = d_left + width - 1;
-
-					*d_left = b_left[ch];
-					*d_right = b_right[ch];
-
-					b_left[ch] = b_right[ch] = 0.0f;
 				}
 			}
 		};
@@ -2149,32 +2099,31 @@ namespace libimage
 		auto const row_func = [&](u32 y) 
 		{
 			u32 w = 0;
-			r32 b[N] = { 0 };
 
-			auto d = channel_row_begin(dst, y).channels;
-			for (u32 x = 0; x < src.width; ++x)
+			auto d_row = channel_row_begin(dst, y).channels;
+
+			for (u32 ch = 0; ch < N; ++ch)
 			{
-				w = 0;
-
-				for (int ry = ry_begin; ry < ry_end; ++ry)
+				for (u32 x = 0; x < src.width; ++x)
 				{
-					auto s = channel_row_offset_begin(src, y + ry).channels;
-					for (int rx = rx_begin; rx < rx_end; ++rx)
+					w = 0;
+					auto& d = d_row[ch][x];
+
+					d = 0.0f;
+
+					for (int ry = ry_begin; ry < ry_end; ++ry)
 					{
-						for (u32 ch = 0; ch < N; ++ch)
+						auto s = channel_row_offset_begin(src, y + ry).channels;
+
+						for (int rx = rx_begin; rx < rx_end; ++rx)
 						{
-							b[ch] += (s[ch] + rx)[x] * GAUSS_5X5[w];
+							d += (s[ch] + rx)[x] * GAUSS_5X5[w];
+
+							++w;
 						}
-						++w;
 					}
 				}
-
-				for (u32 ch = 0; ch < N; ++ch)
-				{
-					d[ch][x] = b[ch];
-					b[ch] = 0.0f;
-				}
-			}
+			}			
 		};
 
 		process_rows(src.height, row_func);
