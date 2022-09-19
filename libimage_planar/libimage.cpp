@@ -1842,7 +1842,12 @@ namespace libimage
 					}
 				}
 
+				gx = fabs(gx);
+				gy = fabs(gy);
+
 				d[x] = gx > gy ? gx : gy;
+
+				// TODO: f(gx, gy)
 			}
 		};
 
@@ -1883,7 +1888,12 @@ namespace libimage
 					}
 				}
 
+				gx = fabs(gx);
+				gy = fabs(gy);
+
 				d[x] = (gx > gy ? gx : gy) >= threshold ? 1.0f : 0.0f;
+
+				// TODO: f(gx, gy)
 			}
 		};
 
