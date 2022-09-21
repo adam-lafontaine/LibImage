@@ -23,6 +23,12 @@ namespace libimage
 	};
 
 
+	enum class GA : int
+	{
+		G = 0, A = 1
+	};
+
+
 	constexpr inline int id_cast(auto channel)
 	{
 		return static_cast<int>(channel);
@@ -143,7 +149,7 @@ namespace libimage
 
 			union
 			{
-				Range2Du32 range;
+				Range2Du32 range = {};
 
 				struct
 				{
@@ -193,7 +199,7 @@ namespace libimage
 
 		union
 		{
-			Range2Du32 range;
+			Range2Du32 range = {};
 
 			struct
 			{
@@ -242,9 +248,28 @@ namespace libimage
 
 	using View4r32 = ViewCHr32<4>;
 	using View3r32 = ViewCHr32<3>;
+	using View2r32 = ViewCHr32<2>;
 
 
 	View3r32 make_rgb_view(View4r32 const& image);
+
+
+	template <size_t N>
+	View1r32 select_channel(ViewCHr32<N> const& view, u32 ch)
+	{
+		View1r32 view1{};
+
+		view1.image_width = view.image_width;
+		view1.range = view.range;
+		view1.width = view.width;
+		view1.height = view.height;
+
+		view1.image_data = view.image_channel_data[ch];
+
+		// Warning! No asserts here
+
+		return view1;
+	}
 }
 
 
@@ -258,6 +283,8 @@ namespace libimage
 	void make_view(View4r32& view, u32 width, u32 height, Buffer32& buffer);
 
 	void make_view(View3r32& view, u32 width, u32 height, Buffer32& buffer);
+
+	void make_view(View2r32& view, u32 width, u32 height, Buffer32& buffer);
 
 	void make_view(View1r32& view, u32 width, u32 height, Buffer32& buffer);	
 }
@@ -306,6 +333,8 @@ namespace libimage
 
 	View3r32 sub_view(View3r32 const& view, Range2Du32 const& range);
 
+	View2r32 sub_view(View2r32 const& view, Range2Du32 const& range);
+
 	View1r32 sub_view(View1r32 const& view, Range2Du32 const& range);
 }
 
@@ -326,7 +355,7 @@ namespace libimage
 
 	void fill(View3r32 const& view, Pixel color);
 
-	void fill(View1r32 const& image, u8 gray);
+	void fill(View1r32 const& view, u8 gray);
 }
 
 
@@ -355,6 +384,8 @@ namespace libimage
 	void copy(View4r32 const& src, View4r32 const& dst);
 
 	void copy(View3r32 const& src, View3r32 const& dst);
+
+	void copy(View2r32 const& src, View2r32 const& dst);
 
 	void copy(View1r32 const& src, View1r32 const& dst);
 }
@@ -417,8 +448,6 @@ namespace libimage
 	void grayscale(View const& src, gray::View const& dst);
 
 
-	void grayscale(View4r32 const& src, View1r32 const& dst);
-
 	void grayscale(View3r32 const& src, View1r32 const& dst);
 }
 
@@ -427,9 +456,11 @@ namespace libimage
 
 namespace libimage
 {
-	View1r32 select_channel(View4r32 const& image, RGBA channel);
+	View1r32 select_channel(View4r32 const& view, RGBA channel);
 
-	View1r32 select_channel(View3r32 const& image, RGB channel);
+	View1r32 select_channel(View3r32 const& view, RGB channel);
+
+	View1r32 select_channel(View2r32 const& view, GA channel);
 }
 
 
@@ -439,7 +470,8 @@ namespace libimage
 {
 	void alpha_blend(View4r32 const& src, View3r32 const& cur, View3r32 const& dst);
 
-	void alpha_blend(View4r32 const& src, View3r32 const& cur_dst);
+
+	void alpha_blend(View2r32 const& src, View1r32 const& cur, View1r32 const& dst);
 }
 
 

@@ -710,7 +710,7 @@ void grayscale_test()
 	auto gr_right = img::sub_view(view1, right);
 
 	img::grayscale(view3, gr_right);
-	img::grayscale(view4, gr_left);
+	img::grayscale(img::make_rgb_view(view4), gr_left);
 
 	img::convert(view1, dst);
 
@@ -815,7 +815,7 @@ void alpha_blend_test()
 	img::convert(dst3, vette);
 	write_image(vette, "blend_01.bmp");
 
-	img::alpha_blend(vette4, img::make_rgb_view(caddy4));
+	img::alpha_blend(vette4, img::make_rgb_view(caddy4), img::make_rgb_view(caddy4));
 
 	clear_image(vette);
 	img::convert(caddy4, vette);
