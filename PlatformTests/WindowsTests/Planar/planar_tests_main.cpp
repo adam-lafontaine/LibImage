@@ -792,6 +792,15 @@ void alpha_blend_test()
 	caddy.width = width;
 	caddy.height = height;
 	img::resize_image(caddy_read, caddy);
+
+	GrayImage gr_vette;
+	img::make_image(gr_vette, width, height);
+	GrayImage gr_caddy;
+	img::make_image(gr_caddy, width, height);
+
+	img::grayscale(vette, gr_vette);
+	img::grayscale(caddy, gr_caddy);
+
 	
 	img::Buffer32 buffer(width * height * 11);
 
@@ -821,9 +830,31 @@ void alpha_blend_test()
 	img::convert(caddy4, vette);
 	write_image(vette, "blend_02.bmp");
 
+	buffer.reset();
+
+	img::View2r32 caddy2;
+	img::make_view(caddy2, width, height, buffer);
+	img::convert(gr_caddy, img::select_channel(caddy2, img::GA::G));
+	alpha_view = img::select_channel(caddy2, img::GA::A);
+	img::for_each_pixel(alpha_view, [](r32& p) { p = 0.5f; });
+
+	img::View1r32 vette1;
+	img::make_view(vette1, width, height, buffer);
+	img::convert(gr_vette, vette1);
+
+	img::View1r32 dst1;
+	img::make_view(dst1, width, height, buffer);
+
+	img::alpha_blend(caddy2, vette1, dst1);
+
+	img::convert(dst1, gr_vette);
+	write_image(gr_vette, "gr_blend.bmp");
+
 	img::destroy_image(vette);
 	img::destroy_image(caddy_read);
 	img::destroy_image(caddy);
+	img::destroy_image(gr_vette);
+	img::destroy_image(gr_caddy);
 	buffer.free();
 }
 
