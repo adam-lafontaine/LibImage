@@ -640,6 +640,12 @@ namespace libimage
 	}
 
 
+	void make_view(View2r32& view, u32 width, u32 height, Buffer32& buffer)
+	{
+		do_make_view(view, width, height, buffer);
+	}
+
+
 	void make_view(View1r32& view, u32 width, u32 height, Buffer32& buffer)
 	{
 		view.image_data = buffer.push(width * height);
@@ -882,6 +888,18 @@ namespace libimage
 	}
 
 
+	View2r32 sub_view(View2r32 const& view, Range2Du32 const& range)
+	{
+		assert(verify(view, range));
+
+		auto sub_view = do_sub_view(view, range);
+
+		assert(verify(sub_view));
+
+		return sub_view;
+	}
+
+
 	View1r32 sub_view(View1r32 const& view, Range2Du32 const& range)
 	{
 		assert(verify(view, range));
@@ -996,6 +1014,23 @@ namespace libimage
 		assert(verify(view));
 
 		fill_n_channels(view, color);
+	}
+
+
+	void fill(View1r32 const& view, r32 gray32)
+	{
+		assert(verify(view));
+
+		auto const row_func = [&](u32 y)
+		{
+			auto d = row_begin(view, y);
+			for (u32 x = 0; x < view.width; ++x)
+			{
+				d[x] = gray32;
+			}
+		};
+
+		process_rows(view.height, row_func);
 	}
 
 
@@ -1143,6 +1178,14 @@ namespace libimage
 	}
 
 
+	void copy(View2r32 const& src, View2r32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		copy_n_channels(src, dst);
+	}
+
+
 	void copy(View1r32 const& src, View1r32 const& dst)
 	{
 		assert(verify(src, dst));
@@ -1274,9 +1317,9 @@ namespace libimage
 	template <class IMG, class GRAY>
 	static void grayscale_platform(IMG const& src, GRAY const& dst)
 	{
-		constexpr static auto red = id_cast(RGB::R);
-		constexpr static auto green = id_cast(RGB::G);
-		constexpr static auto blue = id_cast(RGB::B);
+		static constexpr auto red = id_cast(RGB::R);
+		static constexpr auto green = id_cast(RGB::G);
+		static constexpr auto blue = id_cast(RGB::B);
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1300,9 +1343,9 @@ namespace libimage
 	{
 		static_assert(N >= 3);
 
-		constexpr static auto red = id_cast(RGB::R);
-		constexpr static auto green = id_cast(RGB::G);
-		constexpr static auto blue = id_cast(RGB::B);
+		static constexpr auto red = id_cast(RGB::R);
+		static constexpr auto green = id_cast(RGB::G);
+		static constexpr auto blue = id_cast(RGB::B);
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1381,14 +1424,7 @@ namespace libimage
 
 		auto ch = id_cast(channel);
 
-		View1r32 view1{};
-
-		view1.image_width = view.image_width;
-		view1.range = view.range;
-		view1.width = view.width;
-		view1.height = view.height;
-
-		view1.image_data = view.image_channel_data[ch];
+		auto view1 = select_channel(view, ch);
 
 		assert(verify(view1));
 
@@ -1402,19 +1438,29 @@ namespace libimage
 
 		auto ch = id_cast(channel);
 
-		View1r32 view1{};
-
-		view1.image_width = view.image_width;
-		view1.range = view.range;
-		view1.width = view.width;
-		view1.height = view.height;
-
-		view1.image_data = view.image_channel_data[ch];
+		auto view1 = select_channel(view, ch);
 
 		assert(verify(view1));
 
 		return view1;
 	}
+
+
+	View1r32 select_channel(View2r32 const& view, GA channel)
+	{
+		assert(verify(view));
+
+		auto ch = id_cast(channel);
+
+		auto view1 = select_channel(view, ch);
+
+		assert(verify(view1));
+
+		return view1;
+	}
+
+
+	
 }
 
 
@@ -1433,10 +1479,14 @@ namespace libimage
 
 	static void do_alpha_blend(View4r32 const& src, View3r32 const& cur, View3r32 const& dst)
 	{
-		constexpr static auto red = id_cast(RGBA::R);
-		constexpr static auto green = id_cast(RGBA::G);
-		constexpr static auto blue = id_cast(RGBA::B);
-		constexpr static auto alpha = id_cast(RGBA::A);
+		static constexpr auto red = id_cast(RGBA::R);
+		static constexpr auto green = id_cast(RGBA::G);
+		static constexpr auto blue = id_cast(RGBA::B);
+		static constexpr auto alpha = id_cast(RGBA::A);
+
+		assert(red == id_cast(RGB::R));
+		assert(green == id_cast(RGB::G));
+		assert(blue == id_cast(RGB::B));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -1444,24 +1494,17 @@ namespace libimage
 			auto c = channel_row_begin(cur, y).channels;
 			auto d = channel_row_begin(dst, y).channels;
 
-			auto sr = s[red];
-			auto sg = s[green];
-			auto sb = s[blue];
 			auto sa = s[alpha];
 
-			auto cr = c[red];
-			auto cg = c[green];
-			auto cb = c[blue];
-
-			auto dr = d[red];
-			auto dg = d[green];
-			auto db = d[blue];
-
-			for (u32 x = 0; x < src.width; ++x)
+			for (u32 ch = 0; ch < 3; ++ch)
 			{
-				dr[x] = blend_linear(sr[x], cr[x], sa[x]);
-				dg[x] = blend_linear(sg[x], cg[x], sa[x]);
-				db[x] = blend_linear(sb[x], cb[x], sa[x]);
+				auto d_ch = d[ch];
+				auto c_ch = c[ch];
+				auto s_ch = s[ch];
+				for (u32 x = 0; x < src.width; ++x)
+				{
+					d_ch[x] = blend_linear(s_ch[x], c_ch[x], sa[x]);
+				}
 			}
 		};
 
@@ -1478,11 +1521,30 @@ namespace libimage
 	}
 
 
-	void alpha_blend(View4r32 const& src, View3r32 const& cur_dst)
+	void alpha_blend(View2r32 const& src, View1r32 const& cur, View1r32 const& dst)
 	{
-		assert(verify(src, cur_dst));
+		assert(verify(src, cur));
+		assert(verify(src, dst));
 
-		do_alpha_blend(src, cur_dst, cur_dst);
+		static constexpr auto gray = id_cast(GA::G);
+		static constexpr auto alpha = id_cast(GA::A);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = channel_row_begin(src, y).channels;
+			auto c = row_begin(cur, y);
+			auto d = row_begin(dst, y);
+
+			auto sg = s[gray];
+			auto sa = s[alpha];
+
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = blend_linear(sg[x], c[x], sa[x]);
+			}
+		};
+
+		process_rows(src.height, row_func);
 	}
 }
 
@@ -2449,6 +2511,69 @@ namespace libimage
 				{
 					d[x] = *xy_at(src, (u32)floorf(src_xy.x), (u32)floorf(src_xy.y));
 				}
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+}
+
+
+/* overlay */
+
+namespace libimage
+{
+	void overlay(View3r32 const& src, View1r32 const& binary, Pixel color, View3r32 const& dst)
+	{
+		assert(verify(src, binary));
+		assert(verify(src, dst));
+
+		static constexpr auto red = id_cast(RGBA::R);
+		static constexpr auto green = id_cast(RGBA::G);
+		static constexpr auto blue = id_cast(RGBA::B);
+
+		assert(red == id_cast(RGB::R));
+		assert(green == id_cast(RGB::G));
+		assert(blue == id_cast(RGB::B));
+
+		auto const row_func = [&](u32 y) 
+		{
+			auto s = channel_row_begin(src, y).channels;
+			auto b = row_begin(binary, y);
+			auto d = channel_row_begin(dst, y).channels;
+
+			for (u32 ch = 0; ch < 3; ++ch)
+			{
+				auto d_ch = d[ch];
+				auto s_ch = s[ch];
+				auto c = to_channel_r32(color.channels[ch]);
+				for (u32 x = 0; x < src.width; ++x)
+				{
+					d_ch[x] = b[x] > 0.0f ? c : s_ch[x];
+				}
+			}			
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void overlay(View1r32 const& src, View1r32 const& binary, u8 gray, View1r32 const& dst)
+	{
+		assert(verify(src, binary));
+		assert(verify(src, dst));
+
+		auto gray32 = to_channel_r32(gray);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto b = row_begin(binary, y);
+			auto d = row_begin(dst, y);
+
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = b[x] > 0.0f ? gray32 : s[x];
 			}
 		};
 
