@@ -1226,11 +1226,18 @@ void overlay_test()
 	auto width = vette.width;
 	auto height = vette.height;
 
-	img::Buffer32 buffer(width * height * 4);
+	GrayImage gr_caddy;
+	img::read_image_from_file(CADILLAC_PATH, gr_caddy);
+
+	img::Buffer32 buffer(width * height * 5);
 
 	img::View3r32 view3;
 	img::make_view(view3, width, height, buffer);
 	img::convert(vette, view3);
+
+	img::View1r32 view1;
+	img::make_view(view1, gr_caddy.width, gr_caddy.height, buffer);
+	img::convert(gr_caddy, view1);
 
 	img::View1r32 binary;
 	img::make_view(binary, width / 2, height / 2, buffer);
@@ -1258,13 +1265,17 @@ void overlay_test()
 	r.y_end = r.y_begin + binary.height;
 
 	auto sub3 = img::sub_view(view3, r);
-
 	img::overlay(sub3, binary, img::to_pixel(0, 255, 0), sub3);
-
 	img::convert(view3, vette);
 	write_image(vette, "overlay.bmp");
 
+	auto sub1 = img::sub_view(view1, r);
+	img::overlay(sub1, binary, 255, sub1);
+	img::convert(view1, gr_caddy);
+	write_image(gr_caddy, "overlay_gray.bmp");
+
 	img::destroy_image(vette);
+	img::destroy_image(gr_caddy);
 	buffer.free();
 }
 

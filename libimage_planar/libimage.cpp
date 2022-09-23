@@ -2556,4 +2556,27 @@ namespace libimage
 
 		process_rows(src.height, row_func);
 	}
+
+
+	void overlay(View1r32 const& src, View1r32 const& binary, u8 gray, View1r32 const& dst)
+	{
+		assert(verify(src, binary));
+		assert(verify(src, dst));
+
+		auto gray32 = to_channel_r32(gray);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto b = row_begin(binary, y);
+			auto d = row_begin(dst, y);
+
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = b[x] > 0.0f ? gray32 : s[x];
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
 }
