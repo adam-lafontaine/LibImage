@@ -355,6 +355,8 @@ namespace libimage
 
 	void fill(View3r32 const& view, Pixel color);
 
+	void fill(View1r32 const& view, r32 gray32);
+
 	void fill(View1r32 const& view, u8 gray);
 }
 
@@ -470,7 +472,6 @@ namespace libimage
 {
 	void alpha_blend(View4r32 const& src, View3r32 const& cur, View3r32 const& dst);
 
-
 	void alpha_blend(View2r32 const& src, View1r32 const& cur, View1r32 const& dst);
 }
 
@@ -570,6 +571,14 @@ namespace libimage
 	void rotate(View3r32 const& src, View3r32 const& dst, Point2Du32 origin, r32 radians);
 
 	void rotate(View1r32 const& src, View1r32 const& dst, Point2Du32 origin, r32 radians);
+}
+
+
+/* overlay */
+
+namespace libimage
+{
+	void overlay(View3r32 const& src, View1r32 const& binary, Pixel color, View3r32 const& dst);
 }
 
 

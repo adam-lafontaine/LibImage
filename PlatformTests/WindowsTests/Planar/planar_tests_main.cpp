@@ -102,6 +102,7 @@ void gradients_test();
 void blur_test();
 void edges_test();
 void rotate_test();
+void overlay_test();
 
 
 int main()
@@ -137,6 +138,7 @@ int main()
 	edges_test();
 	blur_test();
 	rotate_test();
+	overlay_test();
 }
 
 
@@ -800,7 +802,6 @@ void alpha_blend_test()
 
 	img::grayscale(vette, gr_vette);
 	img::grayscale(caddy, gr_caddy);
-
 	
 	img::Buffer32 buffer(width * height * 11);
 
@@ -1208,6 +1209,62 @@ void rotate_test()
 
 	img::destroy_image(vette);
 	img::destroy_image(caddy);
+	buffer.free();
+}
+
+
+void overlay_test()
+{
+	auto title = "overlay_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+
+	Image vette;
+	img::read_image_from_file(CORVETTE_PATH, vette);
+	auto width = vette.width;
+	auto height = vette.height;
+
+	img::Buffer32 buffer(width * height * 4);
+
+	img::View3r32 view3;
+	img::make_view(view3, width, height, buffer);
+	img::convert(vette, view3);
+
+	img::View1r32 binary;
+	img::make_view(binary, width / 2, height / 2, buffer);
+	img::fill(binary, -1.0f);
+
+	Range2Du32 r{};
+	r.x_begin = 0;
+	r.x_end = binary.width;
+	r.y_begin = 0;
+	r.y_end = 5;
+	img::fill(img::sub_view(binary, r), 1.0f);
+	r.y_begin = binary.height - 5;
+	r.y_end = binary.height;
+	img::fill(img::sub_view(binary, r), 1.0f);
+	r.y_begin = 0;
+	r.x_end = 5;
+	img::fill(img::sub_view(binary, r), 1.0f);
+	r.x_begin = binary.width - 5;
+	r.x_end = binary.width;
+	img::fill(img::sub_view(binary, r), 1.0f);
+
+	r.x_begin = width / 4;
+	r.x_end = r.x_begin + binary.width;
+	r.y_begin = height / 4;
+	r.y_end = r.y_begin + binary.height;
+
+	auto sub3 = img::sub_view(view3, r);
+
+	img::overlay(sub3, binary, img::to_pixel(0, 255, 0), sub3);
+
+	img::convert(view3, vette);
+	write_image(vette, "overlay.bmp");
+
+	img::destroy_image(vette);
 	buffer.free();
 }
 

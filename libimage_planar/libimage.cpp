@@ -1017,6 +1017,23 @@ namespace libimage
 	}
 
 
+	void fill(View1r32 const& view, r32 gray32)
+	{
+		assert(verify(view));
+
+		auto const row_func = [&](u32 y)
+		{
+			auto d = row_begin(view, y);
+			for (u32 x = 0; x < view.width; ++x)
+			{
+				d[x] = gray32;
+			}
+		};
+
+		process_rows(view.height, row_func);
+	}
+
+
 	void fill(View1r32 const& view, u8 gray)
 	{
 		assert(verify(view));
@@ -1477,32 +1494,17 @@ namespace libimage
 			auto c = channel_row_begin(cur, y).channels;
 			auto d = channel_row_begin(dst, y).channels;
 
-			auto sr = s[red];
-			auto sg = s[green];
-			auto sb = s[blue];
 			auto sa = s[alpha];
 
-			auto cr = c[red];
-			auto cg = c[green];
-			auto cb = c[blue];
-
-			auto dr = d[red];
-			auto dg = d[green];
-			auto db = d[blue];
-
-			for (u32 x = 0; x < src.width; ++x)
+			for (u32 ch = 0; ch < 3; ++ch)
 			{
-				dr[x] = blend_linear(sr[x], cr[x], sa[x]);
-			}
-
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				dg[x] = blend_linear(sg[x], cg[x], sa[x]);
-			}
-
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				db[x] = blend_linear(sb[x], cb[x], sa[x]);
+				auto d_ch = d[ch];
+				auto c_ch = c[ch];
+				auto s_ch = s[ch];
+				for (u32 x = 0; x < src.width; ++x)
+				{
+					d_ch[x] = blend_linear(s_ch[x], c_ch[x], sa[x]);
+				}
 			}
 		};
 
@@ -2510,6 +2512,46 @@ namespace libimage
 					d[x] = *xy_at(src, (u32)floorf(src_xy.x), (u32)floorf(src_xy.y));
 				}
 			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+}
+
+
+/* overlay */
+
+namespace libimage
+{
+	void overlay(View3r32 const& src, View1r32 const& binary, Pixel color, View3r32 const& dst)
+	{
+		assert(verify(src, binary));
+		assert(verify(src, dst));
+
+		static constexpr auto red = id_cast(RGBA::R);
+		static constexpr auto green = id_cast(RGBA::G);
+		static constexpr auto blue = id_cast(RGBA::B);
+
+		assert(red == id_cast(RGB::R));
+		assert(green == id_cast(RGB::G));
+		assert(blue == id_cast(RGB::B));
+
+		auto const row_func = [&](u32 y) 
+		{
+			auto s = channel_row_begin(src, y).channels;
+			auto b = row_begin(binary, y);
+			auto d = channel_row_begin(dst, y).channels;
+
+			for (u32 ch = 0; ch < 3; ++ch)
+			{
+				auto d_ch = d[ch];
+				auto s_ch = s[ch];
+				auto c = to_channel_r32(color.channels[ch]);
+				for (u32 x = 0; x < src.width; ++x)
+				{
+					d_ch[x] = b[x] > 0.0f ? c : s_ch[x];
+				}
+			}			
 		};
 
 		process_rows(src.height, row_func);
