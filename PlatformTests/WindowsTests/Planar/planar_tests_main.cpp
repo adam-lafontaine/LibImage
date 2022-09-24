@@ -91,7 +91,7 @@ void sub_view_test();
 void fill_test();
 void copy_test();
 void for_each_pixel_test();
-//void for_each_xy_test();
+void for_each_xy_test();
 void grayscale_test();
 void select_channel_test();
 void alpha_blend_test();
@@ -127,7 +127,7 @@ int main()
 	fill_test();
 	copy_test();
 	for_each_pixel_test();
-	//for_each_xy_test();
+	for_each_xy_test();
 	grayscale_test();
 	select_channel_test();
 	alpha_blend_test();
@@ -651,16 +651,42 @@ void for_each_pixel_test()
 }
 
 
-//void for_each_xy_test()
-//{
-//	auto title = "for_each_xy_test";
-//	printf("\n%s:\n", title);
-//	auto out_dir = IMAGE_OUT_PATH / title;
-//	empty_dir(out_dir);
-//	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
-//
-//
-//}
+void for_each_xy_test()
+{
+	auto title = "for_each_xy_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+
+	u32 width = 800;
+	u32 height = 600;
+
+	img::Buffer32 buffer(width * height * 3);
+
+	img::View3r32 view3;
+	img::make_view(view3, width, height, buffer);
+
+	auto const xy_func = [&](u32 x, u32 y) 
+	{
+		auto p = img::rgb_xy_at(view3, x, y);
+		p.red() = (r32)x / width;
+		p.green() = (r32)y / height;
+		p.blue() = (r32)x * y / (width * height);
+	};
+
+	img::for_each_xy(view3, xy_func);
+
+	Image image;
+	img::make_image(image, width, height);
+
+	img::convert(view3, image);
+
+	write_image(image, "for_each_xy.bmp");
+
+	buffer.free();
+	img::destroy_image(image);
+}
 
 
 void grayscale_test()

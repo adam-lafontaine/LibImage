@@ -6,6 +6,8 @@
 #include <array>
 
 
+/* platform image */
+
 namespace libimage
 {
 	constexpr auto RGB_CHANNELS = 3u;
@@ -97,7 +99,7 @@ namespace libimage
 
 		union
 		{
-			Range2Du32 range;
+			Range2Du32 range = {};
 
 			struct
 			{
@@ -121,10 +123,7 @@ namespace libimage
 
 	Pixel* row_begin(View const& view, u32 y);
 
-	Pixel* xy_at(View const& view, u32 x, u32 y);
-
-
-	
+	Pixel* xy_at(View const& view, u32 x, u32 y);	
 
 
 	namespace gray
@@ -214,10 +213,6 @@ namespace libimage
 		u32 height = 0;
 	};	
 
-	r32* row_begin(View1r32 const& view, u32 y);
-
-	r32* xy_at(View1r32 const& view, u32 x, u32 y);
-
 
 	template <size_t N>
 	class ViewCHr32
@@ -255,21 +250,103 @@ namespace libimage
 
 
 	template <size_t N>
-	View1r32 select_channel(ViewCHr32<N> const& view, u32 ch)
+	class PixelCHr32
 	{
-		View1r32 view1{};
+	public:
 
-		view1.image_width = view.image_width;
-		view1.range = view.range;
-		view1.width = view.width;
-		view1.height = view.height;
+		static constexpr u32 n_channels = N;
 
-		view1.image_data = view.image_channel_data[ch];
+		r32* channels[N] = {};
+	};
 
-		// Warning! No asserts here
 
-		return view1;
-	}
+	using Pixel4r32 = PixelCHr32<4>;
+	using Pixel3r32 = PixelCHr32<3>;
+	using Pixel2r32 = PixelCHr32<2>;
+
+
+	class PixelRGBAr32
+	{
+	public:
+
+		static constexpr u32 n_channels = 4;
+
+		union {
+
+			struct {
+				r32* r;
+				r32* g;
+				r32* b;
+				r32* a;
+			};
+
+			r32* channels[4] = {};
+		};
+
+		r32& red() { return *r; }
+		r32& green() { return *g; }
+		r32& blue() { return *b; }
+		r32& alpha() { return *a; }
+	};
+
+
+	class PixelRGBr32
+	{
+	public:
+
+		static constexpr u32 n_channels = 3;
+
+		union {
+
+			struct {
+				r32* r;
+				r32* g;
+				r32* b;
+			};
+
+			r32* channels[3] = {};
+		};
+
+		r32& red() { return *r; }
+		r32& green() { return *g; }
+		r32& blue() { return *b; }
+	};
+}
+
+
+/* row_begin */
+
+//namespace libimage
+//{
+//	r32* row_begin(View1r32 const& view, u32 y);
+//
+//	Pixel4r32 row_begin(View4r32 const& view, u32 y);
+//
+//	Pixel3r32 row_begin(View3r32 const& view, u32 y);
+//
+//	Pixel2r32 row_begin(View2r32 const& view, u32 y);
+//
+//	PixelRGBAr32 rgba_row_begin(View4r32 const& view, u32 y);
+//
+//	PixelRGBr32 rgb_row_begin(View3r32 const& view, u32 y);
+//}
+
+
+/* xy_at */
+
+namespace libimage
+{
+	r32* xy_at(View1r32 const& view, u32 x, u32 y);
+
+	Pixel4r32 xy_at(View4r32 const& view, u32 x, u32 y);
+
+	Pixel3r32 xy_at(View3r32 const& view, u32 x, u32 y);
+
+	Pixel2r32 xy_at(View2r32 const& view, u32 x, u32 y);
+
+	PixelRGBAr32 rgba_xy_at(View4r32 const& view, u32 x, u32 y);
+
+	PixelRGBr32 rgb_xy_at(View3r32 const& view, u32 x, u32 y);
 }
 
 
@@ -431,7 +508,9 @@ namespace libimage
 
 	void for_each_xy(View4r32 const& view, xy_f const& func);
 
-	void for_each_xy(View3r32 const& image, xy_f const& func);
+	void for_each_xy(View3r32 const& view, xy_f const& func);
+
+	void for_each_xy(View2r32 const& view, xy_f const& func);
 
 	void for_each_xy(View1r32 const& view, xy_f const& func);
 }
