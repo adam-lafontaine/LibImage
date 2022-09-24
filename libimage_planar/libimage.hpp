@@ -6,6 +6,8 @@
 #include <array>
 
 
+/* platform image */
+
 namespace libimage
 {
 	constexpr auto RGB_CHANNELS = 3u;
@@ -121,10 +123,7 @@ namespace libimage
 
 	Pixel* row_begin(View const& view, u32 y);
 
-	Pixel* xy_at(View const& view, u32 x, u32 y);
-
-
-	
+	Pixel* xy_at(View const& view, u32 x, u32 y);	
 
 
 	namespace gray
@@ -252,24 +251,6 @@ namespace libimage
 
 
 	View3r32 make_rgb_view(View4r32 const& image);
-
-
-	template <size_t N>
-	View1r32 select_channel(ViewCHr32<N> const& view, u32 ch)
-	{
-		View1r32 view1{};
-
-		view1.image_width = view.image_width;
-		view1.range = view.range;
-		view1.width = view.width;
-		view1.height = view.height;
-
-		view1.image_data = view.image_channel_data[ch];
-
-		// Warning! No asserts here
-
-		return view1;
-	}
 }
 
 
