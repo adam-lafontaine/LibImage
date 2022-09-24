@@ -99,7 +99,7 @@ namespace libimage
 
 		union
 		{
-			Range2Du32 range;
+			Range2Du32 range = {};
 
 			struct
 			{
@@ -256,7 +256,7 @@ namespace libimage
 
 		static constexpr u32 n_channels = N;
 
-		r32* channels[N];
+		r32* channels[N] = {};
 	};
 
 
@@ -305,33 +305,37 @@ namespace libimage
 }
 
 
-/* row_begin, xy_at */
+/* row_begin */
+
+//namespace libimage
+//{
+//	r32* row_begin(View1r32 const& view, u32 y);
+//
+//	Pixel4r32 row_begin(View4r32 const& view, u32 y);
+//
+//	Pixel3r32 row_begin(View3r32 const& view, u32 y);
+//
+//	Pixel2r32 row_begin(View2r32 const& view, u32 y);
+//
+//	PixelRGBAr32 rgba_row_begin(View4r32 const& view, u32 y);
+//
+//	PixelRGBr32 rgb_row_begin(View3r32 const& view, u32 y);
+//}
+
+
+/* xy_at */
 
 namespace libimage
 {
-	r32* row_begin(View1r32 const& view, u32 y);
-
 	r32* xy_at(View1r32 const& view, u32 x, u32 y);
-
-
-	Pixel4r32 row_begin(View4r32 const& view, u32 y);
 
 	Pixel4r32 xy_at(View4r32 const& view, u32 x, u32 y);
 
-	Pixel3r32 row_begin(View3r32 const& view, u32 y);
-
 	Pixel3r32 xy_at(View3r32 const& view, u32 x, u32 y);
-
-	Pixel2r32 row_begin(View2r32 const& view, u32 y);
 
 	Pixel2r32 xy_at(View2r32 const& view, u32 x, u32 y);
 
-
-	PixelRGBAr32 rgba_row_begin(View4r32 const& view, u32 y);
-
 	PixelRGBAr32 rgba_xy_at(View4r32 const& view, u32 x, u32 y);
-
-	PixelRGBr32 rgb_row_begin(View3r32 const& view, u32 y);
 
 	PixelRGBr32 rgb_xy_at(View3r32 const& view, u32 x, u32 y);
 }

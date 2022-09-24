@@ -513,11 +513,11 @@ namespace libimage
 }
 
 
-/* row_begin, xy_at */
+/* row_begin */
 
 namespace libimage
 {
-	r32* row_begin(View1r32 const& view, u32 y)
+	static r32* row_begin(View1r32 const& view, u32 y)
 	{
 		assert(y < view.height);
 
@@ -530,91 +530,12 @@ namespace libimage
 	}
 
 
-	r32* xy_at(View1r32 const& view, u32 x, u32 y)
-	{
-		assert(y < view.height);
-		assert(x < view.width);
-
-		return row_begin(view, y) + x;
-	}
-
-
-	static r32* row_offset_begin(View1r32 const& view, u32 y, int y_offset)
-	{
-		int y_eff = y + y_offset;
-		assert(y_eff < view.height);
-		assert(y_eff >= 0);
-
-		auto offset = (view.y_begin + y_eff) * view.image_width + view.x_begin;
-
-		auto ptr = view.image_data + (u64)(offset);
-		assert(ptr);
-
-		return ptr;
-	}
-
-
-	template <size_t N>
-	static r32* channel_row_begin(ViewCHr32<N> const& view, u32 y, u32 ch)
-	{
-		assert(y < view.height);
-
-		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin);
-
-		return view.image_channel_data[ch] + offset;
-	}
-
-
-	template <size_t N>
-	static r32* channel_xy_at(ViewCHr32<N> const& view, u32 x, u32 y, u32 ch)
-	{
-		assert(y < view.height);
-		assert(x < view.width);
-
-		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin) + x;
-
-		return view.image_channel_data[ch] + offset;
-	}
-
-
-	template <size_t N>
-	static r32* channel_row_offset_begin(ViewCHr32<N> const& view, u32 y, int y_offset, u32 ch)
-	{
-		int y_eff = y + y_offset;
-		assert(y_eff < view.height);
-		assert(y_eff >= 0);
-
-		auto offset = (size_t)((view.y_begin + y_eff) * view.image_width + view.x_begin);
-
-		return view.image_channel_data[ch] + offset;
-	}
-
-
-	template <size_t N>
-	PixelCHr32<N> row_begin_n(ViewCHr32<N> const& view, u32 y)
+	/*template <size_t N>
+	static PixelCHr32<N> row_begin_n(ViewCHr32<N> const& view, u32 y)
 	{
 		assert(y < view.height);
 
 		auto offset = (view.y_begin + y) * view.image_width + view.x_begin;
-
-		PixelCHr32<N> p{};
-
-		for (u32 ch = 0; ch < N; ++ch)
-		{
-			p.channels[ch] = view.image_channel_data[ch] + offset;
-		}
-
-		return p;
-	}
-
-
-	template <size_t N>
-	PixelCHr32<N> xy_at_n(ViewCHr32<N> const& view, u32 x, u32 y)
-	{
-		assert(y < view.height);
-		assert(x < view.width);
-
-		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin) + x;
 
 		PixelCHr32<N> p{};
 
@@ -633,21 +554,9 @@ namespace libimage
 	}
 
 
-	Pixel4r32 xy_at(View4r32 const& view, u32 x, u32 y)
-	{
-		return xy_at_n(view, x, y);
-	}
-
-
 	Pixel3r32 row_begin(View3r32 const& view, u32 y)
 	{
 		return row_begin_n(view, y);
-	}
-
-
-	Pixel3r32 xy_at(View3r32 const& view, u32 x, u32 y)
-	{
-		return xy_at_n(view, x, y);
 	}
 
 
@@ -657,35 +566,11 @@ namespace libimage
 	}
 
 
-	Pixel2r32 xy_at(View2r32 const& view, u32 x, u32 y)
-	{
-		return xy_at_n(view, x, y);
-	}
-
-
 	PixelRGBAr32 rgba_row_begin(View4r32 const& view, u32 y)
 	{
 		assert(y < view.height);
 
 		auto offset = (view.y_begin + y) * view.image_width + view.x_begin;
-
-		PixelRGBAr32 p{};
-
-		p.red = view.image_channel_data[id_cast(RGBA::R)] + offset;
-		p.green = view.image_channel_data[id_cast(RGBA::G)] + offset;
-		p.blue = view.image_channel_data[id_cast(RGBA::B)] + offset;
-		p.alpha = view.image_channel_data[id_cast(RGBA::A)] + offset;
-
-		return p;
-	}
-
-
-	PixelRGBAr32 rgba_xy_at(View4r32 const& view, u32 x, u32 y)
-	{
-		assert(y < view.height);
-		assert(x < view.width);
-
-		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin) + x;
 
 		PixelRGBAr32 p{};
 
@@ -711,6 +596,110 @@ namespace libimage
 		p.blue = view.image_channel_data[id_cast(RGB::B)] + offset;
 
 		return p;
+	}*/
+
+
+	static r32* row_offset_begin(View1r32 const& view, u32 y, int y_offset)
+	{
+		int y_eff = y + y_offset;
+
+		auto offset = (view.y_begin + y_eff) * view.image_width + view.x_begin;
+
+		auto ptr = view.image_data + (u64)(offset);
+		assert(ptr);
+
+		return ptr;
+	}
+
+
+	template <size_t N>
+	static r32* channel_row_begin(ViewCHr32<N> const& view, u32 y, u32 ch)
+	{
+		assert(y < view.height);
+
+		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin);
+
+		return view.image_channel_data[ch] + offset;
+	}
+
+
+	template <size_t N>
+	static r32* channel_row_offset_begin(ViewCHr32<N> const& view, u32 y, int y_offset, u32 ch)
+	{
+		int y_eff = y + y_offset;
+
+		auto offset = (size_t)((view.y_begin + y_eff) * view.image_width + view.x_begin);
+
+		return view.image_channel_data[ch] + offset;
+	}
+}
+
+
+/* xy_at */
+
+namespace libimage
+{
+	r32* xy_at(View1r32 const& view, u32 x, u32 y)
+	{
+		assert(y < view.height);
+		assert(x < view.width);
+
+		return row_begin(view, y) + x;
+	}	
+
+
+	template <size_t N>
+	PixelCHr32<N> xy_at_n(ViewCHr32<N> const& view, u32 x, u32 y)
+	{
+		assert(y < view.height);
+		assert(x < view.width);
+
+		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin) + x;
+
+		PixelCHr32<N> p{};
+
+		for (u32 ch = 0; ch < N; ++ch)
+		{
+			p.channels[ch] = view.image_channel_data[ch] + offset;
+		}
+
+		return p;
+	}
+
+
+	Pixel4r32 xy_at(View4r32 const& view, u32 x, u32 y)
+	{
+		return xy_at_n(view, x, y);
+	}
+
+
+	Pixel3r32 xy_at(View3r32 const& view, u32 x, u32 y)
+	{
+		return xy_at_n(view, x, y);
+	}
+
+
+	Pixel2r32 xy_at(View2r32 const& view, u32 x, u32 y)
+	{
+		return xy_at_n(view, x, y);
+	}
+
+
+	PixelRGBAr32 rgba_xy_at(View4r32 const& view, u32 x, u32 y)
+	{
+		assert(y < view.height);
+		assert(x < view.width);
+
+		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin) + x;
+
+		PixelRGBAr32 p{};
+
+		p.red = view.image_channel_data[id_cast(RGBA::R)] + offset;
+		p.green = view.image_channel_data[id_cast(RGBA::G)] + offset;
+		p.blue = view.image_channel_data[id_cast(RGBA::B)] + offset;
+		p.alpha = view.image_channel_data[id_cast(RGBA::A)] + offset;
+
+		return p;
 	}
 
 
@@ -728,6 +717,18 @@ namespace libimage
 		p.blue = view.image_channel_data[id_cast(RGB::B)] + offset;
 
 		return p;
+	}
+
+
+	template <size_t N>
+	static r32* channel_xy_at(ViewCHr32<N> const& view, u32 x, u32 y, u32 ch)
+	{
+		assert(y < view.height);
+		assert(x < view.width);
+
+		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin) + x;
+
+		return view.image_channel_data[ch] + offset;
 	}
 }
 
