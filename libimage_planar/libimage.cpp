@@ -1479,14 +1479,7 @@ namespace libimage
 
 	static void do_alpha_blend(View4r32 const& src, View3r32 const& cur, View3r32 const& dst)
 	{
-		static constexpr auto red = id_cast(RGBA::R);
-		static constexpr auto green = id_cast(RGBA::G);
-		static constexpr auto blue = id_cast(RGBA::B);
 		static constexpr auto alpha = id_cast(RGBA::A);
-
-		assert(red == id_cast(RGB::R));
-		assert(green == id_cast(RGB::G));
-		assert(blue == id_cast(RGB::B));
 
 		auto const row_func = [&](u32 y)
 		{
@@ -2527,14 +2520,6 @@ namespace libimage
 	{
 		assert(verify(src, binary));
 		assert(verify(src, dst));
-
-		static constexpr auto red = id_cast(RGBA::R);
-		static constexpr auto green = id_cast(RGBA::G);
-		static constexpr auto blue = id_cast(RGBA::B);
-
-		assert(red == id_cast(RGB::R));
-		assert(green == id_cast(RGB::G));
-		assert(blue == id_cast(RGB::B));
 
 		auto const row_func = [&](u32 y) 
 		{
