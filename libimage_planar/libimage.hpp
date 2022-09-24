@@ -274,14 +274,19 @@ namespace libimage
 		union {
 
 			struct {
-				r32* red;
-				r32* green;
-				r32* blue;
-				r32* alpha;
+				r32* r;
+				r32* g;
+				r32* b;
+				r32* a;
 			};
 
 			r32* channels[4] = {};
 		};
+
+		r32& red() { return *r; }
+		r32& green() { return *g; }
+		r32& blue() { return *b; }
+		r32& alpha() { return *a; }
 	};
 
 
@@ -294,13 +299,17 @@ namespace libimage
 		union {
 
 			struct {
-				r32* red;
-				r32* green;
-				r32* blue;
+				r32* r;
+				r32* g;
+				r32* b;
 			};
 
 			r32* channels[3] = {};
 		};
+
+		r32& red() { return *r; }
+		r32& green() { return *g; }
+		r32& blue() { return *b; }
 	};
 }
 
@@ -499,7 +508,9 @@ namespace libimage
 
 	void for_each_xy(View4r32 const& view, xy_f const& func);
 
-	void for_each_xy(View3r32 const& image, xy_f const& func);
+	void for_each_xy(View3r32 const& view, xy_f const& func);
+
+	void for_each_xy(View2r32 const& view, xy_f const& func);
 
 	void for_each_xy(View1r32 const& view, xy_f const& func);
 }

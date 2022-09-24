@@ -694,10 +694,10 @@ namespace libimage
 
 		PixelRGBAr32 p{};
 
-		p.red = view.image_channel_data[id_cast(RGBA::R)] + offset;
-		p.green = view.image_channel_data[id_cast(RGBA::G)] + offset;
-		p.blue = view.image_channel_data[id_cast(RGBA::B)] + offset;
-		p.alpha = view.image_channel_data[id_cast(RGBA::A)] + offset;
+		p.r = view.image_channel_data[id_cast(RGBA::R)] + offset;
+		p.g = view.image_channel_data[id_cast(RGBA::G)] + offset;
+		p.b = view.image_channel_data[id_cast(RGBA::B)] + offset;
+		p.a = view.image_channel_data[id_cast(RGBA::A)] + offset;
 
 		return p;
 	}
@@ -712,9 +712,9 @@ namespace libimage
 
 		PixelRGBr32 p{};
 
-		p.red = view.image_channel_data[id_cast(RGB::R)] + offset;
-		p.green = view.image_channel_data[id_cast(RGB::G)] + offset;
-		p.blue = view.image_channel_data[id_cast(RGB::B)] + offset;
+		p.r = view.image_channel_data[id_cast(RGB::R)] + offset;
+		p.g = view.image_channel_data[id_cast(RGB::G)] + offset;
+		p.b = view.image_channel_data[id_cast(RGB::B)] + offset;
 
 		return p;
 	}
@@ -1416,6 +1416,30 @@ namespace libimage
 
 
 	void for_each_xy(View4r32 const& view, xy_f const& func)
+	{
+		assert(verify(view));
+
+		do_for_each_xy(view, func);
+	}
+
+
+	void for_each_xy(View3r32 const& view, xy_f const& func)
+	{
+		assert(verify(view));
+
+		do_for_each_xy(view, func);
+	}
+
+
+	void for_each_xy(View2r32 const& view, xy_f const& func)
+	{
+		assert(verify(view));
+
+		do_for_each_xy(view, func);
+	}
+
+
+	void for_each_xy(View1r32 const& view, xy_f const& func)
 	{
 		assert(verify(view));
 
