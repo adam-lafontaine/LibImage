@@ -565,7 +565,7 @@ namespace libimage
 	}
 
 
-	template <size_t N>
+	/*template <size_t N>
 	static ChannelData<N> channel_xy_at(ViewCHr32<N> const& view, u32 x, u32 y)
 	{
 		assert(y < view.height);
@@ -580,6 +580,18 @@ namespace libimage
 		}
 
 		return data;
+	}*/
+
+
+	template <size_t N>
+	static r32* channel_xy_at(ViewCHr32<N> const& view, u32 x, u32 y, u32 ch)
+	{
+		assert(y < view.height);
+		assert(x < view.width);
+
+		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin) + x;
+
+		return view.image_channel_data[ch] + offset;
 	}
 
 
@@ -2457,10 +2469,12 @@ namespace libimage
 				}
 				else
 				{
-					auto s = channel_xy_at(src, (u32)floorf(src_xy.x), (u32)floorf(src_xy.y)).channels;
+					auto src_x = (u32)floorf(src_xy.x);
+					auto src_y = (u32)floorf(src_xy.y);
 					for (u32 ch = 0; ch < N; ++ch)
 					{
-						d_channel_rows[ch][x] = *s[ch];
+						auto s = channel_xy_at(src, src_x, src_y, ch);
+						d_channel_rows[ch][x] = *s;
 					}
 				}
 			}
