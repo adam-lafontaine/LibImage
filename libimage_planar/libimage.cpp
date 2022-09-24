@@ -547,40 +547,12 @@ namespace libimage
 
 
 	template <size_t N>
-	class ChannelData
-	{
-	public:
-		static constexpr u32 n_channels = N;
-
-		r32* channels[N] = {};		
-	};
-
-
-	template <size_t N>
 	static r32* channel_row_begin(ViewCHr32<N> const& view, u32 y, u32 ch)
 	{
 		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin);
 
 		return view.image_channel_data[ch] + offset;
 	}
-
-
-	/*template <size_t N>
-	static ChannelData<N> channel_xy_at(ViewCHr32<N> const& view, u32 x, u32 y)
-	{
-		assert(y < view.height);
-		assert(x < view.width);
-
-		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin) + x;
-
-		ChannelData<N> data{};
-		for (u32 ch = 0; ch < N; ++ch)
-		{
-			data.channels[ch] = view.image_channel_data[ch] + offset;
-		}
-
-		return data;
-	}*/
 
 
 	template <size_t N>
@@ -596,17 +568,11 @@ namespace libimage
 
 
 	template <size_t N>
-	static ChannelData<N> channel_row_offset_begin(ViewCHr32<N> const& view, u32 y, int y_offset)
+	static r32* channel_row_offset_begin(ViewCHr32<N> const& view, u32 y, int y_offset, u32 ch)
 	{
 		auto offset = (size_t)((view.y_begin + y + y_offset) * view.image_width + view.x_begin);
 
-		ChannelData<N> data{};
-		for (u32 ch = 0; ch < N; ++ch)
-		{
-			data.channels[ch] = view.image_channel_data[ch] + offset;
-		}
-
-		return data;
+		return view.image_channel_data[ch] + offset;
 	}
 		
 }
@@ -2102,13 +2068,13 @@ namespace libimage
 
 					for (int ry = ry_begin; ry < ry_end; ++ry)
 					{
-						auto s_top = channel_row_offset_begin(src, 0, ry).channels;
-						auto s_bottom = channel_row_offset_begin(src, height - 1, ry).channels;
+						auto s_top = channel_row_offset_begin(src, 0, ry, ch);
+						auto s_bottom = channel_row_offset_begin(src, height - 1, ry, ch);
 
 						for (int rx = rx_begin; rx < rx_end; ++rx)
 						{
-							d_top += (s_top[ch] + rx)[x] * GAUSS_3X3[w];
-							d_bottom += (s_bottom[ch] + rx)[x] * GAUSS_3X3[w];
+							d_top += (s_top + rx)[x] * GAUSS_3X3[w];
+							d_bottom += (s_bottom + rx)[x] * GAUSS_3X3[w];
 
 							++w;
 						}						
@@ -2135,11 +2101,11 @@ namespace libimage
 
 					for (int ry = ry_begin; ry < ry_end; ++ry)
 					{
-						auto s_row = channel_row_offset_begin(src, y, ry).channels;
+						auto s_row = channel_row_offset_begin(src, y, ry, ch);
 
 						for (int rx = rx_begin; rx < rx_end; ++rx)
 						{
-							auto s_left = s_row[ch];
+							auto s_left = s_row;
 							auto s_right = s_left + width - 1;
 
 							d_left += *(s_left + rx) * GAUSS_3X3[w];
@@ -2190,11 +2156,11 @@ namespace libimage
 
 					for (int ry = ry_begin; ry < ry_end; ++ry)
 					{
-						auto s = channel_row_offset_begin(src, y, ry).channels;
+						auto s = channel_row_offset_begin(src, y, ry, ch);
 
 						for (int rx = rx_begin; rx < rx_end; ++rx)
 						{
-							d += (s[ch] + rx)[x] * GAUSS_5X5[w];
+							d += (s + rx)[x] * GAUSS_5X5[w];
 
 							++w;
 						}
