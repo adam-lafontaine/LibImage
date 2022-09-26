@@ -2069,6 +2069,94 @@ namespace libimage
 	}
 
 
+	static void convolve_gradients_3x3(View1r32 const& src, View2r32 const& xy_dst)
+	{
+		// TODO: simd
+
+		int const ry_begin = -1;
+		int const ry_end = 2;
+		int const rx_begin = -1;
+		int const rx_end = 2;
+
+		auto const row_func = [&](u32 y)
+		{
+			u32 w = 0;
+			r32 gx = 0.0f;
+			r32 gy = 0.0f;
+
+			auto dx = channel_row_begin(xy_dst, y, 0);
+			auto dy = channel_row_begin(xy_dst, y, 1);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				w = 0;
+				gx = 0.0f;
+				gy = 0.0f;
+
+				for (int ry = ry_begin; ry < ry_end; ++ry)
+				{
+					auto s = row_offset_begin(src, y, ry);
+					for (int rx = rx_begin; rx < rx_end; ++rx)
+					{
+						gx += (s + rx)[x] * GRAD_X_3X3[w];
+						gy += (s + rx)[x] * GRAD_Y_3X3[w];
+						++w;
+					}
+				}
+
+				dx[x] = gx;
+				dy[x] = gy;
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void gradients(View1r32 const& src, View1r32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		zero_outer(dst);
+
+		Range2Du32 inner{};
+		inner.x_begin = 1;
+		inner.x_end = src.width - 1;
+		inner.y_begin = 1;
+		inner.y_end = src.height - 1;
+
+		convolve_gradients_3x3(sub_view(src, inner), sub_view(dst, inner));
+	}
+
+
+	void gradients(View1r32 const& src, View2r32 const& xy_dst)
+	{
+		auto x_dst = select_channel(xy_dst, 0);
+		auto y_dst = select_channel(xy_dst, 1);
+
+		assert(verify(src, x_dst));
+		assert(verify(src, y_dst));
+
+		zero_outer(x_dst);
+		zero_outer(y_dst);
+
+		Range2Du32 inner{};
+		inner.x_begin = 1;
+		inner.x_end = src.width - 1;
+		inner.y_begin = 1;
+		inner.y_end = src.height - 1;
+
+		convolve_gradients_3x3(sub_view(src, inner), sub_view(xy_dst, inner));
+	}
+
+
+	
+}
+
+
+/* edges */
+
+namespace libimage
+{
 	static void convolve_edges_3x3(View1r32 const& src, View1r32 const& dst, r32 threshold)
 	{
 		// TODO: simd
@@ -2115,22 +2203,6 @@ namespace libimage
 	}
 
 
-	void gradients(View1r32 const& src, View1r32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		zero_outer(dst);
-
-		Range2Du32 inner{};
-		inner.x_begin = 1;
-		inner.x_end = src.width - 1;
-		inner.y_begin = 1;
-		inner.y_end = src.height - 1;
-
-		convolve_gradients_3x3(sub_view(src, inner), sub_view(dst, inner));
-	}
-
-
 	void edges(View1r32 const& src, View1r32 const& dst, r32 threshold)
 	{
 		assert(verify(src, dst));
@@ -2145,6 +2217,28 @@ namespace libimage
 		inner.y_end = src.height - 1;
 
 		convolve_edges_3x3(sub_view(src, inner), sub_view(dst, inner), threshold);
+	}
+}
+
+
+/* corners */
+
+namespace libimage
+{
+	
+
+
+	void corners(View1r32 const& src, View1r32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		zero_outer(dst);
+
+		Range2Du32 inner{};
+		inner.x_begin = 1;
+		inner.x_end = src.width - 1;
+		inner.y_begin = 1;
+		inner.y_end = src.height - 1;
 	}
 }
 
