@@ -787,7 +787,7 @@ namespace libimage
 }
 
 
-/* convert */
+/* map */
 
 namespace libimage
 {
@@ -867,7 +867,7 @@ namespace libimage
 	}
 
 
-	void convert(View4r32 const& src, Image const& dst)
+	void map(View4r32 const& src, Image const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -875,7 +875,7 @@ namespace libimage
 	}
 
 
-	void convert(Image const& src, View4r32 const& dst)
+	void map(Image const& src, View4r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -883,7 +883,7 @@ namespace libimage
 	}
 
 
-	void convert(View4r32 const& src, View const& dst)
+	void map(View4r32 const& src, View const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -891,7 +891,7 @@ namespace libimage
 	}
 
 
-	void convert(View const& src, View4r32 const& dst)
+	void map(View const& src, View4r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -899,7 +899,7 @@ namespace libimage
 	}
 
 
-	void convert(View3r32 const& src, Image const& dst)
+	void map(View3r32 const& src, Image const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -907,7 +907,7 @@ namespace libimage
 	}
 
 
-	void convert(Image const& src, View3r32 const& dst)
+	void map(Image const& src, View3r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -915,7 +915,7 @@ namespace libimage
 	}
 
 
-	void convert(View3r32 const& src, View const& dst)
+	void map(View3r32 const& src, View const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -923,7 +923,7 @@ namespace libimage
 	}
 
 
-	void convert(View const& src, View3r32 const& dst)
+	void map(View const& src, View3r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -931,7 +931,7 @@ namespace libimage
 	}
 
 
-	void convert(View1r32 const& src, gray::Image const& dst)
+	void map(View1r32 const& src, gray::Image const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -939,7 +939,7 @@ namespace libimage
 	}
 
 
-	void convert(gray::Image const& src, View1r32 const& dst)
+	void map(gray::Image const& src, View1r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -947,7 +947,7 @@ namespace libimage
 	}
 
 
-	void convert(View1r32 const& src, gray::View const& dst)
+	void map(View1r32 const& src, gray::View const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -955,7 +955,7 @@ namespace libimage
 	}
 
 
-	void convert(gray::View const& src, View1r32 const& dst)
+	void map(gray::View const& src, View1r32 const& dst)
 	{
 		assert(verify(src, dst));
 
