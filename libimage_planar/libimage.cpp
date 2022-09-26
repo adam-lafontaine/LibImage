@@ -1688,6 +1688,24 @@ namespace libimage
 		assert(verify(view));
 
 		auto ch = id_cast(channel);
+		assert(ch >= 0);
+		assert(ch < 2);
+
+		auto view1 = select_channel(view, ch);
+
+		assert(verify(view1));
+
+		return view1;
+	}
+
+
+	View1r32 select_channel(View2r32 const& view, XY channel)
+	{
+		assert(verify(view));
+
+		auto ch = id_cast(channel);
+		assert(ch >= 0);
+		assert(ch < 2);
 
 		auto view1 = select_channel(view, ch);
 
@@ -2151,14 +2169,17 @@ namespace libimage
 		int const rx_begin = -1;
 		int const rx_end = 2;
 
+		static constexpr auto x_ch = id_cast(XY::X);
+		static constexpr auto y_ch = id_cast(XY::Y);
+
 		auto const row_func = [&](u32 y)
 		{
 			u32 w = 0;
 			r32 gx = 0.0f;
 			r32 gy = 0.0f;
 
-			auto dx = channel_row_begin(xy_dst, y, 0);
-			auto dy = channel_row_begin(xy_dst, y, 1);
+			auto dx = channel_row_begin(xy_dst, y, x_ch);
+			auto dy = channel_row_begin(xy_dst, y, y_ch);
 			for (u32 x = 0; x < src.width; ++x)
 			{
 				w = 0;

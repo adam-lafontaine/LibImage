@@ -6,7 +6,7 @@
 #include <array>
 
 
-/* platform image */
+/* constants, enums */
 
 namespace libimage
 {
@@ -31,12 +31,23 @@ namespace libimage
 	};
 
 
+	enum class XY : int
+	{
+		X = 0, Y = 1
+	};
+
+
 	constexpr inline int id_cast(auto channel)
 	{
 		return static_cast<int>(channel);
 	}
+}
 
 
+/* platform image */
+
+namespace libimage
+{
 	typedef union pixel_t
 	{
 		u8 channels[4] = {};
@@ -554,6 +565,8 @@ namespace libimage
 	View1r32 select_channel(View3r32 const& view, RGB channel);
 
 	View1r32 select_channel(View2r32 const& view, GA channel);
+
+	View1r32 select_channel(View2r32 const& view, XY channel);
 }
 
 

@@ -1071,7 +1071,7 @@ void gradients_test()
 	auto width = vette.width;
 	auto height = vette.height;
 
-	img::Buffer32 buffer(width * height * 2);
+	img::Buffer32 buffer(width * height * 4);
 
 	img::View1r32 src;
 	img::make_view(src, width, height, buffer);
@@ -1084,8 +1084,18 @@ void gradients_test()
 	img::gradients(src, dst);
 
 	img::map(dst, vette);
-
 	write_image(vette, "gradients.bmp");
+
+	img::View2r32 xy_dst;
+	img::make_view(xy_dst, width, height, buffer);
+
+	img::gradients(src, xy_dst);
+
+	img::map(img::select_channel(xy_dst, img::XY::X), vette);
+	write_image(vette, "gradients_x.bmp");
+
+	img::map(img::select_channel(xy_dst, img::XY::Y), vette);
+	write_image(vette, "gradients_y.bmp");
 
 	img::destroy_image(vette);
 	buffer.free();
