@@ -403,6 +403,11 @@ namespace libimage
 	void map(gray::View const& src, View1r32 const& dst);
 
 
+	void map(View1r32 const& src, gray::Image const& dst, r32 gray_min, r32 gray_max);
+
+	void map(gray::Image const& src, View1r32 const& dst, r32 gray_min, r32 gray_max);
+
+
 	void map(View1r32 const& src, gray::View const& dst, r32 gray_min, r32 gray_max);
 
 	void map(gray::View const& src, View1r32 const& dst, r32 gray_min, r32 gray_max);

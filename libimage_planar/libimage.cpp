@@ -119,7 +119,7 @@ static constexpr u8 to_channel_u8(r32 value)
 }
 
 
-static r32 to_channel_r32(u8 value, r32 min, r32 max)
+static r32 lerp_to_r32(u8 value, r32 min, r32 max)
 {
 	assert(min < max);
 
@@ -127,7 +127,7 @@ static r32 to_channel_r32(u8 value, r32 min, r32 max)
 }
 
 
-static u8 to_channel_u8(r32 value, r32 min, r32 max)
+static u8 lerp_to_u8(r32 value, r32 min, r32 max)
 {
 	assert(min < max);
 	assert(value >= min);
@@ -867,7 +867,7 @@ namespace libimage
 
 
 	template <class IMG_U8>
-	static void channel_r32_to_u8(View1r32 const& src, IMG_U8 const& dst)
+	static void map_r32_to_u8(View1r32 const& src, IMG_U8 const& dst, r32_to_u8_f const& func)
 	{
 		auto const row_func = [&](u32 y)
 		{
@@ -875,7 +875,7 @@ namespace libimage
 			auto d = row_begin(dst, y);
 			for (u32 x = 0; x < src.width; ++x)
 			{
-				d[x] = to_channel_u8(s[x]);
+				d[x] = func(s[x]);
 			}
 		};
 
@@ -884,7 +884,7 @@ namespace libimage
 
 
 	template <class IMG_U8>
-	static void channel_u8_to_r32(IMG_U8 const& src, View1r32 const& dst)
+	static void map_u8_to_r32(IMG_U8 const& src, View1r32 const& dst, u8_to_r32_f const& func)
 	{
 		auto const row_func = [&](u32 y)
 		{
@@ -892,7 +892,7 @@ namespace libimage
 			auto d = row_begin(dst, y);
 			for (u32 x = 0; x < src.width; ++x)
 			{
-				d[x] = to_channel_r32(s[x]);
+				d[x] = func(s[x]);
 			}
 		};
 
@@ -968,7 +968,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		channel_r32_to_u8(src, dst);
+		map_r32_to_u8(src, dst, to_channel_u8);
 	}
 
 
@@ -976,7 +976,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		channel_u8_to_r32(src, dst);
+		map_u8_to_r32(src, dst, to_channel_r32);
 	}
 
 
@@ -984,7 +984,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		channel_r32_to_u8(src, dst);
+		map_r32_to_u8(src, dst, to_channel_u8);
 	}
 
 
@@ -992,13 +992,48 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		channel_u8_to_r32(src, dst);
+		map_u8_to_r32(src, dst, to_channel_r32);
 	}
 
 
-	void map(View1r32 const& src, gray::View const& dst, r32 gray_min, r32 gray_max);
+	void map(View1r32 const& src, gray::Image const& dst, r32 gray_min, r32 gray_max)
+	{
+		assert(verify(src, dst));
 
-	void map(gray::View const& src, View1r32 const& dst, r32 gray_min, r32 gray_max);
+		auto const func = [&](r32 p) { return lerp_to_u8(p, gray_min, gray_max); };
+
+		map_r32_to_u8(src, dst, func);
+	}
+
+
+	void map(gray::Image const& src, View1r32 const& dst, r32 gray_min, r32 gray_max)
+	{
+		assert(verify(src, dst));
+
+		auto const func = [&](u8 p) { return lerp_to_r32(p, gray_min, gray_max); };
+
+		map_u8_to_r32(src, dst, func);
+	}
+
+
+	void map(View1r32 const& src, gray::View const& dst, r32 gray_min, r32 gray_max)
+	{
+		assert(verify(src, dst));
+
+		auto const func = [&](r32 p) { return lerp_to_u8(p, gray_min, gray_max); };
+
+		map_r32_to_u8(src, dst, func);
+	}
+
+
+	void map(gray::View const& src, View1r32 const& dst, r32 gray_min, r32 gray_max)
+	{
+		assert(verify(src, dst));
+
+		auto const func = [&](u8 p) { return lerp_to_r32(p, gray_min, gray_max); };
+
+		map_u8_to_r32(src, dst, func);
+	}
 
 }
 
