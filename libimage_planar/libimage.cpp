@@ -119,6 +119,35 @@ static constexpr u8 to_channel_u8(r32 value)
 }
 
 
+static r32 to_channel_r32(u8 value, r32 min, r32 max)
+{
+	assert(min < max);
+
+	return min + (value / 255.0f) * (max - min);
+}
+
+
+static u8 to_channel_u8(r32 value, r32 min, r32 max)
+{
+	assert(min < max);
+	assert(value >= min);
+	assert(value <= max);
+
+	if (value < min)
+	{
+		value = min;
+	}
+	else if (value > max)
+	{
+		value = max;
+	}
+
+	auto ratio = (value - min) / (max - min);
+
+	return (u8)(u32)(ratio * 255 + 0.5f);
+}
+
+
 /* verify */
 
 #ifndef NDEBUG
@@ -791,6 +820,10 @@ namespace libimage
 
 namespace libimage
 {
+	using u8_to_r32_f = std::function<r32(u8)>;
+	using r32_to_u8_f = std::function<u8(r32)>;
+
+
 	template <class IMG_INT, size_t N>
 	static void interleaved_to_planar(IMG_INT const& src, ViewCHr32<N> const& dst)
 	{
@@ -961,6 +994,11 @@ namespace libimage
 
 		channel_u8_to_r32(src, dst);
 	}
+
+
+	void map(View1r32 const& src, gray::View const& dst, r32 gray_min, r32 gray_max);
+
+	void map(gray::View const& src, View1r32 const& dst, r32 gray_min, r32 gray_max);
 
 }
 
