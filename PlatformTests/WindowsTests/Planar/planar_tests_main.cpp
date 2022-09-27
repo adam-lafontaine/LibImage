@@ -1091,10 +1091,10 @@ void gradients_test()
 
 	img::gradients(src, xy_dst);
 
-	img::map(img::select_channel(xy_dst, img::XY::X), vette);
+	img::map(img::select_channel(xy_dst, img::XY::X), vette, -1.0f, 1.0f);
 	write_image(vette, "gradients_x.bmp");
 
-	img::map(img::select_channel(xy_dst, img::XY::Y), vette);
+	img::map(img::select_channel(xy_dst, img::XY::Y), vette, -1.0f, 1.0f);
 	write_image(vette, "gradients_y.bmp");
 
 	img::destroy_image(vette);

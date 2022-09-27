@@ -2070,17 +2070,17 @@ namespace libimage
 {
 	static constexpr r32 GRAD_X_3X3[9]
 	{
-		-0.25f,  0.0f,  0.25f,
-		-0.50f,  0.0f,  0.50f,
-		-0.25f,  0.0f,  0.25f,
+		-0.2f,  0.0f,  0.2f,
+		-0.6f,  0.0f,  0.6f,
+		-0.2f,  0.0f,  0.2f,
 	};
 
 
 	static constexpr r32 GRAD_Y_3X3[9]
 	{
-		-0.25f, -0.50f, -0.25f,
-		 0.0f,   0.0f,   0.0f,
-		 0.25f,  0.50f,  0.25f,
+		-0.2f, -0.6f, -0.2f,
+		 0.0f,  0.0f,  0.0f,
+		 0.2f,  0.6f,  0.2f,
 	};
 
 
@@ -2241,9 +2241,6 @@ namespace libimage
 
 		convolve_gradients_3x3(sub_view(src, inner), sub_view(xy_dst, inner));
 	}
-
-
-	
 }
 
 
@@ -2319,7 +2316,83 @@ namespace libimage
 
 namespace libimage
 {
-	
+	template <size_t N>
+	static void corner_xy_N(ViewCHr32<N> const& src, ViewCHr32<N> const& dst)
+	{
+		// TODO: simd
+		int const ry_begin = -4;
+		int const ry_end = 5;
+		int const rx_begin = -4;
+		int const rx_end = 5;
+
+		auto const row_func = [&](u32 y)
+		{
+			for (u32 ch = 0; ch < N; ++ch)
+			{
+				r32 t = 0.0f;
+
+				auto d = channel_row_begin(dst, y, ch);
+				for (u32 x = 0; x < src.width; ++x)
+				{
+					t = 0.0f;
+					for (int ry = ry_begin; ry < ry_end; ++ry)
+					{
+						auto s = channel_row_offset_begin(src, y, ry, ch);
+						for (int rx = rx_begin; rx < rx_end; ++rx)
+						{
+							t += s[x] * s[x];
+						}
+					}
+
+					d[x] = t;
+				}
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	static void corner_xy(View2r32 const& src, View1r32 const& dst)
+	{
+		// TODO: simd
+		int const ry_begin = -4;
+		int const ry_end = 5;
+		int const rx_begin = -4;
+		int const rx_end = 5;
+
+		auto const src_x = select_channel(src, XY::X);
+		auto const src_y = select_channel(src, XY::Y);
+
+		r32 const tmin = 0.2f;
+
+		auto const row_func = [&](u32 y)
+		{
+			r32 tx = 0.0f;
+			r32 ty = 0.0f;
+
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				tx = 0.0f;
+				ty = 0.0f;
+				for (int ry = ry_begin; ry < ry_end; ++ry)
+				{
+					auto sx = row_offset_begin(src_x, y, ry);
+					auto sy = row_offset_begin(src_y, y, ry);
+					for (int rx = rx_begin; rx < rx_end; ++rx)
+					{
+						tx += sx[x] * sx[x];
+						ty += sy[x] * sy[x];
+					}
+				}
+
+				d[x] = tx < tmin || ty < tmin ? 0.0f : 0.5f * (tx + ty);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
 
 
 	void corners(View1r32 const& src, View1r32 const& dst)
