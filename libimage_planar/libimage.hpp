@@ -640,6 +640,16 @@ namespace libimage
 }
 
 
+/* blur */
+
+namespace libimage
+{
+	void blur(View1r32 const& src, View1r32 const& dst);
+
+	void blur(View3r32 const& src, View3r32 const& dst);
+}
+
+
 /* gradients */
 
 namespace libimage
@@ -664,17 +674,7 @@ namespace libimage
 
 namespace libimage
 {
-
-}
-
-
-/* blur */
-
-namespace libimage
-{
-	void blur(View1r32 const& src, View1r32 const& dst);
-
-	void blur(View3r32 const& src, View3r32 const& dst);
+	void corners(View1r32 const& src, View2r32 const& temp, View1r32 const& dst);
 }
 
 

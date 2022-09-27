@@ -39,6 +39,7 @@ const auto IMAGE_OUT_PATH = TEST_IMAGE_PATH / IMAGE_OUT_DIR;
 const auto CORVETTE_PATH = IMAGE_IN_PATH / "corvette.png";
 const auto CADILLAC_PATH = IMAGE_IN_PATH / "cadillac.png";
 const auto WEED_PATH = IMAGE_IN_PATH / "weed.png";
+const auto CHESS_PATH = IMAGE_IN_PATH / "chess_board.bmp";
 
 
 bool directory_files_test()
@@ -98,9 +99,10 @@ void alpha_blend_test();
 void transform_test();
 void threshold_test();
 void contrast_test();
-void gradients_test();
 void blur_test();
+void gradients_test();
 void edges_test();
+void corners_test();
 void rotate_test();
 void overlay_test();
 
@@ -134,11 +136,13 @@ int main()
 	transform_test();
 	threshold_test();
 	contrast_test();
+	blur_test();
 	gradients_test();
 	edges_test();
-	blur_test();
+	corners_test();
 	rotate_test();
 	overlay_test();
+
 }
 
 
@@ -1058,6 +1062,61 @@ void contrast_test()
 }
 
 
+void blur_test()
+{
+	auto title = "blur_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+
+	GrayImage vette;
+	img::read_image_from_file(CORVETTE_PATH, vette);
+	auto width = vette.width;
+	auto height = vette.height;
+
+	img::Buffer32 buffer(width * height * 6);
+
+	img::View1r32 src;
+	img::make_view(src, width, height, buffer);
+
+	img::View1r32 dst;
+	img::make_view(dst, width, height, buffer);
+
+	img::map(vette, src);
+
+	img::blur(src, dst);
+
+	img::map(dst, vette);
+
+	write_image(vette, "blur1.bmp");
+
+	buffer.reset();
+
+	Image caddy;
+	img::read_image_from_file(CADILLAC_PATH, caddy);
+	width = caddy.width;
+	height = caddy.height;
+
+	img::View3r32 src3;
+	img::make_view(src3, width, height, buffer);
+
+	img::map(caddy, src3);
+
+	img::View3r32 dst3;
+	img::make_view(dst3, width, height, buffer);
+
+	img::blur(src3, dst3);
+
+	img::map(dst3, caddy);
+	write_image(caddy, "blur3.bmp");
+
+	img::destroy_image(vette);
+	img::destroy_image(caddy);
+	buffer.free();
+}
+
+
 void gradients_test()
 {
 	auto title = "gradients_test";
@@ -1136,57 +1195,39 @@ void edges_test()
 }
 
 
-void blur_test()
+void corners_test()
 {
-	auto title = "blur_test";
+	auto title = "corners_test";
 	printf("\n%s:\n", title);
 	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
 	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
-	GrayImage vette;
-	img::read_image_from_file(CORVETTE_PATH, vette);
-	auto width = vette.width;
-	auto height = vette.height;
+	GrayImage chess;
+	img::read_image_from_file(CHESS_PATH, chess);
+	auto width = chess.width;
+	auto height = chess.height;
 
-	img::Buffer32 buffer(width * height * 6);
+	img::Buffer32 buffer(width * height * 4);
 
-	img::View1r32 src;
-	img::make_view(src, width, height, buffer);
+	img::View1r32 src1;
+	img::make_view(src1, width, height, buffer);
 
-	img::View1r32 dst;
-	img::make_view(dst, width, height, buffer);
+	img::View1r32 dst1;
+	img::make_view(dst1, width, height, buffer);
 
-	img::map(vette, src);
+	img::View2r32 temp2;
+	img::make_view(temp2, width, height, buffer);
 
-	img::blur(src, dst);
+	img::map(chess, src1);
 
-	img::map(dst, vette);
+	img::corners(src1, temp2, dst1);
 
-	write_image(vette, "blur1.bmp");
+	img::map(dst1, chess);
+	write_image(chess, "corners.bmp");
 
-	buffer.reset();
 
-	Image caddy;
-	img::read_image_from_file(CADILLAC_PATH, caddy);
-	width = caddy.width;
-	height = caddy.height;
-
-	img::View3r32 src3;
-	img::make_view(src3, width, height, buffer);
-
-	img::map(caddy, src3);
-
-	img::View3r32 dst3;
-	img::make_view(dst3, width, height, buffer);
-
-	img::blur(src3, dst3);
-
-	img::map(dst3, caddy);
-	write_image(caddy, "blur3.bmp");
-
-	img::destroy_image(vette);
-	img::destroy_image(caddy);
+	img::destroy_image(chess);
 	buffer.free();
 }
 
