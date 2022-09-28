@@ -656,7 +656,7 @@ namespace libimage
 {
 	void gradients(View1r32 const& src, View1r32 const& dst);
 
-	void gradients(View1r32 const& src, View2r32 const& xy_dst);
+	void gradients_xy(View1r32 const& src, View2r32 const& xy_dst);
 }
 
 
@@ -667,6 +667,8 @@ namespace libimage
 	inline void edges(View1r32 const& src, View1r32 const& dst) { gradients(src, dst); }
 
 	void edges(View1r32 const& src, View1r32 const& dst, r32 threshold);
+
+	void edges_xy(View1r32 const& src, View2r32 const& xy_dst, r32 threshold);
 }
 
 

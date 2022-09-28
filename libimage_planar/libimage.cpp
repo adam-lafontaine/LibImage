@@ -2573,7 +2573,7 @@ namespace libimage
 	}
 
 
-	static void convolve_gradients_3x3(View1r32 const& src, View2r32 const& xy_dst)
+	static void convolve_xy_gradients_3x3(View1r32 const& src, View2r32 const& xy_dst)
 	{
 		// TODO: simd
 
@@ -2641,7 +2641,7 @@ namespace libimage
 	}
 
 
-	void gradients(View1r32 const& src, View2r32 const& xy_dst)
+	void gradients_xy(View1r32 const& src, View2r32 const& xy_dst)
 	{
 		auto x_dst = select_channel(xy_dst, 0);
 		auto y_dst = select_channel(xy_dst, 1);
@@ -2658,7 +2658,7 @@ namespace libimage
 		inner.y_begin = 1;
 		inner.y_end = src.height - 1;
 
-		convolve_gradients_3x3(sub_view(src, inner), sub_view(xy_dst, inner));
+		convolve_xy_gradients_3x3(sub_view(src, inner), sub_view(xy_dst, inner));
 	}
 }
 
@@ -2718,7 +2718,7 @@ namespace libimage
 	}
 
 
-	static void convolve_edges_3x3(View1r32 const& src, View2r32 const& xy_dst, r32 threshold)
+	static void convolve_xy_edges_3x3(View1r32 const& src, View2r32 const& xy_dst, r32 threshold)
 	{
 		// TODO: simd
 
@@ -2761,8 +2761,8 @@ namespace libimage
 				assert(gy >= -1.0f);
 				assert(gy <= 1.0f);
 
-				dx[x] = fabs(gx) >= threshold ? 1.0f : 0.0f;
-				dy[x] = fabs(gy) >= threshold ? 1.0f : 0.0f;
+				dx[x] = fabs(gx) < threshold ? 0.0f : (gx > 0.0f ? 1.0f : -1.0f);
+				dy[x] = fabs(gy) < threshold ? 0.0f : (gy > 0.0f ? 1.0f : -1.0f);
 			}
 		};
 
@@ -2787,7 +2787,7 @@ namespace libimage
 	}
 
 
-	void edges(View1r32 const& src, View2r32 const& xy_dst, r32 threshold)
+	void edges_xy(View1r32 const& src, View2r32 const& xy_dst, r32 threshold)
 	{
 		auto x_dst = select_channel(xy_dst, 0);
 		auto y_dst = select_channel(xy_dst, 1);
@@ -2804,7 +2804,7 @@ namespace libimage
 		inner.y_begin = 1;
 		inner.y_end = src.height - 1;
 
-		convolve_edges_3x3(sub_view(src, inner), sub_view(xy_dst, inner), threshold);
+		convolve_xy_edges_3x3(sub_view(src, inner), sub_view(xy_dst, inner), threshold);
 	}
 }
 
@@ -2849,45 +2849,7 @@ namespace libimage
 	}
 
 
-	template <size_t N>
-	static void corner_xy_N(ViewCHr32<N> const& src, ViewCHr32<N> const& dst)
-	{
-		// TODO: simd
-		int const ry_begin = -4;
-		int const ry_end = 5;
-		int const rx_begin = -4;
-		int const rx_end = 5;
-
-		auto const row_func = [&](u32 y)
-		{
-			for (u32 ch = 0; ch < N; ++ch)
-			{
-				r32 t = 0.0f;
-
-				auto d = channel_row_begin(dst, y, ch);
-				for (u32 x = 0; x < src.width; ++x)
-				{
-					t = 0.0f;
-					for (int ry = ry_begin; ry < ry_end; ++ry)
-					{
-						auto s = channel_row_offset_begin(src, y, ry, ch);
-						for (int rx = rx_begin; rx < rx_end; ++rx)
-						{
-							auto val = (s + rx)[x];
-							t += val * val;
-						}
-					}
-
-					d[x] = t;
-				}
-			}
-		};
-
-		process_rows(src.height, row_func);
-	}
-
-
-	static void do_corners(View2r32 const& edges_xy_src, View1r32 const& dst)
+	static void do_corners(View2r32 const& grad_xy_src, View1r32 const& dst)
 	{
 		// TODO: simd
 		int const ry_begin = -4;
@@ -2897,45 +2859,62 @@ namespace libimage
 
 		auto norm = (rx_end - rx_begin) * (ry_end - ry_begin);
 
-		auto const src_x = select_channel(edges_xy_src, XY::X);
-		auto const src_y = select_channel(edges_xy_src, XY::Y);
+		auto const lam_min = 0.3f;
 
-		r32 const tmin = 0.1f;
+		auto const src_x = select_channel(grad_xy_src, XY::X);
+		auto const src_y = select_channel(grad_xy_src, XY::Y);
 
 		auto const row_func = [&](u32 y)
 		{
-			r32 tx = 0.0f;
-			r32 ty = 0.0f;
+			r32 a = 0.0f;
+			r32 b = 0.0f;
+			r32 c = 0.0f;
 
 			auto d = row_begin(dst, y);
-			for (u32 x = 0; x < edges_xy_src.width; ++x)
+			for (u32 x = 0; x < grad_xy_src.width; ++x)
 			{
-				tx = 0.0f;
-				ty = 0.0f;
+				a = 0.0f;
+				b = 0.0f;
+				c = 0.0f;
 				for (int ry = ry_begin; ry < ry_end; ++ry)
 				{
 					auto sx = row_offset_begin(src_x, y, ry);
 					auto sy = row_offset_begin(src_y, y, ry);
 					for (int rx = rx_begin; rx < rx_end; ++rx)
 					{
-						auto xval = (sx + rx)[x];
-						auto yval = (sy + rx)[x];
-						tx += fabs(xval);
-						ty += fabs(yval);
+						auto x_grad = (sx + rx)[x];
+						auto y_grad = (sy + rx)[x];
+						
+						if (x_grad)
+						{
+							a += 1.0f;
+						}
+
+						if (y_grad)
+						{
+							c += 1.0f;
+						}
+
+						if (x_grad && y_grad)
+						{
+							b += 2.0f * (x_grad == y_grad ? 1.0f : -1.0f);
+						}
 					}
 				}
 
-				tx /= norm;
-				ty /= norm;
+				a /= norm;
+				b /= norm;
+				c /= norm;
 
-				assert(tx <= 1.0f);
-				assert(ty <= 1.0f);
+				auto bac = std::sqrtf(b * b + (a - c) * (a - c));
+				auto lam1 = 0.5f * (a + c + bac);
+				auto lam2 = 0.5f * (a + c - bac);
 
-				d[x] = tx < tmin || ty < tmin ? 0.0f : 0.5f * (tx + ty);
+				d[x] = (lam1 <= lam_min || lam2 <= lam_min) ? 0.0f : (lam1 > lam2 ? lam1 : lam2);
 			}
 		};
 
-		process_rows(edges_xy_src.height, row_func);
+		process_rows(grad_xy_src.height, row_func);
 	}
 
 
@@ -2944,7 +2923,8 @@ namespace libimage
 		assert(verify(src, dst));
 		assert(verify(src, temp));
 
-		edges(src, temp, 0.05f);
+		edges_xy(src, temp, 0.05f);
+		//gradients(src, temp);
 
 		zero_outer(dst, 4, 4);
 

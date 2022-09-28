@@ -1148,7 +1148,7 @@ void gradients_test()
 	img::View2r32 xy_dst;
 	img::make_view(xy_dst, width, height, buffer);
 
-	img::gradients(src, xy_dst);
+	img::gradients_xy(src, xy_dst);
 
 	img::map(img::select_channel(xy_dst, img::XY::X), vette, -1.0f, 1.0f);
 	write_image(vette, "gradients_x.bmp");
@@ -1225,6 +1225,8 @@ void corners_test()
 
 	img::map(dst1, chess);
 	write_image(chess, "corners.bmp");
+
+
 
 
 	img::destroy_image(chess);
