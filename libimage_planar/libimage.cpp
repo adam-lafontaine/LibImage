@@ -2527,22 +2527,21 @@ namespace libimage
 	}
 
 
-	static void convolve_gradients_3x3(View1r32 const& src, View1r32 const& dst)
+	static void for_each_gradient_3x3(View1r32 const& src, View1r32 const& dst, std::function<r32(r32, r32)> const& grad_func)
 	{
-		// TODO: simd
-
 		int const ry_begin = -1;
 		int const ry_end = 2;
 		int const rx_begin = -1;
 		int const rx_end = 2;
 
-		auto const row_func = [&](u32 y) 
+		auto const row_func = [&](u32 y)
 		{
 			u32 w = 0;
 			r32 gx = 0.0f;
 			r32 gy = 0.0f;
-			
+
 			auto d = row_begin(dst, y);
+
 			for (u32 x = 0; x < src.width; ++x)
 			{
 				w = 0;
@@ -2560,12 +2559,7 @@ namespace libimage
 					}
 				}
 
-				gx = fabs(gx);
-				gy = fabs(gy);
-
-				d[x] = gx > gy ? gx : gy;
-
-				// TODO: f(gx, gy)
+				d[x] = grad_func(gx, gy);
 			}
 		};
 
@@ -2573,10 +2567,9 @@ namespace libimage
 	}
 
 
-	static void convolve_xy_gradients_3x3(View1r32 const& src, View2r32 const& xy_dst)
+	
+	static void for_each_gradient_3x3(View1r32 const& src, View2r32 const& xy_dst, std::function<r32(r32)> const& grad_func)
 	{
-		// TODO: simd
-
 		int const ry_begin = -1;
 		int const ry_end = 2;
 		int const rx_begin = -1;
@@ -2616,8 +2609,8 @@ namespace libimage
 				assert(gy >= -1.0f);
 				assert(gy <= 1.0f);
 
-				dx[x] = gx;
-				dy[x] = gy;
+				dx[x] = grad_func(gx);
+				dy[x] = grad_func(gy);
 			}
 		};
 
@@ -2637,7 +2630,15 @@ namespace libimage
 		inner.y_begin = 1;
 		inner.y_end = src.height - 1;
 
-		convolve_gradients_3x3(sub_view(src, inner), sub_view(dst, inner));
+		auto const grad_func = [](r32 gx, r32 gy) 
+		{
+			gx = fabs(gx);
+			gy = fabs(gy);
+
+			return gx > gy ? gx : gy;
+		};
+
+		for_each_gradient_3x3(sub_view(src, inner), sub_view(dst, inner), grad_func);
 	}
 
 
@@ -2658,7 +2659,9 @@ namespace libimage
 		inner.y_begin = 1;
 		inner.y_end = src.height - 1;
 
-		convolve_xy_gradients_3x3(sub_view(src, inner), sub_view(xy_dst, inner));
+		auto const grad_func = [](r32 g) { return g; };
+
+		for_each_gradient_3x3(sub_view(src, inner), sub_view(xy_dst, inner), grad_func);
 	}
 }
 
@@ -2666,110 +2669,7 @@ namespace libimage
 /* edges */
 
 namespace libimage
-{
-	static void convolve_edges_3x3(View1r32 const& src, View1r32 const& dst, r32 threshold)
-	{
-		// TODO: simd
-
-		int const ry_begin = -1;
-		int const ry_end = 2;
-		int const rx_begin = -1;
-		int const rx_end = 2;
-
-		auto const row_func = [&](u32 y)
-		{
-			u32 w = 0;
-			r32 gx = 0.0f;
-			r32 gy = 0.0f;
-
-			auto d = row_begin(dst, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				w = 0;
-				gx = 0.0f;
-				gy = 0.0f;
-
-				for (int ry = ry_begin; ry < ry_end; ++ry)
-				{
-					auto s = row_offset_begin(src, y, ry);
-					for (int rx = rx_begin; rx < rx_end; ++rx)
-					{
-						gx += (s + rx)[x] * GRAD_X_3X3[w];
-						gy += (s + rx)[x] * GRAD_Y_3X3[w];
-						++w;
-					}
-				}
-
-				assert(gx >= -1.0f);
-				assert(gx <= 1.0f);
-				assert(gy >= -1.0f);
-				assert(gy <= 1.0f);
-
-				gx = fabs(gx);
-				gy = fabs(gy);
-
-				d[x] = (gx > gy ? gx : gy) >= threshold ? 1.0f : 0.0f;
-
-				// TODO: f(gx, gy)
-			}
-		};
-
-		process_rows(src.height, row_func);
-	}
-
-
-	static void convolve_xy_edges_3x3(View1r32 const& src, View2r32 const& xy_dst, r32 threshold)
-	{
-		// TODO: simd
-
-		int const ry_begin = -1;
-		int const ry_end = 2;
-		int const rx_begin = -1;
-		int const rx_end = 2;
-
-		static constexpr auto x_ch = id_cast(XY::X);
-		static constexpr auto y_ch = id_cast(XY::Y);
-
-		auto const row_func = [&](u32 y)
-		{
-			u32 w = 0;
-			r32 gx = 0.0f;
-			r32 gy = 0.0f;
-
-			auto dx = channel_row_begin(xy_dst, y, x_ch);
-			auto dy = channel_row_begin(xy_dst, y, y_ch);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				w = 0;
-				gx = 0.0f;
-				gy = 0.0f;
-
-				for (int ry = ry_begin; ry < ry_end; ++ry)
-				{
-					auto s = row_offset_begin(src, y, ry);
-					for (int rx = rx_begin; rx < rx_end; ++rx)
-					{
-						auto val = (s + rx)[x];
-						gx += val * GRAD_X_3X3[w];
-						gy += val * GRAD_Y_3X3[w];
-						++w;
-					}
-				}
-
-				assert(gx >= -1.0f);
-				assert(gx <= 1.0f);
-				assert(gy >= -1.0f);
-				assert(gy <= 1.0f);
-
-				dx[x] = fabs(gx) < threshold ? 0.0f : (gx > 0.0f ? 1.0f : -1.0f);
-				dy[x] = fabs(gy) < threshold ? 0.0f : (gy > 0.0f ? 1.0f : -1.0f);
-			}
-		};
-
-		process_rows(src.height, row_func);
-	}
-
-
+{	
 	void edges(View1r32 const& src, View1r32 const& dst, r32 threshold)
 	{
 		assert(verify(src, dst));
@@ -2783,7 +2683,15 @@ namespace libimage
 		inner.y_begin = 1;
 		inner.y_end = src.height - 1;
 
-		convolve_edges_3x3(sub_view(src, inner), sub_view(dst, inner), threshold);
+		auto const grad_func = [threshold](r32 gx, r32 gy) 
+		{
+			gx = fabs(gx);
+			gy = fabs(gy);
+
+			return (gx > gy ? gx : gy) >= threshold ? 1.0f : 0.0f;
+		};
+
+		for_each_gradient_3x3(sub_view(src, inner), sub_view(dst, inner), grad_func);
 	}
 
 
@@ -2804,7 +2712,9 @@ namespace libimage
 		inner.y_begin = 1;
 		inner.y_end = src.height - 1;
 
-		convolve_xy_edges_3x3(sub_view(src, inner), sub_view(xy_dst, inner), threshold);
+		auto const grad_func = [threshold](r32 g) { return fabs(g) < threshold ? 0.0f : (g > 0.0f ? 1.0f : -1.0f); };
+
+		for_each_gradient_3x3(sub_view(src, inner), sub_view(xy_dst, inner), grad_func);
 	}
 }
 
@@ -2884,16 +2794,9 @@ namespace libimage
 					{
 						auto x_grad = (sx + rx)[x];
 						auto y_grad = (sy + rx)[x];
-						
-						if (x_grad)
-						{
-							a += 1.0f;
-						}
 
-						if (y_grad)
-						{
-							c += 1.0f;
-						}
+						a += std::fabsf(x_grad);
+						c += std::fabsf(y_grad);
 
 						if (x_grad && y_grad)
 						{
@@ -2924,7 +2827,6 @@ namespace libimage
 		assert(verify(src, temp));
 
 		edges_xy(src, temp, 0.05f);
-		//gradients(src, temp);
 
 		zero_outer(dst, 4, 4);
 

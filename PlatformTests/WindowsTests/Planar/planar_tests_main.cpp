@@ -1174,7 +1174,7 @@ void edges_test()
 	auto width = vette.width;
 	auto height = vette.height;
 
-	img::Buffer32 buffer(width * height * 2);
+	img::Buffer32 buffer(width * height * 4);
 
 	img::View1r32 src;
 	img::make_view(src, width, height, buffer);
@@ -1189,6 +1189,17 @@ void edges_test()
 	img::map(dst, vette);
 
 	write_image(vette, "edges.bmp");
+
+	img::View2r32 xy_dst;
+	img::make_view(xy_dst, width, height, buffer);
+
+	img::edges_xy(src, xy_dst, 0.2f);
+
+	img::map(img::select_channel(xy_dst, img::XY::X), vette, -1.0f, 1.0f);
+	write_image(vette, "edges_x.bmp");
+
+	img::map(img::select_channel(xy_dst, img::XY::Y), vette, -1.0f, 1.0f);
+	write_image(vette, "edges_y.bmp");
 
 	img::destroy_image(vette);
 	buffer.free();
