@@ -2738,7 +2738,7 @@ namespace libimage
 
 		auto norm = (rx_end - rx_begin) * (ry_end - ry_begin);
 
-		auto const lam_min = 0.3f;
+		auto const lam_min = 0.3f; // TODO: param
 
 		auto const src_x = select_channel(grad_xy_src, XY::X);
 		auto const src_y = select_channel(grad_xy_src, XY::Y);
