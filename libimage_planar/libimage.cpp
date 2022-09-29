@@ -2496,25 +2496,30 @@ namespace libimage
 		 0.2f,  0.6f,  0.2f,
 	};
 
-
-	static void zero_outer(View1r32 const& view)
+	static void zero_outer(View1r32 const& view, u32 n_rows, u32 n_columns)
 	{
-		auto const top_bottom = [&]() 
+		auto const top_bottom = [&]()
 		{
-			auto top = row_begin(view, 0);
-			auto bottom = row_begin(view, view.height - 1);
-			for (u32 x = 0; x < view.width; ++x)
+			for (u32 r = 0; r < n_rows; ++r)
 			{
-				top[x] = bottom[x] = 0.0f;
+				auto top = row_begin(view, r);
+				auto bottom = row_begin(view, view.height - 1 - r);
+				for (u32 x = 0; x < view.width; ++x)
+				{
+					top[x] = bottom[x] = 0.0f;
+				}
 			}
 		};
-		
-		auto const left_right = [&]() 
+
+		auto const left_right = [&]()
 		{
-			for (u32 y = 1; y < view.height - 1; ++y)
+			for (u32 y = n_rows; y < view.height - n_rows; ++y)
 			{
 				auto row = row_begin(view, y);
-				row[0] = row[view.width - 1] = 0.0f;
+				for (u32 c = 0; c < n_columns; ++c)
+				{
+					row[c] = row[view.width - 1 - c] = 0.0f;
+				}
 			}
 		};
 
@@ -2622,7 +2627,7 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		zero_outer(dst);
+		zero_outer(dst, 1, 1);
 
 		Range2Du32 inner{};
 		inner.x_begin = 1;
@@ -2650,8 +2655,8 @@ namespace libimage
 		assert(verify(src, x_dst));
 		assert(verify(src, y_dst));
 
-		zero_outer(x_dst);
-		zero_outer(y_dst);
+		zero_outer(x_dst, 1, 1);
+		zero_outer(y_dst, 1, 1);
 
 		Range2Du32 inner{};
 		inner.x_begin = 1;
@@ -2675,7 +2680,7 @@ namespace libimage
 		assert(verify(src, dst));
 		assert(threshold >= 0.0f && threshold <= 1.0f);
 
-		zero_outer(dst);
+		zero_outer(dst, 1, 1);
 
 		Range2Du32 inner{};
 		inner.x_begin = 1;
@@ -2703,8 +2708,8 @@ namespace libimage
 		assert(verify(src, x_dst));
 		assert(verify(src, y_dst));
 
-		zero_outer(x_dst);
-		zero_outer(y_dst);
+		zero_outer(x_dst, 1, 1);
+		zero_outer(y_dst, 1, 1);
 
 		Range2Du32 inner{};
 		inner.x_begin = 1;
@@ -2723,42 +2728,6 @@ namespace libimage
 
 namespace libimage
 {
-	static void zero_outer(View1r32 const& view, u32 n_rows, u32 n_columns)
-	{
-		auto const top_bottom = [&]()
-		{
-			for (u32 r = 0; r < n_rows; ++r)
-			{
-				auto top = row_begin(view, r);
-				auto bottom = row_begin(view, view.height - 1 - r);
-				for (u32 x = 0; x < view.width; ++x)
-				{
-					top[x] = bottom[x] = 0.0f;
-				}
-			}			
-		};
-
-		auto const left_right = [&]()
-		{
-			for (u32 y = n_rows; y < view.height - n_rows; ++y)
-			{
-				auto row = row_begin(view, y);
-				for (u32 c = 0; c < n_columns; ++c)
-				{
-					row[c] = row[view.width - 1 - c] = 0.0f;
-				}				
-			}
-		};
-
-		std::array<std::function<void()>, 2> f_list
-		{
-			top_bottom, left_right
-		};
-
-		do_for_each(f_list, [](auto const& f) { f(); });
-	}
-
-
 	static void do_corners(View2r32 const& grad_xy_src, View1r32 const& dst)
 	{
 		// TODO: simd
