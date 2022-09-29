@@ -119,6 +119,35 @@ static constexpr u8 to_channel_u8(r32 value)
 }
 
 
+static r32 lerp_to_r32(u8 value, r32 min, r32 max)
+{
+	assert(min < max);
+
+	return min + (value / 255.0f) * (max - min);
+}
+
+
+static u8 lerp_to_u8(r32 value, r32 min, r32 max)
+{
+	assert(min < max);
+	assert(value >= min);
+	assert(value <= max);
+
+	if (value < min)
+	{
+		value = min;
+	}
+	else if (value > max)
+	{
+		value = max;
+	}
+
+	auto ratio = (value - min) / (max - min);
+
+	return (u8)(u32)(ratio * 255 + 0.5f);
+}
+
+
 /* verify */
 
 #ifndef NDEBUG
@@ -787,10 +816,14 @@ namespace libimage
 }
 
 
-/* convert */
+/* map */
 
 namespace libimage
 {
+	using u8_to_r32_f = std::function<r32(u8)>;
+	using r32_to_u8_f = std::function<u8(r32)>;
+
+
 	template <class IMG_INT, size_t N>
 	static void interleaved_to_planar(IMG_INT const& src, ViewCHr32<N> const& dst)
 	{
@@ -834,7 +867,7 @@ namespace libimage
 
 
 	template <class IMG_U8>
-	static void channel_r32_to_u8(View1r32 const& src, IMG_U8 const& dst)
+	static void map_r32_to_u8(View1r32 const& src, IMG_U8 const& dst, r32_to_u8_f const& func)
 	{
 		auto const row_func = [&](u32 y)
 		{
@@ -842,7 +875,7 @@ namespace libimage
 			auto d = row_begin(dst, y);
 			for (u32 x = 0; x < src.width; ++x)
 			{
-				d[x] = to_channel_u8(s[x]);
+				d[x] = func(s[x]);
 			}
 		};
 
@@ -851,7 +884,7 @@ namespace libimage
 
 
 	template <class IMG_U8>
-	static void channel_u8_to_r32(IMG_U8 const& src, View1r32 const& dst)
+	static void map_u8_to_r32(IMG_U8 const& src, View1r32 const& dst, u8_to_r32_f const& func)
 	{
 		auto const row_func = [&](u32 y)
 		{
@@ -859,7 +892,7 @@ namespace libimage
 			auto d = row_begin(dst, y);
 			for (u32 x = 0; x < src.width; ++x)
 			{
-				d[x] = to_channel_r32(s[x]);
+				d[x] = func(s[x]);
 			}
 		};
 
@@ -867,7 +900,7 @@ namespace libimage
 	}
 
 
-	void convert(View4r32 const& src, Image const& dst)
+	void map(View4r32 const& src, Image const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -875,7 +908,7 @@ namespace libimage
 	}
 
 
-	void convert(Image const& src, View4r32 const& dst)
+	void map(Image const& src, View4r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -883,7 +916,7 @@ namespace libimage
 	}
 
 
-	void convert(View4r32 const& src, View const& dst)
+	void map(View4r32 const& src, View const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -891,7 +924,7 @@ namespace libimage
 	}
 
 
-	void convert(View const& src, View4r32 const& dst)
+	void map(View const& src, View4r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -899,7 +932,7 @@ namespace libimage
 	}
 
 
-	void convert(View3r32 const& src, Image const& dst)
+	void map(View3r32 const& src, Image const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -907,7 +940,7 @@ namespace libimage
 	}
 
 
-	void convert(Image const& src, View3r32 const& dst)
+	void map(Image const& src, View3r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -915,7 +948,7 @@ namespace libimage
 	}
 
 
-	void convert(View3r32 const& src, View const& dst)
+	void map(View3r32 const& src, View const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -923,7 +956,7 @@ namespace libimage
 	}
 
 
-	void convert(View const& src, View3r32 const& dst)
+	void map(View const& src, View3r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -931,35 +964,75 @@ namespace libimage
 	}
 
 
-	void convert(View1r32 const& src, gray::Image const& dst)
+	void map(View1r32 const& src, gray::Image const& dst)
 	{
 		assert(verify(src, dst));
 
-		channel_r32_to_u8(src, dst);
+		map_r32_to_u8(src, dst, to_channel_u8);
 	}
 
 
-	void convert(gray::Image const& src, View1r32 const& dst)
+	void map(gray::Image const& src, View1r32 const& dst)
 	{
 		assert(verify(src, dst));
 
-		channel_u8_to_r32(src, dst);
+		map_u8_to_r32(src, dst, to_channel_r32);
 	}
 
 
-	void convert(View1r32 const& src, gray::View const& dst)
+	void map(View1r32 const& src, gray::View const& dst)
 	{
 		assert(verify(src, dst));
 
-		channel_r32_to_u8(src, dst);
+		map_r32_to_u8(src, dst, to_channel_u8);
 	}
 
 
-	void convert(gray::View const& src, View1r32 const& dst)
+	void map(gray::View const& src, View1r32 const& dst)
 	{
 		assert(verify(src, dst));
 
-		channel_u8_to_r32(src, dst);
+		map_u8_to_r32(src, dst, to_channel_r32);
+	}
+
+
+	void map(View1r32 const& src, gray::Image const& dst, r32 gray_min, r32 gray_max)
+	{
+		assert(verify(src, dst));
+
+		auto const func = [&](r32 p) { return lerp_to_u8(p, gray_min, gray_max); };
+
+		map_r32_to_u8(src, dst, func);
+	}
+
+
+	void map(gray::Image const& src, View1r32 const& dst, r32 gray_min, r32 gray_max)
+	{
+		assert(verify(src, dst));
+
+		auto const func = [&](u8 p) { return lerp_to_r32(p, gray_min, gray_max); };
+
+		map_u8_to_r32(src, dst, func);
+	}
+
+
+	void map(View1r32 const& src, gray::View const& dst, r32 gray_min, r32 gray_max)
+	{
+		assert(verify(src, dst));
+
+		auto const func = [&](r32 p) { return lerp_to_u8(p, gray_min, gray_max); };
+
+		map_r32_to_u8(src, dst, func);
+	}
+
+
+	void map(gray::View const& src, View1r32 const& dst, r32 gray_min, r32 gray_max)
+	{
+		assert(verify(src, dst));
+
+		auto const func = [&](u8 p) { return lerp_to_r32(p, gray_min, gray_max); };
+
+		map_u8_to_r32(src, dst, func);
 	}
 
 }
@@ -1615,6 +1688,24 @@ namespace libimage
 		assert(verify(view));
 
 		auto ch = id_cast(channel);
+		assert(ch >= 0);
+		assert(ch < 2);
+
+		auto view1 = select_channel(view, ch);
+
+		assert(verify(view1));
+
+		return view1;
+	}
+
+
+	View1r32 select_channel(View2r32 const& view, XY channel)
+	{
+		assert(verify(view));
+
+		auto ch = id_cast(channel);
+		assert(ch >= 0);
+		assert(ch < 2);
 
 		auto view1 = select_channel(view, ch);
 
@@ -1973,182 +2064,6 @@ namespace libimage
 }
 
 
-/* gradients edges */
-
-namespace libimage
-{
-	static constexpr r32 GRAD_X_3X3[9]
-	{
-		-0.25f,  0.0f,  0.25f,
-		-0.50f,  0.0f,  0.50f,
-		-0.25f,  0.0f,  0.25f,
-	};
-
-
-	static constexpr r32 GRAD_Y_3X3[9]
-	{
-		-0.25f, -0.50f, -0.25f,
-		 0.0f,   0.0f,   0.0f,
-		 0.25f,  0.50f,  0.25f,
-	};
-
-
-	static void zero_outer(View1r32 const& view)
-	{
-		auto const top_bottom = [&]() 
-		{
-			auto top = row_begin(view, 0);
-			auto bottom = row_begin(view, view.height - 1);
-			for (u32 x = 0; x < view.width; ++x)
-			{
-				top[x] = bottom[x] = 0.0f;
-			}
-		};
-		
-		auto const left_right = [&]() 
-		{
-			for (u32 y = 1; y < view.height - 1; ++y)
-			{
-				auto row = row_begin(view, y);
-				row[0] = row[view.width - 1] = 0.0f;
-			}
-		};
-
-		std::array<std::function<void()>, 2> f_list
-		{
-			top_bottom, left_right
-		};
-
-		do_for_each(f_list, [](auto const& f) { f(); });
-	}
-
-
-	static void convolve_gradients_3x3(View1r32 const& src, View1r32 const& dst)
-	{
-		// TODO: simd
-
-		int const ry_begin = -1;
-		int const ry_end = 2;
-		int const rx_begin = -1;
-		int const rx_end = 2;
-
-		auto const row_func = [&](u32 y) 
-		{
-			u32 w = 0;
-			r32 gx = 0.0f;
-			r32 gy = 0.0f;
-			
-			auto d = row_begin(dst, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				w = 0;
-				gx = 0.0f;
-				gy = 0.0f;
-
-				for (int ry = ry_begin; ry < ry_end; ++ry)
-				{
-					auto s = row_offset_begin(src, y, ry);
-					for (int rx = rx_begin; rx < rx_end; ++rx)
-					{
-						gx += (s + rx)[x] * GRAD_X_3X3[w];
-						gy += (s + rx)[x] * GRAD_Y_3X3[w];
-						++w;
-					}
-				}
-
-				gx = fabs(gx);
-				gy = fabs(gy);
-
-				d[x] = gx > gy ? gx : gy;
-
-				// TODO: f(gx, gy)
-			}
-		};
-
-		process_rows(src.height, row_func);
-	}
-
-
-	static void convolve_edges_3x3(View1r32 const& src, View1r32 const& dst, r32 threshold)
-	{
-		// TODO: simd
-
-		int const ry_begin = -1;
-		int const ry_end = 2;
-		int const rx_begin = -1;
-		int const rx_end = 2;
-
-		auto const row_func = [&](u32 y)
-		{
-			u32 w = 0;
-			r32 gx = 0.0f;
-			r32 gy = 0.0f;
-
-			auto d = row_begin(dst, y);
-			for (u32 x = 0; x < src.width; ++x)
-			{
-				w = 0;
-				gx = 0.0f;
-				gy = 0.0f;
-
-				for (int ry = ry_begin; ry < ry_end; ++ry)
-				{
-					auto s = row_offset_begin(src, y, ry);
-					for (int rx = rx_begin; rx < rx_end; ++rx)
-					{
-						gx += (s + rx)[x] * GRAD_X_3X3[w];
-						gy += (s + rx)[x] * GRAD_Y_3X3[w];
-						++w;
-					}
-				}
-
-				gx = fabs(gx);
-				gy = fabs(gy);
-
-				d[x] = (gx > gy ? gx : gy) >= threshold ? 1.0f : 0.0f;
-
-				// TODO: f(gx, gy)
-			}
-		};
-
-		process_rows(src.height, row_func);
-	}
-
-
-	void gradients(View1r32 const& src, View1r32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		zero_outer(dst);
-
-		Range2Du32 inner{};
-		inner.x_begin = 1;
-		inner.x_end = src.width - 1;
-		inner.y_begin = 1;
-		inner.y_end = src.height - 1;
-
-		convolve_gradients_3x3(sub_view(src, inner), sub_view(dst, inner));
-	}
-
-
-	void edges(View1r32 const& src, View1r32 const& dst, r32 threshold)
-	{
-		assert(verify(src, dst));
-		assert(threshold >= 0.0f && threshold <= 1.0f);
-
-		zero_outer(dst);
-
-		Range2Du32 inner{};
-		inner.x_begin = 1;
-		inner.x_end = src.width - 1;
-		inner.y_begin = 1;
-		inner.y_end = src.height - 1;
-
-		convolve_edges_3x3(sub_view(src, inner), sub_view(dst, inner), threshold);
-	}
-}
-
-
 /* blur */
 
 namespace libimage
@@ -2205,7 +2120,7 @@ namespace libimage
 
 					d_row[0] = s_row[0];
 					d_row[width - 1] = s_row[width - 1];
-				}				
+				}
 			}
 		};
 
@@ -2256,13 +2171,13 @@ namespace libimage
 							d_bottom += (s_bottom + rx)[x] * GAUSS_3X3[w];
 
 							++w;
-						}						
+						}
 					}
 				}
 			}
 		};
 
-		auto const left_right = [&]() 
+		auto const left_right = [&]()
 		{
 			u32 w = 0;
 
@@ -2319,7 +2234,7 @@ namespace libimage
 		int const rx_begin = -2;
 		int const rx_end = 3;
 
-		auto const row_func = [&](u32 y) 
+		auto const row_func = [&](u32 y)
 		{
 			u32 w = 0;
 
@@ -2345,7 +2260,7 @@ namespace libimage
 						}
 					}
 				}
-			}			
+			}
 		};
 
 		process_rows(src.height, row_func);
@@ -2558,6 +2473,339 @@ namespace libimage
 		inner.y_end = src.height - 2;
 
 		convolve_gauss_5x5(sub_view(src, inner), sub_view(dst, inner));
+	}
+}
+
+
+/* gradients */
+
+namespace libimage
+{
+	static constexpr r32 GRAD_X_3X3[9]
+	{
+		-0.2f,  0.0f,  0.2f,
+		-0.6f,  0.0f,  0.6f,
+		-0.2f,  0.0f,  0.2f,
+	};
+
+
+	static constexpr r32 GRAD_Y_3X3[9]
+	{
+		-0.2f, -0.6f, -0.2f,
+		 0.0f,  0.0f,  0.0f,
+		 0.2f,  0.6f,  0.2f,
+	};
+
+	static void zero_outer(View1r32 const& view, u32 n_rows, u32 n_columns)
+	{
+		auto const top_bottom = [&]()
+		{
+			for (u32 r = 0; r < n_rows; ++r)
+			{
+				auto top = row_begin(view, r);
+				auto bottom = row_begin(view, view.height - 1 - r);
+				for (u32 x = 0; x < view.width; ++x)
+				{
+					top[x] = bottom[x] = 0.0f;
+				}
+			}
+		};
+
+		auto const left_right = [&]()
+		{
+			for (u32 y = n_rows; y < view.height - n_rows; ++y)
+			{
+				auto row = row_begin(view, y);
+				for (u32 c = 0; c < n_columns; ++c)
+				{
+					row[c] = row[view.width - 1 - c] = 0.0f;
+				}
+			}
+		};
+
+		std::array<std::function<void()>, 2> f_list
+		{
+			top_bottom, left_right
+		};
+
+		do_for_each(f_list, [](auto const& f) { f(); });
+	}
+
+
+	static void for_each_gradient_3x3(View1r32 const& src, View1r32 const& dst, std::function<r32(r32, r32)> const& grad_func)
+	{
+		int const ry_begin = -1;
+		int const ry_end = 2;
+		int const rx_begin = -1;
+		int const rx_end = 2;
+
+		auto const row_func = [&](u32 y)
+		{
+			u32 w = 0;
+			r32 gx = 0.0f;
+			r32 gy = 0.0f;
+
+			auto d = row_begin(dst, y);
+
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				w = 0;
+				gx = 0.0f;
+				gy = 0.0f;
+
+				for (int ry = ry_begin; ry < ry_end; ++ry)
+				{
+					auto s = row_offset_begin(src, y, ry);
+					for (int rx = rx_begin; rx < rx_end; ++rx)
+					{
+						gx += (s + rx)[x] * GRAD_X_3X3[w];
+						gy += (s + rx)[x] * GRAD_Y_3X3[w];
+						++w;
+					}
+				}
+
+				d[x] = grad_func(gx, gy);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	
+	static void for_each_gradient_3x3(View1r32 const& src, View2r32 const& xy_dst, std::function<r32(r32)> const& grad_func)
+	{
+		int const ry_begin = -1;
+		int const ry_end = 2;
+		int const rx_begin = -1;
+		int const rx_end = 2;
+
+		static constexpr auto x_ch = id_cast(XY::X);
+		static constexpr auto y_ch = id_cast(XY::Y);
+
+		auto const row_func = [&](u32 y)
+		{
+			u32 w = 0;
+			r32 gx = 0.0f;
+			r32 gy = 0.0f;
+
+			auto dx = channel_row_begin(xy_dst, y, x_ch);
+			auto dy = channel_row_begin(xy_dst, y, y_ch);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				w = 0;
+				gx = 0.0f;
+				gy = 0.0f;
+
+				for (int ry = ry_begin; ry < ry_end; ++ry)
+				{
+					auto s = row_offset_begin(src, y, ry);
+					for (int rx = rx_begin; rx < rx_end; ++rx)
+					{
+						auto val = (s + rx)[x];
+						gx += val * GRAD_X_3X3[w];
+						gy += val * GRAD_Y_3X3[w];
+						++w;
+					}
+				}
+
+				assert(gx >= -1.0f);
+				assert(gx <= 1.0f);
+				assert(gy >= -1.0f);
+				assert(gy <= 1.0f);
+
+				dx[x] = grad_func(gx);
+				dy[x] = grad_func(gy);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void gradients(View1r32 const& src, View1r32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		zero_outer(dst, 1, 1);
+
+		Range2Du32 inner{};
+		inner.x_begin = 1;
+		inner.x_end = src.width - 1;
+		inner.y_begin = 1;
+		inner.y_end = src.height - 1;
+
+		auto const grad_func = [](r32 gx, r32 gy) 
+		{
+			gx = fabs(gx);
+			gy = fabs(gy);
+
+			return gx > gy ? gx : gy;
+		};
+
+		for_each_gradient_3x3(sub_view(src, inner), sub_view(dst, inner), grad_func);
+	}
+
+
+	void gradients_xy(View1r32 const& src, View2r32 const& xy_dst)
+	{
+		auto x_dst = select_channel(xy_dst, 0);
+		auto y_dst = select_channel(xy_dst, 1);
+
+		assert(verify(src, x_dst));
+		assert(verify(src, y_dst));
+
+		zero_outer(x_dst, 1, 1);
+		zero_outer(y_dst, 1, 1);
+
+		Range2Du32 inner{};
+		inner.x_begin = 1;
+		inner.x_end = src.width - 1;
+		inner.y_begin = 1;
+		inner.y_end = src.height - 1;
+
+		auto const grad_func = [](r32 g) { return g; };
+
+		for_each_gradient_3x3(sub_view(src, inner), sub_view(xy_dst, inner), grad_func);
+	}
+}
+
+
+/* edges */
+
+namespace libimage
+{	
+	void edges(View1r32 const& src, View1r32 const& dst, r32 threshold)
+	{
+		assert(verify(src, dst));
+		assert(threshold >= 0.0f && threshold <= 1.0f);
+
+		zero_outer(dst, 1, 1);
+
+		Range2Du32 inner{};
+		inner.x_begin = 1;
+		inner.x_end = src.width - 1;
+		inner.y_begin = 1;
+		inner.y_end = src.height - 1;
+
+		auto const grad_func = [threshold](r32 gx, r32 gy) 
+		{
+			gx = fabs(gx);
+			gy = fabs(gy);
+
+			return (gx > gy ? gx : gy) >= threshold ? 1.0f : 0.0f;
+		};
+
+		for_each_gradient_3x3(sub_view(src, inner), sub_view(dst, inner), grad_func);
+	}
+
+
+	void edges_xy(View1r32 const& src, View2r32 const& xy_dst, r32 threshold)
+	{
+		auto x_dst = select_channel(xy_dst, 0);
+		auto y_dst = select_channel(xy_dst, 1);
+
+		assert(verify(src, x_dst));
+		assert(verify(src, y_dst));
+
+		zero_outer(x_dst, 1, 1);
+		zero_outer(y_dst, 1, 1);
+
+		Range2Du32 inner{};
+		inner.x_begin = 1;
+		inner.x_end = src.width - 1;
+		inner.y_begin = 1;
+		inner.y_end = src.height - 1;
+
+		auto const grad_func = [threshold](r32 g) { return fabs(g) < threshold ? 0.0f : (g > 0.0f ? 1.0f : -1.0f); };
+
+		for_each_gradient_3x3(sub_view(src, inner), sub_view(xy_dst, inner), grad_func);
+	}
+}
+
+
+/* corners */
+
+namespace libimage
+{
+	static void do_corners(View2r32 const& grad_xy_src, View1r32 const& dst)
+	{
+		// TODO: simd
+		int const ry_begin = -4;
+		int const ry_end = 5;
+		int const rx_begin = -4;
+		int const rx_end = 5;
+
+		auto norm = (rx_end - rx_begin) * (ry_end - ry_begin);
+
+		auto const lam_min = 0.3f; // TODO: param
+
+		auto const src_x = select_channel(grad_xy_src, XY::X);
+		auto const src_y = select_channel(grad_xy_src, XY::Y);
+
+		auto const row_func = [&](u32 y)
+		{
+			r32 a = 0.0f;
+			r32 b = 0.0f;
+			r32 c = 0.0f;
+
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < grad_xy_src.width; ++x)
+			{
+				a = 0.0f;
+				b = 0.0f;
+				c = 0.0f;
+				for (int ry = ry_begin; ry < ry_end; ++ry)
+				{
+					auto sx = row_offset_begin(src_x, y, ry);
+					auto sy = row_offset_begin(src_y, y, ry);
+					for (int rx = rx_begin; rx < rx_end; ++rx)
+					{
+						auto x_grad = (sx + rx)[x];
+						auto y_grad = (sy + rx)[x];
+
+						a += std::fabsf(x_grad);
+						c += std::fabsf(y_grad);
+
+						if (x_grad && y_grad)
+						{
+							b += 2.0f * (x_grad == y_grad ? 1.0f : -1.0f);
+						}
+					}
+				}
+
+				a /= norm;
+				b /= norm;
+				c /= norm;
+
+				auto bac = std::sqrtf(b * b + (a - c) * (a - c));
+				auto lam1 = 0.5f * (a + c + bac);
+				auto lam2 = 0.5f * (a + c - bac);
+
+				d[x] = (lam1 <= lam_min || lam2 <= lam_min) ? 0.0f : (lam1 > lam2 ? lam1 : lam2);
+			}
+		};
+
+		process_rows(grad_xy_src.height, row_func);
+	}
+
+
+	void corners(View1r32 const& src, View2r32 const& temp, View1r32 const& dst)
+	{
+		assert(verify(src, dst));
+		assert(verify(src, temp));
+
+		edges_xy(src, temp, 0.05f);
+
+		zero_outer(dst, 4, 4);
+
+		Range2Du32 inner{};
+		inner.x_begin = 4;
+		inner.x_end = src.width - 4;
+		inner.y_begin = 4;
+		inner.y_end = src.height - 4;
+
+		do_corners(sub_view(temp, inner), sub_view(dst, inner));
 	}
 }
 

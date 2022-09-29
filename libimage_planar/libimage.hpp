@@ -6,7 +6,7 @@
 #include <array>
 
 
-/* platform image */
+/* constants, enums */
 
 namespace libimage
 {
@@ -31,12 +31,23 @@ namespace libimage
 	};
 
 
+	enum class XY : int
+	{
+		X = 0, Y = 1
+	};
+
+
 	constexpr inline int id_cast(auto channel)
 	{
 		return static_cast<int>(channel);
 	}
+}
 
 
+/* platform image */
+
+namespace libimage
+{
 	typedef union pixel_t
 	{
 		u8 channels[4] = {};
@@ -271,9 +282,10 @@ namespace libimage
 
 		static constexpr u32 n_channels = 4;
 
-		union {
-
-			struct {
+		union 
+		{
+			struct 
+			{
 				r32* r;
 				r32* g;
 				r32* b;
@@ -296,9 +308,10 @@ namespace libimage
 
 		static constexpr u32 n_channels = 3;
 
-		union {
-
-			struct {
+		union 
+		{
+			struct 
+			{
 				r32* r;
 				r32* g;
 				r32* b;
@@ -367,38 +380,48 @@ namespace libimage
 }
 
 
-/* convert */
+/* map */
 
 namespace libimage
 {
-	void convert(View4r32 const& src, Image const& dst);
+	void map(View4r32 const& src, Image const& dst);
 
-	void convert(Image const& src, View4r32 const& dst);
-
-
-	void convert(View4r32 const& src, View const& dst);
-
-	void convert(View const& src, View4r32 const& dst);
+	void map(Image const& src, View4r32 const& dst);
 
 
-	void convert(View3r32 const& src, Image const& dst);
+	void map(View4r32 const& src, View const& dst);
 
-	void convert(Image const& src, View3r32 const& dst);
-
-
-	void convert(View3r32 const& src, View const& dst);
-
-	void convert(View const& src, View3r32 const& dst);
+	void map(View const& src, View4r32 const& dst);
 
 
-	void convert(View1r32 const& src, gray::Image const& dst);
+	void map(View3r32 const& src, Image const& dst);
 
-	void convert(gray::Image const& src, View1r32 const& dst);
+	void map(Image const& src, View3r32 const& dst);
 
 
-	void convert(View1r32 const& src, gray::View const& dst);
+	void map(View3r32 const& src, View const& dst);
 
-	void convert(gray::View const& src, View1r32 const& dst);
+	void map(View const& src, View3r32 const& dst);
+
+
+	void map(View1r32 const& src, gray::Image const& dst);
+
+	void map(gray::Image const& src, View1r32 const& dst);
+
+
+	void map(View1r32 const& src, gray::View const& dst);
+
+	void map(gray::View const& src, View1r32 const& dst);
+
+
+	void map(View1r32 const& src, gray::Image const& dst, r32 gray_min, r32 gray_max);
+
+	void map(gray::Image const& src, View1r32 const& dst, r32 gray_min, r32 gray_max);
+
+
+	void map(View1r32 const& src, gray::View const& dst, r32 gray_min, r32 gray_max);
+
+	void map(gray::View const& src, View1r32 const& dst, r32 gray_min, r32 gray_max);
 }
 
 
@@ -542,6 +565,8 @@ namespace libimage
 	View1r32 select_channel(View3r32 const& view, RGB channel);
 
 	View1r32 select_channel(View2r32 const& view, GA channel);
+
+	View1r32 select_channel(View2r32 const& view, XY channel);
 }
 
 
@@ -615,22 +640,6 @@ namespace libimage
 }
 
 
-/* gradients */
-
-namespace libimage
-{
-	void gradients(View1r32 const& src, View1r32 const& dst);
-}
-
-
-/* edges */
-
-namespace libimage
-{
-	void edges(View1r32 const& src, View1r32 const& dst, r32 threshold);
-}
-
-
 /* blur */
 
 namespace libimage
@@ -638,6 +647,36 @@ namespace libimage
 	void blur(View1r32 const& src, View1r32 const& dst);
 
 	void blur(View3r32 const& src, View3r32 const& dst);
+}
+
+
+/* gradients */
+
+namespace libimage
+{
+	void gradients(View1r32 const& src, View1r32 const& dst);
+
+	void gradients_xy(View1r32 const& src, View2r32 const& xy_dst);
+}
+
+
+/* edges */
+
+namespace libimage
+{
+	inline void edges(View1r32 const& src, View1r32 const& dst) { gradients(src, dst); }
+
+	void edges(View1r32 const& src, View1r32 const& dst, r32 threshold);
+
+	void edges_xy(View1r32 const& src, View2r32 const& xy_dst, r32 threshold);
+}
+
+
+/* corners */
+
+namespace libimage
+{
+	void corners(View1r32 const& src, View2r32 const& temp, View1r32 const& dst);
 }
 
 
