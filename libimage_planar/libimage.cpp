@@ -2975,3 +2975,79 @@ namespace libimage
 		process_rows(src.height, row_func);
 	}
 }
+
+
+/* scale_down */
+
+namespace libimage
+{
+	template <size_t N>
+	ViewCHr32<N> do_scale_down(ViewCHr32<N> const& src, Buffer32& buffer)
+	{
+		auto const width = src.width / 2;
+		auto const height = src.height / 2;
+
+		ViewCHr32<N> dst;
+		make_view(dst, width, height, buffer);
+
+		auto const row_func = [&](u32 y) 
+		{
+			auto ys = 2 * y;
+			for (u32 ch = 0; ch < N; ++ch)
+			{
+				auto d = channel_row_begin(dst, y, ch);
+				auto s1 = channel_row_begin(src, ys, ch);
+				auto s2 = channel_row_offset_begin(src, ys, 1, ch);
+
+				for (u32 x = 0; x < width; ++x)
+				{
+					auto xs = 2 * x;
+					d[x] = 0.25f * (s1[xs] + s1[xs + 1] + s2[xs] + s2[xs + 1]);
+				}
+			}
+		};
+
+		process_rows(height, row_func);
+
+		return dst;
+	}
+
+
+	View3r32 scale_down(View3r32 const& src, Buffer32& buffer)
+	{
+		assert(verify(src));
+
+		return do_scale_down(src, buffer);
+	}
+
+
+	View1r32 scale_down(View1r32 const& src, Buffer32& buffer)
+	{
+		assert(verify(src));
+
+		auto const width = src.width / 2;
+		auto const height = src.height / 2;
+
+		View1r32 dst;
+		make_view(dst, width, height, buffer);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto ys = 2 * y;
+
+			auto d = row_begin(dst, y);
+			auto s1 = row_begin(src, ys);
+			auto s2 = row_offset_begin(src, ys, 1);
+
+			for (u32 x = 0; x < width; ++x)
+			{
+				auto xs = 2 * x;
+				d[x] = 0.25f * (s1[xs] + s1[xs + 1] + s2[xs] + s2[xs + 1]);
+			}
+		};
+
+		process_rows(height, row_func);
+
+		return dst;
+	}
+}

@@ -702,6 +702,16 @@ namespace libimage
 }
 
 
+/* scale_down */
+
+namespace libimage
+{
+	View3r32 scale_down(View3r32 const& src, Buffer32& buffer);
+
+	View1r32 scale_down(View1r32 const& src, Buffer32& buffer);
+}
+
+
 /* stb wrappers */
 
 namespace libimage

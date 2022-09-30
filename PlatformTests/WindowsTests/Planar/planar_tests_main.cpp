@@ -105,6 +105,7 @@ void edges_test();
 void corners_test();
 void rotate_test();
 void overlay_test();
+void scale_down_test();
 
 
 int main()
@@ -142,7 +143,7 @@ int main()
 	corners_test();
 	rotate_test();
 	overlay_test();
-
+	scale_down_test();
 }
 
 
@@ -1366,6 +1367,69 @@ void overlay_test()
 
 	img::destroy_image(vette);
 	img::destroy_image(gr_caddy);
+	buffer.free();
+}
+
+
+void scale_down_test()
+{
+	auto title = "scale_down_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+
+	Image image;
+	img::read_image_from_file(CHESS_PATH, image);
+	auto width = image.width;
+	auto height = image.height;
+
+	img::Buffer32 buffer(width * height * 5);
+
+	img::View3r32 src3;
+	img::make_view(src3, width, height, buffer);
+	img::map(image, src3);
+
+	auto scaled3 = img::scale_down(src3, buffer);
+
+	Range2Du32 r{};
+	r.x_begin = src3.width / 4;
+	r.x_end = r.x_begin + scaled3.width;
+	r.y_begin = src3.height / 4;
+	r.y_end = r.y_begin + scaled3.height;
+
+	auto view3 = img::sub_view(src3, r);
+	img::copy(scaled3, view3);
+
+	img::map(src3, image);	
+	write_image(image, "scale_down3.bmp");
+
+	GrayImage gray;
+	img::read_image_from_file(CHESS_PATH, gray);
+	width = gray.width;
+	height = gray.height;
+
+	buffer.reset();
+
+	img::View1r32 src1;
+	img::make_view(src1, width, height, buffer);
+	img::map(gray, src1);
+
+	auto scaled1 = img::scale_down(src1, buffer);
+
+	r.x_begin = src3.width / 4;
+	r.x_end = r.x_begin + scaled3.width;
+	r.y_begin = src3.height / 4;
+	r.y_end = r.y_begin + scaled3.height;
+
+	auto view1 = img::sub_view(src1, r);
+	img::copy(scaled1, view1);
+
+	img::map(src1, gray);
+	write_image(gray, "scale_down1.bmp");
+
+	img::destroy_image(image);
+	img::destroy_image(gray);
 	buffer.free();
 }
 
