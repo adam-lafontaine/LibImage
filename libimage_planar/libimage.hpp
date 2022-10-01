@@ -37,7 +37,8 @@ namespace libimage
 	};
 
 
-	constexpr inline int id_cast(auto channel)
+	template <typename T>
+	constexpr inline int id_cast(T channel)
 	{
 		return static_cast<int>(channel);
 	}
@@ -767,6 +768,7 @@ namespace libimage
 	{
 		write_image(image_src, file_path_dst.string().c_str());
 	}
+
 
 	inline void write_image(gray::Image const& image_src, fs::path const& file_path_dst)
 	{

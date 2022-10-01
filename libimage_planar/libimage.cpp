@@ -2764,8 +2764,8 @@ namespace libimage
 						auto x_grad = (sx + rx)[x];
 						auto y_grad = (sy + rx)[x];
 
-						a += std::fabsf(x_grad);
-						c += std::fabsf(y_grad);
+						a += std::fabs(x_grad);
+						c += std::fabs(y_grad);
 
 						if (x_grad && y_grad)
 						{
@@ -2778,7 +2778,7 @@ namespace libimage
 				b /= norm;
 				c /= norm;
 
-				auto bac = std::sqrtf(b * b + (a - c) * (a - c));
+				auto bac = std::sqrt(b * b + (a - c) * (a - c));
 				auto lam1 = 0.5f * (a + c + bac);
 				auto lam2 = 0.5f * (a + c - bac);
 

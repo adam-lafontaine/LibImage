@@ -1,21 +1,21 @@
 GPP := g++-10 -std=c++17
+
 build := ./build_files
 
 ubuntu_tests_exe := $(build)/ubuntu_tests
 
 
 # directories
-libimage := ../../libimage_parallel
+libimage := ../../../libimage_planar
 stb := $(libimage)/stb_wrapper
 
 
 # main
-main_c         := ubuntu_parallel_tests.cpp
+main_c         := ubuntu_planar_tests.cpp
 main_o         := $(build)/ubuntu_tests_main.o
 object_files   := $(main_o)
 
 defines_h := $(libimage)/defines.hpp
-simd_def_h := $(libimage)/simd_def.hpp
 
 
 # libimage
@@ -61,7 +61,7 @@ $(stb_libimage_o): $(stb_libimage_c) $(libimage_h) $(stb_h)
 	@echo "\n stb_libimage"
 	$(GPP) $(CCFLAGS) -o $@ -c $<
 
-$(libimage_o): $(libimage_c) $(libimage_h) $(simd_def_h)
+$(libimage_o): $(libimage_c) $(libimage_h)
 	@echo "\n libimage"
 	$(GPP) $(CCFLAGS) -o $@ -c $<
 
