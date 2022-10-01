@@ -1,11 +1,12 @@
 GPP := g++-10 -std=c++17
+
 build := ./build_files
 
 ubuntu_tests_exe := $(build)/ubuntu_tests
 
 
 # directories
-libimage := ../../libimage_parallel
+libimage := ../../../libimage_parallel
 stb := $(libimage)/stb_wrapper
 
 

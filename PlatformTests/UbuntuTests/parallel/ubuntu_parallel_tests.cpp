@@ -1,6 +1,6 @@
-#include "../../libimage_parallel/libimage.hpp"
+#include "../../../libimage_parallel/libimage.hpp"
 
-#include "utils/stopwatch.hpp"
+#include "../utils/stopwatch.hpp"
 
 //#define CHECK_LEAKS
 
@@ -23,7 +23,7 @@ using path_t = fs::path;
 
 
 // set this directory for your system
-constexpr auto ROOT_DIR = "../../";
+constexpr auto ROOT_DIR = "../../../";
 
 constexpr auto TEST_IMAGE_DIR = "TestImages/";
 constexpr auto IMAGE_IN_DIR = "in_files/";
