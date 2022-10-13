@@ -248,20 +248,20 @@ void map_test()
 	img::View4r32 view4;
 	img::make_view(view4, width, height, buffer);
 
-	img::map(image, view4);
-	img::map(view4, image_dst);
+	img::map_rgb(image, view4);
+	img::map_rgb(view4, image_dst);
 	buffer.reset();
 
-	write_image(image_dst, "map4.bmp");	
+	write_image(image_dst, "map_rgba.bmp");	
 
 	img::View3r32 view3;
 	img::make_view(view3, width, height, buffer);
 
-	img::map(image, view3);
-	img::map(view3, image_dst);
+	img::map_rgb(image, view3);
+	img::map_rgb(view3, image_dst);
 	buffer.reset();
 
-	write_image(image_dst, "map3.bmp");
+	write_image(image_dst, "map_rgb.bmp");
 
 	img::View1r32 view1;
 	img::make_view(view1, gr_width, gr_height, buffer);
@@ -297,11 +297,11 @@ void sub_view_test()
 
 	img::View3r32 vette3;
 	img::make_view(vette3, width, height, buffer);
-	img::map(vette, vette3);
+	img::map_rgb(vette, vette3);
 
 	img::View4r32 vette4;
 	img::make_view(vette4, width, height, buffer);
-	img::map(vette, vette4);
+	img::map_rgb(vette, vette4);
 
 	Range2Du32 r{};
 	r.x_begin = 0;
@@ -318,8 +318,8 @@ void sub_view_test()
 	auto dst3 = img::sub_view(vette, r);
 	auto sub4 = img::sub_view(vette4, r);
 
-	img::map(sub3, dst3);
-	img::map(sub4, dst4);
+	img::map_rgb(sub3, dst3);
+	img::map_rgb(sub4, dst4);
 	buffer.reset();
 
 	write_image(vette, "swap.bmp");
@@ -421,7 +421,7 @@ void fill_test()
 	img::View3r32 view3;
 	img::make_view(view3, width / 2, height / 2, buffer);
 	img::fill(view3, blue);
-	img::map(view3, top_left_view);
+	img::map_rgb(view3, top_left_view);
 	buffer.reset();
 	write_image(image, "fill_03.bmp");
 
@@ -429,7 +429,7 @@ void fill_test()
 	img::make_view(view4, width / 2, height / 2, buffer);
 
 	img::fill(view4, white);
-	img::map(view4, bottom_right_view);
+	img::map_rgb(view4, bottom_right_view);
 	buffer.reset();
 	write_image(image, "fill_04.bmp");
 
@@ -448,7 +448,7 @@ void fill_test()
 		auto red = (u8)(255.0f * r.x_end / width);
 		img::fill(view, img::to_pixel(red, 255, 0));
 	}
-	img::map(view3, image);
+	img::map_rgb(view3, image);
 	buffer.reset();
 	write_image(image, "fill_view3.bmp");
 
@@ -465,7 +465,7 @@ void fill_test()
 		auto blue = (u8)(255.0f * r.y_end / height);
 		img::fill(view, img::to_pixel(255, 0, blue));
 	}
-	img::map(view4, image);
+	img::map_rgb(view4, image);
 	buffer.reset();
 	write_image(image, "fill_view4.bmp");	
 
@@ -506,13 +506,13 @@ void copy_test()
 
 	img::View3r32 view3;
 	img::make_view(view3, width, height, buffer);
-	img::map(image, view3);
+	img::map_rgb(image, view3);
 	auto left_view3 = img::sub_view(view3, left);
 	auto right_view3 = img::sub_view(view3, right);
 
 	img::View4r32 view4;
 	img::make_view(view4, width, height, buffer);
-	img::map(image, view4);
+	img::map_rgb(image, view4);
 	auto left_view4 = img::sub_view(view4, left);
 	auto right_view4 = img::sub_view(view4, right);
 
@@ -521,8 +521,8 @@ void copy_test()
 
 	clear_image(image);
 
-	img::map(right_view3, right_view);
-	img::map(left_view4, left_view);
+	img::map_rgb(right_view3, right_view);
+	img::map_rgb(left_view4, left_view);
 	write_image(image, "image.bmp");
 
 	buffer.reset();
@@ -642,11 +642,11 @@ void for_each_pixel_test()
 	img::make_view(rgb, width, height, buffer);
 	auto red = img::select_channel(rgb, img::RGB::R);
 
-	img::map(rgba, rgb);
+	img::map_rgb(rgba, rgb);
 
 	img::for_each_pixel(red, [](r32& p) { p = 1.0f - p; });
 
-	img::map(rgb, rgba);
+	img::map_rgb(rgb, rgba);
 	write_image(rgba, "invert_green.bmp");
 
 	img::destroy_image(vette);
@@ -685,7 +685,7 @@ void for_each_xy_test()
 	Image image;
 	img::make_image(image, width, height);
 
-	img::map(view3, image);
+	img::map_rgb(view3, image);
 
 	write_image(image, "for_each_xy.bmp");
 
@@ -730,8 +730,8 @@ void grayscale_test()
 	img::View4r32 view4;
 	img::make_view(view4, width / 2, height, buffer);
 
-	img::map(left_view, view3);
-	img::map(right_view, view4);
+	img::map_rgb(left_view, view3);
+	img::map_rgb(right_view, view4);
 
 	GrayImage dst;
 	img::make_image(dst, width, height);
@@ -773,7 +773,7 @@ void select_channel_test()
 
 	img::View3r32 vette3;
 	img::make_view(vette3, width, height, buffer);
-	img::map(vette, vette3);
+	img::map_rgb(vette, vette3);
 
 	GrayImage vette_dst;
 	img::make_image(vette_dst, vette.width, vette.height);
@@ -783,7 +783,7 @@ void select_channel_test()
 
 	img::View4r32 caddy4;
 	img::make_view(caddy4, caddy.width, caddy.height, buffer);
-	img::map(caddy, caddy4);
+	img::map_rgb(caddy, caddy4);
 
 	GrayImage caddy_dst;
 	img::make_image(caddy_dst, caddy.width, caddy.height);
@@ -838,14 +838,14 @@ void alpha_blend_test()
 
 	img::View4r32 vette4;
 	img::make_view(vette4, width, height, buffer);
-	img::map(vette, vette4);
+	img::map_rgb(vette, vette4);
 
 	auto alpha_view = img::select_channel(vette4, img::RGBA::A);
 	img::for_each_pixel(alpha_view, [](r32& p) { p = 0.5f; });
 
 	img::View4r32 caddy4;
 	img::make_view(caddy4, width, height, buffer);
-	img::map(caddy, caddy4);
+	img::map_rgb(caddy, caddy4);
 
 	img::View3r32 dst3;
 	img::make_view(dst3, width, height, buffer);
@@ -853,13 +853,13 @@ void alpha_blend_test()
 	img::alpha_blend(vette4, img::make_rgb_view(caddy4), dst3);
 
 	clear_image(vette);
-	img::map(dst3, vette);
+	img::map_rgb(dst3, vette);
 	write_image(vette, "blend_01.bmp");
 
 	img::alpha_blend(vette4, img::make_rgb_view(caddy4), img::make_rgb_view(caddy4));
 
 	clear_image(vette);
-	img::map(caddy4, vette);
+	img::map_rgb(caddy4, vette);
 	write_image(vette, "blend_02.bmp");
 
 	buffer.reset();
@@ -1102,14 +1102,14 @@ void blur_test()
 	img::View3r32 src3;
 	img::make_view(src3, width, height, buffer);
 
-	img::map(caddy, src3);
+	img::map_rgb(caddy, src3);
 
 	img::View3r32 dst3;
 	img::make_view(dst3, width, height, buffer);
 
 	img::blur(src3, dst3);
 
-	img::map(dst3, caddy);
+	img::map_rgb(dst3, caddy);
 	write_image(caddy, "blur3.bmp");
 
 	img::destroy_image(vette);
@@ -1287,14 +1287,14 @@ void rotate_test()
 	img::View3r32 src3;
 	img::make_view(src3, width, height, buffer);
 
-	img::map(caddy, src3);
+	img::map_rgb(caddy, src3);
 
 	img::View3r32 dst3;
 	img::make_view(dst3, width, height, buffer);
 
 	img::rotate(src3, dst3, origin, theta);
 
-	img::map(dst3, caddy);
+	img::map_rgb(dst3, caddy);
 
 	write_image(caddy, "rotate3.bmp");
 
@@ -1324,7 +1324,7 @@ void overlay_test()
 
 	img::View3r32 view3;
 	img::make_view(view3, width, height, buffer);
-	img::map(vette, view3);
+	img::map_rgb(vette, view3);
 
 	img::View1r32 view1;
 	img::make_view(view1, gr_caddy.width, gr_caddy.height, buffer);
@@ -1357,7 +1357,7 @@ void overlay_test()
 
 	auto sub3 = img::sub_view(view3, r);
 	img::overlay(sub3, binary, img::to_pixel(0, 255, 0), sub3);
-	img::map(view3, vette);
+	img::map_rgb(view3, vette);
 	write_image(vette, "overlay.bmp");
 
 	auto sub1 = img::sub_view(view1, r);
@@ -1388,7 +1388,7 @@ void scale_down_test()
 
 	img::View3r32 src3;
 	img::make_view(src3, width, height, buffer);
-	img::map(image, src3);
+	img::map_rgb(image, src3);
 
 	auto scaled3 = img::scale_down(src3, buffer);
 
@@ -1401,7 +1401,7 @@ void scale_down_test()
 	auto view3 = img::sub_view(src3, r);
 	img::copy(scaled3, view3);
 
-	img::map(src3, image);	
+	img::map_rgb(src3, image);	
 	write_image(image, "scale_down3.bmp");
 
 	GrayImage gray;

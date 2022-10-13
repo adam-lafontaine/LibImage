@@ -900,7 +900,7 @@ namespace libimage
 	}
 
 
-	void map(View4r32 const& src, Image const& dst)
+	void map_rgb(View4r32 const& src, Image const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -908,7 +908,7 @@ namespace libimage
 	}
 
 
-	void map(Image const& src, View4r32 const& dst)
+	void map_rgb(Image const& src, View4r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -916,7 +916,7 @@ namespace libimage
 	}
 
 
-	void map(View4r32 const& src, View const& dst)
+	void map_rgb(View4r32 const& src, View const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -924,7 +924,7 @@ namespace libimage
 	}
 
 
-	void map(View const& src, View4r32 const& dst)
+	void map_rgb(View const& src, View4r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -932,7 +932,7 @@ namespace libimage
 	}
 
 
-	void map(View3r32 const& src, Image const& dst)
+	void map_rgb(View3r32 const& src, Image const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -940,7 +940,7 @@ namespace libimage
 	}
 
 
-	void map(Image const& src, View3r32 const& dst)
+	void map_rgb(Image const& src, View3r32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -948,7 +948,7 @@ namespace libimage
 	}
 
 
-	void map(View3r32 const& src, View const& dst)
+	void map_rgb(View3r32 const& src, View const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -956,7 +956,7 @@ namespace libimage
 	}
 
 
-	void map(View const& src, View3r32 const& dst)
+	void map_rgb(View const& src, View3r32 const& dst)
 	{
 		assert(verify(src, dst));
 
