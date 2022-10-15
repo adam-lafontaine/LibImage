@@ -88,6 +88,7 @@ void clear_image(GrayImage const& img);
 void read_write_image_test();
 void resize_test();
 void map_test();
+void map_rgb_test();
 void sub_view_test();
 void fill_test();
 void copy_test();
@@ -126,6 +127,7 @@ int main()
 	read_write_image_test();
 	resize_test();
 	map_test();
+	map_rgb_test();
 	sub_view_test();
 	fill_test();
 	copy_test();
@@ -227,6 +229,38 @@ void map_test()
 	empty_dir(out_dir);
 	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
+	GrayImage gray;
+	img::read_image_from_file(CADILLAC_PATH, gray);
+	auto width = gray.width;
+	auto height = gray.height;
+
+	GrayImage gray_dst;
+	img::make_image(gray_dst, width, height);
+
+	img::Buffer32 buffer(width * height);
+
+	img::View1r32 view1;
+	img::make_view(view1, width, height, buffer);
+
+	img::map(gray, view1);
+	img::map(view1, gray_dst);
+
+	write_image(gray_dst, "map1.bmp");
+	
+	img::destroy_image(gray);
+	img::destroy_image(gray_dst);
+	buffer.free();
+}
+
+
+void map_rgb_test()
+{
+	auto title = "map_rgb_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+
 	Image image;
 	img::read_image_from_file(CORVETTE_PATH, image);
 	auto width = image.width;
@@ -234,14 +268,6 @@ void map_test()
 
 	Image image_dst;
 	img::make_image(image_dst, width, height);
-
-	GrayImage gray;
-	img::read_image_from_file(CADILLAC_PATH, gray);
-	auto gr_width = gray.width;
-	auto gr_height = gray.height;
-
-	GrayImage gray_dst;
-	img::make_image(gray_dst, gr_width, gr_height);
 
 	img::Buffer32 buffer(width * height * 4);
 
@@ -252,7 +278,7 @@ void map_test()
 	img::map_rgb(view4, image_dst);
 	buffer.reset();
 
-	write_image(image_dst, "map_rgba.bmp");	
+	write_image(image_dst, "map_rgba.bmp");
 
 	img::View3r32 view3;
 	img::make_view(view3, width, height, buffer);
@@ -263,19 +289,8 @@ void map_test()
 
 	write_image(image_dst, "map_rgb.bmp");
 
-	img::View1r32 view1;
-	img::make_view(view1, gr_width, gr_height, buffer);
-
-	img::map(gray, view1);
-	img::map(view1, gray_dst);
-	buffer.reset();
-
-	write_image(gray_dst, "map1.bmp");
-
 	img::destroy_image(image);
 	img::destroy_image(image_dst);
-	img::destroy_image(gray);
-	img::destroy_image(gray_dst);
 	buffer.free();
 }
 

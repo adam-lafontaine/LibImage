@@ -387,9 +387,9 @@ namespace libimage
 		r32& sat() { return *hsv.S; }
 		r32& val() { return *hsv.V; }
 
-		r32 hue() const { return *hsv.H; }
+		/*r32 hue() const { return *hsv.H; }
 		r32 sat() const { return *hsv.S; }
-		r32 val() const { return *hsv.V; }
+		r32 val() const { return *hsv.V; }*/
 	};
 }
 
