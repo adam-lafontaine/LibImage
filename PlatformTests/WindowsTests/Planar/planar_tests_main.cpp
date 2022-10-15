@@ -323,25 +323,6 @@ void map_hsv_test()
 
 	write_image(image_dst, "map_hsv.bmp");
 
-	auto const to_half = [](r32& p) { p *= 0.5f; };
-
-	auto view_ch = img::select_channel(view3, img::HSV::H);
-	img::for_each_pixel(view_ch, to_half);
-	img::map_hsv(view3, image_dst);
-	write_image(image_dst, "map_hsv_h.bmp");
-
-	img::map_hsv(image, view3);
-	view_ch = img::select_channel(view3, img::HSV::S);
-	img::for_each_pixel(view_ch, to_half);
-	img::map_hsv(view3, image_dst);
-	write_image(image_dst, "map_hsv_s.bmp");
-
-	img::map_hsv(image, view3);
-	view_ch = img::select_channel(view3, img::HSV::V);
-	img::for_each_pixel(view_ch, to_half);
-	img::map_hsv(view3, image_dst);
-	write_image(image_dst, "map_hsv_v.bmp");
-
 	img::destroy_image(image);
 	img::destroy_image(image_dst);
 	buffer.free();
@@ -865,10 +846,52 @@ void select_channel_test()
 	img::map(blue, caddy_dst);
 	write_image(caddy_dst, "blue.bmp");
 
+	auto const to_half = [](r32& p) { p *= 0.5f; };
+
+	Image image_dst;
+	img::make_image(image_dst, width, height);
+
+	img::map_rgb(vette, vette3);
+	auto view_ch = img::select_channel(vette3, img::RGB::R);
+	img::for_each_pixel(view_ch, to_half);
+	img::map_hsv(vette3, image_dst);
+	write_image(image_dst, "reduce_r.bmp");
+
+	img::map_rgb(vette, vette3);
+	view_ch = img::select_channel(vette3, img::RGB::G);
+	img::for_each_pixel(view_ch, to_half);
+	img::map_hsv(vette3, image_dst);
+	write_image(image_dst, "reduce_g.bmp");
+
+	img::map_rgb(vette, vette3);
+	view_ch = img::select_channel(vette3, img::RGB::B);
+	img::for_each_pixel(view_ch, to_half);
+	img::map_hsv(vette3, image_dst);
+	write_image(image_dst, "reduce_b.bmp");
+
+	img::map_hsv(vette, vette3);
+	view_ch = img::select_channel(vette3, img::HSV::H);
+	img::for_each_pixel(view_ch, to_half);
+	img::map_hsv(vette3, image_dst);
+	write_image(image_dst, "reduce_h.bmp");
+
+	img::map_hsv(vette, vette3);
+	view_ch = img::select_channel(vette3, img::HSV::S);
+	img::for_each_pixel(view_ch, to_half);
+	img::map_hsv(vette3, image_dst);
+	write_image(image_dst, "reduce_s.bmp");
+
+	img::map_hsv(vette, vette3);
+	view_ch = img::select_channel(vette3, img::HSV::V);
+	img::for_each_pixel(view_ch, to_half);
+	img::map_hsv(vette3, image_dst);
+	write_image(image_dst, "reduce_v.bmp");
+
 	img::destroy_image(vette);
 	img::destroy_image(vette_dst);
 	img::destroy_image(caddy);
 	img::destroy_image(caddy_dst);
+	img::destroy_image(image_dst);
 	buffer.free();
 }
 
