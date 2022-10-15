@@ -89,6 +89,7 @@ void read_write_image_test();
 void resize_test();
 void map_test();
 void map_rgb_test();
+void map_hsv_test();
 void sub_view_test();
 void fill_test();
 void copy_test();
@@ -128,6 +129,7 @@ int main()
 	resize_test();
 	map_test();
 	map_rgb_test();
+	map_hsv_test();
 	sub_view_test();
 	fill_test();
 	copy_test();
@@ -288,6 +290,57 @@ void map_rgb_test()
 	buffer.reset();
 
 	write_image(image_dst, "map_rgb.bmp");
+
+	img::destroy_image(image);
+	img::destroy_image(image_dst);
+	buffer.free();
+}
+
+
+void map_hsv_test()
+{
+	auto title = "map_hsv_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH / title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+
+	Image image;
+	img::read_image_from_file(CORVETTE_PATH, image);
+	auto width = image.width;
+	auto height = image.height;
+
+	Image image_dst;
+	img::make_image(image_dst, width, height);
+
+	img::Buffer32 buffer(width * height * 3);
+
+	img::ViewHSVr32 view3;
+	img::make_view(view3, width, height, buffer);
+
+	img::map_hsv(image, view3);
+	img::map_hsv(view3, image_dst);
+
+	write_image(image_dst, "map_hsv.bmp");
+
+	auto const to_half = [](r32& p) { p *= 0.5f; };
+
+	auto view_ch = img::select_channel(view3, img::HSV::H);
+	img::for_each_pixel(view_ch, to_half);
+	img::map_hsv(view3, image_dst);
+	write_image(image_dst, "map_hsv_h.bmp");
+
+	img::map_hsv(image, view3);
+	view_ch = img::select_channel(view3, img::HSV::S);
+	img::for_each_pixel(view_ch, to_half);
+	img::map_hsv(view3, image_dst);
+	write_image(image_dst, "map_hsv_s.bmp");
+
+	img::map_hsv(image, view3);
+	view_ch = img::select_channel(view3, img::HSV::V);
+	img::for_each_pixel(view_ch, to_half);
+	img::map_hsv(view3, image_dst);
+	write_image(image_dst, "map_hsv_v.bmp");
 
 	img::destroy_image(image);
 	img::destroy_image(image_dst);

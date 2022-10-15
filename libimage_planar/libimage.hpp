@@ -499,13 +499,17 @@ namespace libimage
 }
 
 
-/* map_hsl */
+/* map_hsv */
 
 namespace libimage
 {
-	void map_hsl(View3r32 const& src, Image const& dst);
+	void map_hsv(ViewHSVr32 const& src, Image const& dst);
 
-	void map_hsl(Image const& src, View3r32 const& dst);
+	void map_hsv(Image const& src, ViewHSVr32 const& dst);
+
+	void map_hsv(ViewHSVr32 const& src, View const& dst);
+
+	void map_hsv(View const& src, ViewHSVr32 const& dst);
 }
 
 
@@ -644,9 +648,11 @@ namespace libimage
 
 namespace libimage
 {
-	View1r32 select_channel(View4r32 const& view, RGBA channel);
+	View1r32 select_channel(ViewRGBAr32 const& view, RGBA channel);
 
-	View1r32 select_channel(View3r32 const& view, RGB channel);
+	View1r32 select_channel(ViewRGBr32 const& view, RGB channel);
+
+	View1r32 select_channel(ViewHSVr32 const& view, HSV channel);
 
 	View1r32 select_channel(View2r32 const& view, GA channel);
 

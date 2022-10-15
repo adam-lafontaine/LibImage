@@ -1169,12 +1169,8 @@ namespace libimage
 	};
 
 
-	static HSVr32 rgb_hsv(Pixel const& src)
+	static HSVr32 rgb_hsv(u8 r, u8 g, u8 b)
 	{
-		auto r = src.rgba.red;
-		auto g = src.rgba.green;
-		auto b = src.rgba.blue;
-
 		auto max = std::max(r, std::max(g, b));
 		auto min = std::min(r, std::max(g, b));
 
@@ -1211,12 +1207,8 @@ namespace libimage
 	}
 
 
-	static RGBr32 hsv_rgb(PixelHSVr32 const& src)
+	static RGBr32 hsv_rgb(r32 h, r32 s, r32 v)
 	{
-		auto h = *src.hsv.H;
-		auto s = *src.hsv.S;
-		auto v = *src.hsv.V;
-
 		auto c = s * v;
 		auto m = v - c;
 
@@ -1273,7 +1265,8 @@ namespace libimage
 
 			for (u32 x = 0; x < src.width; ++x)
 			{
-				auto hsv = rgb_hsv(s[x]);
+				auto rgba = s[x].rgba;
+				auto hsv = rgb_hsv(rgba.red, rgba.green, rgba.blue);
 				d.hsv.H[x] = hsv.hue;
 				d.hsv.S[x] = hsv.sat;
 				d.hsv.V[x] = hsv.val;
@@ -1291,23 +1284,26 @@ namespace libimage
 
 		auto const row_func = [&](u32 y) 
 		{
-			auto s = hsv_row_begin(src, y);
+			auto s = hsv_row_begin(src, y).hsv;
 			auto d = row_begin(dst, y);
 
 			for (u32 x = 0; x < src.width; ++x)
 			{
-				auto& rgba = d[x].rgba;
-				auto rgb = hsv_rgb(s);
+				auto rgb = hsv_rgb(s.H[x], s.S[x], s.V[x]);
+
+				auto& rgba = d[x].rgba;				
 				rgba.red = to_channel_u8(rgb.red);
 				rgba.green = to_channel_u8(rgb.green);
 				rgba.blue = to_channel_u8(rgb.blue);
 				rgba.alpha = ch_max;
 			}
 		};
+
+		process_rows(src.height, row_func);
 	}
 
 
-	void map_hsv(View3r32 const& src, Image const& dst)
+	void map_hsv(ViewHSVr32 const& src, Image const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1315,7 +1311,7 @@ namespace libimage
 	}
 
 
-	void map_hsv(Image const& src, View3r32 const& dst)
+	void map_hsv(Image const& src, ViewHSVr32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1323,7 +1319,7 @@ namespace libimage
 	}
 
 
-	void map_hsv(View3r32 const& src, View const& dst)
+	void map_hsv(ViewHSVr32 const& src, View const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1331,7 +1327,7 @@ namespace libimage
 	}
 
 
-	void map_hsv(View const& src, View3r32 const& dst)
+	void map_hsv(View const& src, ViewHSVr32 const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1957,7 +1953,7 @@ namespace libimage
 	}
 
 
-	View1r32 select_channel(View4r32 const& view, RGBA channel)
+	View1r32 select_channel(ViewRGBAr32 const& view, RGBA channel)
 	{
 		assert(verify(view));
 
@@ -1971,7 +1967,21 @@ namespace libimage
 	}
 
 
-	View1r32 select_channel(View3r32 const& view, RGB channel)
+	View1r32 select_channel(ViewRGBr32 const& view, RGB channel)
+	{
+		assert(verify(view));
+
+		auto ch = id_cast(channel);
+
+		auto view1 = select_channel(view, ch);
+
+		assert(verify(view1));
+
+		return view1;
+	}
+
+
+	View1r32 select_channel(ViewHSVr32 const& view, HSV channel)
 	{
 		assert(verify(view));
 
