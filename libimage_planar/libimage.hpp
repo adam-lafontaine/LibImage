@@ -13,6 +13,45 @@ namespace libimage
 	constexpr auto RGB_CHANNELS = 3u;
 	constexpr auto RGBA_CHANNELS = 4u;
 
+	// platform dependent, endianness
+	class RGBAr32p
+	{
+	public:
+		r32* R;
+		r32* G;
+		r32* B;
+		r32* A;
+	};
+
+
+	class RGBr32p
+	{
+	public:
+		r32* R;
+		r32* G;
+		r32* B;
+	};
+
+
+	class HSVr32p
+	{
+	public:
+		r32* H;
+		r32* S;
+		r32* V;
+	};
+
+
+	class RGBAu8
+	{
+	public:
+		u8 red;
+		u8 green;
+		u8 blue;
+		u8 alpha;
+	};
+
+
 	enum class RGB : int
 	{
 		R = 0, G = 1, B = 2
@@ -61,14 +100,7 @@ namespace libimage
 
 		u32 value;
 
-		// platform dependent, endianness
-		/*struct
-		{
-			u8 red;
-			u8 green;
-			u8 blue;
-			u8 alpha;
-		};*/
+		RGBAu8 rgba;
 
 	} Pixel;
 
@@ -305,21 +337,16 @@ namespace libimage
 
 		union 
 		{
-			struct 
-			{
-				r32* R;
-				r32* G;
-				r32* B;
-				r32* A;
-			};
+			RGBAr32p rgba;
 
 			r32* channels[4] = {};
 		};
 
-		r32& red() { return *R; }
-		r32& green() { return *G; }
-		r32& blue() { return *B; }
-		r32& alpha() { return *A; }
+		// for_each_xy
+		r32& red() { return *rgba.R; }
+		r32& green() { return *rgba.G; }
+		r32& blue() { return *rgba.B; }
+		r32& alpha() { return *rgba.A; }
 	};
 
 
@@ -331,19 +358,15 @@ namespace libimage
 
 		union 
 		{
-			struct 
-			{
-				r32* R;
-				r32* G;
-				r32* B;
-			};
+			RGBr32p rgb;
 
 			r32* channels[3] = {};
 		};
 
-		r32& red() { return *R; }
-		r32& green() { return *G; }
-		r32& blue() { return *B; }
+		// for_each_xy
+		r32& red() { return *rgb.R; }
+		r32& green() { return *rgb.G; }
+		r32& blue() { return *rgb.B; }
 	};
 
 
@@ -355,19 +378,18 @@ namespace libimage
 
 		union
 		{
-			struct
-			{
-				r32* H;
-				r32* S;
-				r32* V;
-			};
+			HSVr32p hsv;
 
 			r32* channels[3] = {};
 		};
 
-		r32& hue() { return *H; }
-		r32& sat() { return *S; }
-		r32& val() { return *V; }
+		r32& hue() { return *hsv.H; }
+		r32& sat() { return *hsv.S; }
+		r32& val() { return *hsv.V; }
+
+		r32 hue() const { return *hsv.H; }
+		r32 sat() const { return *hsv.S; }
+		r32 val() const { return *hsv.V; }
 	};
 }
 

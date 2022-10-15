@@ -559,7 +559,7 @@ namespace libimage
 	}
 
 
-	/*template <size_t N>
+	template <size_t N>
 	static PixelCHr32<N> row_begin_n(ViewCHr32<N> const& view, u32 y)
 	{
 		assert(y < view.height);
@@ -577,25 +577,25 @@ namespace libimage
 	}
 
 
-	Pixel4r32 row_begin(View4r32 const& view, u32 y)
+	static Pixel4r32 row_begin(View4r32 const& view, u32 y)
 	{
 		return row_begin_n(view, y);
 	}
 
 
-	Pixel3r32 row_begin(View3r32 const& view, u32 y)
+	static Pixel3r32 row_begin(View3r32 const& view, u32 y)
 	{
 		return row_begin_n(view, y);
 	}
 
 
-	Pixel2r32 row_begin(View2r32 const& view, u32 y)
+	static Pixel2r32 row_begin(View2r32 const& view, u32 y)
 	{
 		return row_begin_n(view, y);
 	}
 
 
-	PixelRGBAr32 rgba_row_begin(View4r32 const& view, u32 y)
+	static PixelRGBAr32 rgba_row_begin(ViewRGBAr32 const& view, u32 y)
 	{
 		assert(y < view.height);
 
@@ -603,16 +603,16 @@ namespace libimage
 
 		PixelRGBAr32 p{};
 
-		p.red = view.image_channel_data[id_cast(RGBA::R)] + offset;
-		p.green = view.image_channel_data[id_cast(RGBA::G)] + offset;
-		p.blue = view.image_channel_data[id_cast(RGBA::B)] + offset;
-		p.alpha = view.image_channel_data[id_cast(RGBA::A)] + offset;
+		p.rgba.R = view.image_channel_data[id_cast(RGBA::R)] + offset;
+		p.rgba.G = view.image_channel_data[id_cast(RGBA::G)] + offset;
+		p.rgba.B = view.image_channel_data[id_cast(RGBA::B)] + offset;
+		p.rgba.A = view.image_channel_data[id_cast(RGBA::A)] + offset;
 
 		return p;
 	}
 
 
-	PixelRGBr32 rgb_row_begin(View3r32 const& view, u32 y)
+	static PixelRGBr32 rgb_row_begin(ViewRGBr32 const& view, u32 y)
 	{
 		assert(y < view.height);
 
@@ -620,12 +620,28 @@ namespace libimage
 
 		PixelRGBr32 p{};
 
-		p.red = view.image_channel_data[id_cast(RGB::R)] + offset;
-		p.green = view.image_channel_data[id_cast(RGB::G)] + offset;
-		p.blue = view.image_channel_data[id_cast(RGB::B)] + offset;
+		p.rgb.R = view.image_channel_data[id_cast(RGB::R)] + offset;
+		p.rgb.G = view.image_channel_data[id_cast(RGB::G)] + offset;
+		p.rgb.B = view.image_channel_data[id_cast(RGB::B)] + offset;
 
 		return p;
-	}*/
+	}
+
+
+	static PixelHSVr32 hsv_row_begin(ViewHSVr32 const& view, u32 y)
+	{
+		assert(y < view.height);
+
+		auto offset = (view.y_begin + y) * view.image_width + view.x_begin;
+
+		PixelHSVr32 p{};
+
+		p.hsv.H = view.image_channel_data[id_cast(HSV::H)] + offset;
+		p.hsv.S = view.image_channel_data[id_cast(HSV::S)] + offset;
+		p.hsv.V = view.image_channel_data[id_cast(HSV::V)] + offset;
+
+		return p;
+	}
 
 
 	static r32* row_offset_begin(View1r32 const& view, u32 y, int y_offset)
@@ -714,6 +730,18 @@ namespace libimage
 	}
 
 
+	template <size_t N>
+	static r32* channel_xy_at(ViewCHr32<N> const& view, u32 x, u32 y, u32 ch)
+	{
+		assert(y < view.height);
+		assert(x < view.width);
+
+		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin) + x;
+
+		return view.image_channel_data[ch] + offset;
+	}
+
+
 	PixelRGBAr32 rgba_xy_at(ViewRGBAr32 const& view, u32 x, u32 y)
 	{
 		assert(y < view.height);
@@ -723,10 +751,10 @@ namespace libimage
 
 		PixelRGBAr32 p{};
 
-		p.R = view.image_channel_data[id_cast(RGBA::R)] + offset;
-		p.G = view.image_channel_data[id_cast(RGBA::G)] + offset;
-		p.B = view.image_channel_data[id_cast(RGBA::B)] + offset;
-		p.A = view.image_channel_data[id_cast(RGBA::A)] + offset;
+		p.rgba.R = view.image_channel_data[id_cast(RGBA::R)] + offset;
+		p.rgba.G = view.image_channel_data[id_cast(RGBA::G)] + offset;
+		p.rgba.B = view.image_channel_data[id_cast(RGBA::B)] + offset;
+		p.rgba.A = view.image_channel_data[id_cast(RGBA::A)] + offset;
 
 		return p;
 	}
@@ -741,9 +769,9 @@ namespace libimage
 
 		PixelRGBr32 p{};
 
-		p.R = view.image_channel_data[id_cast(RGB::R)] + offset;
-		p.G = view.image_channel_data[id_cast(RGB::G)] + offset;
-		p.B = view.image_channel_data[id_cast(RGB::B)] + offset;
+		p.rgb.R = view.image_channel_data[id_cast(RGB::R)] + offset;
+		p.rgb.G = view.image_channel_data[id_cast(RGB::G)] + offset;
+		p.rgb.B = view.image_channel_data[id_cast(RGB::B)] + offset;
 
 		return p;
 	}
@@ -758,23 +786,11 @@ namespace libimage
 
 		PixelHSVr32 p{};
 
-		p.H = view.image_channel_data[id_cast(HSV::H)] + offset;
-		p.S = view.image_channel_data[id_cast(HSV::S)] + offset;
-		p.V = view.image_channel_data[id_cast(HSV::V)] + offset;
+		p.hsv.H = view.image_channel_data[id_cast(HSV::H)] + offset;
+		p.hsv.S = view.image_channel_data[id_cast(HSV::S)] + offset;
+		p.hsv.V = view.image_channel_data[id_cast(HSV::V)] + offset;
 
 		return p;
-	}
-
-
-	template <size_t N>
-	static r32* channel_xy_at(ViewCHr32<N> const& view, u32 x, u32 y, u32 ch)
-	{
-		assert(y < view.height);
-		assert(x < view.width);
-
-		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin) + x;
-
-		return view.image_channel_data[ch] + offset;
 	}
 }
 
@@ -1135,14 +1151,29 @@ namespace libimage
 
 namespace libimage
 {
-
-
-
-	static void do_stuff(Pixel const& p)
+	class HSVr32
 	{
-		auto r = p.channels[id_cast(RGBA::R)];
-		auto g = p.channels[id_cast(RGBA::G)];
-		auto b = p.channels[id_cast(RGBA::B)];
+	public:
+		r32 hue;
+		r32 sat;
+		r32 val;
+	};
+
+
+	class RGBr32
+	{
+	public:
+		r32 red;
+		r32 green;
+		r32 blue;
+	};
+
+
+	static HSVr32 rgb_hsv(Pixel const& src)
+	{
+		auto r = src.rgba.red;
+		auto g = src.rgba.green;
+		auto b = src.rgba.blue;
 
 		auto max = std::max(r, std::max(g, b));
 		auto min = std::min(r, std::max(g, b));
@@ -1155,38 +1186,156 @@ namespace libimage
 
 		r32 sat = max == 0 ? 0.0f : (c / value);
 
-		r32 hue = 0.0f;
+		r32 hue = 60.0f;
 
 		if (max == min)
 		{
-			// hue = 0.0f;
+			hue = 0.0f;
 		}
 		else if (max == r)
 		{
-			hue = (norm(g) - norm(b)) / c;
+			hue *= ((norm(g) - norm(b)) / c);
 		}
 		else if (max == g)
 		{
-			hue = (norm(b) - norm(r)) / c + 2;
+			hue *= ((norm(b) - norm(r)) / c + 2);
 		}
 		else // max == b
 		{
-			hue = (norm(r) - norm(g)) / c + 4;
+			hue *= ((norm(r) - norm(g)) / c + 4);
 		}
 
-		hue /= 6.0f;
+		hue /= 360.0f;
+
+		return { hue, sat, value };
+	}
+
+
+	static RGBr32 hsv_rgb(PixelHSVr32 const& src)
+	{
+		auto h = *src.hsv.H;
+		auto s = *src.hsv.S;
+		auto v = *src.hsv.V;
+
+		auto c = s * v;
+		auto m = v - c;
+
+		auto d = h * 360.0f / 60.0f;
+
+		auto x = c * (1.0f - std::abs(std::fmod(d, 2.0f) - 1.0f));
+
+		auto r = m;
+		auto g = m;
+		auto b = m;
+
+		if (d < 1.0f)
+		{
+			r += c;
+			g += x;
+		}
+		else if (d < 2.0f)
+		{
+			r += x;
+			g += c;
+		}
+		else if (d < 3.0f)
+		{
+			g += c;
+			b += x;
+		}
+		else if (d < 4.0f)
+		{
+			g += x;
+			b += c;
+		}
+		else if (d < 5.0f)
+		{
+			r += x;
+			b += c;
+		}
+		else
+		{
+			r += c;
+			b += x;
+		}
+
+		return { r, g, b };
+	}
+
+
+	template <class IMG_INT>
+	static void interleaved_to_planar_hsv(IMG_INT const& src, ViewHSVr32 const& dst)
+	{
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = hsv_row_begin(dst, y);
+
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				auto hsv = rgb_hsv(s[x]);
+				d.hsv.H[x] = hsv.hue;
+				d.hsv.S[x] = hsv.sat;
+				d.hsv.V[x] = hsv.val;
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	template <class IMG_INT>
+	static void planar_hsv_to_interleaved(ViewHSVr32 const& src, IMG_INT const& dst)
+	{
+		constexpr auto ch_max = to_channel_u8(1.0f);
+
+		auto const row_func = [&](u32 y) 
+		{
+			auto s = hsv_row_begin(src, y);
+			auto d = row_begin(dst, y);
+
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				auto& rgba = d[x].rgba;
+				auto rgb = hsv_rgb(s);
+				rgba.red = to_channel_u8(rgb.red);
+				rgba.green = to_channel_u8(rgb.green);
+				rgba.blue = to_channel_u8(rgb.blue);
+				rgba.alpha = ch_max;
+			}
+		};
 	}
 
 
 	void map_hsv(View3r32 const& src, Image const& dst)
 	{
+		assert(verify(src, dst));
 
+		planar_hsv_to_interleaved(src, dst);
 	}
 
 
 	void map_hsv(Image const& src, View3r32 const& dst)
 	{
-		
+		assert(verify(src, dst));
+
+		interleaved_to_planar_hsv(src, dst);
+	}
+
+
+	void map_hsv(View3r32 const& src, View const& dst)
+	{
+		assert(verify(src, dst));
+
+		planar_hsv_to_interleaved(src, dst);
+	}
+
+
+	void map_hsv(View const& src, View3r32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		interleaved_to_planar_hsv(src, dst);
 	}
 }
 
