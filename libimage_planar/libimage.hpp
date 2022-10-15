@@ -510,6 +510,9 @@ namespace libimage
 	void map_hsv(ViewHSVr32 const& src, View const& dst);
 
 	void map_hsv(View const& src, ViewHSVr32 const& dst);
+
+
+	void map_hsv(ViewRGBr32 const& src, ViewHSVr32 const& dst);
 }
 
 

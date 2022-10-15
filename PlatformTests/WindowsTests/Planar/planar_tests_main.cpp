@@ -871,9 +871,9 @@ void select_channel_test()
 
 	img::map_hsv(vette, vette3);
 	view_ch = img::select_channel(vette3, img::HSV::H);
-	img::for_each_pixel(view_ch, to_half);
+	img::for_each_pixel(view_ch, [](r32& p) { p = 0.5f; });
 	img::map_hsv(vette3, image_dst);
-	write_image(image_dst, "reduce_h.bmp");
+	write_image(image_dst, "change_h.bmp");
 
 	img::map_hsv(vette, vette3);
 	view_ch = img::select_channel(vette3, img::HSV::S);

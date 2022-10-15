@@ -1220,35 +1220,32 @@ namespace libimage
 		auto g = m;
 		auto b = m;
 
-		if (d < 1.0f)
+		switch (int(d))
 		{
+		case 0:
 			r += c;
 			g += x;
-		}
-		else if (d < 2.0f)
-		{
+			break;
+		case 1:
 			r += x;
 			g += c;
-		}
-		else if (d < 3.0f)
-		{
+			break;
+		case 2:
 			g += c;
 			b += x;
-		}
-		else if (d < 4.0f)
-		{
+			break;
+		case 3:
 			g += x;
 			b += c;
-		}
-		else if (d < 5.0f)
-		{
+			break;
+		case 4:
 			r += x;
 			b += c;
-		}
-		else
-		{
+			break;
+		default:
 			r += c;
 			b += x;
+			break;
 		}
 
 		return { r, g, b };
@@ -1332,6 +1329,28 @@ namespace libimage
 		assert(verify(src, dst));
 
 		interleaved_to_planar_hsv(src, dst);
+	}
+
+
+	void map_hsv(ViewRGBr32 const& src, ViewHSVr32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = rgb_row_begin(src, y).rgb;
+			auto d = hsv_row_begin(dst, y);
+
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				auto hsv = rgb_hsv(s.R[x], s.G[x], s.B[x]);
+				d.hsv.H[x] = hsv.hue;
+				d.hsv.S[x] = hsv.sat;
+				d.hsv.V[x] = hsv.val;
+			}
+		};
+
+		process_rows(src.height, row_func);
 	}
 }
 
