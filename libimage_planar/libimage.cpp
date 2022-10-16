@@ -1258,15 +1258,15 @@ namespace libimage
 		auto const row_func = [&](u32 y)
 		{
 			auto s = row_begin(src, y);
-			auto d = hsv_row_begin(dst, y);
+			auto d = hsv_row_begin(dst, y).hsv;
 
 			for (u32 x = 0; x < src.width; ++x)
 			{
 				auto rgba = s[x].rgba;
 				auto hsv = rgb_hsv(rgba.red, rgba.green, rgba.blue);
-				d.hsv.H[x] = hsv.hue;
-				d.hsv.S[x] = hsv.sat;
-				d.hsv.V[x] = hsv.val;
+				d.H[x] = hsv.hue;
+				d.S[x] = hsv.sat;
+				d.V[x] = hsv.val;
 			}
 		};
 
@@ -1339,14 +1339,18 @@ namespace libimage
 		auto const row_func = [&](u32 y)
 		{
 			auto s = rgb_row_begin(src, y).rgb;
-			auto d = hsv_row_begin(dst, y);
+			auto d = hsv_row_begin(dst, y).hsv;
 
 			for (u32 x = 0; x < src.width; ++x)
 			{
-				auto hsv = rgb_hsv(s.R[x], s.G[x], s.B[x]);
-				d.hsv.H[x] = hsv.hue;
-				d.hsv.S[x] = hsv.sat;
-				d.hsv.V[x] = hsv.val;
+				auto r = to_channel_u8(s.R[x]);
+				auto g = to_channel_u8(s.G[x]);
+				auto b = to_channel_u8(s.B[x]);
+
+				auto hsv = rgb_hsv(r, g, b);
+				d.H[x] = hsv.hue;
+				d.S[x] = hsv.sat;
+				d.V[x] = hsv.val;
 			}
 		};
 
