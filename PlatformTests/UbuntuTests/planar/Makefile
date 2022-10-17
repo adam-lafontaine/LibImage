@@ -77,6 +77,8 @@ run: build
 
 clean:
 	rm -rfv $(build)/*
+	rm -rfv $(out)/*
 
 setup:
 	mkdir -p $(build)
+	mkdir -p $(out)
