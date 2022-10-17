@@ -1356,6 +1356,28 @@ namespace libimage
 
 		process_rows(src.height, row_func);
 	}
+
+
+	void map_rgb(ViewHSVr32 const& src, ViewRGBr32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = hsv_row_begin(dst, y).hsv;
+			auto d = rgb_row_begin(src, y).rgb;
+
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				auto rgb = hsv_rgb(s.H[x], s.S[x], s.V[x]);
+				d.R[x] = rgb.red;
+				d.G[x] = rgb.green;
+				d.B[x] = rgb.blue;
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
 }
 
 
