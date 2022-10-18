@@ -32,7 +32,9 @@ A Basic image processing libray for C++
 * Simple MemoryBuffer class for managing memory instead of having various make/destroy overloads
 * Simplified parallel processing
 * Visual Studio project for Windows
-* Create directory /TestImages/out_files/ to allow programs to write output images
+* Tests for Windows and Ubuntu
+* "make setup" to create build and output directories
+* "make build" or "make run"
 
 ## CUDA
 * Typesafe wrapper for preallocating memory on the GPU
