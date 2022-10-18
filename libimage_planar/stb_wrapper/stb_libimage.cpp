@@ -5,6 +5,15 @@
 #include <cstring>
 
 
+class STB_Pixel // TODO: endianness
+{
+	u8 red;
+	u8 green;
+	u8 blue;
+	u8 alpha;
+};
+
+
 static bool has_extension(const char* filename, const char* ext)
 {
 	size_t file_length = std::strlen(filename);

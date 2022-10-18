@@ -13,6 +13,45 @@ namespace libimage
 	constexpr auto RGB_CHANNELS = 3u;
 	constexpr auto RGBA_CHANNELS = 4u;
 
+	// platform dependent, endianness
+	class RGBAr32p
+	{
+	public:
+		r32* R;
+		r32* G;
+		r32* B;
+		r32* A;
+	};
+
+
+	class RGBr32p
+	{
+	public:
+		r32* R;
+		r32* G;
+		r32* B;
+	};
+
+
+	class HSVr32p
+	{
+	public:
+		r32* H;
+		r32* S;
+		r32* V;
+	};
+
+
+	class RGBAu8
+	{
+	public:
+		u8 red;
+		u8 green;
+		u8 blue;
+		u8 alpha;
+	};
+
+
 	enum class RGB : int
 	{
 		R = 0, G = 1, B = 2
@@ -28,6 +67,12 @@ namespace libimage
 	enum class GA : int
 	{
 		G = 0, A = 1
+	};
+
+
+	enum class HSV : int
+	{
+		H = 0, S = 1, V = 2
 	};
 
 
@@ -54,6 +99,8 @@ namespace libimage
 		u8 channels[4] = {};
 
 		u32 value;
+
+		RGBAu8 rgba;
 
 	} Pixel;
 
@@ -257,8 +304,13 @@ namespace libimage
 	using View3r32 = ViewCHr32<3>;
 	using View2r32 = ViewCHr32<2>;
 
+	using ViewRGBAr32 = View4r32;
+	using ViewRGBr32 = View3r32;
 
-	View3r32 make_rgb_view(View4r32 const& image);
+	using ViewHSVr32 = View3r32;
+
+
+	ViewRGBr32 make_rgb_view(ViewRGBAr32 const& image);
 
 
 	template <size_t N>
@@ -285,21 +337,16 @@ namespace libimage
 
 		union 
 		{
-			struct 
-			{
-				r32* r;
-				r32* g;
-				r32* b;
-				r32* a;
-			};
+			RGBAr32p rgba;
 
 			r32* channels[4] = {};
 		};
 
-		r32& red() { return *r; }
-		r32& green() { return *g; }
-		r32& blue() { return *b; }
-		r32& alpha() { return *a; }
+		// for_each_xy
+		r32& red() { return *rgba.R; }
+		r32& green() { return *rgba.G; }
+		r32& blue() { return *rgba.B; }
+		r32& alpha() { return *rgba.A; }
 	};
 
 
@@ -311,19 +358,38 @@ namespace libimage
 
 		union 
 		{
-			struct 
-			{
-				r32* r;
-				r32* g;
-				r32* b;
-			};
+			RGBr32p rgb;
 
 			r32* channels[3] = {};
 		};
 
-		r32& red() { return *r; }
-		r32& green() { return *g; }
-		r32& blue() { return *b; }
+		// for_each_xy
+		r32& red() { return *rgb.R; }
+		r32& green() { return *rgb.G; }
+		r32& blue() { return *rgb.B; }
+	};
+
+
+	class PixelHSVr32
+	{
+	public:
+
+		static constexpr u32 n_channels = 3;
+
+		union
+		{
+			HSVr32p hsv;
+
+			r32* channels[3] = {};
+		};
+
+		r32& hue() { return *hsv.H; }
+		r32& sat() { return *hsv.S; }
+		r32& val() { return *hsv.V; }
+
+		/*r32 hue() const { return *hsv.H; }
+		r32 sat() const { return *hsv.S; }
+		r32 val() const { return *hsv.V; }*/
 	};
 }
 
@@ -358,9 +424,11 @@ namespace libimage
 
 	Pixel2r32 xy_at(View2r32 const& view, u32 x, u32 y);
 
-	PixelRGBAr32 rgba_xy_at(View4r32 const& view, u32 x, u32 y);
+	PixelRGBAr32 rgba_xy_at(ViewRGBAr32 const& view, u32 x, u32 y);
 
-	PixelRGBr32 rgb_xy_at(View3r32 const& view, u32 x, u32 y);
+	PixelRGBr32 rgb_xy_at(ViewRGBr32 const& view, u32 x, u32 y);
+
+	PixelHSVr32 hsv_xy_at(ViewHSVr32 const& view, u32 x, u32 y);
 }
 
 
@@ -385,26 +453,6 @@ namespace libimage
 
 namespace libimage
 {
-	void map(View4r32 const& src, Image const& dst);
-
-	void map(Image const& src, View4r32 const& dst);
-
-
-	void map(View4r32 const& src, View const& dst);
-
-	void map(View const& src, View4r32 const& dst);
-
-
-	void map(View3r32 const& src, Image const& dst);
-
-	void map(Image const& src, View3r32 const& dst);
-
-
-	void map(View3r32 const& src, View const& dst);
-
-	void map(View const& src, View3r32 const& dst);
-
-
 	void map(View1r32 const& src, gray::Image const& dst);
 
 	void map(gray::Image const& src, View1r32 const& dst);
@@ -423,6 +471,48 @@ namespace libimage
 	void map(View1r32 const& src, gray::View const& dst, r32 gray_min, r32 gray_max);
 
 	void map(gray::View const& src, View1r32 const& dst, r32 gray_min, r32 gray_max);
+}
+
+
+/* map_rgb */
+
+namespace libimage
+{
+	void map_rgb(ViewRGBAr32 const& src, Image const& dst);
+
+	void map_rgb(Image const& src, ViewRGBAr32 const& dst);
+
+
+	void map_rgb(ViewRGBAr32 const& src, View const& dst);
+
+	void map_rgb(View const& src, ViewRGBAr32 const& dst);
+
+
+	void map_rgb(ViewRGBr32 const& src, Image const& dst);
+
+	void map_rgb(Image const& src, ViewRGBr32 const& dst);
+
+
+	void map_rgb(ViewRGBr32 const& src, View const& dst);
+
+	void map_rgb(View const& src, ViewRGBr32 const& dst);
+}
+
+
+/* map_hsv */
+
+namespace libimage
+{
+	void map_hsv(ViewHSVr32 const& src, Image const& dst);
+
+	void map_hsv(Image const& src, ViewHSVr32 const& dst);
+
+	void map_hsv(ViewHSVr32 const& src, View const& dst);
+
+	void map_hsv(View const& src, ViewHSVr32 const& dst);
+
+
+	void map_hsv(ViewRGBr32 const& src, ViewHSVr32 const& dst);
 }
 
 
@@ -561,9 +651,11 @@ namespace libimage
 
 namespace libimage
 {
-	View1r32 select_channel(View4r32 const& view, RGBA channel);
+	View1r32 select_channel(ViewRGBAr32 const& view, RGBA channel);
 
-	View1r32 select_channel(View3r32 const& view, RGB channel);
+	View1r32 select_channel(ViewRGBr32 const& view, RGB channel);
+
+	View1r32 select_channel(ViewHSVr32 const& view, HSV channel);
 
 	View1r32 select_channel(View2r32 const& view, GA channel);
 

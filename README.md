@@ -27,11 +27,14 @@ A Basic image processing libray for C++
 * C++17
 * Settings macros defined in /defines.hpp
 * Images are converted to planar 32 bit float channels for presumably better compiler optimizations
+* RGB/HSV conversion
 * Similar C-style api
 * Simple MemoryBuffer class for managing memory instead of having various make/destroy overloads
 * Simplified parallel processing
 * Visual Studio project for Windows
-* Create directory /TestImages/out_files/ to allow programs to write output images
+* Tests for Windows and Ubuntu
+* "make setup" to create build and output directories
+* "make build" or "make run"
 
 ## CUDA
 * Typesafe wrapper for preallocating memory on the GPU

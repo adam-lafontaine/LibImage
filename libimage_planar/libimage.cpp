@@ -520,7 +520,7 @@ namespace libimage
 
 namespace libimage
 {
-	View3r32 make_rgb_view(View4r32 const& view)
+	ViewRGBr32 make_rgb_view(ViewRGBAr32 const& view)
 	{
 		assert(verify(view));
 
@@ -559,7 +559,7 @@ namespace libimage
 	}
 
 
-	/*template <size_t N>
+	template <size_t N>
 	static PixelCHr32<N> row_begin_n(ViewCHr32<N> const& view, u32 y)
 	{
 		assert(y < view.height);
@@ -577,25 +577,25 @@ namespace libimage
 	}
 
 
-	Pixel4r32 row_begin(View4r32 const& view, u32 y)
+	static Pixel4r32 row_begin(View4r32 const& view, u32 y)
 	{
 		return row_begin_n(view, y);
 	}
 
 
-	Pixel3r32 row_begin(View3r32 const& view, u32 y)
+	static Pixel3r32 row_begin(View3r32 const& view, u32 y)
 	{
 		return row_begin_n(view, y);
 	}
 
 
-	Pixel2r32 row_begin(View2r32 const& view, u32 y)
+	static Pixel2r32 row_begin(View2r32 const& view, u32 y)
 	{
 		return row_begin_n(view, y);
 	}
 
 
-	PixelRGBAr32 rgba_row_begin(View4r32 const& view, u32 y)
+	static PixelRGBAr32 rgba_row_begin(ViewRGBAr32 const& view, u32 y)
 	{
 		assert(y < view.height);
 
@@ -603,16 +603,16 @@ namespace libimage
 
 		PixelRGBAr32 p{};
 
-		p.red = view.image_channel_data[id_cast(RGBA::R)] + offset;
-		p.green = view.image_channel_data[id_cast(RGBA::G)] + offset;
-		p.blue = view.image_channel_data[id_cast(RGBA::B)] + offset;
-		p.alpha = view.image_channel_data[id_cast(RGBA::A)] + offset;
+		p.rgba.R = view.image_channel_data[id_cast(RGBA::R)] + offset;
+		p.rgba.G = view.image_channel_data[id_cast(RGBA::G)] + offset;
+		p.rgba.B = view.image_channel_data[id_cast(RGBA::B)] + offset;
+		p.rgba.A = view.image_channel_data[id_cast(RGBA::A)] + offset;
 
 		return p;
 	}
 
 
-	PixelRGBr32 rgb_row_begin(View3r32 const& view, u32 y)
+	static PixelRGBr32 rgb_row_begin(ViewRGBr32 const& view, u32 y)
 	{
 		assert(y < view.height);
 
@@ -620,12 +620,28 @@ namespace libimage
 
 		PixelRGBr32 p{};
 
-		p.red = view.image_channel_data[id_cast(RGB::R)] + offset;
-		p.green = view.image_channel_data[id_cast(RGB::G)] + offset;
-		p.blue = view.image_channel_data[id_cast(RGB::B)] + offset;
+		p.rgb.R = view.image_channel_data[id_cast(RGB::R)] + offset;
+		p.rgb.G = view.image_channel_data[id_cast(RGB::G)] + offset;
+		p.rgb.B = view.image_channel_data[id_cast(RGB::B)] + offset;
 
 		return p;
-	}*/
+	}
+
+
+	static PixelHSVr32 hsv_row_begin(ViewHSVr32 const& view, u32 y)
+	{
+		assert(y < view.height);
+
+		auto offset = (view.y_begin + y) * view.image_width + view.x_begin;
+
+		PixelHSVr32 p{};
+
+		p.hsv.H = view.image_channel_data[id_cast(HSV::H)] + offset;
+		p.hsv.S = view.image_channel_data[id_cast(HSV::S)] + offset;
+		p.hsv.V = view.image_channel_data[id_cast(HSV::V)] + offset;
+
+		return p;
+	}
 
 
 	static r32* row_offset_begin(View1r32 const& view, u32 y, int y_offset)
@@ -714,41 +730,6 @@ namespace libimage
 	}
 
 
-	PixelRGBAr32 rgba_xy_at(View4r32 const& view, u32 x, u32 y)
-	{
-		assert(y < view.height);
-		assert(x < view.width);
-
-		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin) + x;
-
-		PixelRGBAr32 p{};
-
-		p.r = view.image_channel_data[id_cast(RGBA::R)] + offset;
-		p.g = view.image_channel_data[id_cast(RGBA::G)] + offset;
-		p.b = view.image_channel_data[id_cast(RGBA::B)] + offset;
-		p.a = view.image_channel_data[id_cast(RGBA::A)] + offset;
-
-		return p;
-	}
-
-
-	PixelRGBr32 rgb_xy_at(View3r32 const& view, u32 x, u32 y)
-	{
-		assert(y < view.height);
-		assert(x < view.width);
-
-		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin) + x;
-
-		PixelRGBr32 p{};
-
-		p.r = view.image_channel_data[id_cast(RGB::R)] + offset;
-		p.g = view.image_channel_data[id_cast(RGB::G)] + offset;
-		p.b = view.image_channel_data[id_cast(RGB::B)] + offset;
-
-		return p;
-	}
-
-
 	template <size_t N>
 	static r32* channel_xy_at(ViewCHr32<N> const& view, u32 x, u32 y, u32 ch)
 	{
@@ -758,6 +739,58 @@ namespace libimage
 		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin) + x;
 
 		return view.image_channel_data[ch] + offset;
+	}
+
+
+	PixelRGBAr32 rgba_xy_at(ViewRGBAr32 const& view, u32 x, u32 y)
+	{
+		assert(y < view.height);
+		assert(x < view.width);
+
+		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin) + x;
+
+		PixelRGBAr32 p{};
+
+		p.rgba.R = view.image_channel_data[id_cast(RGBA::R)] + offset;
+		p.rgba.G = view.image_channel_data[id_cast(RGBA::G)] + offset;
+		p.rgba.B = view.image_channel_data[id_cast(RGBA::B)] + offset;
+		p.rgba.A = view.image_channel_data[id_cast(RGBA::A)] + offset;
+
+		return p;
+	}
+
+
+	PixelRGBr32 rgb_xy_at(ViewRGBr32 const& view, u32 x, u32 y)
+	{
+		assert(y < view.height);
+		assert(x < view.width);
+
+		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin) + x;
+
+		PixelRGBr32 p{};
+
+		p.rgb.R = view.image_channel_data[id_cast(RGB::R)] + offset;
+		p.rgb.G = view.image_channel_data[id_cast(RGB::G)] + offset;
+		p.rgb.B = view.image_channel_data[id_cast(RGB::B)] + offset;
+
+		return p;
+	}
+
+
+	PixelHSVr32 hsv_xy_at(ViewHSVr32 const& view, u32 x, u32 y)
+	{
+		assert(y < view.height);
+		assert(x < view.width);
+
+		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin) + x;
+
+		PixelHSVr32 p{};
+
+		p.hsv.H = view.image_channel_data[id_cast(HSV::H)] + offset;
+		p.hsv.S = view.image_channel_data[id_cast(HSV::S)] + offset;
+		p.hsv.V = view.image_channel_data[id_cast(HSV::V)] + offset;
+
+		return p;
 	}
 }
 
@@ -824,48 +857,6 @@ namespace libimage
 	using r32_to_u8_f = std::function<u8(r32)>;
 
 
-	template <class IMG_INT, size_t N>
-	static void interleaved_to_planar(IMG_INT const& src, ViewCHr32<N> const& dst)
-	{
-		auto const row_func = [&](u32 y)
-		{
-			auto s = row_begin(src, y);
-
-			for (u32 ch = 0; ch < N; ++ch)
-			{
-				auto d = channel_row_begin(dst, y, ch);
-				for (u32 x = 0; x < src.width; ++x)
-				{
-					d[x] = to_channel_r32(s[x].channels[ch]);
-				}
-			}
-		};
-
-		process_rows(src.height, row_func);
-	}
-
-
-	template <class IMG_INT, size_t N>
-	static void planar_to_interleaved(ViewCHr32<N> const& src, IMG_INT const& dst)
-	{
-		auto const row_func = [&](u32 y)
-		{
-			auto d = row_begin(dst, y);
-
-			for (u32 ch = 0; ch < N; ++ch)
-			{
-				auto s = channel_row_begin(src, y, ch);
-				for (u32 x = 0; x < src.width; ++x)
-				{
-					d[x].channels[ch] = to_channel_u8(s[x]);
-				}
-			}
-		};
-
-		process_rows(src.height, row_func);
-	}
-
-
 	template <class IMG_U8>
 	static void map_r32_to_u8(View1r32 const& src, IMG_U8 const& dst, r32_to_u8_f const& func)
 	{
@@ -898,71 +889,6 @@ namespace libimage
 
 		process_rows(src.height, row_func);
 	}
-
-
-	void map(View4r32 const& src, Image const& dst)
-	{
-		assert(verify(src, dst));
-
-		planar_to_interleaved(src, dst);
-	}
-
-
-	void map(Image const& src, View4r32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		interleaved_to_planar(src, dst);
-	}
-
-
-	void map(View4r32 const& src, View const& dst)
-	{
-		assert(verify(src, dst));
-
-		planar_to_interleaved(src, dst);
-	}
-
-
-	void map(View const& src, View4r32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		interleaved_to_planar(src, dst);
-	}
-
-
-	void map(View3r32 const& src, Image const& dst)
-	{
-		assert(verify(src, dst));
-
-		planar_to_interleaved(src, dst);
-	}
-
-
-	void map(Image const& src, View3r32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		interleaved_to_planar(src, dst);
-	}
-
-
-	void map(View3r32 const& src, View const& dst)
-	{
-		assert(verify(src, dst));
-
-		planar_to_interleaved(src, dst);
-	}
-
-
-	void map(View const& src, View3r32 const& dst)
-	{
-		assert(verify(src, dst));
-
-		interleaved_to_planar(src, dst);
-	}
-
 
 	void map(View1r32 const& src, gray::Image const& dst)
 	{
@@ -1035,6 +961,423 @@ namespace libimage
 		map_u8_to_r32(src, dst, func);
 	}
 
+}
+
+
+/* map_rgb */
+
+namespace libimage
+{
+	template <class IMG_INT>
+	static void interleaved_to_planar(IMG_INT const& src, ViewRGBAr32 const& dst)
+	{
+		constexpr auto r = id_cast(RGBA::R);
+		constexpr auto g = id_cast(RGBA::G);
+		constexpr auto b = id_cast(RGBA::B);
+		constexpr auto a = id_cast(RGBA::A);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto dr = channel_row_begin(dst, y, r);
+			auto dg = channel_row_begin(dst, y, g);
+			auto db = channel_row_begin(dst, y, b);
+			auto da = channel_row_begin(dst, y, a);
+
+			for (u32 x = 0; x < src.width; ++x) // TODO: simd
+			{
+				dr[x] = to_channel_r32(s[x].channels[r]);
+				dg[x] = to_channel_r32(s[x].channels[g]);
+				db[x] = to_channel_r32(s[x].channels[b]);
+				da[x] = to_channel_r32(s[x].channels[a]);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	template <class IMG_INT>
+	static void interleaved_to_planar(IMG_INT const& src, ViewRGBr32 const& dst)
+	{
+		constexpr auto r = id_cast(RGB::R);
+		constexpr auto g = id_cast(RGB::G);
+		constexpr auto b = id_cast(RGB::B);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto dr = channel_row_begin(dst, y, r);
+			auto dg = channel_row_begin(dst, y, g);
+			auto db = channel_row_begin(dst, y, b);
+
+			for (u32 x = 0; x < src.width; ++x) // TODO: simd
+			{
+				dr[x] = to_channel_r32(s[x].channels[r]);
+				dg[x] = to_channel_r32(s[x].channels[g]);
+				db[x] = to_channel_r32(s[x].channels[b]);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	template <class IMG_INT>
+	static void planar_to_interleaved(ViewRGBAr32 const& src, IMG_INT const& dst)
+	{
+		constexpr auto r = id_cast(RGBA::R);
+		constexpr auto g = id_cast(RGBA::G);
+		constexpr auto b = id_cast(RGBA::B);
+		constexpr auto a = id_cast(RGBA::A);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto d = row_begin(dst, y);
+			auto sr = channel_row_begin(src, y, r);
+			auto sg = channel_row_begin(src, y, g);
+			auto sb = channel_row_begin(src, y, b);
+			auto sa = channel_row_begin(src, y, a);
+
+			for (u32 x = 0; x < src.width; ++x) // TODO: simd
+			{
+				d[x].channels[r] = to_channel_u8(sr[x]);
+				d[x].channels[g] = to_channel_u8(sg[x]);
+				d[x].channels[b] = to_channel_u8(sb[x]);
+				d[x].channels[a] = to_channel_u8(sa[x]);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	template <class IMG_INT>
+	static void planar_to_interleaved(ViewRGBr32 const& src, IMG_INT const& dst)
+	{
+		constexpr auto r = id_cast(RGBA::R);
+		constexpr auto g = id_cast(RGBA::G);
+		constexpr auto b = id_cast(RGBA::B);
+		constexpr auto a = id_cast(RGBA::A);
+
+		constexpr auto ch_max = to_channel_u8(1.0f);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto d = row_begin(dst, y);
+			auto sr = channel_row_begin(src, y, r);
+			auto sg = channel_row_begin(src, y, g);
+			auto sb = channel_row_begin(src, y, b);
+
+			for (u32 x = 0; x < src.width; ++x) // TODO: simd
+			{
+				d[x].channels[r] = to_channel_u8(sr[x]);
+				d[x].channels[g] = to_channel_u8(sg[x]);
+				d[x].channels[b] = to_channel_u8(sb[x]);
+				d[x].channels[a] = ch_max;
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void map_rgb(ViewRGBAr32 const& src, Image const& dst)
+	{
+		assert(verify(src, dst));
+
+		planar_to_interleaved(src, dst);
+	}
+
+
+	void map_rgb(Image const& src, ViewRGBAr32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		interleaved_to_planar(src, dst);
+	}
+
+
+	void map_rgb(ViewRGBAr32 const& src, View const& dst)
+	{
+		assert(verify(src, dst));
+
+		planar_to_interleaved(src, dst);
+	}
+
+
+	void map_rgb(View const& src, ViewRGBAr32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		interleaved_to_planar(src, dst);
+	}
+
+
+	void map_rgb(ViewRGBr32 const& src, Image const& dst)
+	{
+		assert(verify(src, dst));
+
+		planar_to_interleaved(src, dst);
+	}
+
+
+	void map_rgb(Image const& src, ViewRGBr32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		interleaved_to_planar(src, dst);
+	}
+
+
+	void map_rgb(ViewRGBr32 const& src, View const& dst)
+	{
+		assert(verify(src, dst));
+
+		planar_to_interleaved(src, dst);
+	}
+
+
+	void map_rgb(View const& src, ViewRGBr32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		interleaved_to_planar(src, dst);
+	}
+}
+
+
+/* map_hsv */
+
+namespace libimage
+{
+	class HSVr32
+	{
+	public:
+		r32 hue;
+		r32 sat;
+		r32 val;
+	};
+
+
+	class RGBr32
+	{
+	public:
+		r32 red;
+		r32 green;
+		r32 blue;
+	};
+
+
+	static HSVr32 rgb_hsv(u8 r, u8 g, u8 b)
+	{
+		auto max = std::max(r, std::max(g, b));
+		auto min = std::min(r, std::max(g, b));
+
+		auto& norm = to_channel_r32;
+
+		auto c = norm(max - min);
+
+		r32 value = norm(max);
+
+		r32 sat = max == 0 ? 0.0f : (c / value);
+
+		r32 hue = 60.0f;
+
+		if (max == min)
+		{
+			hue = 0.0f;
+		}
+		else if (max == r)
+		{
+			hue *= ((norm(g) - norm(b)) / c);
+		}
+		else if (max == g)
+		{
+			hue *= ((norm(b) - norm(r)) / c + 2);
+		}
+		else // max == b
+		{
+			hue *= ((norm(r) - norm(g)) / c + 4);
+		}
+
+		hue /= 360.0f;
+
+		return { hue, sat, value };
+	}
+
+
+	static RGBr32 hsv_rgb(r32 h, r32 s, r32 v)
+	{
+		auto c = s * v;
+		auto m = v - c;
+
+		auto d = h * 360.0f / 60.0f;
+
+		auto x = c * (1.0f - std::abs(std::fmod(d, 2.0f) - 1.0f));
+
+		auto r = m;
+		auto g = m;
+		auto b = m;
+
+		switch (int(d))
+		{
+		case 0:
+			r += c;
+			g += x;
+			break;
+		case 1:
+			r += x;
+			g += c;
+			break;
+		case 2:
+			g += c;
+			b += x;
+			break;
+		case 3:
+			g += x;
+			b += c;
+			break;
+		case 4:
+			r += x;
+			b += c;
+			break;
+		default:
+			r += c;
+			b += x;
+			break;
+		}
+
+		return { r, g, b };
+	}
+
+
+	template <class IMG_INT>
+	static void interleaved_to_planar_hsv(IMG_INT const& src, ViewHSVr32 const& dst)
+	{
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = hsv_row_begin(dst, y).hsv;
+
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				auto rgba = s[x].rgba;
+				auto hsv = rgb_hsv(rgba.red, rgba.green, rgba.blue);
+				d.H[x] = hsv.hue;
+				d.S[x] = hsv.sat;
+				d.V[x] = hsv.val;
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	template <class IMG_INT>
+	static void planar_hsv_to_interleaved(ViewHSVr32 const& src, IMG_INT const& dst)
+	{
+		constexpr auto ch_max = to_channel_u8(1.0f);
+
+		auto const row_func = [&](u32 y) 
+		{
+			auto s = hsv_row_begin(src, y).hsv;
+			auto d = row_begin(dst, y);
+
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				auto rgb = hsv_rgb(s.H[x], s.S[x], s.V[x]);
+
+				auto& rgba = d[x].rgba;				
+				rgba.red = to_channel_u8(rgb.red);
+				rgba.green = to_channel_u8(rgb.green);
+				rgba.blue = to_channel_u8(rgb.blue);
+				rgba.alpha = ch_max;
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void map_hsv(ViewHSVr32 const& src, Image const& dst)
+	{
+		assert(verify(src, dst));
+
+		planar_hsv_to_interleaved(src, dst);
+	}
+
+
+	void map_hsv(Image const& src, ViewHSVr32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		interleaved_to_planar_hsv(src, dst);
+	}
+
+
+	void map_hsv(ViewHSVr32 const& src, View const& dst)
+	{
+		assert(verify(src, dst));
+
+		planar_hsv_to_interleaved(src, dst);
+	}
+
+
+	void map_hsv(View const& src, ViewHSVr32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		interleaved_to_planar_hsv(src, dst);
+	}
+
+
+	void map_hsv(ViewRGBr32 const& src, ViewHSVr32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = rgb_row_begin(src, y).rgb;
+			auto d = hsv_row_begin(dst, y).hsv;
+
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				auto r = to_channel_u8(s.R[x]);
+				auto g = to_channel_u8(s.G[x]);
+				auto b = to_channel_u8(s.B[x]);
+
+				auto hsv = rgb_hsv(r, g, b);
+				d.H[x] = hsv.hue;
+				d.S[x] = hsv.sat;
+				d.V[x] = hsv.val;
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void map_rgb(ViewHSVr32 const& src, ViewRGBr32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = hsv_row_begin(dst, y).hsv;
+			auto d = rgb_row_begin(src, y).rgb;
+
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				auto rgb = hsv_rgb(s.H[x], s.S[x], s.V[x]);
+				d.R[x] = rgb.red;
+				d.G[x] = rgb.green;
+				d.B[x] = rgb.blue;
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
 }
 
 
@@ -1655,7 +1998,7 @@ namespace libimage
 	}
 
 
-	View1r32 select_channel(View4r32 const& view, RGBA channel)
+	View1r32 select_channel(ViewRGBAr32 const& view, RGBA channel)
 	{
 		assert(verify(view));
 
@@ -1669,7 +2012,21 @@ namespace libimage
 	}
 
 
-	View1r32 select_channel(View3r32 const& view, RGB channel)
+	View1r32 select_channel(ViewRGBr32 const& view, RGB channel)
+	{
+		assert(verify(view));
+
+		auto ch = id_cast(channel);
+
+		auto view1 = select_channel(view, ch);
+
+		assert(verify(view1));
+
+		return view1;
+	}
+
+
+	View1r32 select_channel(ViewHSVr32 const& view, HSV channel)
 	{
 		assert(verify(view));
 
