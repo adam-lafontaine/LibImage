@@ -75,7 +75,8 @@ bool directory_files_test()
 		result &&
 		test_file(CORVETTE_PATH) &&
 		test_file(CADILLAC_PATH) &&
-		test_file(WEED_PATH);
+		test_file(WEED_PATH) &&
+		test_file(CHESS_PATH);
 
 	return result;
 }
