@@ -92,25 +92,6 @@ namespace libimage
 		assert(result);
 	}
 
-
-	/*static void make_image(View const& view_src, Image& image_dst)
-	{
-		make_image(image_dst, view_src.width, view_src.height);
-
-		copy(view_src, image_dst);
-	}
-
-
-	void write_view(View const& view_src, const char* file_path_dst)
-	{
-		Image image;
-		make_image(view_src, image);
-
-		write_image(image, file_path_dst);
-
-		destroy_image(image);
-	}*/
-
 #endif // !LIBIMAGE_NO_WRITE
 
 
@@ -214,25 +195,6 @@ namespace libimage
 
 		assert(result);
 	}
-
-
-	/*static void make_image(gray::View const& view_src, gray::Image& image_dst)
-	{
-		make_image(image_dst, view_src.width, view_src.height);
-
-		copy(view_src, image_dst);
-	}
-
-
-	void write_view(gray::View const& view_src, const char* file_path_dst)
-	{
-		gray::Image image;
-		make_image(view_src, image);
-
-		write_image(image, file_path_dst);
-
-		destroy_image(image);
-	}*/
 
 #endif // !LIBIMAGE_NO_WRITE
 

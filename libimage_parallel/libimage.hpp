@@ -195,13 +195,7 @@ namespace libimage
 
 	void destroy_image(Image& image);
 
-	//Pixel* row_begin(Image const& image, u32 y);
-
-	//Pixel* xy_at(Image const& image, u32 x, u32 y);
-
 	View make_view(Image const& image);
-
-	//View make_view(Image& image, u32 width, u32 height);
 
 	View sub_view(Image const& image, Range2Du32 const& range);
 
@@ -217,9 +211,6 @@ namespace libimage
 
 	void write_image(Image const& image_src, const char* file_path_dst);
 
-	//void write_view(View const& view_src, const char* file_path_dst);
-
-
 
 #endif // !LIBIMAGE_NO_WRITE
 
@@ -227,8 +218,6 @@ namespace libimage
 #ifndef LIBIMAGE_NO_RESIZE
 
 	void resize_image(Image const& image_src, Image& image_dst);
-
-	//View make_resized_view(Image const& image_src, Image& image_dst);
 
 #endif // !LIBIMAGE_NO_RESIZE
 
@@ -243,13 +232,7 @@ namespace libimage
 
 	void destroy_image(gray::Image& image);
 
-	//gray::Pixel* row_begin(gray::Image const& image, u32 y);
-
-	//gray::Pixel* xy_at(gray::Image const& image, u32 x, u32 y);
-
 	gray::View make_view(gray::Image const& image);
-
-	//gray::View make_view(gray::Image& image, u32 width, u32 height);
 
 	gray::View sub_view(gray::Image const& image, Range2Du32 const& range);
 
@@ -264,16 +247,12 @@ namespace libimage
 
 	void write_image(gray::Image const& image_src, const char* file_path_dst);
 
-	//void write_view(gray::View const& view_src, const char* file_path_dst);
-
 
 #endif // !LIBIMAGE_NO_WRITE
 
 #ifndef LIBIMAGE_NO_RESIZE
 
 	void resize_image(gray::Image const& img_src, gray::Image& img_dst);
-
-	//gray::View make_resized_view(gray::Image const& image_src, gray::Image& image_dst);
 
 #endif // !LIBIMAGE_NO_RESIZE
 
@@ -298,11 +277,6 @@ namespace libimage
 		write_image(image_src, file_path.c_str());
 	}
 
-	/*inline void write_view(View const& view_src, std::string const& file_path)
-	{
-		write_view(view_src, file_path.c_str());
-	}*/
-
 #endif // !LIBIMAGE_NO_WRITE
 
 #endif // !LIBIMAGE_NO_COLOR
@@ -320,11 +294,6 @@ namespace libimage
 	{
 		write_image(image_src, file_path_dst.c_str());
 	}
-
-	/*inline void write_view(gray::View const& view_src, std::string const& file_path_dst)
-	{
-		write_view(view_src, file_path_dst.c_str());
-	}*/
 
 #endif // !LIBIMAGE_NO_WRITE
 
@@ -354,11 +323,6 @@ namespace libimage
 		write_image(image_src, file_path.string().c_str());
 	}
 
-	/*inline void write_view(View const& view_src, fs::path const& file_path)
-	{
-		write_view(view_src, file_path.string().c_str());
-	}*/
-
 #endif // !LIBIMAGE_NO_WRITE
 
 #endif // !LIBIMAGE_NO_COLOR
@@ -376,11 +340,6 @@ namespace libimage
 	{
 		write_image(image_src, file_path_dst.string().c_str());
 	}
-
-	/*inline void write_view(gray::View const& view_src, fs::path const& file_path_dst)
-	{
-		write_view(view_src, file_path_dst.string().c_str());
-	}*/
 
 #endif // !LIBIMAGE_NO_WRITE
 
@@ -425,13 +384,9 @@ namespace libimage
 
 namespace libimage
 {
-#ifndef LIBIMAGE_NO_COLOR	
-
-	//void for_each_pixel(Image const& image, pixel_f const& func);
+#ifndef LIBIMAGE_NO_COLOR
 
 	void for_each_pixel(View const& view, pixel_f const& func);
-
-	//void for_each_xy(Image const& image, xy_f const& func);
 
 	void for_each_xy(View const& view, xy_f const& func);
 
@@ -439,11 +394,7 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-	//void for_each_pixel(gray::Image const& image, u8_f const& func);
-
 	void for_each_pixel(gray::View const& view, u8_f const& func);
-
-	//void for_each_xy(gray::Image const& image, xy_f const& func);
 
 	void for_each_xy(gray::View const& view, xy_f const& func);
 
@@ -481,21 +432,9 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR	
 
-	/*void transform(Image const& src, Image const& dst, pixel_to_pixel_f const& func);
-
-	void transform(Image const& src, View const& dst, pixel_to_pixel_f const& func);
-
-	void transform(View const& src, Image const& dst, pixel_to_pixel_f const& func);*/
-
 	void transform(View const& src, View const& dst, pixel_to_pixel_f const& func);
 
-
-	//void transform_in_place(Image const& src_dst, pixel_to_pixel_f const& func);
-
 	void transform_in_place(View const& src_dst, pixel_to_pixel_f const& func);
-
-
-	//void transform_alpha(Image const& src_dst, pixel_to_u8_f const& func);
 
 	void transform_alpha(View const& src_dst, pixel_to_u8_f const& func);
 
@@ -508,30 +447,11 @@ namespace libimage
 
 	lookup_table_t to_lookup_table(u8_to_u8_f const& func);
 
-	/*void transform(gray::Image const& src, gray::Image const& dst, lookup_table_t const& lut);
-
-	void transform(gray::Image const& src, gray::View const& dst, lookup_table_t const& lut);
-
-	void transform(gray::View const& src, gray::Image const& dst, lookup_table_t const& lut);*/
-
 	void transform(gray::View const& src, gray::View const& dst, lookup_table_t const& lut);
-
-
-	/*void transform(gray::Image const& src, gray::Image const& dst, u8_to_u8_f const& func);
-
-	void transform(gray::Image const& src, gray::View const& dst, u8_to_u8_f const& func);
-
-	void transform(gray::View const& src, gray::Image const& dst, u8_to_u8_f const& func);*/
 
 	void transform(gray::View const& src, gray::View const& dst, u8_to_u8_f const& func);
 
-
-	//void transform_in_place(gray::Image const& src_dst, lookup_table_t const& lut);
-
 	void transform_in_place(gray::View const& src_dst, lookup_table_t const& lut);
-
-
-	//void transform_in_place(gray::Image const& src_dst, u8_to_u8_f const& func);
 
 	void transform_in_place(gray::View const& src_dst, u8_to_u8_f const& func);
 
@@ -539,12 +459,6 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR
 #ifndef LIBIMAGE_NO_GRAYSCALE
-
-	/*void transform(Image const& src, gray::Image const& dst, pixel_to_u8_f const& func);
-
-	void transform(Image const& src, gray::View const& dst, pixel_to_u8_f const& func);
-
-	void transform(View const& src, gray::Image const& dst, pixel_to_u8_f const& func);*/
 
 	void transform(View const& src, gray::View const& dst, pixel_to_u8_f const& func);
 
@@ -586,10 +500,7 @@ namespace libimage
 	void copy(gray::View const& src, gray::View const& dst);
 
 
-#endif // !LIBIMAGE_NO_GRAYSCALE
-
-
-	
+#endif // !LIBIMAGE_NO_GRAYSCALE	
 }
 
 
@@ -599,34 +510,9 @@ namespace libimage
 
 namespace libimage
 {
-
-	/*void alpha_blend(Image const& src, Image const& current, Image const& dst);
-
-	void alpha_blend(Image const& src, Image const& current, View const& dst);
-
-	void alpha_blend(Image const& src, View const& current, Image const& dst);
-
-	void alpha_blend(Image const& src, View const& current, View const& dst);
-
-	void alpha_blend(View const& src, Image const& current, Image const& dst);
-
-	void alpha_blend(View const& src, Image const& current, View const& dst);
-
-	void alpha_blend(View const& src, View const& current, Image const& dst);*/
-
 	void alpha_blend(View const& src, View const& current, View const& dst);
 
-
-	/*void alpha_blend(Image const& src, Image const& current_dst);
-
-	void alpha_blend(Image const& src, View const& current_dst);
-
-	void alpha_blend(View const& src, Image const& current_dst);*/
-
 	void alpha_blend(View const& src, View const& current_dst);
-
-
-
 }
 
 #endif // !LIBIMAGE_NO_COLOR
@@ -639,21 +525,9 @@ namespace libimage
 
 namespace libimage
 {
-
-	/*void grayscale(Image const& src, gray::Image const& dst);
-
-	void grayscale(Image const& src, gray::View const& dst);
-
-	void grayscale(View const& src, gray::Image const& dst);*/
-
 	void grayscale(View const& src, gray::View const& dst);
 
-
-	//void alpha_grayscale(Image const& src);
-
 	void alpha_grayscale(View const& src);
-
-
 }
 
 #endif // !LIBIMAGE_NO_COLOR
@@ -666,48 +540,20 @@ namespace libimage
 
 namespace libimage
 {
-	/*void binarize(gray::Image const& src, gray::Image const& dst, u8_to_bool_f const& cond);
-
-	void binarize(gray::Image const& src, gray::View const& dst, u8_to_bool_f const& cond);
-
-	void binarize(gray::View const& src, gray::Image const& dst, u8_to_bool_f const& cond);*/
-
 	void binarize(gray::View const& src, gray::View const& dst, u8_to_bool_f const& cond);
-
-
-	//void binarize_in_place(gray::Image const& src_dst, u8_to_bool_f const& func);
 
 	void binarize_in_place(gray::View const& src_dst, u8_to_bool_f const& func);
 
 
 #ifndef LIBIMAGE_NO_COLOR
 
-	/*void binarize(Image const& src, gray::Image const& dst, pixel_to_bool_f const& cond);
-
-	void binarize(Image const& src, gray::View const& dst, pixel_to_bool_f const& cond);
-
-	void binarize(View const& src, gray::Image const& dst, pixel_to_bool_f const& cond);*/
-
 	void binarize(View const& src, gray::View const& dst, pixel_to_bool_f const& cond);
 
 #endif // !LIBIMAGE_NO_COLOR
 
-
-	/*Point2Du32 centroid(gray::Image const& src);
-
-	Point2Du32 centroid(gray::Image const& src, u8_to_bool_f const& func);*/
-
-
 	Point2Du32 centroid(gray::View const& src);
 
 	Point2Du32 centroid(gray::View const& src, u8_to_bool_f const& func);
-
-	
-	/*void skeleton(gray::Image const& src, gray::Image const& dst);
-
-	void skeleton(gray::Image const& src, gray::View const& dst);
-
-	void skeleton(gray::View const& src, gray::Image const& dst);*/
 
 	void skeleton(gray::View const& src, gray::View const& dst);
 
@@ -716,25 +562,10 @@ namespace libimage
 
 // threshold overloads
 namespace libimage
-{
-	/*inline void binarize_th(gray::Image const& src, gray::Image const& dst, u8 th) { binarize(src, dst, [&th](u8 p) { return p >= th; }); }
-
-	inline void binarize_th(gray::Image const& src, gray::View const& dst, u8 th) { binarize(src, dst, [&th](u8 p) { return p >= th; }); }
-
-	inline void binarize_th(gray::View const& src, gray::Image const& dst, u8 th) { binarize(src, dst, [&th](u8 p) { return p >= th; }); }*/
-
+{	
 	inline void binarize_th(gray::View const& src, gray::View const& dst, u8 th) { binarize(src, dst, [&th](u8 p) { return p >= th; }); }
 
-
-	/*inline void binarize_th(gray::Image const& src, gray::Image const& dst, u8 min_th, u8 max_th) { binarize(src, dst, [&](u8 p) { return min_th <= p && p <= max_th; }); }
-
-	inline void binarize_th(gray::Image const& src, gray::View const& dst, u8 min_th, u8 max_th) { binarize(src, dst, [&](u8 p) { return min_th <= p && p <= max_th; }); }
-
-	inline void binarize_th(gray::View const& src, gray::Image const& dst, u8 min_th, u8 max_th) { binarize(src, dst, [&](u8 p) { return min_th <= p && p <= max_th; }); }*/
-
 	inline void binarize_th(gray::View const& src, gray::View const& dst, u8 min_th, u8 max_th) { binarize(src, dst, [&](u8 p) { return min_th <= p && p <= max_th; }); }
-
-
 }
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
@@ -747,21 +578,11 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-	/*void contrast(gray::Image const& src, gray::Image const& dst, u8 src_low, u8 src_high);
-
-	void contrast(gray::Image const& src, gray::View const& dst, u8 src_low, u8 src_high);
-
-	void contrast(gray::View const& src, gray::Image const& dst, u8 src_low, u8 src_high);*/
-
 	void contrast(gray::View const& src, gray::View const& dst, u8 src_low, u8 src_high);
-
-
-	//void contrast_in_place(gray::Image const& src_dst, u8 src_low, u8 src_high);
 
 	void contrast_in_place(gray::View const& src_dst, u8 src_low, u8 src_high);
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
-
 
 }
 
@@ -774,21 +595,12 @@ namespace libimage
 namespace libimage
 {
 
-
 #ifndef LIBIMAGE_NO_GRAYSCALE
-
-
-	/*void blur(gray::Image const& src, gray::Image const& dst);
-
-	void blur(gray::Image const& src, gray::View const& dst);
-
-	void blur(gray::View const& src, gray::Image const& dst);*/
 
 	void blur(gray::View const& src, gray::View const& dst);
 
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
-
 
 }
 
@@ -802,20 +614,11 @@ namespace libimage
 namespace libimage
 {
 
-
 #ifndef LIBIMAGE_NO_GRAYSCALE
-
-	/*void edges(gray::Image const& src, gray::Image const& dst, u8_to_bool_f const& cond);
-
-	void edges(gray::Image const& src, gray::View const& dst, u8_to_bool_f const& cond);
-
-	void edges(gray::View const& src, gray::Image const& dst, u8_to_bool_f const& cond);*/
 
 	void edges(gray::View const& src, gray::View const& dst, u8_to_bool_f const& cond);
 
-
 #endif // !LIBIMAGE_NO_GRAYSCALE
-
 
 }
 
@@ -829,20 +632,11 @@ namespace libimage
 namespace libimage
 {
 
-
 #ifndef LIBIMAGE_NO_GRAYSCALE
-
-
-	/*void gradients(gray::Image const& src, gray::Image const& dst);
-
-	void gradients(gray::Image const& src, gray::View const& dst);
-
-	void gradients(gray::View const& src, gray::Image const& dst);*/
 
 	void gradients(gray::View const& src, gray::View const& dst);
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
-
 
 }
 
@@ -854,23 +648,9 @@ namespace libimage
 namespace libimage
 {
 
-
 #ifndef LIBIMAGE_NO_COLOR
 
-	/*void rotate(Image const& src, Image const& dst, u32 origin_x, u32 origin_y, r32 theta);
-
-	void rotate(Image const& src, View const& dst, u32 origin_x, u32 origin_y, r32 theta);
-
-	void rotate(View const& src, Image const& dst, u32 origin_x, u32 origin_y, r32 theta);*/
-
 	void rotate(View const& src, View const& dst, u32 origin_x, u32 origin_y, r32 theta);
-
-
-	/*void rotate(Image const& src, Image const& dst, Point2Du32 origin, r32 theta);
-
-	void rotate(Image const& src, View const& dst, Point2Du32 origin, r32 theta);
-
-	void rotate(View const& src, Image const& dst, Point2Du32 origin, r32 theta);*/
 
 	void rotate(View const& src, View const& dst, Point2Du32 origin, r32 theta);
 
@@ -878,26 +658,11 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-	/*void rotate(gray::Image const& src, gray::Image const& dst, u32 origin_x, u32 origin_y, r32 theta);
-
-	void rotate(gray::Image const& src, gray::View const& dst, u32 origin_x, u32 origin_y, r32 theta);
-
-	void rotate(gray::View const& src, gray::Image const& dst, u32 origin_x, u32 origin_y, r32 theta);*/
-
 	void rotate(gray::View const& src, gray::View const& dst, u32 origin_x, u32 origin_y, r32 theta);
-
-
-	/*void rotate(gray::Image const& src, gray::Image const& dst, Point2Du32 origin, r32 theta);
-
-	void rotate(gray::Image const& src, gray::View const& dst, Point2Du32 origin, r32 theta);
-
-	void rotate(gray::View const& src, gray::Image const& dst, Point2Du32 origin, r32 theta);*/
 
 	void rotate(gray::View const& src, gray::View const& dst, Point2Du32 origin, r32 theta);
 
-
 #endif // !LIBIMAGE_NO_GRAYSCALE
-
 
 }
 

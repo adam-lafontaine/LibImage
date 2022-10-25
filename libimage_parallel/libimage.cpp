@@ -162,13 +162,6 @@ namespace libimage
 	}
 
 
-	/*View make_view(Image& image, u32 width, u32 height)
-	{
-		make_image(image, width, height);
-		return make_view(image);
-	}*/
-
-
 	View sub_view(Image const& image, Range2Du32 const& range)
 	{
 		assert(image.width);
@@ -241,10 +234,7 @@ namespace libimage
 		assert(x < view.width);
 
 		return row_begin(view, y) + x;
-	}
-
-
-	
+	}	
 
 
 #endif // !LIBIMAGE_NO_COLOR
@@ -321,13 +311,6 @@ namespace libimage
 
 		return view;
 	}
-
-
-	/*gray::View make_view(gray::Image& image, u32 width, u32 height)
-	{
-		make_image(image, width, height);
-		return make_view(image);
-	}*/
 
 
 	gray::View sub_view(gray::Image const& image, Range2Du32 const& range)
@@ -1078,38 +1061,6 @@ namespace libimage
 #ifndef LIBIMAGE_NO_COLOR
 
 
-	/*void transform(Image const& src, Image const& dst, pixel_to_pixel_f const& func)
-	{
-		assert(verify(src, dst));
-
-		auto const range = make_range(src);
-		auto const f = [&](Pixel* s, Pixel* d) { *d = func(*s); };
-
-		do_process_range(src, dst, range, f);
-	}
-
-
-	void transform(Image const& src, View const& dst, pixel_to_pixel_f const& func)
-	{
-		assert(verify(src, dst));
-		auto const range = make_range(src);
-		auto const f = [&](Pixel* s, Pixel* d) { *d = func(*s); };
-
-		do_process_range(src, dst, range, f);
-	}
-
-
-	void transform(View const& src, Image const& dst, pixel_to_pixel_f const& func)
-	{
-		assert(verify(src, dst));
-
-		auto const range = make_range(src);
-		auto const f = [&](Pixel* s, Pixel* d) { *d = func(*s); };
-
-		do_process_range(src, dst, range, f);
-	}*/
-
-
 	void transform(View const& src, View const& dst, pixel_to_pixel_f const& func)
 	{
 		assert(verify(src, dst));
@@ -1121,17 +1072,6 @@ namespace libimage
 	}
 
 
-	/*void transform_in_place(Image const& src_dst, pixel_to_pixel_f const& func)
-	{
-		assert(verify(src_dst));
-
-		auto const range = make_range(src_dst);
-		auto const f = [&](Pixel* p) { *p = func(*p); };
-
-		do_process_range(src_dst, range, f);
-	}*/
-
-
 	void transform_in_place(View const& src_dst, pixel_to_pixel_f const& func)
 	{
 		assert(verify(src_dst));
@@ -1141,17 +1081,6 @@ namespace libimage
 
 		do_process_range(src_dst, range, f);
 	}
-
-
-	/*void transform_alpha(Image const& src_dst, pixel_to_u8_f const& func)
-	{
-		assert(verify(src_dst));
-
-		auto const range = make_range(src_dst);
-		auto const f = [&](Pixel* p) { p->alpha = func(*p); };
-
-		do_process_range(src_dst, range, f);
-	}*/
 
 
 	void transform_alpha(View const& src_dst, pixel_to_u8_f const& func)
@@ -1183,39 +1112,6 @@ namespace libimage
 	}
 
 
-	/*void transform(gray::Image const& src, gray::Image const& dst, lookup_table_t const& lut)
-	{
-		assert(verify(src, dst));
-
-		auto const range = make_range(src);
-		auto const f = [&](u8* s, u8* d) { *d = lut[*s]; };
-
-		do_process_range(src, dst, range, f);
-	}
-
-
-	void transform(gray::Image const& src, gray::View const& dst, lookup_table_t const& lut)
-	{
-		assert(verify(src, dst));
-
-		auto const range = make_range(src);
-		auto const f = [&](u8* s, u8* d) { *d = lut[*s]; };
-
-		do_process_range(src, dst, range, f);
-	}
-
-
-	void transform(gray::View const& src, gray::Image const& dst, lookup_table_t const& lut)
-	{
-		assert(verify(src, dst));
-
-		auto const range = make_range(src);
-		auto const f = [&](u8* s, u8* d) { *d = lut[*s]; };
-
-		do_process_range(src, dst, range, f);
-	}*/
-
-
 	void transform(gray::View const& src, gray::View const& dst, lookup_table_t const& lut)
 	{
 		assert(verify(src, dst));
@@ -1227,30 +1123,6 @@ namespace libimage
 	}
 
 
-	/*void transform(gray::Image const& src, gray::Image const& dst, u8_to_u8_f const& func)
-	{
-		assert(verify(src, dst));
-		auto const lut = to_lookup_table(func);
-		transform(src, dst, lut);
-	}
-
-
-	void transform(gray::Image const& src, gray::View const& dst, u8_to_u8_f const& func)
-	{
-		assert(verify(src, dst));
-		auto const lut = to_lookup_table(func);
-		transform(src, dst, lut);
-	}
-
-
-	void transform(gray::View const& src, gray::Image const& dst, u8_to_u8_f const& func)
-	{
-		assert(verify(src, dst));
-		auto const lut = to_lookup_table(func);
-		transform(src, dst, lut);
-	}*/
-
-
 	void transform(gray::View const& src, gray::View const& dst, u8_to_u8_f const& func)
 	{
 		assert(verify(src, dst));
@@ -1258,16 +1130,6 @@ namespace libimage
 		transform(src, dst, lut);
 	}
 
-
-	/*void transform_in_place(gray::Image const& src_dst, lookup_table_t const& lut)
-	{
-		assert(verify(src_dst));
-
-		auto const range = make_range(src_dst);
-		auto const f = [&](u8* p) { *p = lut[*p]; };
-
-		do_process_range(src_dst, range, f);
-	}*/
 
 	void transform_in_place(gray::View const& src_dst, lookup_table_t const& lut)
 	{
@@ -1278,14 +1140,6 @@ namespace libimage
 
 		do_process_range(src_dst, range, f);
 	}
-
-
-	/*void transform_in_place(gray::Image const& src_dst, u8_to_u8_f const& func)
-	{
-		assert(verify(src_dst));
-		auto const lut = to_lookup_table(func);
-		transform_in_place(src_dst, lut);
-	}*/
 
 
 	void transform_in_place(gray::View const& src_dst, u8_to_u8_f const& func)
@@ -1301,38 +1155,6 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR
 #ifndef LIBIMAGE_NO_GRAYSCALE
-
-	/*void transform(Image const& src, gray::Image const& dst, pixel_to_u8_f const& func)
-	{
-		assert(verify(src, dst));
-
-		auto const range = make_range(src);
-		auto const f = [&](Pixel* s, u8* d) { *d = func(*s); };
-
-		do_process_range(src, dst, range, f);
-	}
-
-
-	void transform(Image const& src, gray::View const& dst, pixel_to_u8_f const& func)
-	{
-		assert(verify(src, dst));
-
-		auto const range = make_range(src);
-		auto const f = [&](Pixel* s, u8* d) { *d = func(*s); };
-
-		do_process_range(src, dst, range, f);
-	}
-
-
-	void transform(View const& src, gray::Image const& dst, pixel_to_u8_f const& func)
-	{
-		assert(verify(src, dst));
-
-		auto const range = make_range(src);
-		auto const f = [&](Pixel* s, u8* d) { *d = func(*s); };
-
-		do_process_range(src, dst, range, f);
-	}*/
 
 
 	void transform(View const& src, gray::View const& dst, pixel_to_u8_f const& func)
@@ -1468,69 +1290,6 @@ namespace libimage
 #endif // !LIBIMAGE_NO_SIMD	
 
 
-	/*void alpha_blend(Image const& src, Image const& current, Image const& dst)
-	{
-		assert(verify(src, current));
-		assert(verify(src, dst));
-
-		do_alpha_blend(src, current, dst);
-	}
-
-
-	void alpha_blend(Image const& src, Image const& current, View const& dst)
-	{
-		assert(verify(src, current));
-		assert(verify(src, dst));
-
-		do_alpha_blend(src, current, dst);
-	}
-
-
-	void alpha_blend(Image const& src, View const& current, Image const& dst)
-	{
-		assert(verify(src, current));
-		assert(verify(src, dst));
-
-		do_alpha_blend(src, current, dst);
-	}
-
-
-	void alpha_blend(Image const& src, View const& current, View const& dst)
-	{
-		assert(verify(src, current));
-		assert(verify(src, dst));
-
-		do_alpha_blend(src, current, dst);
-	}*/
-
-
-	/*void alpha_blend(View const& src, Image const& current, Image const& dst)
-	{
-		assert(verify(src, current));
-		assert(verify(src, dst));
-
-		do_alpha_blend(src, current, dst);
-	}
-
-
-	void alpha_blend(View const& src, Image const& current, View const& dst)
-	{
-		assert(verify(src, current));
-		assert(verify(src, dst));
-
-		do_alpha_blend(src, current, dst);
-	}*/
-
-
-	/*void alpha_blend(View const& src, View const& current, Image const& dst)
-	{
-		assert(verify(src, current));
-		assert(verify(src, dst));
-
-		do_alpha_blend(src, current, dst);
-	}*/
-
-
 	void alpha_blend(View const& src, View const& current, View const& dst)
 	{
 		assert(verify(src, current));
@@ -1538,30 +1297,6 @@ namespace libimage
 
 		do_alpha_blend(src, current, dst);
 	}
-
-
-	/*void alpha_blend(Image const& src, Image const& current_dst)
-	{
-		assert(verify(src, current_dst));
-
-		do_alpha_blend(src, current_dst, current_dst);
-	}
-
-
-	void alpha_blend(Image const& src, View const& current_dst)
-	{
-		assert(verify(src, current_dst));
-
-		do_alpha_blend(src, current_dst, current_dst);
-	}
-
-
-	void alpha_blend(View const& src, Image const& current_dst)
-	{
-		assert(verify(src, current_dst));
-
-		do_alpha_blend(src, current_dst, current_dst);
-	}*/
 
 
 	void alpha_blend(View const& src, View const& current_dst)
@@ -1722,39 +1457,11 @@ namespace libimage
 
 namespace libimage
 {
-	/*void binarize(gray::Image const& src, gray::Image const& dst, u8_to_bool_f const& cond)
-	{
-		auto const conv = [&](u8 p) { return cond(p) ? 255 : 0; };
-		transform(src, dst, conv);
-	}
-
-
-	void binarize(gray::Image const& src, gray::View const& dst, u8_to_bool_f const& cond)
-	{
-		auto const conv = [&](u8 p) { return cond(p) ? 255 : 0; };
-		transform(src, dst, conv);
-	}
-
-
-	void binarize(gray::View const& src, gray::Image const& dst, u8_to_bool_f const& cond)
-	{
-		auto const conv = [&](u8 p) { return cond(p) ? 255 : 0; };
-		transform(src, dst, conv);
-	}*/
-
-
 	void binarize(gray::View const& src, gray::View const& dst, u8_to_bool_f const& cond)
 	{
 		auto const conv = [&](u8 p) { return cond(p) ? 255 : 0; };
 		transform(src, dst, conv);
 	}
-
-
-	/*void binarize_in_place(gray::Image const& src_dst, u8_to_bool_f const& cond)
-	{
-		auto const conv = [&](u8 p) { return cond(p) ? 255 : 0; };
-		transform_in_place(src_dst, conv);
-	}*/
 
 
 	void binarize_in_place(gray::View const& src_dst, u8_to_bool_f const& cond)
@@ -1765,27 +1472,6 @@ namespace libimage
 
 
 #ifndef LIBIMAGE_NO_COLOR
-
-	/*void binarize(Image const& src, gray::Image const& dst, pixel_to_bool_f const& cond)
-	{
-		auto const conv = [&](Pixel p) { return cond(p) ? 255 : 0; };
-		transform(src, dst, conv);
-	}
-
-
-	void binarize(Image const& src, gray::View const& dst, pixel_to_bool_f const& cond)
-
-	{
-		auto const conv = [&](Pixel p) { return cond(p) ? 255 : 0; };
-		transform(src, dst, conv);
-	}
-
-
-	void binarize(View const& src, gray::Image const& dst, pixel_to_bool_f const& cond)
-	{
-		auto const conv = [&](Pixel p) { return cond(p) ? 255 : 0; };
-		transform(src, dst, conv);
-	}*/
 
 
 	void binarize(View const& src, gray::View const& dst, pixel_to_bool_f const& cond)
@@ -1868,24 +1554,7 @@ namespace libimage
 
 		return pt;
 	}
-
-
-	/*Point2Du32 centroid(gray::Image const& src)
-	{
-		assert(verify(src));
-
-		auto const func = [](u8 p) { return p > 0; };
-		return do_centroid(src, func);
-	}
-
-
-	Point2Du32 centroid(gray::Image const& src, u8_to_bool_f const& func)
-	{
-		assert(verify(src));
-
-		return do_centroid(src, func);
-	}*/
-
+		
 
 	Point2Du32 centroid(gray::View const& src)
 	{
@@ -2061,31 +1730,7 @@ namespace libimage
 			pixel_count = do_skeleton_once(dst);
 		}
 	}
-
-
-	/*void skeleton(gray::Image const& src, gray::Image const& dst)
-	{
-		assert(verify(src, dst));
-
-		do_skeleton(src, dst);
-	}
-
-
-	void skeleton(gray::Image const& src, gray::View const& dst)
-	{
-		assert(verify(src, dst));
-
-		do_skeleton(src, dst);
-	}
-
-
-	void skeleton(gray::View const& src, gray::Image const& dst)
-	{
-		assert(verify(src, dst));
-
-		do_skeleton(src, dst);
-	}*/
-
+	
 
 	void skeleton(gray::View const& src, gray::View const& dst)
 	{
@@ -2655,45 +2300,6 @@ namespace libimage
 	}
 
 
-	/*void blur(gray::Image const& src, gray::Image const& dst)
-	{
-		assert(verify(src, dst));
-		auto const width = src.width;
-		auto const height = src.height;
-
-		assert(width >= VIEW_MIN_DIM);
-		assert(height >= VIEW_MIN_DIM);
-
-		do_blur(src, dst);
-	}
-
-
-	void blur(gray::Image const& src, gray::View const& dst)
-	{
-		assert(verify(src, dst));
-		auto const width = src.width;
-		auto const height = src.height;
-
-		assert(width >= VIEW_MIN_DIM);
-		assert(height >= VIEW_MIN_DIM);
-
-		do_blur(src, dst);
-	}
-
-
-	void blur(gray::View const& src, gray::Image const& dst)
-	{
-		assert(verify(src, dst));
-		auto const width = src.width;
-		auto const height = src.height;
-
-		assert(width >= VIEW_MIN_DIM);
-		assert(height >= VIEW_MIN_DIM);
-
-		do_blur(src, dst);
-	}*/
-
-
 	void blur(gray::View const& src, gray::View const& dst)
 	{
 		assert(verify(src, dst));
@@ -3022,31 +2628,7 @@ namespace libimage
 
 		do_gradients_in_range(src, dst, r);
 	}
-
-
-	/*void edges(gray::Image const& src, gray::Image const& dst, u8_to_bool_f const& cond)
-	{
-		assert(verify(src, dst));
-
-		do_edges(src, dst, cond);
-	}
-
-
-	void edges(gray::Image const& src, gray::View const& dst, u8_to_bool_f const& cond)
-	{
-		assert(verify(src, dst));
-
-		do_edges(src, dst, cond);
-	}
-
-
-	void edges(gray::View const& src, gray::Image const& dst, u8_to_bool_f const& cond)
-	{
-		assert(verify(src, dst));
-
-		do_edges(src, dst, cond);
-	}*/
-
+		
 
 	void edges(gray::View const& src, gray::View const& dst, u8_to_bool_f const& cond)
 	{
@@ -3054,30 +2636,6 @@ namespace libimage
 
 		do_edges(src, dst, cond);
 	}
-
-
-	/*void gradients(gray::Image const& src, gray::Image const& dst)
-	{
-		assert(verify(src, dst));
-
-		do_gradients(src, dst);
-	}
-
-
-	void gradients(gray::Image const& src, gray::View const& dst)
-	{
-		assert(verify(src, dst));
-
-		do_gradients(src, dst);
-	}
-
-
-	void gradients(gray::View const& src, gray::Image const& dst)
-	{
-		assert(verify(src, dst));
-
-		do_gradients(src, dst);
-	}*/
 
 
 	void gradients(gray::View const& src, gray::View const& dst)
@@ -3113,6 +2671,7 @@ static Point2Dr32 find_rotation_src(Point2Du32 const& pt, Point2Du32 const& orig
 	return pt_src;
 }
 
+/* rotate */
 
 namespace libimage
 {
@@ -3182,33 +2741,6 @@ namespace libimage
 	}
 
 
-	/*void rotate(Image const& src, Image const& dst, u32 origin_x, u32 origin_y, r32 theta)
-	{
-		assert(verify(src));
-		assert(verify(dst));
-
-		do_rotate(src, dst, origin_x, origin_y, theta);
-	}
-
-
-	void rotate(Image const& src, View const& dst, u32 origin_x, u32 origin_y, r32 theta)
-	{
-		assert(verify(src));
-		assert(verify(dst));
-
-		do_rotate(src, dst, origin_x, origin_y, theta);
-	}
-
-
-	void rotate(View const& src, Image const& dst, u32 origin_x, u32 origin_y, r32 theta)
-	{
-		assert(verify(src));
-		assert(verify(dst));
-
-		do_rotate(src, dst, origin_x, origin_y, theta);
-	}*/
-
-
 	void rotate(View const& src, View const& dst, u32 origin_x, u32 origin_y, r32 theta)
 	{
 		assert(verify(src));
@@ -3216,33 +2748,6 @@ namespace libimage
 
 		do_rotate(src, dst, origin_x, origin_y, theta);
 	}
-
-
-	/*void rotate(Image const& src, Image const& dst, Point2Du32 origin, r32 theta)
-	{
-		assert(verify(src));
-		assert(verify(dst));
-
-		do_rotate(src, dst, origin.x, origin.y, theta);
-	}
-
-
-	void rotate(Image const& src, View const& dst, Point2Du32 origin, r32 theta)
-	{
-		assert(verify(src));
-		assert(verify(dst));
-
-		do_rotate(src, dst, origin.x, origin.y, theta);
-	}
-
-
-	void rotate(View const& src, Image const& dst, Point2Du32 origin, r32 theta)
-	{
-		assert(verify(src));
-		assert(verify(dst));
-
-		do_rotate(src, dst, origin.x, origin.y, theta);
-	}*/
 
 
 	void rotate(View const& src, View const& dst, Point2Du32 origin, r32 theta)
@@ -3273,33 +2778,6 @@ namespace libimage
 	}
 
 
-	/*void rotate(gray::Image const& src, gray::Image const& dst, u32 origin_x, u32 origin_y, r32 theta)
-	{
-		assert(verify(src));
-		assert(verify(dst));
-
-		do_rotate_gray(src, dst, origin_x, origin_y, theta);
-	}
-
-
-	void rotate(gray::Image const& src, gray::View const& dst, u32 origin_x, u32 origin_y, r32 theta)
-	{
-		assert(verify(src));
-		assert(verify(dst));
-
-		do_rotate_gray(src, dst, origin_x, origin_y, theta);
-	}
-
-
-	void rotate(gray::View const& src, gray::Image const& dst, u32 origin_x, u32 origin_y, r32 theta)
-	{
-		assert(verify(src));
-		assert(verify(dst));
-
-		do_rotate_gray(src, dst, origin_x, origin_y, theta);
-	}*/
-
-
 	void rotate(gray::View const& src, gray::View const& dst, u32 origin_x, u32 origin_y, r32 theta)
 	{
 		assert(verify(src));
@@ -3307,33 +2785,6 @@ namespace libimage
 
 		do_rotate_gray(src, dst, origin_x, origin_y, theta);
 	}
-
-
-	/*void rotate(gray::Image const& src, gray::Image const& dst, Point2Du32 origin, r32 theta)
-	{
-		assert(verify(src));
-		assert(verify(dst));
-
-		do_rotate_gray(src, dst, origin.x, origin.y, theta);
-	}
-
-
-	void rotate(gray::Image const& src, gray::View const& dst, Point2Du32 origin, r32 theta)
-	{
-		assert(verify(src));
-		assert(verify(dst));
-
-		do_rotate_gray(src, dst, origin.x, origin.y, theta);
-	}
-
-
-	void rotate(gray::View const& src, gray::Image const& dst, Point2Du32 origin, r32 theta)
-	{
-		assert(verify(src));
-		assert(verify(dst));
-
-		do_rotate_gray(src, dst, origin.x, origin.y, theta);
-	}*/
 
 
 	void rotate(gray::View const& src, gray::View const& dst, Point2Du32 origin, r32 theta)
