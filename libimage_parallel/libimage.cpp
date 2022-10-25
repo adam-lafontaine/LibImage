@@ -1278,15 +1278,6 @@ namespace libimage
 
 #else
 
-	template <class SRC_A_IMG_T, class SRC_B_IMG_T, class DST_IMG_T>
-	static void do_alpha_blend(SRC_A_IMG_T const& src_a, SRC_B_IMG_T const& src_b, DST_IMG_T const& dst)
-	{
-		auto const range = make_range(src_a);
-		auto const f = [&](Pixel* sa, Pixel* sb, Pixel* d) { *d = alpha_blend_linear(*sa, *sb); };
-
-		do_process_range(src_a, src_b, dst, range, f);
-	}
-
 #endif // !LIBIMAGE_NO_SIMD	
 
 
@@ -1295,7 +1286,10 @@ namespace libimage
 		assert(verify(src, current));
 		assert(verify(src, dst));
 
-		do_alpha_blend(src, current, dst);
+		auto const range = make_range(src);
+		auto const f = [&](Pixel* sa, Pixel* sb, Pixel* d) { *d = alpha_blend_linear(*sa, *sb); };
+
+		do_process_range(src, current, dst, range, f);
 	}
 
 
@@ -1303,7 +1297,7 @@ namespace libimage
 	{
 		assert(verify(src, current_dst));
 
-		do_alpha_blend(src, current_dst, current_dst);
+		alpha_blend(src, current_dst, current_dst);
 	}
 }
 
@@ -1484,8 +1478,7 @@ namespace libimage
 #endif // !LIBIMAGE_NO_COLOR
 
 
-	template <class GRAY_IMG_T>
-	Point2Du32 do_centroid(GRAY_IMG_T const& src, u8_to_bool_f const& func)
+	Point2Du32 do_centroid(gray::View const& src, u8_to_bool_f const& func)
 	{
 		constexpr u32 n_threads = N_THREADS;
 		u32 h = src.height / n_threads;
@@ -1558,6 +1551,8 @@ namespace libimage
 
 	Point2Du32 centroid(gray::View const& src)
 	{
+		assert(verify(src));
+
 		auto const func = [](u8 p) { return p > 0; };
 		return do_centroid(src, func);
 	}
@@ -1571,8 +1566,7 @@ namespace libimage
 	}
 
 
-	template <class GRAY_IMG_T>
-	static bool do_neighbors(GRAY_IMG_T const& img, u32 x, u32 y)
+	static bool do_neighbors(gray::View const& img, u32 x, u32 y)
 	{
 		assert(x >= 1);
 		assert(x < img.width);
@@ -1608,8 +1602,7 @@ namespace libimage
 	}
 
 
-	template <class GRAY_IMG_T>
-	static u32 do_skeleton_once(GRAY_IMG_T const& img)
+	static u32 do_skeleton_once(gray::View const& img)
 	{
 		u32 pixel_count = 0;
 
@@ -1714,9 +1707,8 @@ namespace libimage
 		return pixel_count;
 	}
 
-
-	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void do_skeleton(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+		
+	static void do_skeleton(gray::View const& src, gray::View const& dst)
 	{
 		copy(src, dst);
 
@@ -2126,8 +2118,8 @@ namespace libimage
 
 #endif // !LIBIMAGE_NO_SIMD
 
-	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void do_convolve_in_range(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst, Range2Du32 const& range, Matrix2Dr32 const& kernel)
+	
+	static void do_convolve_in_range(gray::View const& src, gray::View const& dst, Range2Du32 const& range, Matrix2Dr32 const& kernel)
 	{
 		auto const height = range.y_end - range.y_begin;
 		auto const width = range.x_end - range.x_begin;
@@ -2165,9 +2157,8 @@ namespace libimage
 
 namespace libimage
 {
-
-	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void do_copy_top_bottom(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+		
+	static void do_copy_top_bottom(gray::View const& src, gray::View const& dst)
 	{
 		u32 const x_begin = 0;
 		u32 const x_end = src.width;
@@ -2187,8 +2178,7 @@ namespace libimage
 	}
 
 
-	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void do_copy_left_right(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	static void do_copy_left_right(gray::View const& src, gray::View const& dst)
 	{
 		u32 const y_begin = 1;
 		u32 const y_end = src.height - 1;
@@ -2206,8 +2196,7 @@ namespace libimage
 	}
 
 
-	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void do_gauss_inner_top_bottom(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	static void do_gauss_inner_top_bottom(gray::View const& src, gray::View const& dst)
 	{
 		u32 const x_begin = 1;
 		u32 const x_end = src.width - 1;
@@ -2234,8 +2223,7 @@ namespace libimage
 	}
 
 
-	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void do_gauss_inner_left_right(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	static void do_gauss_inner_left_right(gray::View const& src, gray::View const& dst)
 	{
 		u32 const y_begin = 2;
 		u32 const y_end = src.height - 2;
@@ -2270,8 +2258,7 @@ namespace libimage
 	}
 
 
-	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void do_blur(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	static void do_blur(gray::View const& src, gray::View const& dst)
 	{
 		std::array<std::function<void()>, 4> f_list =
 		{
@@ -2499,8 +2486,7 @@ namespace libimage
 #endif // !LIBIMAGE_NO_SIMD
 
 
-	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void do_gradients_in_range(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst, Range2Du32 const& range)
+	static void do_gradients_in_range(gray::View const& src, gray::View const& dst, Range2Du32 const& range)
 	{
 		auto const height = range.y_end - range.y_begin;
 		auto const width = range.x_end - range.x_begin;
@@ -2525,8 +2511,7 @@ namespace libimage
 	}
 
 
-	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void do_edges_in_range(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst, Range2Du32 const& range, u8_to_bool_f const& cond)
+	static void do_edges_in_range(gray::View const& src, gray::View const& dst, Range2Du32 const& range, u8_to_bool_f const& cond)
 	{
 		auto const height = range.y_end - range.y_begin;
 		auto const width = range.x_end - range.x_begin;
@@ -2551,8 +2536,7 @@ namespace libimage
 	}
 
 
-	template<class GRAY_IMG_T>
-	static void do_zero_top_bottom(GRAY_IMG_T const& dst)
+	static void do_zero_top_bottom(gray::View const& dst)
 	{
 		u32 const x_begin = 0;
 		u32 const x_end = dst.width;
@@ -2570,8 +2554,7 @@ namespace libimage
 	}
 
 
-	template<class GRAY_IMG_T>
-	static void do_zero_left_right(GRAY_IMG_T const& dst)
+	static void do_zero_left_right(gray::View const& dst)
 	{
 		u32 const y_begin = 1;
 		u32 const y_end = dst.height - 1;
@@ -2588,8 +2571,7 @@ namespace libimage
 	}
 
 
-	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void do_edges(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst, u8_to_bool_f const& cond)
+	static void do_edges(gray::View const& src, gray::View const& dst, u8_to_bool_f const& cond)
 	{
 		std::array<std::function<void()>, 2> f_list
 		{
@@ -2609,8 +2591,7 @@ namespace libimage
 	}
 
 
-	template<class GRAY_SRC_IMG_T, class GRAY_DST_IMG_T>
-	static void do_gradients(GRAY_SRC_IMG_T const& src, GRAY_DST_IMG_T const& dst)
+	static void do_gradients(gray::View const& src, gray::View const& dst)
 	{
 		std::array<std::function<void()>, 2> f_list
 		{
@@ -2678,8 +2659,7 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR
 
-	template <typename IMG_T>
-	static Pixel do_get_color(IMG_T const& src_image, Point2Dr32 location)
+	static Pixel do_get_color(View const& src_image, Point2Dr32 location)
 	{
 		auto zero = 0.0f;
 		auto width = (r32)src_image.width;
@@ -2700,8 +2680,7 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-	template <typename GR_IMG_T>
-	static u8 do_get_gray(GR_IMG_T const& src_image, Point2Dr32 location)
+	static u8 do_get_gray(gray::View const& src_image, Point2Dr32 location)
 	{
 		auto zero = 0.0f;
 		auto width = (r32)src_image.width;
@@ -2721,13 +2700,10 @@ namespace libimage
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
 
-
-
 #ifndef LIBIMAGE_NO_COLOR	
 
 
-	template <typename IMG_SRC_T, typename IMG_DST_T>
-	static void do_rotate(IMG_SRC_T const& src, IMG_DST_T const& dst, u32 origin_x, u32 origin_y, r32 theta)
+	static void do_rotate(View const& src, View const& dst, u32 origin_x, u32 origin_y, r32 theta)
 	{
 		Point2Du32 origin = { origin_x, origin_y };
 
@@ -2763,8 +2739,8 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_GRAYSCALE
 
-	template <typename GR_IMG_SRC_T, typename GR_IMG_DST_T>
-	static void do_rotate_gray(GR_IMG_SRC_T const& src, GR_IMG_DST_T const& dst, u32 origin_x, u32 origin_y, r32 theta)
+
+	static void do_rotate_gray(gray::View const& src, gray::View const& dst, u32 origin_x, u32 origin_y, r32 theta)
 	{
 		Point2Du32 origin = { origin_x, origin_y };
 
