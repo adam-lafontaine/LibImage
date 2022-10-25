@@ -93,7 +93,7 @@ namespace libimage
 	}
 
 
-	static void make_image(View const& view_src, Image& image_dst)
+	/*static void make_image(View const& view_src, Image& image_dst)
 	{
 		make_image(image_dst, view_src.width, view_src.height);
 
@@ -109,7 +109,7 @@ namespace libimage
 		write_image(image, file_path_dst);
 
 		destroy_image(image);
-	}
+	}*/
 
 #endif // !LIBIMAGE_NO_WRITE
 
@@ -216,7 +216,7 @@ namespace libimage
 	}
 
 
-	static void make_image(gray::View const& view_src, gray::Image& image_dst)
+	/*static void make_image(gray::View const& view_src, gray::Image& image_dst)
 	{
 		make_image(image_dst, view_src.width, view_src.height);
 
@@ -232,7 +232,7 @@ namespace libimage
 		write_image(image, file_path_dst);
 
 		destroy_image(image);
-	}
+	}*/
 
 #endif // !LIBIMAGE_NO_WRITE
 

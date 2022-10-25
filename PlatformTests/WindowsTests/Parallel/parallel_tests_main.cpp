@@ -84,7 +84,7 @@ void clear_image(GrayImage const& img);
 
 void read_write_image_test();
 void resize_test();
-void view_test();
+void sub_view_test();
 void transform_test();
 void copy_test();
 void fill_test();
@@ -116,7 +116,7 @@ int main()
 
 	read_write_image_test();
 	resize_test();
-	view_test();
+	sub_view_test();
 	transform_test();
 	copy_test();
 	fill_test();
@@ -138,14 +138,15 @@ void read_write_image_test()
 	printf("\n%s:\n", title);
 	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
 	Image image;
 	img::read_image_from_file(CORVETTE_PATH, image);
-	img::write_image(image, out_dir / "corvette.bmp");
+	write_image(image, "corvette.bmp");
 
 	GrayImage gray;
 	img::read_image_from_file(CADILLAC_PATH, gray);
-	img::write_image(gray, out_dir / "cadillac_gray.bmp");
+	write_image(gray, "cadillac_gray.bmp");
 
 	img::destroy_image(image);
 	img::destroy_image(gray);
@@ -158,6 +159,7 @@ void resize_test()
 	printf("\n%s:\n", title);
 	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
 	Image image;
 	img::read_image_from_file(CORVETTE_PATH, image);
@@ -168,13 +170,13 @@ void resize_test()
 	vertical.width = width / 2;
 	vertical.height = height * 2;
 	img::resize_image(image, vertical);
-	img::write_image(vertical, out_dir / "vertical.bmp");
+	write_image(vertical, "vertical.bmp");
 
 	Image horizontal;
 	horizontal.width = width * 2;
 	horizontal.height = height / 2;
 	img::resize_image(image, horizontal);
-	img::write_image(horizontal, out_dir / "horizontal.bmp");
+	write_image(horizontal, "horizontal.bmp");
 
 	GrayImage gray;
 	img::read_image_from_file(CADILLAC_PATH, gray);
@@ -185,13 +187,13 @@ void resize_test()
 	vertical_gray.width = width / 2;
 	vertical_gray.height = height * 2;
 	img::resize_image(gray, vertical_gray);
-	img::write_image(vertical_gray, out_dir / "vertical_gray.bmp");
+	write_image(vertical_gray, "vertical_gray.bmp");
 
 	GrayImage horizontal_gray;
 	horizontal_gray.width = width * 2;
 	horizontal_gray.height = height / 2;
 	img::resize_image(gray, horizontal_gray);
-	img::write_image(horizontal_gray, out_dir / "horizontal_gray.bmp");
+	write_image(horizontal_gray, "horizontal_gray.bmp");
 
 	img::destroy_image(image);
 	img::destroy_image(vertical);
@@ -202,12 +204,13 @@ void resize_test()
 }
 
 
-void view_test()
+void sub_view_test()
 {
-	auto title = "view_test";
+	auto title = "sub_view_test";
 	printf("\n%s:\n", title);
 	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
 	Range2Du32 r{};
 
@@ -222,7 +225,12 @@ void view_test()
 	r.y_end = r.y_begin + height / 2;
 
 	auto view = img::sub_view(image, r);
-	img::write_view(view, out_dir / "view.bmp");
+
+	Image dst;
+	img::make_image(dst, view.width, view.height);
+	img::copy(view, dst);
+
+	write_image(dst, "sub_view.bmp");
 
 	GrayImage gray;
 	img::read_image_from_file(CADILLAC_PATH, gray);
@@ -235,10 +243,17 @@ void view_test()
 	r.y_end = r.y_begin + height / 2;
 
 	auto view_gray = img::sub_view(gray, r);
-	img::write_view(view_gray, out_dir / "view_gray.bmp");
+
+	GrayImage dst_gray;
+	img::make_image(dst_gray, view_gray.width, view_gray.height);
+	img::copy(view_gray, dst_gray);
+
+	write_image(dst_gray, "sub_view_gray.bmp");
 
 	img::destroy_image(image);
 	img::destroy_image(gray);
+	img::destroy_image(dst);
+	img::destroy_image(dst_gray);
 }
 
 
@@ -248,10 +263,11 @@ void transform_test()
 	printf("\n%s:\n", title);
 	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
 	Image image;
 	img::read_image_from_file(CORVETTE_PATH, image);
-	img::write_image(image, out_dir / "vette.bmp");
+	write_image(image, "vette.bmp");
 
 	Image dst;
 	img::make_image(dst, image.width, image.height);
@@ -266,20 +282,20 @@ void transform_test()
 		return img::to_pixel(r, g, b);
 	};
 
-	img::transform(image, dst, invert_rgb);
-	img::write_image(dst, out_dir / "transform.bmp");
+	img::transform(img::make_view(image), img::make_view(dst), invert_rgb);
+	write_image(dst, "transform.bmp");
 
 	clear_image(dst);
 
 	GrayImage gray;
 	img::read_image_from_file(CADILLAC_PATH, gray);
-	img::write_image(gray, out_dir / "caddy.bmp");
+	write_image(gray, "caddy.bmp");
 
 	GrayImage dst_gray;
 	img::make_image(dst_gray, gray.width, gray.height);
 
-	img::transform(gray, dst_gray, invert);
-	img::write_image(dst_gray, out_dir / "transform_gray.bmp");
+	img::transform(img::make_view(gray), img::make_view(dst_gray), invert);
+	write_image(dst_gray, "transform_gray.bmp");
 
 	img::destroy_image(image);
 	img::destroy_image(dst);
@@ -294,27 +310,28 @@ void copy_test()
 	printf("\n%s:\n", title);
 	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
 	Image image;
 	img::read_image_from_file(CORVETTE_PATH, image);
-	img::write_image(image, out_dir / "vette.bmp");
+	write_image(image, "vette.bmp");
 
 	Image dst;
 	img::make_image(dst, image.width, image.height);
 
 	img::copy(image, dst);
-	img::write_image(dst, out_dir / "copy.bmp");
+	write_image(dst, "copy.bmp");
 
 
 	GrayImage gray;
 	img::read_image_from_file(CADILLAC_PATH, gray);
-	img::write_image(gray, out_dir / "caddy.bmp");
+	write_image(gray, "caddy.bmp");
 
 	GrayImage dst_gray;
 	img::make_image(dst_gray, gray.width, gray.height);
 
 	img::copy(gray, dst_gray);
-	img::write_image(dst_gray, out_dir / "copy_gray.bmp");
+	write_image(dst_gray, "copy_gray.bmp");
 
 	img::destroy_image(image);
 	img::destroy_image(dst);
@@ -329,6 +346,7 @@ void fill_test()
 	printf("\n%s:\n", title);
 	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
 	u32 width = 800;
 	u32 height = 600;
@@ -337,13 +355,13 @@ void fill_test()
 	img::make_image(dst, width, height);
 
 	img::fill(dst, img::to_pixel(20, 20, 220));
-	img::write_image(dst, out_dir / "fill.bmp");
+	write_image(dst, "fill.bmp");
 
 	GrayImage dst_gray;
 	img::make_image(dst_gray, width, height);
 
 	img::fill(dst_gray, 127);
-	img::write_image(dst_gray, out_dir / "copy_gray.bmp");
+	write_image(dst_gray, "copy_gray.bmp");
 
 	img::destroy_image(dst);
 	img::destroy_image(dst_gray);
@@ -356,38 +374,43 @@ void alpha_blend_test()
 	printf("\n%s:\n", title);
 	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
-	Image src;
-	img::read_image_from_file(CORVETTE_PATH, src);
-	auto width = src.width;
-	auto height = src.height;
+	Image src_image;
+	img::read_image_from_file(CORVETTE_PATH, src_image);
+	auto width = src_image.width;
+	auto height = src_image.height;	
 
 	Image caddy;
 	img::read_image_from_file(CADILLAC_PATH, caddy);
 
-	Image cur;
-	cur.width = width;
-	cur.height = height;
-	img::resize_image(caddy, cur);
+	Image cur_image;
+	cur_image.width = width;
+	cur_image.height = height;
+	img::resize_image(caddy, cur_image);	
 
-	Image dst;
-	img::make_image(dst, width, height);
+	Image dst_image;
+	img::make_image(dst_image, width, height);
+
+	auto src = img::make_view(src_image);
+	auto cur = img::make_view(cur_image);
+	auto dst = img::make_view(dst_image);
 
 	img::transform_alpha(src, [](auto const& p) { return 128; });
 
 	img::alpha_blend(src, cur, dst);
-	img::write_image(dst, out_dir / "alpha_blend.bmp");
+	write_image(dst_image, "alpha_blend.bmp");
 
-	clear_image(dst);
+	clear_image(dst_image);
 
 	img::copy(cur, dst);
 	img::alpha_blend(src, dst);
-	img::write_image(dst, out_dir / "alpha_blend_src_dst.bmp");
+	write_image(dst_image, "alpha_blend_src_dst.bmp");
 
-	img::destroy_image(src);
+	img::destroy_image(src_image);
 	img::destroy_image(caddy);
-	img::destroy_image(cur);
-	img::destroy_image(dst);
+	img::destroy_image(cur_image);
+	img::destroy_image(dst_image);
 }
 
 
@@ -397,6 +420,7 @@ void grayscale_test()
 	printf("\n%s:\n", title);
 	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
 	Image src;
 	img::read_image_from_file(CORVETTE_PATH, src);
@@ -406,8 +430,8 @@ void grayscale_test()
 	GrayImage dst;
 	img::make_image(dst, width, height);
 
-	img::grayscale(src, dst);
-	img::write_image(dst, out_dir / "grayscale.bmp");
+	img::grayscale(img::make_view(src), img::make_view(dst));
+	write_image(dst, "grayscale.bmp");
 
 	img::destroy_image(src);
 	img::destroy_image(dst);
@@ -420,16 +444,20 @@ void binary_test()
 	printf("\n%s:\n", title);
 	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
 	GrayImage caddy;
 	img::read_image_from_file(CADILLAC_PATH, caddy);
-	img::write_image(caddy, out_dir / "caddy.bmp");
+	write_image(caddy, "caddy.bmp");
 
 	GrayImage caddy_binary;
 	img::make_image(caddy_binary, caddy.width, caddy.height);
 
-	img::binarize_th(caddy, caddy_binary, 128);
-	img::write_image(caddy_binary, out_dir / "caddy_binary.bmp");
+	auto src = img::make_view(caddy);
+	auto dst = img::make_view(caddy_binary);
+
+	img::binarize_th(src, dst, 128);
+	write_image(caddy_binary, "caddy_binary.bmp");
 
 	Image weed;
 	img::read_image_from_file(WEED_PATH, weed);
@@ -442,19 +470,19 @@ void binary_test()
 	GrayImage binary_dst;
 	img::make_image(binary_dst, width, height);
 
-	GrayImage temp;
-	img::make_image(temp, width, height);
+	src = img::make_view(binary_src);
+	dst = img::make_view(binary_dst);
 
 	auto const is_white = [](Pixel p)
 	{
 		return ((r32)p.red + (r32)p.blue + (r32)p.green) / 3.0f < 190;
 	};
 
-	img::binarize(weed, binary_src, is_white);
-	img::write_image(binary_src, out_dir / "weed.bmp");
+	img::binarize(img::make_view(weed), src, is_white);
+	write_image(binary_src, "weed.bmp");
 
 	// centroid point
-	auto pt = img::centroid(binary_src);
+	auto pt = img::centroid(src);
 
 	// region around centroid
 	Range2Du32 c{};
@@ -467,18 +495,17 @@ void binary_test()
 	img::copy(binary_src, binary_dst);
 	auto c_view = img::sub_view(binary_dst, c);
 	img::fill(c_view, 0);
-	img::write_image(binary_dst, out_dir / "centroid.bmp");
+	write_image(binary_dst, "centroid.bmp");
 
 	// thin the object
-	img::skeleton(binary_src, binary_dst);
-	img::write_image(binary_dst, out_dir / "skeleton.bmp");
+	img::skeleton(src, dst);
+	write_image(binary_dst, "skeleton.bmp");
 
 	img::destroy_image(caddy);
 	img::destroy_image(caddy_binary);
 	img::destroy_image(weed);
 	img::destroy_image(binary_src);
 	img::destroy_image(binary_dst);
-	img::destroy_image(temp);
 }
 
 
@@ -488,16 +515,17 @@ void contrast_test()
 	printf("\n%s:\n", title);
 	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
 	GrayImage src;
 	img::read_image_from_file(CORVETTE_PATH, src);
-	img::write_image(src, out_dir / "vette.bmp");
+	write_image(src, "vette.bmp");
 
 	GrayImage dst;
 	img::make_image(dst, src.width, src.height);
 
-	img::contrast(src, dst, 0, 128);
-	img::write_image(dst, out_dir / "contrast.bmp");
+	img::contrast(img::make_view(src), img::make_view(dst), 0, 128);
+	write_image(dst, "contrast.bmp");
 
 	img::destroy_image(src);
 	img::destroy_image(dst);
@@ -510,16 +538,17 @@ void blur_test()
 	printf("\n%s:\n", title);
 	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
 	GrayImage src;
 	img::read_image_from_file(CORVETTE_PATH, src);
-	img::write_image(src, out_dir / "vette.bmp");
+	write_image(src, "vette.bmp");
 
 	GrayImage dst;
 	img::make_image(dst, src.width, src.height);
 
-	img::blur(src, dst);
-	img::write_image(dst, out_dir / "blur.bmp");
+	img::blur(img::make_view(src), img::make_view(dst));
+	write_image(dst, "blur.bmp");
 
 	img::destroy_image(src);
 	img::destroy_image(dst);
@@ -532,16 +561,17 @@ void gradients_test()
 	printf("\n%s:\n", title);
 	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
 	GrayImage src;
 	img::read_image_from_file(CORVETTE_PATH, src);
-	img::write_image(src, out_dir / "vette.bmp");
+	write_image(src, "vette.bmp");
 
 	GrayImage dst;
 	img::make_image(dst, src.width, src.height);
 
-	img::gradients(src, dst);
-	img::write_image(dst, out_dir / "gradient.bmp");
+	img::gradients(img::make_view(src), img::make_view(dst));
+	write_image(dst, "gradient.bmp");
 
 	img::destroy_image(src);
 	img::destroy_image(dst);
@@ -554,18 +584,19 @@ void edges_test()
 	printf("\n%s:\n", title);
 	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
 	GrayImage src;
 	img::read_image_from_file(CORVETTE_PATH, src);
-	img::write_image(src, out_dir / "vette.bmp");
+	write_image(src, "vette.bmp");
 
 	GrayImage dst;
 	img::make_image(dst, src.width, src.height);
 
 	auto const threshold = [](u8 g) { return g >= 100; };
 
-	img::edges(src, dst, threshold);
-	img::write_image(dst, out_dir / "edges.bmp");
+	img::edges(img::make_view(src), img::make_view(dst), threshold);
+	write_image(dst, "edges.bmp");
 
 	img::destroy_image(src);
 	img::destroy_image(dst);
@@ -578,6 +609,7 @@ void combo_view_test()
 	printf("\n%s:\n", title);
 	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
 	GrayImage src;
 	img::read_image_from_file(CORVETTE_PATH, src);
@@ -626,7 +658,7 @@ void combo_view_test()
 	auto const threshold = [](u8 g) { return g >= 100; };
 	img::edges(src_sub, dst_sub, threshold);
 
-	img::write_image(dst, out_dir / "combo.bmp");
+	write_image(dst, "combo.bmp");
 
 	img::destroy_image(src);
 	img::destroy_image(dst);
@@ -639,6 +671,7 @@ void rotate_test()
 	printf("\n%s:\n", title);
 	auto out_dir = IMAGE_OUT_PATH / title;
 	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
 
 	Image src;
 	img::read_image_from_file(CADILLAC_PATH, src);
@@ -649,8 +682,8 @@ void rotate_test()
 	Point2Du32 origin = { src.width / 2, src.height / 2 };
 
 	r32 theta = 0.6f * 2 * 3.14159f;
-	img::rotate(src, dst, origin, theta);
-	img::write_image(dst, out_dir / "rotate.bmp");
+	img::rotate(img::make_view(src), img::make_view(dst), origin, theta);
+	write_image(dst, "rotate.bmp");
 
 	GrayImage src_gray;
 	img::read_image_from_file(CORVETTE_PATH, src_gray);
@@ -660,8 +693,8 @@ void rotate_test()
 
 	origin = { src_gray.width / 2, src_gray.height / 2 };
 
-	img::rotate(src_gray, dst_gray, origin, theta);
-	img::write_image(dst_gray, out_dir / "rotate_gray.bmp");
+	img::rotate(img::make_view(src_gray), img::make_view(dst_gray), origin, theta);
+	write_image(dst_gray, "rotate_gray.bmp");
 
 	img::destroy_image(src);
 	img::destroy_image(dst);

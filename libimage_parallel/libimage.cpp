@@ -35,11 +35,14 @@ static void do_for_each(LIST_T const& list, FUNC_T const& func)
 #endif // !LIBIMAGE_NO_PARALLEL
 
 
+using id_func_t = std::function<void(u32)>;
+
+
 class ThreadProcess
 {
 public:
 	u32 thread_id = 0;
-	std::function<void(u32)> process;
+	id_func_t process;
 };
 
 
@@ -64,6 +67,25 @@ static void execute_procs(ProcList const& list)
 	auto const func = [](ThreadProcess const& t) { t.process(t.thread_id); };
 
 	do_for_each(list, func);
+}
+
+
+static void process_rows(u32 height, id_func_t const& row_func)
+{
+	auto const rows_per_thread = height / N_THREADS;
+
+	auto const thread_proc = [&](u32 id)
+	{
+		auto y_begin = id * rows_per_thread;
+		auto y_end = (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
+
+		for (u32 y = y_begin; y < y_end; ++y)
+		{
+			row_func(y);
+		}
+	};
+
+	execute_procs(make_proc_list(thread_proc));
 }
 
 
@@ -97,7 +119,7 @@ namespace libimage
 	}
 
 
-	Pixel* row_begin(Image const& image, u32 y)
+	static Pixel* row_begin(Image const& image, u32 y)
 	{
 		assert(y < image.height);
 
@@ -110,7 +132,7 @@ namespace libimage
 	}
 
 
-	Pixel* xy_at(Image const& image, u32 x, u32 y)
+	static Pixel* xy_at(Image const& image, u32 x, u32 y)
 	{
 		assert(y < image.height);
 		assert(x < image.width);
@@ -140,11 +162,11 @@ namespace libimage
 	}
 
 
-	View make_view(Image& image, u32 width, u32 height)
+	/*View make_view(Image& image, u32 width, u32 height)
 	{
 		make_image(image, width, height);
 		return make_view(image);
-	}
+	}*/
 
 
 	View sub_view(Image const& image, Range2Du32 const& range)
@@ -252,7 +274,7 @@ namespace libimage
 	}
 
 
-	gray::Pixel* row_begin(gray::Image const& image, u32 y)
+	static gray::Pixel* row_begin(gray::Image const& image, u32 y)
 	{
 		assert(image.width);
 		assert(image.height);
@@ -268,7 +290,7 @@ namespace libimage
 	}
 
 
-	gray::Pixel* xy_at(gray::Image const& image, u32 x, u32 y)
+	static gray::Pixel* xy_at(gray::Image const& image, u32 x, u32 y)
 	{
 		assert(image.width);
 		assert(image.height);
@@ -301,11 +323,11 @@ namespace libimage
 	}
 
 
-	gray::View make_view(gray::Image& image, u32 width, u32 height)
+	/*gray::View make_view(gray::Image& image, u32 width, u32 height)
 	{
 		make_image(image, width, height);
 		return make_view(image);
-	}
+	}*/
 
 
 	gray::View sub_view(gray::Image const& image, Range2Du32 const& range)
@@ -824,288 +846,6 @@ namespace libimage
 #endif // !LIBIMAGE_NO_SIMD
 
 
-/*  transform  */
-
-namespace libimage
-{
-
-#ifndef LIBIMAGE_NO_COLOR
-
-
-	void transform(Image const& src, Image const& dst, pixel_to_pixel_f const& func)
-	{
-		assert(verify(src, dst));
-
-		auto const range = make_range(src);
-		auto const f = [&](Pixel* s, Pixel* d) { *d = func(*s); };
-
-		do_process_range(src, dst, range, f);
-	}
-
-
-	void transform(Image const& src, View const& dst, pixel_to_pixel_f const& func)
-	{
-		assert(verify(src, dst));
-		auto const range = make_range(src);
-		auto const f = [&](Pixel* s, Pixel* d) { *d = func(*s); };
-
-		do_process_range(src, dst, range, f);
-	}
-
-
-	void transform(View const& src, Image const& dst, pixel_to_pixel_f const& func)
-	{
-		assert(verify(src, dst));
-
-		auto const range = make_range(src);
-		auto const f = [&](Pixel* s, Pixel* d) { *d = func(*s); };
-
-		do_process_range(src, dst, range, f);
-	}
-
-
-	void transform(View const& src, View const& dst, pixel_to_pixel_f const& func)
-	{
-		assert(verify(src, dst));
-		
-		auto const range = make_range(src);
-		auto const f = [&](Pixel* s, Pixel* d) { *d = func(*s); };
-
-		do_process_range(src, dst, range, f);
-	}
-
-
-	void transform_in_place(Image const& src_dst, pixel_to_pixel_f const& func)
-	{
-		assert(verify(src_dst));
-
-		auto const range = make_range(src_dst);
-		auto const f = [&](Pixel* p) { *p = func(*p); };
-
-		do_process_range(src_dst, range, f);
-	}
-
-
-	void transform_in_place(View const& src_dst, pixel_to_pixel_f const& func)
-	{
-		assert(verify(src_dst));
-
-		auto const range = make_range(src_dst);
-		auto const f = [&](Pixel* p) { *p = func(*p); };
-
-		do_process_range(src_dst, range, f);
-	}
-
-
-	void transform_alpha(Image const& src_dst, pixel_to_u8_f const& func)
-	{
-		assert(verify(src_dst));
-
-		auto const range = make_range(src_dst);
-		auto const f = [&](Pixel* p) { p->alpha = func(*p); };
-
-		do_process_range(src_dst, range, f);
-	}
-
-
-	void transform_alpha(View const& src_dst, pixel_to_u8_f const& func)
-	{
-		assert(verify(src_dst));
-
-		auto const range = make_range(src_dst);
-		auto const f = [&](Pixel* p) { p->alpha = func(*p); };
-
-		do_process_range(src_dst, range, f);
-	}
-
-
-#endif // !LIBIMAGE_NO_COLOR
-
-
-#ifndef LIBIMAGE_NO_GRAYSCALE
-
-	lookup_table_t to_lookup_table(u8_to_u8_f const& func)
-	{
-		lookup_table_t lut = { 0 };
-
-		for (u32 i = 0; i < 256; ++i)
-		{
-			lut[i] = func(i);
-		}
-
-		return lut;
-	}
-
-
-	void transform(gray::Image const& src, gray::Image const& dst, lookup_table_t const& lut)
-	{
-		assert(verify(src, dst));
-
-		auto const range = make_range(src);
-		auto const f = [&](u8* s, u8* d) { *d = lut[*s]; };
-
-		do_process_range(src, dst, range, f);
-	}
-
-
-	void transform(gray::Image const& src, gray::View const& dst, lookup_table_t const& lut)
-	{
-		assert(verify(src, dst));
-
-		auto const range = make_range(src);
-		auto const f = [&](u8* s, u8* d) { *d = lut[*s]; };
-
-		do_process_range(src, dst, range, f);
-	}
-
-
-	void transform(gray::View const& src, gray::Image const& dst, lookup_table_t const& lut)
-	{
-		assert(verify(src, dst));
-
-		auto const range = make_range(src);
-		auto const f = [&](u8* s, u8* d) { *d = lut[*s]; };
-
-		do_process_range(src, dst, range, f);
-	}
-
-
-	void transform(gray::View const& src, gray::View const& dst, lookup_table_t const& lut)
-	{
-		assert(verify(src, dst));
-
-		auto const range = make_range(src);
-		auto const f = [&](u8* s, u8* d) { *d = lut[*s]; };
-
-		do_process_range(src, dst, range, f);
-	}
-
-
-	void transform(gray::Image const& src, gray::Image const& dst, u8_to_u8_f const& func)
-	{
-		assert(verify(src, dst));
-		auto const lut = to_lookup_table(func);
-		transform(src, dst, lut);
-	}
-
-
-	void transform(gray::Image const& src, gray::View const& dst, u8_to_u8_f const& func)
-	{
-		assert(verify(src, dst));
-		auto const lut = to_lookup_table(func);
-		transform(src, dst, lut);
-	}
-
-
-	void transform(gray::View const& src, gray::Image const& dst, u8_to_u8_f const& func)
-	{
-		assert(verify(src, dst));
-		auto const lut = to_lookup_table(func);
-		transform(src, dst, lut);
-	}
-
-
-	void transform(gray::View const& src, gray::View const& dst, u8_to_u8_f const& func)
-	{
-		assert(verify(src, dst));
-		auto const lut = to_lookup_table(func);
-		transform(src, dst, lut);
-	}
-
-
-	void transform_in_place(gray::Image const& src_dst, lookup_table_t const& lut)
-	{
-		assert(verify(src_dst));
-
-		auto const range = make_range(src_dst);
-		auto const f = [&](u8* p) { *p = lut[*p]; };
-
-		do_process_range(src_dst, range, f);
-	}
-
-	void transform_in_place(gray::View const& src_dst, lookup_table_t const& lut)
-	{
-		assert(verify(src_dst));
-
-		auto const range = make_range(src_dst);
-		auto const f = [&](u8* p) { *p = lut[*p]; };
-
-		do_process_range(src_dst, range, f);
-	}
-
-
-	void transform_in_place(gray::Image const& src_dst, u8_to_u8_f const& func)
-	{
-		assert(verify(src_dst));
-		auto const lut = to_lookup_table(func);
-		transform_in_place(src_dst, lut);
-	}
-
-
-	void transform_in_place(gray::View const& src_dst, u8_to_u8_f const& func)
-	{
-		assert(verify(src_dst));
-		auto const lut = to_lookup_table(func);
-		transform_in_place(src_dst, lut);
-	}
-
-
-#endif // !LIBIMAGE_NO_GRAYSCALE
-
-
-#ifndef LIBIMAGE_NO_COLOR
-#ifndef LIBIMAGE_NO_GRAYSCALE
-
-	void transform(Image const& src, gray::Image const& dst, pixel_to_u8_f const& func)
-	{
-		assert(verify(src, dst));
-
-		auto const range = make_range(src);
-		auto const f = [&](Pixel* s, u8* d) { *d = func(*s); };
-
-		do_process_range(src, dst, range, f);
-	}
-
-
-	void transform(Image const& src, gray::View const& dst, pixel_to_u8_f const& func)
-	{
-		assert(verify(src, dst));
-
-		auto const range = make_range(src);
-		auto const f = [&](Pixel* s, u8* d) { *d = func(*s); };
-
-		do_process_range(src, dst, range, f);
-	}
-
-
-	void transform(View const& src, gray::Image const& dst, pixel_to_u8_f const& func)
-	{
-		assert(verify(src, dst));
-
-		auto const range = make_range(src);
-		auto const f = [&](Pixel* s, u8* d) { *d = func(*s); };
-
-		do_process_range(src, dst, range, f);
-	}
-
-
-	void transform(View const& src, gray::View const& dst, pixel_to_u8_f const& func)
-	{
-		assert(verify(src, dst));
-
-		auto const range = make_range(src);
-		auto const f = [&](Pixel* s, u8* d) { *d = func(*s); };
-
-		do_process_range(src, dst, range, f);
-	}
-
-
-#endif // !LIBIMAGE_NO_GRAYSCALE
-#endif // !LIBIMAGE_NO_COLOR
-
-}
-
-
 /* fill */
 
 namespace libimage
@@ -1165,7 +905,7 @@ namespace libimage
 		r32* dst = 0;
 		simd::vec_t vec{};
 
-		auto const do_simd = [&](u32 i) 
+		auto const do_simd = [&](u32 i)
 		{
 			src = (r32*)(src_begin + i);
 			dst = (r32*)(dst_begin + i);
@@ -1195,8 +935,17 @@ namespace libimage
 	template <class SRC_IMG_T, class DST_IMG_T>
 	static void do_copy(SRC_IMG_T const& src, DST_IMG_T const& dst)
 	{
-		auto const func = [](auto p) { return p; };
-		transform(src, dst, func);
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = s[x];
+			}
+		};
+
+		process_rows(src.height, row_func);
 	}
 
 #endif // !LIBIMAGE_NO_SIMD
@@ -1205,7 +954,7 @@ namespace libimage
 	void copy(Image const& src, Image const& dst)
 	{
 		assert(verify(src, dst));
-		
+
 		do_copy(src, dst);
 	}
 
@@ -1248,7 +997,7 @@ namespace libimage
 		r32* dst = 0;
 		simd::vec_t vec{};
 
-		auto const do_simd = [&](u32 i) 
+		auto const do_simd = [&](u32 i)
 		{
 			src = (r32*)(src_begin + i);
 			dst = (r32*)(dst_begin + i);
@@ -1317,6 +1066,288 @@ namespace libimage
 #endif // !LIBIMAGE_NO_GRAYSCALE
 
 
+
+}
+
+
+/*  transform  */
+
+namespace libimage
+{
+
+#ifndef LIBIMAGE_NO_COLOR
+
+
+	/*void transform(Image const& src, Image const& dst, pixel_to_pixel_f const& func)
+	{
+		assert(verify(src, dst));
+
+		auto const range = make_range(src);
+		auto const f = [&](Pixel* s, Pixel* d) { *d = func(*s); };
+
+		do_process_range(src, dst, range, f);
+	}
+
+
+	void transform(Image const& src, View const& dst, pixel_to_pixel_f const& func)
+	{
+		assert(verify(src, dst));
+		auto const range = make_range(src);
+		auto const f = [&](Pixel* s, Pixel* d) { *d = func(*s); };
+
+		do_process_range(src, dst, range, f);
+	}
+
+
+	void transform(View const& src, Image const& dst, pixel_to_pixel_f const& func)
+	{
+		assert(verify(src, dst));
+
+		auto const range = make_range(src);
+		auto const f = [&](Pixel* s, Pixel* d) { *d = func(*s); };
+
+		do_process_range(src, dst, range, f);
+	}*/
+
+
+	void transform(View const& src, View const& dst, pixel_to_pixel_f const& func)
+	{
+		assert(verify(src, dst));
+		
+		auto const range = make_range(src);
+		auto const f = [&](Pixel* s, Pixel* d) { *d = func(*s); };
+
+		do_process_range(src, dst, range, f);
+	}
+
+
+	/*void transform_in_place(Image const& src_dst, pixel_to_pixel_f const& func)
+	{
+		assert(verify(src_dst));
+
+		auto const range = make_range(src_dst);
+		auto const f = [&](Pixel* p) { *p = func(*p); };
+
+		do_process_range(src_dst, range, f);
+	}*/
+
+
+	void transform_in_place(View const& src_dst, pixel_to_pixel_f const& func)
+	{
+		assert(verify(src_dst));
+
+		auto const range = make_range(src_dst);
+		auto const f = [&](Pixel* p) { *p = func(*p); };
+
+		do_process_range(src_dst, range, f);
+	}
+
+
+	/*void transform_alpha(Image const& src_dst, pixel_to_u8_f const& func)
+	{
+		assert(verify(src_dst));
+
+		auto const range = make_range(src_dst);
+		auto const f = [&](Pixel* p) { p->alpha = func(*p); };
+
+		do_process_range(src_dst, range, f);
+	}*/
+
+
+	void transform_alpha(View const& src_dst, pixel_to_u8_f const& func)
+	{
+		assert(verify(src_dst));
+
+		auto const range = make_range(src_dst);
+		auto const f = [&](Pixel* p) { p->alpha = func(*p); };
+
+		do_process_range(src_dst, range, f);
+	}
+
+
+#endif // !LIBIMAGE_NO_COLOR
+
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	lookup_table_t to_lookup_table(u8_to_u8_f const& func)
+	{
+		lookup_table_t lut = { 0 };
+
+		for (u32 i = 0; i < 256; ++i)
+		{
+			lut[i] = func(i);
+		}
+
+		return lut;
+	}
+
+
+	/*void transform(gray::Image const& src, gray::Image const& dst, lookup_table_t const& lut)
+	{
+		assert(verify(src, dst));
+
+		auto const range = make_range(src);
+		auto const f = [&](u8* s, u8* d) { *d = lut[*s]; };
+
+		do_process_range(src, dst, range, f);
+	}
+
+
+	void transform(gray::Image const& src, gray::View const& dst, lookup_table_t const& lut)
+	{
+		assert(verify(src, dst));
+
+		auto const range = make_range(src);
+		auto const f = [&](u8* s, u8* d) { *d = lut[*s]; };
+
+		do_process_range(src, dst, range, f);
+	}
+
+
+	void transform(gray::View const& src, gray::Image const& dst, lookup_table_t const& lut)
+	{
+		assert(verify(src, dst));
+
+		auto const range = make_range(src);
+		auto const f = [&](u8* s, u8* d) { *d = lut[*s]; };
+
+		do_process_range(src, dst, range, f);
+	}*/
+
+
+	void transform(gray::View const& src, gray::View const& dst, lookup_table_t const& lut)
+	{
+		assert(verify(src, dst));
+
+		auto const range = make_range(src);
+		auto const f = [&](u8* s, u8* d) { *d = lut[*s]; };
+
+		do_process_range(src, dst, range, f);
+	}
+
+
+	/*void transform(gray::Image const& src, gray::Image const& dst, u8_to_u8_f const& func)
+	{
+		assert(verify(src, dst));
+		auto const lut = to_lookup_table(func);
+		transform(src, dst, lut);
+	}
+
+
+	void transform(gray::Image const& src, gray::View const& dst, u8_to_u8_f const& func)
+	{
+		assert(verify(src, dst));
+		auto const lut = to_lookup_table(func);
+		transform(src, dst, lut);
+	}
+
+
+	void transform(gray::View const& src, gray::Image const& dst, u8_to_u8_f const& func)
+	{
+		assert(verify(src, dst));
+		auto const lut = to_lookup_table(func);
+		transform(src, dst, lut);
+	}*/
+
+
+	void transform(gray::View const& src, gray::View const& dst, u8_to_u8_f const& func)
+	{
+		assert(verify(src, dst));
+		auto const lut = to_lookup_table(func);
+		transform(src, dst, lut);
+	}
+
+
+	/*void transform_in_place(gray::Image const& src_dst, lookup_table_t const& lut)
+	{
+		assert(verify(src_dst));
+
+		auto const range = make_range(src_dst);
+		auto const f = [&](u8* p) { *p = lut[*p]; };
+
+		do_process_range(src_dst, range, f);
+	}*/
+
+	void transform_in_place(gray::View const& src_dst, lookup_table_t const& lut)
+	{
+		assert(verify(src_dst));
+
+		auto const range = make_range(src_dst);
+		auto const f = [&](u8* p) { *p = lut[*p]; };
+
+		do_process_range(src_dst, range, f);
+	}
+
+
+	/*void transform_in_place(gray::Image const& src_dst, u8_to_u8_f const& func)
+	{
+		assert(verify(src_dst));
+		auto const lut = to_lookup_table(func);
+		transform_in_place(src_dst, lut);
+	}*/
+
+
+	void transform_in_place(gray::View const& src_dst, u8_to_u8_f const& func)
+	{
+		assert(verify(src_dst));
+		auto const lut = to_lookup_table(func);
+		transform_in_place(src_dst, lut);
+	}
+
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+
+
+#ifndef LIBIMAGE_NO_COLOR
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	/*void transform(Image const& src, gray::Image const& dst, pixel_to_u8_f const& func)
+	{
+		assert(verify(src, dst));
+
+		auto const range = make_range(src);
+		auto const f = [&](Pixel* s, u8* d) { *d = func(*s); };
+
+		do_process_range(src, dst, range, f);
+	}
+
+
+	void transform(Image const& src, gray::View const& dst, pixel_to_u8_f const& func)
+	{
+		assert(verify(src, dst));
+
+		auto const range = make_range(src);
+		auto const f = [&](Pixel* s, u8* d) { *d = func(*s); };
+
+		do_process_range(src, dst, range, f);
+	}
+
+
+	void transform(View const& src, gray::Image const& dst, pixel_to_u8_f const& func)
+	{
+		assert(verify(src, dst));
+
+		auto const range = make_range(src);
+		auto const f = [&](Pixel* s, u8* d) { *d = func(*s); };
+
+		do_process_range(src, dst, range, f);
+	}*/
+
+
+	void transform(View const& src, gray::View const& dst, pixel_to_u8_f const& func)
+	{
+		assert(verify(src, dst));
+
+		auto const range = make_range(src);
+		auto const f = [&](Pixel* s, u8* d) { *d = func(*s); };
+
+		do_process_range(src, dst, range, f);
+	}
+
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+#endif // !LIBIMAGE_NO_COLOR
 
 }
 
@@ -1437,7 +1468,7 @@ namespace libimage
 #endif // !LIBIMAGE_NO_SIMD	
 
 
-	void alpha_blend(Image const& src, Image const& current, Image const& dst)
+	/*void alpha_blend(Image const& src, Image const& current, Image const& dst)
 	{
 		assert(verify(src, current));
 		assert(verify(src, dst));
@@ -1470,10 +1501,10 @@ namespace libimage
 		assert(verify(src, dst));
 
 		do_alpha_blend(src, current, dst);
-	}
+	}*/
 
 
-	void alpha_blend(View const& src, Image const& current, Image const& dst)
+	/*void alpha_blend(View const& src, Image const& current, Image const& dst)
 	{
 		assert(verify(src, current));
 		assert(verify(src, dst));
@@ -1488,16 +1519,16 @@ namespace libimage
 		assert(verify(src, dst));
 
 		do_alpha_blend(src, current, dst);
-	}
+	}*/
 
 
-	void alpha_blend(View const& src, View const& current, Image const& dst)
+	/*void alpha_blend(View const& src, View const& current, Image const& dst)
 	{
 		assert(verify(src, current));
 		assert(verify(src, dst));
 
 		do_alpha_blend(src, current, dst);
-	}
+	}*/
 
 
 	void alpha_blend(View const& src, View const& current, View const& dst)
@@ -1509,7 +1540,7 @@ namespace libimage
 	}
 
 
-	void alpha_blend(Image const& src, Image const& current_dst)
+	/*void alpha_blend(Image const& src, Image const& current_dst)
 	{
 		assert(verify(src, current_dst));
 
@@ -1530,7 +1561,7 @@ namespace libimage
 		assert(verify(src, current_dst));
 
 		do_alpha_blend(src, current_dst, current_dst);
-	}
+	}*/
 
 
 	void alpha_blend(View const& src, View const& current_dst)
@@ -1636,7 +1667,7 @@ namespace libimage
 #endif // !LIBIMAGE_NO_SIMD	
 
 
-	void grayscale(Image const& src, gray::Image const& dst)
+	/*void grayscale(Image const& src, gray::Image const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -1657,7 +1688,7 @@ namespace libimage
 		assert(verify(src, dst));
 
 		do_grayscale(src, dst);
-	}
+	}*/
 
 
 	void grayscale(View const& src, gray::View const& dst)
@@ -1667,10 +1698,10 @@ namespace libimage
 		do_grayscale(src, dst);
 	}
 
-	void alpha_grayscale(Image const& src)
+	/*void alpha_grayscale(Image const& src)
 	{
 		transform_alpha(src, pixel_grayscale_standard);
-	}
+	}*/
 
 
 	void alpha_grayscale(View const& src)
@@ -1691,7 +1722,7 @@ namespace libimage
 
 namespace libimage
 {
-	void binarize(gray::Image const& src, gray::Image const& dst, u8_to_bool_f const& cond)
+	/*void binarize(gray::Image const& src, gray::Image const& dst, u8_to_bool_f const& cond)
 	{
 		auto const conv = [&](u8 p) { return cond(p) ? 255 : 0; };
 		transform(src, dst, conv);
@@ -1709,7 +1740,7 @@ namespace libimage
 	{
 		auto const conv = [&](u8 p) { return cond(p) ? 255 : 0; };
 		transform(src, dst, conv);
-	}
+	}*/
 
 
 	void binarize(gray::View const& src, gray::View const& dst, u8_to_bool_f const& cond)
@@ -1719,11 +1750,11 @@ namespace libimage
 	}
 
 
-	void binarize_in_place(gray::Image const& src_dst, u8_to_bool_f const& cond)
+	/*void binarize_in_place(gray::Image const& src_dst, u8_to_bool_f const& cond)
 	{
 		auto const conv = [&](u8 p) { return cond(p) ? 255 : 0; };
 		transform_in_place(src_dst, conv);
-	}
+	}*/
 
 
 	void binarize_in_place(gray::View const& src_dst, u8_to_bool_f const& cond)
@@ -1735,7 +1766,7 @@ namespace libimage
 
 #ifndef LIBIMAGE_NO_COLOR
 
-	void binarize(Image const& src, gray::Image const& dst, pixel_to_bool_f const& cond)
+	/*void binarize(Image const& src, gray::Image const& dst, pixel_to_bool_f const& cond)
 	{
 		auto const conv = [&](Pixel p) { return cond(p) ? 255 : 0; };
 		transform(src, dst, conv);
@@ -1754,7 +1785,7 @@ namespace libimage
 	{
 		auto const conv = [&](Pixel p) { return cond(p) ? 255 : 0; };
 		transform(src, dst, conv);
-	}
+	}*/
 
 
 	void binarize(View const& src, gray::View const& dst, pixel_to_bool_f const& cond)
@@ -1839,7 +1870,7 @@ namespace libimage
 	}
 
 
-	Point2Du32 centroid(gray::Image const& src)
+	/*Point2Du32 centroid(gray::Image const& src)
 	{
 		assert(verify(src));
 
@@ -1853,7 +1884,7 @@ namespace libimage
 		assert(verify(src));
 
 		return do_centroid(src, func);
-	}
+	}*/
 
 
 	Point2Du32 centroid(gray::View const& src)
@@ -2032,7 +2063,7 @@ namespace libimage
 	}
 
 
-	void skeleton(gray::Image const& src, gray::Image const& dst)
+	/*void skeleton(gray::Image const& src, gray::Image const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -2053,7 +2084,7 @@ namespace libimage
 		assert(verify(src, dst));
 
 		do_skeleton(src, dst);
-	}
+	}*/
 
 
 	void skeleton(gray::View const& src, gray::View const& dst)
@@ -2100,7 +2131,7 @@ static constexpr u8 lerp_clamp(u8 src_low, u8 src_high, u8 dst_low, u8 dst_high,
 namespace libimage
 {
 
-	void contrast(gray::Image const& src, gray::Image const& dst, u8 src_low, u8 src_high)
+	/*void contrast(gray::Image const& src, gray::Image const& dst, u8 src_low, u8 src_high)
 	{
 		assert(src_low < src_high);
 		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
@@ -2121,7 +2152,7 @@ namespace libimage
 		assert(src_low < src_high);
 		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
 		transform(src, dst, conv);
-	}
+	}*/
 
 
 
@@ -2133,12 +2164,12 @@ namespace libimage
 	}
 
 
-	void contrast_in_place(gray::Image const& src_dst, u8 src_low, u8 src_high)
+	/*void contrast_in_place(gray::Image const& src_dst, u8 src_low, u8 src_high)
 	{
 		assert(src_low < src_high);
 		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
 		transform_in_place(src_dst, conv);
-	}
+	}*/
 
 
 	void contrast_in_place(gray::View const& src_dst, u8 src_low, u8 src_high)
@@ -2147,11 +2178,6 @@ namespace libimage
 		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
 		transform_in_place(src_dst, conv);
 	}
-
-
-
-
-
 }
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
@@ -2629,7 +2655,7 @@ namespace libimage
 	}
 
 
-	void blur(gray::Image const& src, gray::Image const& dst)
+	/*void blur(gray::Image const& src, gray::Image const& dst)
 	{
 		assert(verify(src, dst));
 		auto const width = src.width;
@@ -2665,7 +2691,7 @@ namespace libimage
 		assert(height >= VIEW_MIN_DIM);
 
 		do_blur(src, dst);
-	}
+	}*/
 
 
 	void blur(gray::View const& src, gray::View const& dst)
@@ -2998,7 +3024,7 @@ namespace libimage
 	}
 
 
-	void edges(gray::Image const& src, gray::Image const& dst, u8_to_bool_f const& cond)
+	/*void edges(gray::Image const& src, gray::Image const& dst, u8_to_bool_f const& cond)
 	{
 		assert(verify(src, dst));
 
@@ -3019,7 +3045,7 @@ namespace libimage
 		assert(verify(src, dst));
 
 		do_edges(src, dst, cond);
-	}
+	}*/
 
 
 	void edges(gray::View const& src, gray::View const& dst, u8_to_bool_f const& cond)
@@ -3030,7 +3056,7 @@ namespace libimage
 	}
 
 
-	void gradients(gray::Image const& src, gray::Image const& dst)
+	/*void gradients(gray::Image const& src, gray::Image const& dst)
 	{
 		assert(verify(src, dst));
 
@@ -3051,7 +3077,7 @@ namespace libimage
 		assert(verify(src, dst));
 
 		do_gradients(src, dst);
-	}
+	}*/
 
 
 	void gradients(gray::View const& src, gray::View const& dst)
@@ -3156,7 +3182,7 @@ namespace libimage
 	}
 
 
-	void rotate(Image const& src, Image const& dst, u32 origin_x, u32 origin_y, r32 theta)
+	/*void rotate(Image const& src, Image const& dst, u32 origin_x, u32 origin_y, r32 theta)
 	{
 		assert(verify(src));
 		assert(verify(dst));
@@ -3180,7 +3206,7 @@ namespace libimage
 		assert(verify(dst));
 
 		do_rotate(src, dst, origin_x, origin_y, theta);
-	}
+	}*/
 
 
 	void rotate(View const& src, View const& dst, u32 origin_x, u32 origin_y, r32 theta)
@@ -3192,7 +3218,7 @@ namespace libimage
 	}
 
 
-	void rotate(Image const& src, Image const& dst, Point2Du32 origin, r32 theta)
+	/*void rotate(Image const& src, Image const& dst, Point2Du32 origin, r32 theta)
 	{
 		assert(verify(src));
 		assert(verify(dst));
@@ -3216,7 +3242,7 @@ namespace libimage
 		assert(verify(dst));
 
 		do_rotate(src, dst, origin.x, origin.y, theta);
-	}
+	}*/
 
 
 	void rotate(View const& src, View const& dst, Point2Du32 origin, r32 theta)
@@ -3247,7 +3273,7 @@ namespace libimage
 	}
 
 
-	void rotate(gray::Image const& src, gray::Image const& dst, u32 origin_x, u32 origin_y, r32 theta)
+	/*void rotate(gray::Image const& src, gray::Image const& dst, u32 origin_x, u32 origin_y, r32 theta)
 	{
 		assert(verify(src));
 		assert(verify(dst));
@@ -3271,7 +3297,7 @@ namespace libimage
 		assert(verify(dst));
 
 		do_rotate_gray(src, dst, origin_x, origin_y, theta);
-	}
+	}*/
 
 
 	void rotate(gray::View const& src, gray::View const& dst, u32 origin_x, u32 origin_y, r32 theta)
@@ -3283,7 +3309,7 @@ namespace libimage
 	}
 
 
-	void rotate(gray::Image const& src, gray::Image const& dst, Point2Du32 origin, r32 theta)
+	/*void rotate(gray::Image const& src, gray::Image const& dst, Point2Du32 origin, r32 theta)
 	{
 		assert(verify(src));
 		assert(verify(dst));
@@ -3307,7 +3333,7 @@ namespace libimage
 		assert(verify(dst));
 
 		do_rotate_gray(src, dst, origin.x, origin.y, theta);
-	}
+	}*/
 
 
 	void rotate(gray::View const& src, gray::View const& dst, Point2Du32 origin, r32 theta)

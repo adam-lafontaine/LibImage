@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 
 #define LIBIMAGE_PNG
 #define LIBIMAGE_BMP
@@ -74,3 +75,30 @@ constexpr u32 N_THREADS = 1;
 constexpr u32 N_THREADS = 8;
 
 #endif //!LIBIMAGE_NO_PARALLEL
+
+
+class Point2Du32
+{
+public:
+	u32 x;
+	u32 y;
+};
+
+
+class Point2Dr32
+{
+public:
+	r32 x;
+	r32 y;
+};
+
+
+// region of interest in an image
+class Range2Du32
+{
+public:
+	u32 x_begin;
+	u32 x_end;   // one past last x
+	u32 y_begin;
+	u32 y_end;   // one past last y
+};
