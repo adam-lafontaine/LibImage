@@ -600,7 +600,14 @@ namespace libimage
 	template <class SRC_IMG_T, class DST_IMG_T>
 	static void do_copy(SRC_IMG_T const& src, DST_IMG_T const& dst)
 	{
-		do_simd_transform_by_row(src, dst, simd_copy_row);
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			simd_copy_row(s, d, src.width);
+		};
+
+		process_rows(src.height, row_func);
 	}
 
 #else
@@ -691,7 +698,14 @@ namespace libimage
 	template <class SRC_IMG_T, class DST_IMG_T>
 	static void do_copy_gray(SRC_IMG_T const& src, DST_IMG_T const& dst)
 	{
-		do_simd_transform_by_row(src, dst, simd_copy_gray_row);
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			simd_copy_gray_row(s, d, src.width);
+		};
+
+		process_rows(src.height, row_func);
 	}
 
 #else
@@ -868,7 +882,7 @@ namespace libimage
 			dst.blue[i] = (r32)blue[i];
 			dst.alpha[i] = 255.0f;
 		}
-	}
+	}/*
 
 
 	template <class SRC_IMG_T, class DST_IMG_T, class SIMD_F>
@@ -912,14 +926,11 @@ namespace libimage
 		};
 
 		execute_procs(make_proc_list(thread_proc));
-	}
+	}*/
 
 }
 
 #endif // !LIBIMAGE_NO_SIMD
-
-
-
 
 
 /*  transform  */
@@ -1159,25 +1170,25 @@ namespace libimage
 	}
 
 
-	template <class SRC_A_IMG_T, class SRC_B_IMG_T, class DST_IMG_T>
-	static void do_alpha_blend(SRC_A_IMG_T const& src_a, SRC_B_IMG_T const& src_b, DST_IMG_T const& dst)
+	static void do_alpha_blend(View const& src, View const& current, View const& dst)
 	{
-		do_simd_transform_by_row2(src_a, src_b, dst, simd_alpha_blend_row);
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto c = row_begin(current, y);
+			auto d = row_begin(dst, y);
+			
+			simd_alpha_blend_row(s, c, d, src.width);
+		};
+
+		process_rows(src.height, row_func);
 	}
 
 
 #else
 
-#endif // !LIBIMAGE_NO_SIMD	
-
-
-	void alpha_blend(View const& src, View const& current, View const& dst)
+	static void do_alpha_blend(View const& src, View const& current, View const& dst)
 	{
-		assert(verify(src, current));
-		assert(verify(src, dst));
-
-		assert(verify(src, dst));
-
 		auto const row_func = [&](u32 y)
 		{
 			auto s = row_begin(src, y);
@@ -1190,6 +1201,17 @@ namespace libimage
 		};
 
 		process_rows(src.height, row_func);
+	}
+
+#endif // !LIBIMAGE_NO_SIMD	
+
+
+	void alpha_blend(View const& src, View const& current, View const& dst)
+	{
+		assert(verify(src, current));
+		assert(verify(src, dst));
+
+		do_alpha_blend(src, current, dst);		
 	}
 
 
@@ -1278,46 +1300,28 @@ namespace libimage
 	}
 
 
-	template <class SRC_IMG_T, class DST_IMG_T>
-	static void do_grayscale(SRC_IMG_T const& src, DST_IMG_T const& dst)
+	static void do_grayscale(View const& src, gray::View const& dst)
 	{
-		do_simd_transform_by_row(src, dst, simd_grayscale_row);
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+
+			simd_grayscale_row(s, d, src.width);
+		};
+
+		process_rows(src.height, row_func);
 	}
 
 #else
 
-	template <class SRC_IMG_T, class DST_IMG_T>
-	static void do_grayscale(SRC_IMG_T const& src, DST_IMG_T const& dst)
+	static void do_grayscale(View const& src, gray::View const& dst)
 	{
 		transform(src, dst, pixel_grayscale_standard);
 	}
 
 
 #endif // !LIBIMAGE_NO_SIMD	
-
-
-	/*void grayscale(Image const& src, gray::Image const& dst)
-	{
-		assert(verify(src, dst));
-
-		do_grayscale(src, dst);
-	}
-
-
-	void grayscale(Image const& src, gray::View const& dst)
-	{
-		assert(verify(src, dst));
-
-		do_grayscale(src, dst);
-	}
-
-
-	void grayscale(View const& src, gray::Image const& dst)
-	{
-		assert(verify(src, dst));
-
-		do_grayscale(src, dst);
-	}*/
 
 
 	void grayscale(View const& src, gray::View const& dst)
@@ -1327,14 +1331,11 @@ namespace libimage
 		do_grayscale(src, dst);
 	}
 
-	/*void alpha_grayscale(Image const& src)
-	{
-		transform_alpha(src, pixel_grayscale_standard);
-	}*/
-
 
 	void alpha_grayscale(View const& src)
 	{
+		assert(verify(src));
+
 		transform_alpha(src, pixel_grayscale_standard);
 	}
 
@@ -2374,7 +2375,7 @@ namespace libimage
 				}
 			}			
 
-			auto g =std::hypot(grad_x, grad_y);
+			auto g = std::hypot(grad_x, grad_y);
 
 			assert(g >= 0.0f);
 			assert(g <= 255.0f);

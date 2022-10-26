@@ -2915,8 +2915,9 @@ namespace libimage
 					auto s = row_offset_begin(src, y, ry);
 					for (int rx = rx_begin; rx < rx_end; ++rx)
 					{
-						gx += (s + rx)[x] * GRAD_X_3X3[w];
-						gy += (s + rx)[x] * GRAD_Y_3X3[w];
+						auto val = (s + rx)[x];
+						gx += val * GRAD_X_3X3[w];
+						gy += val * GRAD_Y_3X3[w];
 						++w;
 					}
 				}
@@ -2927,7 +2928,6 @@ namespace libimage
 
 		process_rows(src.height, row_func);
 	}
-
 
 	
 	static void for_each_gradient_3x3(View1r32 const& src, View2r32 const& xy_dst, std::function<r32(r32)> const& grad_func)
