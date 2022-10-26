@@ -5,13 +5,6 @@
 #include <cmath>
 
 
-template <class LIST_T, class FUNC_T>
-static void do_for_each_seq(LIST_T const& list, FUNC_T const& func)
-{
-	std::for_each(list.begin(), list.end(), func);
-}
-
-
 #ifndef LIBIMAGE_NO_PARALLEL
 
 #include <execution>
@@ -29,7 +22,7 @@ static void do_for_each(LIST_T const& list, FUNC_T const& func)
 template <class LIST_T, class FUNC_T>
 static void do_for_each(LIST_T const& list, FUNC_T const& func)
 {
-	do_for_each_seq(list, func);
+	std::for_each(list.begin(), list.end(), func);
 }
 
 #endif // !LIBIMAGE_NO_PARALLEL
@@ -511,341 +504,38 @@ namespace libimage
 }
 
 
-template <class XY_F>
-static void do_for_each_xy_in_span(u32 y, u32 x_begin, u32 length, XY_F const& func)
-{
-	for (u32 x = x_begin; x < x_begin + length; ++x)
-	{
-		func(x, y);
-	}
-}
-
-
-template <class XY_F>
-static void do_for_each_xy_in_row(u32 y, u32 length, XY_F const& func)
-{
-	auto x_begin = 0;
-
-	do_for_each_xy_in_span(y, x_begin, length, func);
-}
-
-
-template <typename PIXEL_T, typename PIXEL_F>
-static void do_process_span(PIXEL_T* a_begin, u32 length, PIXEL_F const& func)
-{
-	for (u32 i = 0; i < length; ++i)
-	{
-		func(a_begin + i);
-	}
-}
-
-
-template <typename PIXEL_A_T, typename PIXEL_B_T, typename PIXEL_F>
-static void do_process_span(PIXEL_A_T* a_begin, PIXEL_B_T* b_begin, u32 length, PIXEL_F const& func)
-{
-	for (u32 i = 0; i < length; ++i)
-	{
-		func(a_begin + i, b_begin + i);
-	}
-}
-
-
-template <typename PIXEL_A_T, typename PIXEL_B_T, typename PIXEL_C_T, typename PIXEL_F>
-static void do_process_span(PIXEL_A_T* a_begin, PIXEL_B_T* b_begin, PIXEL_C_T* c_begin, u32 length, PIXEL_F const& func)
-{
-	for (u32 i = 0; i < length; ++i)
-	{
-		func(a_begin + i, b_begin + i, c_begin + i);
-	}
-}
-
-
-
-
-template <class IMG_T>
-static Range2Du32 make_range(IMG_T const& img)
-{
-	Range2Du32 r{};
-
-	r.x_begin = 0;
-	r.x_end = img.width;
-	r.y_begin = 0;
-	r.y_end = img.height;
-
-	return r;
-}
-
-
-template <class IMG_T>
-static void do_for_each_xy_in_range(IMG_T const& image, Range2Du32 const& range, std::function<void(u32 x, u32 y)> const& func)
-{
-	auto const height = range.y_end - range.y_begin;
-	auto const width = range.x_end - range.x_begin;
-	auto const rows_per_thread = height / N_THREADS;
-
-	auto const thread_proc = [&](u32 id)
-	{
-		auto y_begin = range.y_begin + id * rows_per_thread;
-		auto y_end = range.y_begin + (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
-
-		for (u32 y = y_begin; y < y_end; ++y)
-		{
-			do_for_each_xy_in_span(y, range.x_begin, width, func);
-		}
-	};
-
-	execute_procs(make_proc_list(thread_proc));
-}
-
-
-namespace libimage
-{
-	template <class IMG_T, class PIXEL_F>
-	static void do_process_range(IMG_T const& img, Range2Du32 const& range, PIXEL_F const& func)
-	{
-		auto const height = range.y_end - range.y_begin;
-		auto const width = range.x_end - range.x_begin;
-		auto const rows_per_thread = height / N_THREADS;
-
-		auto const thread_proc = [&](u32 id)
-		{
-			auto y_begin = range.y_begin + id * rows_per_thread;
-			auto y_end = range.y_begin + (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
-
-			for (u32 y = y_begin; y < y_end; ++y)
-			{
-				auto begin = row_begin(img, y) + range.x_begin;
-				do_process_span(begin, width, func);
-			}
-		};
-
-		execute_procs(make_proc_list(thread_proc));
-	}
-
-
-	template <class IMG_A_T, class IMG_B_T, class PIXEL_F>
-	static void do_process_range(IMG_A_T const& img_a, IMG_B_T const& img_b, Range2Du32 const& range, PIXEL_F const& func)
-	{
-		auto const height = range.y_end - range.y_begin;
-		auto const width = range.x_end - range.x_begin;
-		auto const rows_per_thread = height / N_THREADS;
-
-		auto const thread_proc = [&](u32 id)
-		{
-			auto y_begin = range.y_begin + id * rows_per_thread;
-			auto y_end = range.y_begin + (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
-
-			for (u32 y = y_begin; y < y_end; ++y)
-			{
-				auto a_begin = row_begin(img_a, y) + range.x_begin;
-				auto b_begin = row_begin(img_b, y) + range.x_begin;
-				do_process_span(a_begin, b_begin, width, func);
-			}
-		};
-
-		execute_procs(make_proc_list(thread_proc));
-	}
-
-
-	template <class IMG_A_T, class IMG_B_T, class IMG_C_T, class PIXEL_F>
-	static void do_process_range(IMG_A_T const& img_a, IMG_B_T const& img_b, IMG_C_T const& img_c, Range2Du32 const& range, PIXEL_F const& func)
-	{
-		auto const height = range.y_end - range.y_begin;
-		auto const width = range.x_end - range.x_begin;
-		auto const rows_per_thread = height / N_THREADS;
-
-		auto const thread_proc = [&](u32 id)
-		{
-			auto y_begin = range.y_begin + id * rows_per_thread;
-			auto y_end = range.y_begin + (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
-
-			for (u32 y = y_begin; y < y_end; ++y)
-			{
-				auto a_begin = row_begin(img_a, y) + range.x_begin;
-				auto b_begin = row_begin(img_b, y) + range.x_begin;
-				auto c_begin = row_begin(img_c, y) + range.x_begin;
-				do_process_span(a_begin, b_begin, c_begin, width, func);
-			}
-		};
-
-		execute_procs(make_proc_list(thread_proc));
-	}
-}
-
-
-
-/* for each */
-
-namespace libimage
-{
-
-#ifndef LIBIMAGE_NO_COLOR
-
-	void for_each_pixel(Image const& image, pixel_f const& func)
-	{
-		auto const range = make_range(image);
-		auto const f = [&](Pixel* p) { func(*p); };
-
-		do_process_range(image, range, f);
-	}
-
-
-	void for_each_pixel(View const& view, pixel_f const& func)
-	{
-		auto const range = make_range(view);
-		auto const f = [&](Pixel* p) { func(*p); };
-
-		do_process_range(view, range, f);
-	}
-
-
-	void for_each_xy(Image const& image, xy_f const& func)
-	{
-		auto const range = make_range(image);
-		do_for_each_xy_in_range(image, range, func);
-	}
-
-
-	void for_each_xy(View const& view, xy_f const& func)
-	{
-		auto const range = make_range(view);
-		do_for_each_xy_in_range(view, range, func);
-	}
-
-#endif // !LIBIMAGE_NO_COLOR
-
-#ifndef LIBIMAGE_NO_GRAYSCALE
-
-	void for_each_pixel(gray::Image const& image, u8_f const& func)
-	{
-		auto const range = make_range(image);
-		auto const f = [&](u8* p) { func(*p); };
-
-		do_process_range(image, range, f);
-	}
-
-
-	void for_each_pixel(gray::View const& view, u8_f const& func)
-	{
-		auto const range = make_range(view);
-		auto const f = [&](u8* p) { func(*p); };
-
-		do_process_range(view, range, f);
-	}
-
-
-	void for_each_xy(gray::Image const& image, xy_f const& func)
-	{
-		auto const range = make_range(image);
-		do_for_each_xy_in_range(image, range, func);
-	}
-
-
-	void for_each_xy(gray::View const& view, xy_f const& func)
-	{
-		auto const range = make_range(view);
-		do_for_each_xy_in_range(view, range, func);
-	}
-
-#endif // !LIBIMAGE_NO_GRAYSCALE
-}
-
-
-/* simd helpers */
-
-#ifndef LIBIMAGE_NO_SIMD
-
-namespace libimage
-{
-	static inline void copy_vec_len(Pixel* src, Pixelr32Planar& dst)
-	{
-		for (u32 i = 0; i < simd::VEC_LEN; ++i)
-		{
-			dst.red[i] = (r32)src[i].red;
-			dst.green[i] = (r32)src[i].green;
-			dst.blue[i] = (r32)src[i].blue;
-			dst.alpha[i] = (r32)src[i].alpha;
-		}
-	}
-
-
-	static inline void copy_vec_len(u8* red, u8* green, u8* blue, Pixelr32Planar& dst)
-	{
-		for (u32 i = 0; i < simd::VEC_LEN; ++i)
-		{
-			dst.red[i] = (r32)red[i];
-			dst.green[i] = (r32)green[i];
-			dst.blue[i] = (r32)blue[i];
-			dst.alpha[i] = 255.0f;
-		}
-	}
-
-
-	template <class SRC_IMG_T, class DST_IMG_T, class SIMD_F>
-	static void do_simd_transform_by_row(SRC_IMG_T const& src, DST_IMG_T const& dst, SIMD_F const& func)
-	{
-		auto const height = src.height;
-		auto const width = src.width;
-		auto const rows_per_thread = height / N_THREADS;
-
-		auto const thread_proc = [&](u32 id)
-		{
-			auto y_begin = id * rows_per_thread;
-			auto y_end = id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread;
-
-			for (u32 y = y_begin; y < y_end; ++y)
-			{
-				func(row_begin(src, y), row_begin(dst, y), width);
-			}
-		};
-
-		execute_procs(make_proc_list(thread_proc));
-	}
-
-
-	template <class SRC_A_IMG_T, class SRC_B_IMG_T, class DST_IMG_T, class SIMD_F>
-	static void do_simd_transform_by_row2(SRC_A_IMG_T const& src_a, SRC_B_IMG_T const& src_b, DST_IMG_T const& dst, SIMD_F const& func)
-	{
-		auto const height = src_a.height;
-		auto const width = src_a.width;
-		auto const rows_per_thread = height / N_THREADS;
-
-		auto const thread_proc = [&](u32 id)
-		{
-			auto y_begin = id * rows_per_thread;
-			auto y_end = id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread;
-
-			for (u32 y = y_begin; y < y_end; ++y)
-			{
-				func(row_begin(src_a, y), row_begin(src_b, y), row_begin(dst, y), width);
-			}
-		};
-
-		execute_procs(make_proc_list(thread_proc));
-	}
-
-}
-
-#endif // !LIBIMAGE_NO_SIMD
-
-
 /* fill */
 
 namespace libimage
 {
+	template <class IMG, typename PIXEL>
+	static void do_fill(IMG const& image, PIXEL color)
+	{
+		auto const row_func = [&](u32 y)
+		{
+			auto d = row_begin(image, y);
+			for (u32 x = 0; x < image.width; ++x)
+			{
+				d[x] = color;
+			}
+		};
+
+		process_rows(image.height, row_func);
+	}
+
 #ifndef LIBIMAGE_NO_COLOR
 
 	void fill(Image const& image, Pixel color)
 	{
-		auto const func = [&](Pixel& p) { p = color; };
-		for_each_pixel(image, func);
+		assert(verify(image));
+		do_fill(image, color);
 	}
 
 
 	void fill(View const& view, Pixel color)
 	{
-		auto const func = [&](Pixel& p) { p = color; };
-		for_each_pixel(view, func);
+		assert(verify(view));
+		do_fill(view, color);
 	}
 
 #endif // !LIBIMAGE_NO_COLOR
@@ -854,15 +544,15 @@ namespace libimage
 
 	void fill(gray::Image const& image, u8 gray)
 	{
-		auto const func = [&](u8& p) { p = gray; };
-		for_each_pixel(image, func);
+		assert(verify(image));
+		do_fill(image, gray);
 	}
 
 
 	void fill(gray::View const& view, u8 gray)
 	{
-		auto const func = [&](u8& p) { p = gray; };
-		for_each_pixel(view, func);
+		assert(verify(view));
+		do_fill(view, gray);
 	}
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
@@ -1053,6 +743,185 @@ namespace libimage
 }
 
 
+/* for each */
+
+namespace libimage
+{
+	template <class IMG, class F>
+	void do_for_each_pixel(IMG const& image, F const& func)
+	{
+		auto const row_func = [&](u32 y)
+		{
+			auto row = row_begin(image, y);
+			for (u32 x = 0; x < image.width; ++x)
+			{
+				func(row[x]);
+			}
+		};
+
+		process_rows(image.height, row_func);
+	}
+
+
+	template <class IMG>
+	static void do_for_each_xy(IMG const& image, xy_f const& func)
+	{
+		auto const row_func = [&](u32 y)
+		{
+			for (u32 x = 0; x < image.width; ++x)
+			{
+				func(x, y);
+			}
+		};
+
+		process_rows(image.height, row_func);
+	}
+
+#ifndef LIBIMAGE_NO_COLOR
+
+	void for_each_pixel(Image const& image, pixel_f const& func)
+	{
+		assert(verify(image));
+		do_for_each_pixel(image, func);
+	}
+
+
+	void for_each_pixel(View const& view, pixel_f const& func)
+	{
+		assert(verify(view));
+		do_for_each_pixel(view, func);
+	}
+
+
+	void for_each_xy(Image const& image, xy_f const& func)
+	{
+		assert(verify(image));
+		do_for_each_xy(image, func);
+	}
+
+
+	void for_each_xy(View const& view, xy_f const& func)
+	{
+		assert(verify(view));
+		do_for_each_xy(view, func);
+	}
+
+#endif // !LIBIMAGE_NO_COLOR
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	void for_each_pixel(gray::Image const& image, u8_f const& func)
+	{
+		assert(verify(image));
+		do_for_each_pixel(image, func);
+	}
+
+
+	void for_each_pixel(gray::View const& view, u8_f const& func)
+	{
+		assert(verify(view));
+		do_for_each_pixel(view, func);
+	}
+
+
+	void for_each_xy(gray::Image const& image, xy_f const& func)
+	{
+		assert(verify(image));
+		do_for_each_xy(image, func);
+	}
+
+
+	void for_each_xy(gray::View const& view, xy_f const& func)
+	{
+		assert(verify(view));
+		do_for_each_xy(view, func);
+	}
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+}
+
+
+/* simd helpers */
+
+#ifndef LIBIMAGE_NO_SIMD
+
+namespace libimage
+{
+	static inline void copy_vec_len(Pixel* src, Pixelr32Planar& dst)
+	{
+		for (u32 i = 0; i < simd::VEC_LEN; ++i)
+		{
+			dst.red[i] = (r32)src[i].red;
+			dst.green[i] = (r32)src[i].green;
+			dst.blue[i] = (r32)src[i].blue;
+			dst.alpha[i] = (r32)src[i].alpha;
+		}
+	}
+
+
+	static inline void copy_vec_len(u8* red, u8* green, u8* blue, Pixelr32Planar& dst)
+	{
+		for (u32 i = 0; i < simd::VEC_LEN; ++i)
+		{
+			dst.red[i] = (r32)red[i];
+			dst.green[i] = (r32)green[i];
+			dst.blue[i] = (r32)blue[i];
+			dst.alpha[i] = 255.0f;
+		}
+	}
+
+
+	template <class SRC_IMG_T, class DST_IMG_T, class SIMD_F>
+	static void do_simd_transform_by_row(SRC_IMG_T const& src, DST_IMG_T const& dst, SIMD_F const& func)
+	{
+		auto const height = src.height;
+		auto const width = src.width;
+		auto const rows_per_thread = height / N_THREADS;
+
+		auto const thread_proc = [&](u32 id)
+		{
+			auto y_begin = id * rows_per_thread;
+			auto y_end = id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread;
+
+			for (u32 y = y_begin; y < y_end; ++y)
+			{
+				func(row_begin(src, y), row_begin(dst, y), width);
+			}
+		};
+
+		execute_procs(make_proc_list(thread_proc));
+	}
+
+
+	template <class SRC_A_IMG_T, class SRC_B_IMG_T, class DST_IMG_T, class SIMD_F>
+	static void do_simd_transform_by_row2(SRC_A_IMG_T const& src_a, SRC_B_IMG_T const& src_b, DST_IMG_T const& dst, SIMD_F const& func)
+	{
+		auto const height = src_a.height;
+		auto const width = src_a.width;
+		auto const rows_per_thread = height / N_THREADS;
+
+		auto const thread_proc = [&](u32 id)
+		{
+			auto y_begin = id * rows_per_thread;
+			auto y_end = id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread;
+
+			for (u32 y = y_begin; y < y_end; ++y)
+			{
+				func(row_begin(src_a, y), row_begin(src_b, y), row_begin(dst, y), width);
+			}
+		};
+
+		execute_procs(make_proc_list(thread_proc));
+	}
+
+}
+
+#endif // !LIBIMAGE_NO_SIMD
+
+
+
+
+
 /*  transform  */
 
 namespace libimage
@@ -1064,11 +933,18 @@ namespace libimage
 	void transform(View const& src, View const& dst, pixel_to_pixel_f const& func)
 	{
 		assert(verify(src, dst));
-		
-		auto const range = make_range(src);
-		auto const f = [&](Pixel* s, Pixel* d) { *d = func(*s); };
 
-		do_process_range(src, dst, range, f);
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = func(s[x]);
+			}
+		};
+
+		process_rows(src.height, row_func);
 	}
 
 
@@ -1076,10 +952,7 @@ namespace libimage
 	{
 		assert(verify(src_dst));
 
-		auto const range = make_range(src_dst);
-		auto const f = [&](Pixel* p) { *p = func(*p); };
-
-		do_process_range(src_dst, range, f);
+		transform(src_dst, src_dst, func);
 	}
 
 
@@ -1087,10 +960,16 @@ namespace libimage
 	{
 		assert(verify(src_dst));
 
-		auto const range = make_range(src_dst);
-		auto const f = [&](Pixel* p) { p->alpha = func(*p); };
+		auto const row_func = [&](u32 y)
+		{
+			auto d = row_begin(src_dst, y);
+			for (u32 x = 0; x < src_dst.width; ++x)
+			{
+				d[x].alpha = func(d[x]);
+			}
+		};
 
-		do_process_range(src_dst, range, f);
+		process_rows(src_dst.height, row_func);
 	}
 
 
@@ -1116,10 +995,17 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		auto const range = make_range(src);
-		auto const f = [&](u8* s, u8* d) { *d = lut[*s]; };
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = lut[s[x]];
+			}
+		};
 
-		do_process_range(src, dst, range, f);
+		process_rows(src.height, row_func);
 	}
 
 
@@ -1135,10 +1021,7 @@ namespace libimage
 	{
 		assert(verify(src_dst));
 
-		auto const range = make_range(src_dst);
-		auto const f = [&](u8* p) { *p = lut[*p]; };
-
-		do_process_range(src_dst, range, f);
+		transform(src_dst, src_dst, lut);
 	}
 
 
@@ -1161,10 +1044,17 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		auto const range = make_range(src);
-		auto const f = [&](Pixel* s, u8* d) { *d = func(*s); };
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = func(s[x]);
+			}
+		};
 
-		do_process_range(src, dst, range, f);
+		process_rows(src.height, row_func);
 	}
 
 
@@ -1286,10 +1176,20 @@ namespace libimage
 		assert(verify(src, current));
 		assert(verify(src, dst));
 
-		auto const range = make_range(src);
-		auto const f = [&](Pixel* sa, Pixel* sb, Pixel* d) { *d = alpha_blend_linear(*sa, *sb); };
+		assert(verify(src, dst));
 
-		do_process_range(src, current, dst, range, f);
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto c = row_begin(current, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = alpha_blend_linear(s[x], c[x]);
+			}
+		};
+
+		process_rows(src.height, row_func);
 	}
 
 

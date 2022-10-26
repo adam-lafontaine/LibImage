@@ -384,26 +384,6 @@ namespace libimage
 
 namespace libimage
 {
-#ifndef LIBIMAGE_NO_COLOR
-
-	void for_each_pixel(View const& view, pixel_f const& func);
-
-	void for_each_xy(View const& view, xy_f const& func);
-
-#endif // !LIBIMAGE_NO_COLOR
-
-#ifndef LIBIMAGE_NO_GRAYSCALE
-
-	void for_each_pixel(gray::View const& view, u8_f const& func);
-
-	void for_each_xy(gray::View const& view, xy_f const& func);
-
-#endif // !LIBIMAGE_NO_GRAYSCALE
-}
-
-
-namespace libimage
-{
 	void fill(Image const& image, Pixel color);
 
 	void fill(View const& view, Pixel color);
@@ -417,55 +397,6 @@ namespace libimage
 	void fill(gray::View const& view, u8 gray);
 
 #endif // !LIBIMAGE_NO_GRAYSCALE
-}
-
-
-/*  transform.hpp  */
-
-namespace libimage
-{
-
-
-	/*** transform parallel ***/
-
-
-
-#ifndef LIBIMAGE_NO_COLOR	
-
-	void transform(View const& src, View const& dst, pixel_to_pixel_f const& func);
-
-	void transform_in_place(View const& src_dst, pixel_to_pixel_f const& func);
-
-	void transform_alpha(View const& src_dst, pixel_to_u8_f const& func);
-
-
-
-
-#endif // !LIBIMAGE_NO_COLOR
-
-#ifndef LIBIMAGE_NO_GRAYSCALE
-
-	lookup_table_t to_lookup_table(u8_to_u8_f const& func);
-
-	void transform(gray::View const& src, gray::View const& dst, lookup_table_t const& lut);
-
-	void transform(gray::View const& src, gray::View const& dst, u8_to_u8_f const& func);
-
-	void transform_in_place(gray::View const& src_dst, lookup_table_t const& lut);
-
-	void transform_in_place(gray::View const& src_dst, u8_to_u8_f const& func);
-
-#endif // !LIBIMAGE_NO_GRAYSCALE
-
-#ifndef LIBIMAGE_NO_COLOR
-#ifndef LIBIMAGE_NO_GRAYSCALE
-
-	void transform(View const& src, gray::View const& dst, pixel_to_u8_f const& func);
-
-#endif // !LIBIMAGE_NO_GRAYSCALE
-#endif // !LIBIMAGE_NO_COLOR
-
-
 }
 
 
@@ -501,6 +432,68 @@ namespace libimage
 
 
 #endif // !LIBIMAGE_NO_GRAYSCALE	
+}
+
+
+namespace libimage
+{
+#ifndef LIBIMAGE_NO_COLOR
+
+	void for_each_pixel(View const& view, pixel_f const& func);
+
+	void for_each_xy(View const& view, xy_f const& func);
+
+#endif // !LIBIMAGE_NO_COLOR
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	void for_each_pixel(gray::View const& view, u8_f const& func);
+
+	void for_each_xy(gray::View const& view, xy_f const& func);
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+}
+
+
+/*  transform.hpp  */
+
+namespace libimage
+{
+
+#ifndef LIBIMAGE_NO_COLOR	
+
+	void transform(View const& src, View const& dst, pixel_to_pixel_f const& func);
+
+	void transform_in_place(View const& src_dst, pixel_to_pixel_f const& func);
+
+	void transform_alpha(View const& src_dst, pixel_to_u8_f const& func);
+
+
+#endif // !LIBIMAGE_NO_COLOR
+
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	lookup_table_t to_lookup_table(u8_to_u8_f const& func);
+
+	void transform(gray::View const& src, gray::View const& dst, lookup_table_t const& lut);
+
+	void transform(gray::View const& src, gray::View const& dst, u8_to_u8_f const& func);
+
+	void transform_in_place(gray::View const& src_dst, lookup_table_t const& lut);
+
+	void transform_in_place(gray::View const& src_dst, u8_to_u8_f const& func);
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+
+#ifndef LIBIMAGE_NO_COLOR
+#ifndef LIBIMAGE_NO_GRAYSCALE
+
+	void transform(View const& src, gray::View const& dst, pixel_to_u8_f const& func);
+
+#endif // !LIBIMAGE_NO_GRAYSCALE
+#endif // !LIBIMAGE_NO_COLOR
+
+
 }
 
 
