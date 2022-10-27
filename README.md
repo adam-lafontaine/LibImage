@@ -18,7 +18,7 @@ A Basic image processing libray for C++
 * Processes images by dividing rows by per number of specified threads
 * Limited SIMD support provided
 * Visual Studio project for Windows
-* Makefiles for Ubuntu and Raspberry Pi 3B+
+* Makefile for Ubuntu
 * "make setup" to create build and output directories
 * "make build" or "make run"
 
