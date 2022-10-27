@@ -1668,46 +1668,12 @@ static constexpr u8 lerp_clamp(u8 src_low, u8 src_high, u8 dst_low, u8 dst_high,
 
 namespace libimage
 {
-
-	/*void contrast(gray::Image const& src, gray::Image const& dst, u8 src_low, u8 src_high)
-	{
-		assert(src_low < src_high);
-		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
-		transform(src, dst, conv);
-	}
-
-
-	void contrast(gray::Image const& src, gray::View const& dst, u8 src_low, u8 src_high)
-	{
-		assert(src_low < src_high);
-		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
-		transform(src, dst, conv);
-	}
-
-
-	void contrast(gray::View const& src, gray::Image const& dst, u8 src_low, u8 src_high)
-	{
-		assert(src_low < src_high);
-		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
-		transform(src, dst, conv);
-	}*/
-
-
-
 	void contrast(gray::View const& src, gray::View const& dst, u8 src_low, u8 src_high)
 	{
 		assert(src_low < src_high);
 		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
 		transform(src, dst, conv);
 	}
-
-
-	/*void contrast_in_place(gray::Image const& src_dst, u8 src_low, u8 src_high)
-	{
-		assert(src_low < src_high);
-		auto const conv = [&](u8 p) { return lerp_clamp(src_low, src_high, U8_MIN, U8_MAX, p); };
-		transform_in_place(src_dst, conv);
-	}*/
 
 
 	void contrast_in_place(gray::View const& src_dst, u8 src_low, u8 src_high)
@@ -2018,34 +1984,25 @@ namespace libimage
 
 
 #endif // !LIBIMAGE_NO_SIMD
-
 	
-	static void do_convolve_in_range(gray::View const& src, gray::View const& dst, Range2Du32 const& range, Matrix2Dr32 const& kernel)
+
+	static void do_convolve_by_row(gray::View const& src, gray::View const& dst, Matrix2Dr32 const& kernel)
 	{
-		auto const height = range.y_end - range.y_begin;
-		auto const width = range.x_end - range.x_begin;
-		auto const rows_per_thread = height / N_THREADS;
 		auto const pitch = (u32)(row_begin(src, 1) - row_begin(src, 0));
 
-		auto const thread_proc = [&](u32 id)
+		auto const row_func = [&](u32 y) 
 		{
-			auto y_begin = range.y_begin + id * rows_per_thread;
-			auto y_end = range.y_begin + (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
+			ConvolveProps props{};
+			props.kernel = kernel;
+			props.length = src.width;
+			props.pitch = pitch;
+			props.src_begin = row_begin(src, y);
+			props.dst_begin = row_begin(dst, y);
 
-			for (u32 y = y_begin; y < y_end; ++y)
-			{
-				ConvolveProps props{};
-				props.src_begin = row_begin(src, y) + range.x_begin;
-				props.dst_begin = row_begin(dst, y) + range.x_begin;
-				props.kernel = kernel;
-				props.length = width;
-				props.pitch = pitch;
-
-				convolve_span(props);
-			}
+			convolve_span(props);
 		};
 
-		execute_procs(make_proc_list(thread_proc));
+		process_rows(src.height, row_func);
 	}
 }
 
@@ -2184,7 +2141,7 @@ namespace libimage
 		kernel.height = 5;
 		kernel.data = kernel_data;
 
-		do_convolve_in_range(src, dst, r, kernel);
+		do_convolve_by_row(sub_view(src, r), sub_view(dst, r), kernel);
 	}
 
 
@@ -2387,7 +2344,7 @@ namespace libimage
 #endif // !LIBIMAGE_NO_SIMD
 
 
-	static void do_gradients_in_range(gray::View const& src, gray::View const& dst, Range2Du32 const& range)
+	/*static void do_gradients_in_range(gray::View const& src, gray::View const& dst, Range2Du32 const& range)
 	{
 		auto const height = range.y_end - range.y_begin;
 		auto const width = range.x_end - range.x_begin;
@@ -2409,10 +2366,10 @@ namespace libimage
 		};
 
 		execute_procs(make_proc_list(thread_proc));
-	}
+	}*/
 
 
-	static void do_edges_in_range(gray::View const& src, gray::View const& dst, Range2Du32 const& range, u8_to_bool_f const& cond)
+	/*static void do_edges_in_range(gray::View const& src, gray::View const& dst, Range2Du32 const& range, u8_to_bool_f const& cond)
 	{
 		auto const height = range.y_end - range.y_begin;
 		auto const width = range.x_end - range.x_begin;
@@ -2434,6 +2391,40 @@ namespace libimage
 		};
 
 		execute_procs(make_proc_list(thread_proc));
+	}*/
+
+
+	static void do_edges_by_row(gray::View const& src, gray::View const& dst, u8_to_bool_f const& cond)
+	{
+		auto const length = src.width;
+		auto const pitch = (u32)(row_begin(src, 1) - row_begin(src, 0));
+
+		auto const row_func = [&](u32 y) 
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+
+			edges_span(s, d, length, pitch, cond);
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	static void do_gradients_by_row(gray::View const& src, gray::View const& dst)
+	{
+		auto const length = src.width;
+		auto const pitch = (u32)(row_begin(src, 1) - row_begin(src, 0));
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+
+			gradients_span(s, d, length, pitch);
+		};
+
+		process_rows(src.height, row_func);
 	}
 
 
@@ -2488,7 +2479,7 @@ namespace libimage
 		r.y_begin = 1;
 		r.y_end = src.height - 1;
 
-		do_edges_in_range(src, dst, r, cond);
+		do_edges_by_row(sub_view(src, r), sub_view(dst, r), cond);
 	}
 
 
@@ -2508,7 +2499,7 @@ namespace libimage
 		r.y_begin = 1;
 		r.y_end = src.height - 1;
 
-		do_gradients_in_range(src, dst, r);
+		do_gradients_by_row(sub_view(src, r), sub_view(dst, r));
 	}
 		
 
