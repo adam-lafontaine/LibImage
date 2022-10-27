@@ -1,4 +1,4 @@
-GPP := g++-10 -std=c++17
+GPP := g++-11 -std=c++17
 
 build := ./build_files
 out := ../../../TestImages/out_files
