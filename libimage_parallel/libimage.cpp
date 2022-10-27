@@ -1755,7 +1755,7 @@ namespace libimage
 		u8* dst_begin;
 
 		u32 length;
-		u32 pitch;
+		u32 src_pitch;
 
 		Matrix2Dr32 kernel;
 	};
@@ -1770,7 +1770,7 @@ namespace libimage
 		u8* dst2_begin;
 
 		u32 length;
-		u32 pitch;
+		u32 src_pitch;
 
 		Matrix2Dr32 kernel;
 	};	
@@ -1806,7 +1806,7 @@ namespace libimage
 			{
 				for (int rx = rx_begin; rx < rx_end; ++rx, ++w)
 				{
-					int offset = ry * props.pitch + rx + i;
+					int offset = ry * props.src_pitch + rx + i;
 
 					auto ptr = props.src_begin + offset;
 					simd::cast_copy_len(ptr, mem.data);
@@ -1862,7 +1862,7 @@ namespace libimage
 			{
 				for (int rx = rx_begin; rx < rx_end; ++rx, ++w)
 				{
-					int offset = ry * props.pitch + rx + i;
+					int offset = ry * props.src_pitch + rx + i;
 
 					auto ptr = props.src_begin + offset;
 					simd::cast_copy_len(ptr, mem.data);
@@ -1929,7 +1929,7 @@ namespace libimage
 			{
 				for (int rx = rx_begin; rx < rx_end; ++rx, ++w)
 				{
-					int offset = ry * props.pitch + rx + i;
+					int offset = ry * props.src_pitch + rx + i;
 
 					p += props.src_begin[offset] * weights[w];
 				}
@@ -1965,7 +1965,7 @@ namespace libimage
 			{
 				for (int rx = rx_begin; rx < rx_end; ++rx, ++w)
 				{
-					int offset = ry * props.pitch + rx + i;
+					int offset = ry * props.src_pitch + rx + i;
 
 					p += props.src_begin[offset] * weights[w];
 					p2 += props.src2_begin[offset] * weights[w];
@@ -1995,7 +1995,7 @@ namespace libimage
 			ConvolveProps props{};
 			props.kernel = kernel;
 			props.length = src.width;
-			props.pitch = pitch;
+			props.src_pitch = pitch;
 			props.src_begin = row_begin(src, y);
 			props.dst_begin = row_begin(dst, y);
 
@@ -2074,7 +2074,7 @@ namespace libimage
 		props.src2_begin = row_begin(src, y_bottom) + x_begin;
 		props.dst2_begin = row_begin(dst, y_bottom) + x_begin;
 		props.length = x_end - x_begin;
-		props.pitch = (u32)(row_begin(src, 1) - row_begin(src, 0));
+		props.src_pitch = (u32)(row_begin(src, 1) - row_begin(src, 0));
 		props.kernel = kernel;
 		
 		convolve_span(props);
