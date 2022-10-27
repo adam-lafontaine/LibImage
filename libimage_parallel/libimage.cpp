@@ -2344,56 +2344,6 @@ namespace libimage
 #endif // !LIBIMAGE_NO_SIMD
 
 
-	/*static void do_gradients_in_range(gray::View const& src, gray::View const& dst, Range2Du32 const& range)
-	{
-		auto const height = range.y_end - range.y_begin;
-		auto const width = range.x_end - range.x_begin;
-		auto const rows_per_thread = height / N_THREADS;
-		auto const pitch = (u32)(row_begin(src, 1) - row_begin(src, 0));
-
-		auto const thread_proc = [&](u32 id)
-		{
-			auto y_begin = range.y_begin + id * rows_per_thread;
-			auto y_end = range.y_begin + (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
-
-			for (u32 y = y_begin; y < y_end; ++y)
-			{
-				auto src_begin = row_begin(src, y) + range.x_begin;
-				auto dst_begin = row_begin(dst, y) + range.x_begin;
-
-				gradients_span(src_begin, dst_begin, width, pitch);
-			}
-		};
-
-		execute_procs(make_proc_list(thread_proc));
-	}*/
-
-
-	/*static void do_edges_in_range(gray::View const& src, gray::View const& dst, Range2Du32 const& range, u8_to_bool_f const& cond)
-	{
-		auto const height = range.y_end - range.y_begin;
-		auto const width = range.x_end - range.x_begin;
-		auto const rows_per_thread = height / N_THREADS;
-		auto const pitch = (u32)(row_begin(src, 1) - row_begin(src, 0));
-
-		auto const thread_proc = [&](u32 id)
-		{
-			auto y_begin = range.y_begin + id * rows_per_thread;
-			auto y_end = range.y_begin + (id == N_THREADS - 1 ? height : (id + 1) * rows_per_thread);
-
-			for (u32 y = y_begin; y < y_end; ++y)
-			{
-				auto src_begin = row_begin(src, y) + range.x_begin;
-				auto dst_begin = row_begin(dst, y) + range.x_begin;
-
-				edges_span(src_begin, dst_begin, width, pitch, cond);
-			}
-		};
-
-		execute_procs(make_proc_list(thread_proc));
-	}*/
-
-
 	static void do_edges_by_row(gray::View const& src, gray::View const& dst, u8_to_bool_f const& cond)
 	{
 		auto const length = src.width;
