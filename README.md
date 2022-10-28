@@ -18,10 +18,9 @@ A Basic image processing libray for C++
 * Processes images by dividing rows by per number of specified threads
 * Limited SIMD support provided
 * Visual Studio project for Windows
-* Makefiles for Ubuntu and Raspberry Pi 3B+
-* "make setup" to create build directory
+* Makefile for Ubuntu
+* "make setup" to create build and output directories
 * "make build" or "make run"
-* Create directory /TestImages/out_files/ to allow programs to write output images
 
 ## Latest Implementation - /libimage_planar
 * C++17
@@ -30,9 +29,8 @@ A Basic image processing libray for C++
 * RGB/HSV conversion
 * Similar C-style api
 * Simple MemoryBuffer class for managing memory instead of having various make/destroy overloads
-* Simplified parallel processing
 * Visual Studio project for Windows
-* Tests for Windows and Ubuntu
+* Makefile for Ubuntu
 * "make setup" to create build and output directories
 * "make build" or "make run"
 
