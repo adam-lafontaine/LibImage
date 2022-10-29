@@ -1,21 +1,22 @@
-GPP := g++-10 -std=c++17
+GPP := g++-10 -std=c++17 -Wall
+
 build := ./build_files
+out := ../../../TestImages/out_files
 
 rpi_tests_exe := $(build)/rpi_tests
 
 
 # directories
-libimage := ../../libimage_parallel
+libimage := ../../../libimage_planar
 stb := $(libimage)/stb_wrapper
 
 
 # main
-main_c         := rpi_parallel_tests.cpp
+main_c         := rpi_planar_tests.cpp
 main_o         := $(build)/rpi_tests_main.o
 object_files   := $(main_o)
 
 defines_h := $(libimage)/defines.hpp
-simd_def_h := $(libimage)/simd_def.hpp
 
 
 # libimage
@@ -45,10 +46,10 @@ object_files   += $(stb_libimage_o)
 INCLUDES  :=
 LIBRARIES :=
 CCFLAGS := 
-CCFLAGS += -march=armv8-a -mtune=cortex-a72 -mfpu=neon-fp-armv8 -mfloat-abi=hard
+#CCFLAGS := -march=armv8-a -mtune=cortex-a72 -mfpu=neon-fp-armv8 -mfloat-abi=hard
 #CCFLAGS := -mfpmath=sse -mmmx -msse -msse2
 
-GPP += -O3
+GPP += -O3 -DNDEBUG
 
 
 # build rules
@@ -61,7 +62,7 @@ $(stb_libimage_o): $(stb_libimage_c) $(libimage_h) $(stb_h)
 	@echo "\n stb_libimage"
 	$(GPP) $(CCFLAGS) -o $@ -c $<
 
-$(libimage_o): $(libimage_c) $(libimage_h) $(simd_def_h)
+$(libimage_o): $(libimage_c) $(libimage_h)
 	@echo "\n libimage"
 	$(GPP) $(CCFLAGS) -o $@ -c $<
 
@@ -77,6 +78,8 @@ run: build
 
 clean:
 	rm -rfv $(build)/*
+	rm -rfv $(out)/*
 
 setup:
 	mkdir -p $(build)
+	mkdir -p $(out)
