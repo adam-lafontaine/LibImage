@@ -15,10 +15,12 @@ A Basic image processing libray for C++
 * C++17
 * Settings macros defined in /defines.hpp
 * A more C-style api than the basic implementation
+* Image object owns the memory
+* Processing is done on a View object
 * Processes images by dividing rows by per number of specified threads
 * Limited SIMD support provided
 * Visual Studio project for Windows
-* Makefile for Ubuntu
+* Makefiles for Ubuntu and Raspberry Pi
 * "make setup" to create build and output directories
 * "make build" or "make run"
 
@@ -30,7 +32,7 @@ A Basic image processing libray for C++
 * Similar C-style api
 * Simple MemoryBuffer class for managing memory instead of having various make/destroy overloads
 * Visual Studio project for Windows
-* Makefile for Ubuntu
+* Makefiles for Ubuntu and Raspberry Pi
 * "make setup" to create build and output directories
 * "make build" or "make run"
 
