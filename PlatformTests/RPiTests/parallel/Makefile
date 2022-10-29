@@ -1,11 +1,13 @@
 GPP := g++-10 -std=c++17
-build := ./build_files
 
-rpi_tests_exe := $(build)/rpi_tests
+build := ./build_files
+out := ../../../TestImages/out_files
+
+tests_exe := $(build)/rpi_tests
 
 
 # directories
-libimage := ../../libimage_parallel
+libimage := ../../../libimage_parallel
 stb := $(libimage)/stb_wrapper
 
 
@@ -45,10 +47,11 @@ object_files   += $(stb_libimage_o)
 INCLUDES  :=
 LIBRARIES :=
 CCFLAGS := 
-CCFLAGS += -march=armv8-a -mtune=cortex-a72 -mfpu=neon-fp-armv8 -mfloat-abi=hard
+#CCFLAGS := -march=armv8-a -mtune=cortex-a72 -mfpu=neon-fp-armv8 -mfloat-abi=hard
 #CCFLAGS := -mfpmath=sse -mmmx -msse -msse2
 
-GPP += -O3
+GPP += -O3 -DNDEBUG
+#GPP += -Wall
 
 
 # build rules
@@ -65,18 +68,20 @@ $(libimage_o): $(libimage_c) $(libimage_h) $(simd_def_h)
 	@echo "\n libimage"
 	$(GPP) $(CCFLAGS) -o $@ -c $<
 
-$(rpi_tests_exe): $(object_files)
+$(tests_exe): $(object_files)
 	@echo "\n rpi_tests"
 	$(GPP) $(CCFLAGS) -o $@ $+ $(LIBRARIES)
 
 
-build: $(rpi_tests_exe)
+build: $(tests_exe)
 
 run: build
-	$(rpi_tests_exe)
+	$(tests_exe)
 
 clean:
 	rm -rfv $(build)/*
+	rm -rfv $(out)/*
 
 setup:
 	mkdir -p $(build)
+	mkdir -p $(out)

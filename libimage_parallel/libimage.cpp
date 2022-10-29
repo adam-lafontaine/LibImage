@@ -124,14 +124,14 @@ namespace libimage
 		return ptr;
 	}
 
-
+/*
 	static Pixel* xy_at(Image const& image, u32 x, u32 y)
 	{
 		assert(y < image.height);
 		assert(x < image.width);
 
 		return row_begin(image, y) + x;
-	}
+	}*/
 
 
 	View make_view(Image const& img)
@@ -272,7 +272,7 @@ namespace libimage
 		return ptr;
 	}
 
-
+/*
 	static gray::Pixel* xy_at(gray::Image const& image, u32 x, u32 y)
 	{
 		assert(image.width);
@@ -282,7 +282,7 @@ namespace libimage
 		assert(x < image.width);
 
 		return row_begin(image, y) + x;
-	}
+	}*/
 
 
 	gray::View make_view(gray::Image const& img)
@@ -1382,7 +1382,6 @@ namespace libimage
 	Point2Du32 do_centroid(gray::View const& src, u8_to_bool_f const& func)
 	{
 		constexpr u32 n_threads = N_THREADS;
-		u32 h = src.height / n_threads;
 
 		std::array<u32, n_threads> thread_totals = { 0 };
 		std::array<u32, n_threads> thread_x_totals = { 0 };
@@ -1478,7 +1477,6 @@ namespace libimage
 		constexpr std::array<int, 8> y_neighbors = { -1, -1, -1,  0,  1,  1,  1,  0 };
 
 		constexpr auto n_neighbors = x_neighbors.size();
-		int value_total = 0;
 		u32 value_count = 0;
 		u32 flip = 0;
 
