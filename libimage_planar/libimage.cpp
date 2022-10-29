@@ -560,7 +560,7 @@ namespace libimage
 
 
 	template <size_t N>
-	static PixelCHr32<N> row_begin_n(ViewCHr32<N> const& view, u32 y)
+	static PixelCHr32<N> row_begin(ViewCHr32<N> const& view, u32 y)
 	{
 		assert(y < view.height);
 
@@ -576,7 +576,7 @@ namespace libimage
 		return p;
 	}
 
-
+/*
 	static Pixel4r32 row_begin(View4r32 const& view, u32 y)
 	{
 		return row_begin_n(view, y);
@@ -592,9 +592,9 @@ namespace libimage
 	static Pixel2r32 row_begin(View2r32 const& view, u32 y)
 	{
 		return row_begin_n(view, y);
-	}
+	}*/
 
-
+/*
 	static PixelRGBAr32 rgba_row_begin(ViewRGBAr32 const& view, u32 y)
 	{
 		assert(y < view.height);
@@ -609,7 +609,7 @@ namespace libimage
 		p.rgba.A = view.image_channel_data[id_cast(RGBA::A)] + offset;
 
 		return p;
-	}
+	}*/
 
 
 	static PixelRGBr32 rgb_row_begin(ViewRGBr32 const& view, u32 y)
@@ -2583,9 +2583,6 @@ namespace libimage
 	{
 		assert(verify(src, dst));
 
-		auto const width = src.width;
-		auto const height = src.height;
-
 		int const ry_begin = -2;
 		int const ry_end = 3;
 		int const rx_begin = -2;
@@ -2749,9 +2746,6 @@ namespace libimage
 	static void convolve_gauss_5x5(View1r32 const& src, View1r32 const& dst)
 	{
 		assert(verify(src, dst));
-
-		auto const width = src.width;
-		auto const height = src.height;
 
 		int const ry_begin = -2;
 		int const ry_end = 3;

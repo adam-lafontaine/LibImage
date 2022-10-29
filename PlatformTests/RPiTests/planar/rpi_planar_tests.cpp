@@ -405,7 +405,7 @@ void fill_test()
 	auto const red = img::to_pixel(255, 0, 0);
 	auto const green = img::to_pixel(0, 255, 0);
 	auto const blue = img::to_pixel(0, 0, 255);
-	auto const black = img::to_pixel(0, 0, 0);
+	//auto const black = img::to_pixel(0, 0, 0);
 	auto const white = img::to_pixel(255, 255, 255);
 
 	Range2Du32 left{};
