@@ -50,7 +50,7 @@ CCFLAGS :=
 #CCFLAGS := -mfpmath=sse -mmmx -msse -msse2
 
 #GPP += -O3 -DNDEBUG
-GPP += -Wall
+#GPP += -Wall
 
 
 # build rules

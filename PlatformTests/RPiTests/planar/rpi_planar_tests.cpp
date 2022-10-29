@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <algorithm>
 #include <filesystem>
+#include <locale.h>
 
 namespace img = libimage;
 namespace fs = std::filesystem;
@@ -107,6 +108,9 @@ void scale_down_test();
 
 int main()
 {
+	Stopwatch sw;
+	sw.start();
+
 	if (!directory_files_test())
 	{
 		return EXIT_FAILURE;
@@ -135,6 +139,15 @@ int main()
 	rotate_test();
 	overlay_test();
 	scale_down_test();
+
+	auto time = sw.get_time_milli();
+
+	auto old_locale = setlocale(LC_NUMERIC, NULL);
+	setlocale(LC_NUMERIC, "");
+
+	printf("\nTests complete. %'.3f ms\n", time);
+
+	setlocale(LC_NUMERIC, old_locale);
 }
 
 
