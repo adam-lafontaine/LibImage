@@ -4,6 +4,7 @@
 
 #include <cstdio>
 #include <algorithm>
+#include <locale.h>
 
 namespace img = libimage;
 
@@ -95,6 +96,9 @@ void rotate_test();
 
 int main()
 {
+	Stopwatch sw;
+	sw.start();
+
 	if (!directory_files_test())
 	{
 		return EXIT_FAILURE;
@@ -115,6 +119,15 @@ int main()
 	edges_test();
 	combo_view_test();
 	rotate_test();
+
+	auto time = sw.get_time_milli();
+
+	auto old_locale = setlocale(LC_NUMERIC, NULL);
+	setlocale(LC_NUMERIC, "");
+
+	printf("\nTests complete. %'.3f ms\n", time);
+
+	setlocale(LC_NUMERIC, old_locale);
 }
 
 
