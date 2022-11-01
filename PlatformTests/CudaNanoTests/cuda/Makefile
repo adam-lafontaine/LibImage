@@ -266,3 +266,54 @@ EXEC ?= @echo "[@]"
 endif
 
 ################################################################################
+
+GPP := g++-10 -std=c++17
+
+build := ./build_files
+out := ../../../TestImages/out_files
+
+nano_tests_exe := $(build)/nano_tests
+
+
+# main
+main_c         := nano_cuda_tests.cpp
+main_o         := $(build)/nano_cuda_main.o
+object_files   := $(main_o)
+
+
+# flags
+INCLUDES  :=
+LIBRARIES :=
+CCFLAGS := 
+#CCFLAGS := -march=armv8-a -mtune=cortex-a72 -mfpu=neon-fp-armv8 -mfloat-abi=hard
+#CCFLAGS := -mfpmath=sse -mmmx -msse -msse2
+
+#GPP += -O3 -DNDEBUG
+#GPP += -Wall
+GPP += -DLIBIMAGE_NO_CPP17
+
+# build rules
+
+$(main_o): $(main_c)
+	@echo "\n main"
+	$(GPP) $(CCFLAGS) -o $@ -c $<
+
+
+
+$(nano_tests_exe): $(object_files)
+	@echo "\n nano_tests"
+	$(GPP) $(CCFLAGS) -o $@ $+ $(LIBRARIES)
+
+
+build: $(nano_tests_exe)
+
+run: build
+	$(nano_tests_exe)
+
+clean:
+	rm -rfv $(build)/*
+	rm -rfv $(out)/*
+
+setup:
+	mkdir -p $(build)
+	mkdir -p $(out)
