@@ -1,9 +1,9 @@
-GPP := g++-11 -std=c++17
+GPP := g++-10 -std=c++17
 
 build := ./build_files
 out := ../../../TestImages/out_files
 
-ubuntu_tests_exe := $(build)/ubuntu_tests
+nano_tests_exe := $(build)/nano_tests
 
 
 # directories
@@ -12,8 +12,8 @@ stb := $(libimage)/stb_wrapper
 
 
 # main
-main_c         := ubuntu_parallel_tests.cpp
-main_o         := $(build)/ubuntu_tests_main.o
+main_c         := nano_parallel_tests.cpp
+main_o         := $(build)/nano_tests_main.o
 object_files   := $(main_o)
 
 defines_h := $(libimage)/defines.hpp
@@ -50,8 +50,9 @@ CCFLAGS :=
 #CCFLAGS := -march=armv8-a -mtune=cortex-a72 -mfpu=neon-fp-armv8 -mfloat-abi=hard
 #CCFLAGS := -mfpmath=sse -mmmx -msse -msse2
 
-GPP += -O3 -DNDEBUG
-#GPP += -Wall
+#GPP += -O3 -DNDEBUG
+GPP += -Wall
+#GPP += -DLIBIMAGE_NO_CPP17
 
 
 # build rules
@@ -68,15 +69,15 @@ $(libimage_o): $(libimage_c) $(libimage_h) $(simd_def_h)
 	@echo "\n libimage"
 	$(GPP) $(CCFLAGS) -o $@ -c $<
 
-$(ubuntu_tests_exe): $(object_files)
-	@echo "\n ubuntu_tests"
+$(nano_tests_exe): $(object_files)
+	@echo "\n nano_tests"
 	$(GPP) $(CCFLAGS) -o $@ $+ $(LIBRARIES)
 
 
-build: $(ubuntu_tests_exe)
+build: $(nano_tests_exe)
 
 run: build
-	$(ubuntu_tests_exe)
+	$(nano_tests_exe)
 
 clean:
 	rm -rfv $(build)/*
