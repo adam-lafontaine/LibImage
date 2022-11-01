@@ -871,6 +871,41 @@ namespace libimage
 	
 }
 
+#else
+
+#include <string>
+
+namespace libimage
+{
+
+	inline void read_image_from_file(std::string const& img_path_src, Image& image_dst)
+	{
+		return read_image_from_file(img_path_src.c_str(), image_dst);
+	}
+
+
+	inline void read_image_from_file(std::string const& img_path_src, gray::Image& image_dst)
+	{
+		return read_image_from_file(img_path_src.c_str(), image_dst);
+	}
+
+#ifndef LIBIMAGE_NO_WRITE
+
+	inline void write_image(Image const& image_src, std::string const& file_path_dst)
+	{
+		write_image(image_src, file_path_dst.c_str());
+	}
+
+
+	inline void write_image(gray::Image const& image_src, std::string const& file_path_dst)
+	{
+		write_image(image_src, file_path_dst.c_str());
+	}
+
+#endif // !LIBIMAGE_NO_WRITE
+	
+}
+
 #endif // !LIBIMAGE_NO_FILESYSTEM
 
 
