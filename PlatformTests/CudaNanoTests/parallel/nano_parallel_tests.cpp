@@ -4,6 +4,7 @@
 
 #include <cstdio>
 #include <algorithm>
+#include <locale.h>
 
 namespace img = libimage;
 
@@ -102,11 +103,14 @@ void rotate_test();
 
 int main()
 {
+	Stopwatch sw;
+	sw.start();
+
 	if (!directory_files_test())
 	{
 		return EXIT_FAILURE;
 	}
-/*
+
 	read_write_image_test();
 	resize_test();
 	sub_view_test();
@@ -121,17 +125,26 @@ int main()
 	gradients_test();
 	edges_test();
 	combo_view_test();
-	rotate_test();*/
+	rotate_test();
+
+	auto time = sw.get_time_milli();
+
+	auto old_locale = setlocale(LC_NUMERIC, NULL);
+	setlocale(LC_NUMERIC, "");
+
+	printf("\nTests complete. %'.3f ms\n", time);
+
+	setlocale(LC_NUMERIC, old_locale);
 }
 
-/*
+
 void read_write_image_test()
 {
 	auto title = "read_write_image_test";
 	printf("\n%s:\n", title);
-	auto out_dir = IMAGE_OUT_PATH / title;
+	auto out_dir = IMAGE_OUT_PATH + title + '/';
 	empty_dir(out_dir);
-	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
 
 	Image image;
 	img::read_image_from_file(CORVETTE_PATH, image);
@@ -150,9 +163,9 @@ void resize_test()
 {
 	auto title = "resize_test";
 	printf("\n%s:\n", title);
-	auto out_dir = IMAGE_OUT_PATH / title;
+	auto out_dir = IMAGE_OUT_PATH + title + '/';
 	empty_dir(out_dir);
-	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
 
 	Image image;
 	img::read_image_from_file(CORVETTE_PATH, image);
@@ -201,9 +214,9 @@ void sub_view_test()
 {
 	auto title = "sub_view_test";
 	printf("\n%s:\n", title);
-	auto out_dir = IMAGE_OUT_PATH / title;
+	auto out_dir = IMAGE_OUT_PATH + title + '/';
 	empty_dir(out_dir);
-	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
 
 	Range2Du32 r{};
 
@@ -254,9 +267,9 @@ void transform_test()
 {
 	auto title = "transform_test";
 	printf("\n%s:\n", title);
-	auto out_dir = IMAGE_OUT_PATH / title;
+	auto out_dir = IMAGE_OUT_PATH + title + '/';
 	empty_dir(out_dir);
-	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
 
 	Image image;
 	img::read_image_from_file(CORVETTE_PATH, image);
@@ -301,9 +314,9 @@ void copy_test()
 {
 	auto title = "copy_test";
 	printf("\n%s:\n", title);
-	auto out_dir = IMAGE_OUT_PATH / title;
+	auto out_dir = IMAGE_OUT_PATH + title + '/';
 	empty_dir(out_dir);
-	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
 
 	Image image;
 	img::read_image_from_file(CORVETTE_PATH, image);
@@ -337,9 +350,9 @@ void fill_test()
 {
 	auto title = "fill_test";
 	printf("\n%s:\n", title);
-	auto out_dir = IMAGE_OUT_PATH / title;
+	auto out_dir = IMAGE_OUT_PATH + title + '/';
 	empty_dir(out_dir);
-	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
 
 	u32 width = 800;
 	u32 height = 600;
@@ -365,9 +378,9 @@ void alpha_blend_test()
 {
 	auto title = "alpha_blend_test";
 	printf("\n%s:\n", title);
-	auto out_dir = IMAGE_OUT_PATH / title;
+	auto out_dir = IMAGE_OUT_PATH + title + '/';
 	empty_dir(out_dir);
-	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
 
 	Image src_image;
 	img::read_image_from_file(CORVETTE_PATH, src_image);
@@ -411,9 +424,9 @@ void grayscale_test()
 {
 	auto title = "grayscale_test";
 	printf("\n%s:\n", title);
-	auto out_dir = IMAGE_OUT_PATH / title;
+	auto out_dir = IMAGE_OUT_PATH + title + '/';
 	empty_dir(out_dir);
-	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
 
 	Image src;
 	img::read_image_from_file(CORVETTE_PATH, src);
@@ -435,9 +448,9 @@ void binary_test()
 {
 	auto title = "binary_test";
 	printf("\n%s:\n", title);
-	auto out_dir = IMAGE_OUT_PATH / title;
+	auto out_dir = IMAGE_OUT_PATH + title + '/';
 	empty_dir(out_dir);
-	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
 
 	GrayImage caddy;
 	img::read_image_from_file(CADILLAC_PATH, caddy);
@@ -506,9 +519,9 @@ void contrast_test()
 {
 	auto title = "contrast_test";
 	printf("\n%s:\n", title);
-	auto out_dir = IMAGE_OUT_PATH / title;
+	auto out_dir = IMAGE_OUT_PATH + title + '/';
 	empty_dir(out_dir);
-	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
 
 	GrayImage src;
 	img::read_image_from_file(CORVETTE_PATH, src);
@@ -529,9 +542,9 @@ void blur_test()
 {
 	auto title = "blur_test";
 	printf("\n%s:\n", title);
-	auto out_dir = IMAGE_OUT_PATH / title;
+	auto out_dir = IMAGE_OUT_PATH + title + '/';
 	empty_dir(out_dir);
-	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
 
 	GrayImage src;
 	img::read_image_from_file(CORVETTE_PATH, src);
@@ -552,9 +565,9 @@ void gradients_test()
 {
 	auto title = "gradients_test";
 	printf("\n%s:\n", title);
-	auto out_dir = IMAGE_OUT_PATH / title;
+	auto out_dir = IMAGE_OUT_PATH + title + '/';
 	empty_dir(out_dir);
-	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
 
 	GrayImage src;
 	img::read_image_from_file(CORVETTE_PATH, src);
@@ -575,9 +588,9 @@ void edges_test()
 {
 	auto title = "edges_test";
 	printf("\n%s:\n", title);
-	auto out_dir = IMAGE_OUT_PATH / title;
+	auto out_dir = IMAGE_OUT_PATH + title + '/';
 	empty_dir(out_dir);
-	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
 
 	GrayImage src;
 	img::read_image_from_file(CORVETTE_PATH, src);
@@ -600,9 +613,9 @@ void combo_view_test()
 {
 	auto title = "combo_view_test";
 	printf("\n%s:\n", title);
-	auto out_dir = IMAGE_OUT_PATH / title;
+	auto out_dir = IMAGE_OUT_PATH + title + '/';
 	empty_dir(out_dir);
-	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
 
 	GrayImage src;
 	img::read_image_from_file(CORVETTE_PATH, src);
@@ -662,9 +675,9 @@ void rotate_test()
 {
 	auto title = "rotate_test";
 	printf("\n%s:\n", title);
-	auto out_dir = IMAGE_OUT_PATH / title;
+	auto out_dir = IMAGE_OUT_PATH + title + '/';
 	empty_dir(out_dir);
-	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir / name); };
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
 
 	Image src;
 	img::read_image_from_file(CADILLAC_PATH, src);
@@ -694,7 +707,7 @@ void rotate_test()
 	img::destroy_image(src_gray);
 	img::destroy_image(dst_gray);
 }
-*/
+
 
 void empty_dir(path_t& dir)
 {
@@ -707,7 +720,7 @@ void empty_dir(path_t& dir)
 	std::string command = std::string("mkdir -p ") + dir;
 	system(command.c_str());
 
-	command = std::string("rm -rfv ") + dir + '*';
+	command = std::string("rm -rfv ") + dir + '*' + " > /dev/null";
 	system(command.c_str());
 }
 

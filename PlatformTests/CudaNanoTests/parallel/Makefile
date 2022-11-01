@@ -50,9 +50,9 @@ CCFLAGS :=
 #CCFLAGS := -march=armv8-a -mtune=cortex-a72 -mfpu=neon-fp-armv8 -mfloat-abi=hard
 #CCFLAGS := -mfpmath=sse -mmmx -msse -msse2
 
-#GPP += -O3 -DNDEBUG
-GPP += -Wall
-#GPP += -DLIBIMAGE_NO_CPP17
+GPP += -O3 -DNDEBUG
+#GPP += -Wall
+GPP += -DLIBIMAGE_NO_CPP17
 
 
 # build rules
