@@ -1,4 +1,5 @@
 #include "../utils/stopwatch.hpp"
+#include "../../../libimage_cuda/libimage.hpp"
 
 #include <cstdio>
 #include <locale.h>

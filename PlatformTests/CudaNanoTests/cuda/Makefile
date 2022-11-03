@@ -275,10 +275,52 @@ out := ../../../TestImages/out_files
 nano_tests_exe := $(build)/nano_tests
 
 
+# directories
+libimage := ../../../libimage_cuda
+stb      := $(libimage)/stb_wrapper
+device   := $(libimage)/device
+utils    := ../utils
+
+
+# header files
+stopwatch_h := $(utils)/stopwatch.hpp
+
+defines_h := $(libimage)/defines.hpp
+
+stb_resize_h := $(stb)/stb_image_resize.h
+stb_write_h  := $(stb)/stb_image_write.h
+stb_image_h  := $(stb)/stb_image.h
+
+stb_include_h := $(stb)/stb_include.hpp
+stb_include_h += $(stb_image_h)
+stb_include_h += $(stb_write_h)
+stb_include_h += $(stb_resize_h)
+
+libimage_h := $(libimage)/libimage.hpp
+libimage_h += $(defines_h)
+
+device_h := $(device)/device.hpp
+device_h += $(defines_h)
+
+cuda_def_h := $(device)/cuda_def.cuh
+
+
 # main
 main_c         := nano_cuda_tests.cpp
 main_o         := $(build)/nano_cuda_main.o
 object_files   := $(main_o)
+
+stb_libimage_c := $(stb)/stb_libimage.cpp
+stb_libimage_o := $(build)/stb_libimage.o
+object_files   += $(stb_libimage_o)
+
+device_c     := $(device)/device.cu
+device_o     := $(build)/device.o
+object_files += $(device_o)
+
+libimage_c   := $(libimage)/libimage.cu
+libimage_o   := $(build)/libimage.o
+object_files += $(libimage_o)
 
 
 # flags
@@ -290,19 +332,30 @@ CCFLAGS :=
 
 #GPP += -O3 -DNDEBUG
 #GPP += -Wall
-GPP += -DLIBIMAGE_NO_CPP17
+#GPP += -DLIBIMAGE_NO_CPP17
+#NVCC += -DLIBIMAGE_NO_CPP17
 
 # build rules
 
-$(main_o): $(main_c)
+$(device_o): $(device_c) $(device_h) $(cuda_def_h)
+	@echo "\n device"
+	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
+
+$(libimage_o): $(libimage_c) $(libimage_h) $(device_h) $(cuda_def_h)
+	@echo "\n libimage"
+	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
+
+$(stb_libimage_o): $(stb_libimage_c) $(libimage_h) $(stb_h)
+	@echo "\n stb_libimage"
+	$(GPP) $(CCFLAGS) -o $@ -c $<
+
+$(main_o): $(main_c) $(stopwatch_h)
 	@echo "\n main"
 	$(GPP) $(CCFLAGS) -o $@ -c $<
 
-
-
 $(nano_tests_exe): $(object_files)
 	@echo "\n nano_tests"
-	$(GPP) $(CCFLAGS) -o $@ $+ $(LIBRARIES)
+	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
 
 
 build: $(nano_tests_exe)
