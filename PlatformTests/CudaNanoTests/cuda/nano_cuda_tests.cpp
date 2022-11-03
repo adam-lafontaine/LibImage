@@ -5,6 +5,13 @@
 #include <locale.h>
 #include <string>
 
+namespace img = libimage;
+
+using Image = img::Image;
+using ImageView = img::View;
+using GrayImage = img::gray::Image;
+using GrayView = img::gray::View;
+using Pixel = img::Pixel;
 
 using path_t = std::string;
 
@@ -75,6 +82,8 @@ bool directory_files_test()
 
 void empty_dir(path_t& dir);
 
+void read_write_image_test();
+
 
 int main()
 {
@@ -86,6 +95,8 @@ int main()
 		return EXIT_FAILURE;
 	}
 
+	read_write_image_test();
+
 
     auto time = sw.get_time_milli();
 
@@ -95,6 +106,27 @@ int main()
 	printf("\nTests complete. %'.3f ms\n", time);
 
 	setlocale(LC_NUMERIC, old_locale);
+}
+
+
+void read_write_image_test()
+{
+	auto title = "read_write_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH + title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
+
+	Image image;
+	img::read_image_from_file(CORVETTE_PATH, image);
+	write_image(image, "corvette.bmp");
+
+	GrayImage gray;
+	img::read_image_from_file(CADILLAC_PATH, gray);
+	write_image(gray, "cadillac_gray.bmp");
+
+	img::destroy_image(image);
+	img::destroy_image(gray);
 }
 
 

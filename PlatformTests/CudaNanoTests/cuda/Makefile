@@ -314,13 +314,17 @@ stb_libimage_c := $(stb)/stb_libimage.cpp
 stb_libimage_o := $(build)/stb_libimage.o
 object_files   += $(stb_libimage_o)
 
+libimage_c   := $(libimage)/libimage.cpp
+libimage_o   := $(build)/libimage.o
+object_files += $(libimage_o)
+
 device_c     := $(device)/device.cu
 device_o     := $(build)/device.o
 object_files += $(device_o)
 
-libimage_c   := $(libimage)/libimage.cu
-libimage_o   := $(build)/libimage.o
-object_files += $(libimage_o)
+libimage_cuda_c   := $(libimage)/libimage_cuda.cu
+libimage_cuda_o   := $(build)/libimage_cuda.o
+object_files += $(libimage_cuda_o)
 
 
 # flags
@@ -341,9 +345,13 @@ $(device_o): $(device_c) $(device_h) $(cuda_def_h)
 	@echo "\n device"
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
-$(libimage_o): $(libimage_c) $(libimage_h) $(device_h) $(cuda_def_h)
-	@echo "\n libimage"
+$(libimage_cuda_o): $(libimage_cuda_c) $(libimage_h) $(device_h) $(cuda_def_h)
+	@echo "\n libimage_cuda"
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
+
+$(libimage_o): $(libimage_c) $(libimage_h)
+	@echo "\n libimage"
+	$(GPP) $(CCFLAGS) -o $@ -c $<
 
 $(stb_libimage_o): $(stb_libimage_c) $(libimage_h) $(stb_h)
 	@echo "\n stb_libimage"

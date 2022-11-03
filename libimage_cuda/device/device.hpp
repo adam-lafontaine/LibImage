@@ -3,8 +3,6 @@
 #include "../defines.hpp"
 
 #include <cstddef>
-#include <cassert>
-#include <array>
 
 
 class ByteBuffer
@@ -134,5 +132,12 @@ namespace cuda
         buffer.size -= n_elements;
 
         return true;
+    }
+
+
+    template<typename T>
+    void reset(MemoryBuffer<T>& buffer)
+    {
+        buffer.size = 0;
     }
 }
