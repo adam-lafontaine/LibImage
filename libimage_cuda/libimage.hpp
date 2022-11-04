@@ -503,13 +503,13 @@ namespace libimage
 
 namespace libimage
 {
-	void map_hsv(ViewHSVr32 const& src, Image const& dst);
+	void map_hsv(ViewHSVr32 const& device_src, Image const& host_dst);
 
-	void map_hsv(Image const& src, ViewHSVr32 const& dst);
+	void map_hsv(Image const& host_src, ViewHSVr32 const& device_dst);
 
-	void map_hsv(ViewHSVr32 const& src, View const& dst);
+	void map_hsv(ViewHSVr32 const& device_src, View const& host_dst);
 
-	void map_hsv(View const& src, ViewHSVr32 const& dst);
+	void map_hsv(View const& host_src, ViewHSVr32 const& device_dst);
 
 
 	void map_hsv(ViewRGBr32 const& src, ViewHSVr32 const& dst);

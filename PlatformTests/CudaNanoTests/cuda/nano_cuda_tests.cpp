@@ -86,6 +86,7 @@ void read_write_image_test();
 void resize_test();
 void map_test();
 void map_rgb_test();
+void sub_view_test();
 
 
 int main()
@@ -102,6 +103,7 @@ int main()
 	resize_test();
 	map_test();
 	map_rgb_test();
+	sub_view_test();
 
 
     auto time = sw.get_time_milli();
@@ -257,6 +259,81 @@ void map_rgb_test()
 
 	img::destroy_image(image);
 	img::destroy_image(image_dst);
+	buffer.free();
+}
+
+
+void sub_view_test()
+{
+	auto title = "sub_view_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH + title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
+
+	Image vette;
+	img::read_image_from_file(CORVETTE_PATH, vette);
+	auto width = vette.width;
+	auto height = vette.height;
+	
+	img::Buffer32 buffer(width * height * 7, cuda::Malloc::Device);
+
+	img::View3r32 vette3;
+	img::make_view(vette3, width, height, buffer);
+	img::map_rgb(vette, vette3);
+
+	img::View4r32 vette4;
+	img::make_view(vette4, width, height, buffer);
+	img::map_rgb(vette, vette4);
+
+	Range2Du32 r{};
+	r.x_begin = 0;
+	r.x_end = width / 4;
+	r.y_begin = 0;
+	r.y_end = height;
+
+	auto dst4 = img::sub_view(vette, r);
+	auto sub3 = img::sub_view(vette3, r);	
+
+	r.x_begin = width * 3 / 4;
+	r.x_end = width;
+
+	auto dst3 = img::sub_view(vette, r);
+	auto sub4 = img::sub_view(vette4, r);
+
+	img::map_rgb(sub3, dst3);
+	img::map_rgb(sub4, dst4);
+	buffer.reset();
+
+	write_image(vette, "swap.bmp");
+
+	GrayImage caddy;
+	img::read_image_from_file(CADILLAC_PATH, caddy);
+	width = caddy.width;
+	height = caddy.height;
+
+	img::View1r32 caddy1;
+	img::make_view(caddy1, width, height, buffer);
+	img::map(caddy, caddy1);
+
+	r.x_begin = 0;
+	r.x_end = width / 2;
+	r.y_begin = 0;
+	r.y_end = height;
+
+	auto sub1 = img::sub_view(caddy1, r);
+
+	r.x_begin = width / 4;
+	r.x_end = width * 3 / 4;
+
+	auto dst1 = img::sub_view(caddy, r);
+
+	img::map(sub1, dst1);
+
+	write_image(caddy, "copy.bmp");		
+
+	img::destroy_image(vette);
+	img::destroy_image(caddy);
 	buffer.free();
 }
 
