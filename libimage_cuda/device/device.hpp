@@ -4,7 +4,6 @@
 
 #include <cstddef>
 
-
 class ByteBuffer
 {
 public:
@@ -12,20 +11,6 @@ public:
     size_t capacity = 0;
     size_t size = 0;
 };
-
-
-template<typename T>
-ByteBuffer to_byte_buffer(MemoryBuffer<T> const& buffer)
-{
-    constexpr auto S = sizeof(T);
-
-    ByteBuffer b{};
-    b.data = (u8*)buffer.data;
-    b.capacity = S * buffer.capacity;
-    b.size = S * buffer.size;
-
-    return b;
-}
 
 
 namespace cuda
@@ -52,92 +37,97 @@ namespace cuda
     bool launch_success(cstr label);
 
 
-    template<typename T>
-    bool device_malloc(MemoryBuffer<T>& buffer, size_t n_elements)
+    enum class Malloc : int
     {
-        auto b = to_byte_buffer(buffer);
-        
-        if(!device_malloc(b, sizeof(T) * n_elements))
+        Device,
+        Unified
+    };
+
+
+    template <typename T>
+    class MemoryBuffer
+    {
+    private:
+        T* data_ = nullptr;
+        size_t capacity_ = 0;
+        size_t size_ = 0;
+
+    public:
+        MemoryBuffer(size_t n_elements, Malloc m)
         {
-            return false;
+            constexpr auto S = sizeof(T);
+
+            ByteBuffer b{};
+
+            bool result = false;
+
+            switch(m)
+            {
+                case Malloc::Device:
+                    result = device_malloc(b, S * n_elements);
+                    break;
+                case Malloc::Unified:
+                    result = unified_malloc(b, S * n_elements);
+                    break;
+            }
+
+            assert(result);
+
+            if(result)
+            {
+                data_ = (T*)b.data;
+                capacity_ = n_elements;
+                size_ = 0;
+            }
         }
 
-        buffer.data = (T*)b.data;
-        buffer.capacity = n_elements;
-        buffer.size = 0;
 
-        return true;
-    }
-
-
-    template<typename T>
-    bool unified_malloc(MemoryBuffer<T>& buffer, size_t n_elements)
-    {
-        auto b = to_byte_buffer(buffer);
-        
-        if(!unified_malloc(b, sizeof(T) * n_elements))
+        T* push(size_t n_elements)
         {
-            return false;
+            assert(data_);
+            assert(capacity_);
+            assert(size_ < capacity_);
+
+            auto is_valid =
+                data_ &&
+                capacity_ &&
+                size_ < capacity_;
+
+            auto elements_available = (capacity_ - size_) >= n_elements;
+            assert(elements_available);
+
+            if (!is_valid || !elements_available)
+            {
+                return nullptr;
+            }
+
+            auto data = data_ + size_;
+
+            size_ += n_elements;
+
+            return data;
         }
 
-        buffer.data = (T*)b.data;
-        buffer.capacity = n_elements;
-        buffer.size = 0;
 
-        return true;
-    }
-
-
-    template<typename T>
-    bool free(MemoryBuffer<T>& buffer)
-    {
-        buffer.capacity = 0;
-        buffer.size = 0;
-
-        auto b = to_byte_buffer(buffer);
-
-        return cuda::free(b);
-    }
-
-
-    template<typename T>
-    T* push_elements(MemoryBuffer<T>& buffer, size_t n_elements)
-    {
-        auto b = to_byte_buffer(buffer);
-
-        auto data = push_bytes(b, sizeof(T) * n_elements);
-
-        if(!data)
+        void reset()
         {
-            return nullptr;
+            size_ = 0;
         }
-        
-        buffer.size += n_elements;
-
-        return (T*)data;
-        
-    }
 
 
-    template<typename T>
-    bool pop_elements(MemoryBuffer<T>& buffer, size_t n_elements)
-    {
-        auto b = to_byte_buffer(buffer);
-
-        if(!pop_bytes(b, sizeof(T) * n_elements))
+        void free()
         {
-            return false;
+            if (data_)
+            {
+                ByteBuffer b{};
+                b.data = (u8*)data_;
+                cuda::free(b);
+                data_ = nullptr;
+            }
+
+            capacity_ = 0;
+            size_ = 0;
         }
-        
-        buffer.size -= n_elements;
-
-        return true;
-    }
-
-
-    template<typename T>
-    void reset(MemoryBuffer<T>& buffer)
-    {
-        buffer.size = 0;
-    }
+    };
+    
 }

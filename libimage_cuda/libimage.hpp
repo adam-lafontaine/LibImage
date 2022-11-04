@@ -1,6 +1,6 @@
 #pragma once
 
-#include "defines.hpp"
+#include "./device/device.hpp"
 
 #include <functional>
 #include <array>
@@ -436,7 +436,7 @@ namespace libimage
 
 namespace libimage
 {	
-	using Buffer32 = MemoryBuffer<r32>;
+	using Buffer32 = cuda::MemoryBuffer<r32>;
 
 
 	void make_view(View4r32& view, u32 width, u32 height, Buffer32& buffer);
@@ -453,24 +453,24 @@ namespace libimage
 
 namespace libimage
 {
-	void map(View1r32 const& src, gray::Image const& dst);
+	void map(View1r32 const& device_src, gray::Image const& host_dst);
 
-	void map(gray::Image const& src, View1r32 const& dst);
-
-
-	void map(View1r32 const& src, gray::View const& dst);
-
-	void map(gray::View const& src, View1r32 const& dst);
+	void map(gray::Image const& host_src, View1r32 const& device_dst);
 
 
-	void map(View1r32 const& src, gray::Image const& dst, r32 gray_min, r32 gray_max);
+	void map(View1r32 const& device_src, gray::View const& host_dst);
 
-	void map(gray::Image const& src, View1r32 const& dst, r32 gray_min, r32 gray_max);
+	void map(gray::View const& host_src, View1r32 const& device_dst);
 
 
-	void map(View1r32 const& src, gray::View const& dst, r32 gray_min, r32 gray_max);
+	void map(View1r32 const& device_src, gray::Image const& host_dst, r32 gray_min, r32 gray_max);
 
-	void map(gray::View const& src, View1r32 const& dst, r32 gray_min, r32 gray_max);
+	void map(gray::Image const& host_src, View1r32 const& device_dst, r32 gray_min, r32 gray_max);
+
+
+	void map(View1r32 const& device_src, gray::View const& host_dst, r32 gray_min, r32 gray_max);
+
+	void map(gray::View const& host_src, View1r32 const& device_dst, r32 gray_min, r32 gray_max);
 }
 
 

@@ -83,6 +83,8 @@ bool directory_files_test()
 void empty_dir(path_t& dir);
 
 void read_write_image_test();
+void resize_test();
+void map_test();
 
 
 int main()
@@ -96,6 +98,8 @@ int main()
 	}
 
 	read_write_image_test();
+	resize_test();
+	map_test();
 
 
     auto time = sw.get_time_milli();
@@ -127,6 +131,89 @@ void read_write_image_test()
 
 	img::destroy_image(image);
 	img::destroy_image(gray);
+}
+
+
+void resize_test()
+{
+	auto title = "resize_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH + title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
+
+	Image image;
+	img::read_image_from_file(CORVETTE_PATH, image);
+	auto width = image.width;
+	auto height = image.height;
+
+	Image vertical;
+	vertical.width = width / 2;
+	vertical.height = height * 2;
+	img::resize_image(image, vertical);
+	write_image(vertical, "vertical.bmp");
+
+	Image horizontal;
+	horizontal.width = width * 2;
+	horizontal.height = height / 2;
+	img::resize_image(image, horizontal);
+	write_image(horizontal, "horizontal.bmp");
+
+	GrayImage gray;
+	img::read_image_from_file(CADILLAC_PATH, gray);
+	width = gray.width;
+	height = gray.height;
+
+	GrayImage vertical_gray;
+	vertical_gray.width = width / 2;
+	vertical_gray.height = height * 2;
+	img::resize_image(gray, vertical_gray);
+	write_image(vertical_gray, "vertical_gray.bmp");
+
+	GrayImage horizontal_gray;
+	horizontal_gray.width = width * 2;
+	horizontal_gray.height = height / 2;
+	img::resize_image(gray, horizontal_gray);
+	write_image(horizontal_gray, "horizontal_gray.bmp");
+
+	img::destroy_image(image);
+	img::destroy_image(vertical);
+	img::destroy_image(horizontal);
+	img::destroy_image(gray);
+	img::destroy_image(vertical_gray);
+	img::destroy_image(horizontal_gray);
+}
+
+
+void map_test()
+{
+	auto title = "map_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH + title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
+
+	GrayImage gray;
+	img::read_image_from_file(CADILLAC_PATH, gray);
+	auto width = gray.width;
+	auto height = gray.height;
+
+	GrayImage gray_dst;
+	img::make_image(gray_dst, width, height);
+
+	img::Buffer32 buffer(width * height, cuda::Malloc::Device);
+
+	img::View1r32 view1;
+	img::make_view(view1, width, height, buffer);
+
+	img::map(gray, view1);
+	img::map(view1, gray_dst);
+
+	write_image(gray_dst, "map1.bmp");
+	
+	img::destroy_image(gray);
+	img::destroy_image(gray_dst);
+	buffer.free();
 }
 
 
