@@ -869,7 +869,7 @@ namespace libimage
 		view.width = width;
 		view.height = height;
 
-        auto data = (r32*)std::malloc(N * sizeof(r32) * width * height)
+        auto data = (r32*)std::malloc(N * sizeof(r32) * width * height);
 
         assert(data);
 
@@ -917,10 +917,7 @@ namespace libimage
 			auto s = row_begin(device_src, y);
 			auto h = row_begin(host_v, y);
 
-            if(!cuda::memcpy_to_host(s, h, bytes_per_row))
-            {
-                return;
-            }
+            if(!cuda::memcpy_to_host(s, h, bytes_per_row)) { assert(false); }
 
             auto d = row_begin(host_dst, y);
 
@@ -959,10 +956,7 @@ namespace libimage
 
             auto d = row_begin(device_dst, y);
 
-            if(!cuda::memcpy_to_device(h, d, bytes_per_row))
-            {
-                assert(false);
-            }
+            if(!cuda::memcpy_to_device(h, d, bytes_per_row)) { assert(false); }
 		};
 
 		process_rows(height, row_func);
@@ -1040,5 +1034,267 @@ namespace libimage
 		auto const func = [&](u8 p) { return lerp_to_r32(p, gray_min, gray_max); };
 
         map_host_to_device(host_src, device_dst, func);
+    }
+}
+
+
+/* map_rgb */
+
+namespace libimage
+{
+    template <class IMG_INT>
+    static void map_rgba_device_to_host(ViewRGBAr32 const& device_src, IMG_INT const& host_dst)
+    {
+        constexpr auto r = id_cast(RGBA::R);
+		constexpr auto g = id_cast(RGBA::G);
+		constexpr auto b = id_cast(RGBA::B);
+		constexpr auto a = id_cast(RGBA::A);
+
+        auto const width = device_src.width;
+        auto const height = device_src.height;
+
+        auto const bytes_per_row = sizeof(r32) * width;
+
+        ViewRGBAr32 host_v;
+        make_host_view(host_v, width, height);
+
+		auto const row_func = [&](u32 y)
+		{			
+			auto sr = channel_row_begin(device_src, y, r);
+			auto sg = channel_row_begin(device_src, y, g);
+			auto sb = channel_row_begin(device_src, y, b);
+			auto sa = channel_row_begin(device_src, y, a);
+
+            auto hr = channel_row_begin(host_v, y, r);
+			auto hg = channel_row_begin(host_v, y, g);
+			auto hb = channel_row_begin(host_v, y, b);
+			auto ha = channel_row_begin(host_v, y, a);
+
+            if(!cuda::memcpy_to_host(sr, hr, bytes_per_row)) { assert(false); }
+            if(!cuda::memcpy_to_host(sg, hg, bytes_per_row)) { assert(false); }
+            if(!cuda::memcpy_to_host(sb, hb, bytes_per_row)) { assert(false); }
+            if(!cuda::memcpy_to_host(sa, ha, bytes_per_row)) { assert(false); }
+
+            auto d = row_begin(host_dst, y);
+
+			for (u32 x = 0; x < width; ++x)
+			{
+				d[x].channels[r] = to_channel_u8(hr[x]);
+				d[x].channels[g] = to_channel_u8(hg[x]);
+				d[x].channels[b] = to_channel_u8(hb[x]);
+				d[x].channels[a] = to_channel_u8(ha[x]);
+			}            
+		};
+
+		process_rows(height, row_func);
+
+        destroy_host_view(host_v);
+    }
+
+
+    template <class IMG_INT>
+    static void map_rgba_host_to_device(IMG_INT const& host_src, ViewRGBAr32 const& device_dst)
+    {
+        constexpr auto r = id_cast(RGBA::R);
+		constexpr auto g = id_cast(RGBA::G);
+		constexpr auto b = id_cast(RGBA::B);
+		constexpr auto a = id_cast(RGBA::A);
+
+        auto const width = device_dst.width;
+        auto const height = device_dst.height;
+
+        auto const bytes_per_row = sizeof(r32) * width;
+
+        ViewRGBAr32 host_v;
+        make_host_view(host_v, width, height);
+
+        auto const row_func = [&](u32 y)
+        {
+            auto s = row_begin(host_src, y);
+            auto hr = channel_row_begin(host_v, y, r);
+            auto hg = channel_row_begin(host_v, y, g);
+            auto hb = channel_row_begin(host_v, y, b);
+            auto ha = channel_row_begin(host_v, y, a);
+
+            for (u32 x = 0; x < width; ++x)
+            {
+                hr[x] = to_channel_r32(s[x].channels[r]);
+                hg[x] = to_channel_r32(s[x].channels[g]);
+                hb[x] = to_channel_r32(s[x].channels[b]);
+                ha[x] = to_channel_r32(s[x].channels[a]);
+            }
+
+            auto dr = channel_row_begin(device_dst, y, r);
+            auto dg = channel_row_begin(device_dst, y, g);
+            auto db = channel_row_begin(device_dst, y, b);
+            auto da = channel_row_begin(device_dst, y, a);
+
+            if(!cuda::memcpy_to_device(hr, dr, bytes_per_row)) { assert(false); }
+            if(!cuda::memcpy_to_device(hg, dg, bytes_per_row)) { assert(false); }
+            if(!cuda::memcpy_to_device(hb, db, bytes_per_row)) { assert(false); }
+            if(!cuda::memcpy_to_device(ha, da, bytes_per_row)) { assert(false); }
+        };
+
+        process_rows(height, row_func);
+
+        destroy_host_view(host_v);
+    }
+
+
+    template <class IMG_INT>
+    static void map_rgb_device_to_host(ViewRGBr32 const& device_src, IMG_INT const& host_dst)
+    {
+        constexpr auto r = id_cast(RGBA::R);
+		constexpr auto g = id_cast(RGBA::G);
+		constexpr auto b = id_cast(RGBA::B);
+		constexpr auto a = id_cast(RGBA::A);
+
+		constexpr auto ch_max = to_channel_u8(1.0f);
+
+        auto const width = device_src.width;
+        auto const height = device_src.height;
+
+        auto const bytes_per_row = sizeof(r32) * width;
+
+        ViewRGBr32 host_v;
+        make_host_view(host_v, width, height);
+
+		auto const row_func = [&](u32 y)
+        {
+            auto sr = channel_row_begin(device_src, y, r);
+            auto sg = channel_row_begin(device_src, y, g);
+            auto sb = channel_row_begin(device_src, y, b);
+
+            auto hr = channel_row_begin(host_v, y, r);
+			auto hg = channel_row_begin(host_v, y, g);
+			auto hb = channel_row_begin(host_v, y, b);
+
+            if(!cuda::memcpy_to_host(sr, hr, bytes_per_row)) { assert(false); }
+            if(!cuda::memcpy_to_host(sg, hg, bytes_per_row)) { assert(false); }
+            if(!cuda::memcpy_to_host(sb, hb, bytes_per_row)) { assert(false); }
+
+            auto d = row_begin(host_dst, y);
+
+            for (u32 x = 0; x < width; ++x)
+            {
+                d[x].channels[r] = to_channel_u8(hr[x]);
+				d[x].channels[g] = to_channel_u8(hg[x]);
+				d[x].channels[b] = to_channel_u8(hb[x]);
+				d[x].channels[a] = ch_max;
+            }
+        };
+
+        process_rows(height, row_func);
+
+        destroy_host_view(host_v);
+    }
+
+
+    template <class IMG_INT>
+    static void map_rgb_host_to_device(IMG_INT const& host_src, ViewRGBr32 const& device_dst)
+    {
+        constexpr auto r = id_cast(RGBA::R);
+		constexpr auto g = id_cast(RGBA::G);
+		constexpr auto b = id_cast(RGBA::B);
+		constexpr auto a = id_cast(RGBA::A);
+
+        auto const width = device_dst.width;
+        auto const height = device_dst.height;
+
+        auto const bytes_per_row = sizeof(r32) * width;
+
+        ViewRGBr32 host_v;
+        make_host_view(host_v, width, height);
+
+        auto const row_func = [&](u32 y)
+        {
+            auto s = row_begin(host_src, y);
+            auto hr = channel_row_begin(host_v, y, r);
+            auto hg = channel_row_begin(host_v, y, g);
+            auto hb = channel_row_begin(host_v, y, b);
+
+            for (u32 x = 0; x < width; ++x)
+            {
+                hr[x] = to_channel_r32(s[x].channels[r]);
+                hg[x] = to_channel_r32(s[x].channels[g]);
+                hb[x] = to_channel_r32(s[x].channels[b]);
+            }
+
+            auto dr = channel_row_begin(device_dst, y, r);
+            auto dg = channel_row_begin(device_dst, y, g);
+            auto db = channel_row_begin(device_dst, y, b);
+
+            if(!cuda::memcpy_to_device(hr, dr, bytes_per_row)) { assert(false); }
+            if(!cuda::memcpy_to_device(hg, dg, bytes_per_row)) { assert(false); }
+            if(!cuda::memcpy_to_device(hb, db, bytes_per_row)) { assert(false); }
+        };
+
+        process_rows(height, row_func);
+
+        destroy_host_view(host_v);
+    }
+
+
+	void map_rgb(ViewRGBAr32 const& device_src, Image const& host_dst)
+    {
+        assert(verify(device_src, host_dst));
+
+		map_rgba_device_to_host(device_src, host_dst);
+    }
+
+
+	void map_rgb(Image const& host_src, ViewRGBAr32 const& device_dst)
+    {
+        assert(verify(host_src, device_dst));
+
+        map_rgba_host_to_device(host_src, device_dst);
+    }
+
+
+	void map_rgb(ViewRGBAr32 const& device_src, View const& host_dst)
+    {
+        assert(verify(device_src, host_dst));
+
+		map_rgba_device_to_host(device_src, host_dst);
+    }
+
+
+	void map_rgb(View const& host_src, ViewRGBAr32 const& device_dst)
+    {
+        assert(verify(host_src, device_dst));
+
+        map_rgba_host_to_device(host_src, device_dst);
+    }
+
+
+	void map_rgb(ViewRGBr32 const& device_src, Image const& host_dst)
+    {
+        assert(verify(device_src, host_dst));
+
+        map_rgb_device_to_host(device_src, host_dst);
+    }
+
+
+	void map_rgb(Image const& host_src, ViewRGBr32 const& device_dst)
+    {
+        assert(verify(host_src, device_dst));
+
+        map_rgb_host_to_device(host_src, device_dst);
+    }
+
+
+	void map_rgb(ViewRGBr32 const& device_src, View const& host_dst)
+    {
+        assert(verify(device_src, host_dst));
+
+        map_rgb_device_to_host(device_src, host_dst);
+    }
+
+
+	void map_rgb(View const& host_src, ViewRGBr32 const& device_dst)
+    {
+        assert(verify(host_src, device_dst));
+
+        map_rgb_host_to_device(host_src, device_dst);
     }
 }

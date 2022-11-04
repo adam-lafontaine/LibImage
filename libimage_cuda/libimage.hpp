@@ -478,24 +478,24 @@ namespace libimage
 
 namespace libimage
 {
-	void map_rgb(ViewRGBAr32 const& src, Image const& dst);
+	void map_rgb(ViewRGBAr32 const& device_src, Image const& host_dst);
 
-	void map_rgb(Image const& src, ViewRGBAr32 const& dst);
-
-
-	void map_rgb(ViewRGBAr32 const& src, View const& dst);
-
-	void map_rgb(View const& src, ViewRGBAr32 const& dst);
+	void map_rgb(Image const& host_src, ViewRGBAr32 const& device_dst);
 
 
-	void map_rgb(ViewRGBr32 const& src, Image const& dst);
+	void map_rgb(ViewRGBAr32 const& device_src, View const& host_dst);
 
-	void map_rgb(Image const& src, ViewRGBr32 const& dst);
+	void map_rgb(View const& host_src, ViewRGBAr32 const& device_dst);
 
 
-	void map_rgb(ViewRGBr32 const& src, View const& dst);
+	void map_rgb(ViewRGBr32 const& device_src, Image const& host_dst);
 
-	void map_rgb(View const& src, ViewRGBr32 const& dst);
+	void map_rgb(Image const& host_src, ViewRGBr32 const& device_dst);
+
+
+	void map_rgb(ViewRGBr32 const& device_src, View const& host_dst);
+
+	void map_rgb(View const& host_src, ViewRGBr32 const& device_dst);
 }
 
 

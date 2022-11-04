@@ -85,6 +85,7 @@ void empty_dir(path_t& dir);
 void read_write_image_test();
 void resize_test();
 void map_test();
+void map_rgb_test();
 
 
 int main()
@@ -100,6 +101,7 @@ int main()
 	read_write_image_test();
 	resize_test();
 	map_test();
+	map_rgb_test();
 
 
     auto time = sw.get_time_milli();
@@ -213,6 +215,48 @@ void map_test()
 	
 	img::destroy_image(gray);
 	img::destroy_image(gray_dst);
+	buffer.free();
+}
+
+
+void map_rgb_test()
+{
+	auto title = "map_rgb_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH + title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
+
+	Image image;
+	img::read_image_from_file(CORVETTE_PATH, image);
+	auto width = image.width;
+	auto height = image.height;
+
+	Image image_dst;
+	img::make_image(image_dst, width, height);
+
+	img::Buffer32 buffer(width * height * 4, cuda::Malloc::Device);
+
+	img::View4r32 view4;
+	img::make_view(view4, width, height, buffer);
+
+	img::map_rgb(image, view4);
+	img::map_rgb(view4, image_dst);
+	buffer.reset();
+
+	write_image(image_dst, "map_rgba.bmp");
+
+	img::View3r32 view3;
+	img::make_view(view3, width, height, buffer);
+
+	img::map_rgb(image, view3);
+	img::map_rgb(view3, image_dst);
+	buffer.reset();
+
+	write_image(image_dst, "map_rgb.bmp");
+
+	img::destroy_image(image);
+	img::destroy_image(image_dst);
 	buffer.free();
 }
 
