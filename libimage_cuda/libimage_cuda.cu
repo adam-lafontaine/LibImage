@@ -1,4 +1,4 @@
-#include "libimage.hpp"
+#include "verify.hpp"
 #include "./device/cuda_def.cuh"
 #include "./device/device.hpp"
 
@@ -26,9 +26,9 @@ using Pixel4r32 = PixelCHr32<4>;
 using Pixel3r32 = PixelCHr32<3>;
 using Pixel2r32 = PixelCHr32<2>;
 
-using ViewRGBAr32 = View4r32;
-using ViewRGBr32 = View3r32;
-using ViewHSVr32 = View3r32;
+using ViewRGBAr32 = libimage::ViewRGBAr32;
+using ViewRGBr32 = libimage::ViewRGBr32;
+using ViewHSVr32 = libimage::ViewHSVr32;
 
 using PixelRGBAr32 = libimage::PixelRGBAr32;
 using PixelRGBr32 = libimage::PixelRGBr32;
@@ -407,12 +407,11 @@ namespace gpuf
 }
 
 
-using ViewRGBr32 = libimage::ViewRGBr32;
-using ViewHSVr32 = libimage::ViewHSVr32;
+
 
 
 GPU_KERNAL
-static void gpu_map_hsv(ViewRGBr32 src, ViewHSVr32 dst, u32 n_threads)
+static void gpu_map_rgb_hsv(ViewRGBr32 src, ViewHSVr32 dst, u32 n_threads)
 {
     int t = blockDim.x * blockIdx.x + threadIdx.x;
     if (t >= n_threads)
@@ -420,7 +419,50 @@ static void gpu_map_hsv(ViewRGBr32 src, ViewHSVr32 dst, u32 n_threads)
         return;
     }
 
-    
+    auto pixel_id = (u32)t;
+	auto y = pixel_id / src.width;
+	auto x = pixel_id - y * src.width;
+
+	auto s = gpuf::rgb_xy_at(src, x, y).rgb;
+
+	auto hsv = gpuf::rgb_hsv(*s.R, *s.G, *s.B);
+	
+	auto d = gpuf::hsv_xy_at(dst, x, y).hsv;
+	*d.H = hsv.hue;
+	*d.S = hsv.sat;
+	*d.V = hsv.val;
+}
+
+
+GPU_KERNAL
+static void gpu_map_hsv_rgb(ViewHSVr32 src, ViewRGBr32 dst, u32 n_threads)
+{
+	int t = blockDim.x * blockIdx.x + threadIdx.x;
+    if (t >= n_threads)
+    {
+        return;
+    }
+
+    auto pixel_id = (u32)t;
+	auto y = pixel_id / src.width;
+	auto x = pixel_id - y * src.width;
+
+	auto s = gpuf::hsv_xy_at(src, x, y).hsv;
+
+	auto rgb = gpuf::hsv_rgb(*s.H, *s.S, *s.V);
+
+	auto d = gpuf::rgb_xy_at(dst, x, y).rgb;
+	*d.R = rgb.red;
+	*d.G = rgb.green;
+	*d.B = rgb.blue;
+}
+
+
+constexpr int THREADS_PER_BLOCK = 512;
+
+constexpr int calc_thread_blocks(u32 n_threads)
+{
+    return (n_threads + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 }
 
 
@@ -428,32 +470,38 @@ static void gpu_map_hsv(ViewRGBr32 src, ViewHSVr32 dst, u32 n_threads)
 
 namespace libimage
 {
-	void map_hsv(ViewHSVr32 const& device_src, Image const& host_dst)
+	void map_rgb_hsv(ViewRGBr32 const& src, ViewHSVr32 const& dst)
 	{
+		assert(verify(src,dst));
 
+		auto const width = src.width;
+		auto const height = src.height;
+
+		auto const n_threads = width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
+
+		cuda_launch_kernel(gpu_map_rgb_hsv, n_blocks, block_size, src, dst, n_threads);
+
+		auto result = cuda::launch_success("gpu_map_rgb_hsv");
+		assert(result);
 	}
+	
 
-
-	void map_hsv(Image const& host_src, ViewHSVr32 const& device_dst)
+	void map_hsv_rgb(ViewHSVr32 const& src, ViewRGBr32 const& dst)
 	{
+		assert(verify(src,dst));
 
-	}
+		auto const width = src.width;
+		auto const height = src.height;
 
+		auto const n_threads = width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
 
-	void map_hsv(ViewHSVr32 const& device_src, View const& host_dst)
-	{
+		cuda_launch_kernel(gpu_map_hsv_rgb, n_blocks, block_size, src, dst, n_threads);
 
-	}
-
-
-	void map_hsv(View const& host_src, ViewHSVr32 const& device_dst)
-	{
-
-	}
-
-
-	void map_hsv(ViewRGBr32 const& src, ViewHSVr32 const& dst)
-	{
-
+		auto result = cuda::launch_success("gpu_map_hsv_rgb");
+		assert(result);
 	}
 }

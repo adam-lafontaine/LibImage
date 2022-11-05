@@ -6,6 +6,11 @@
 
 #ifndef CUDA_NOT_INSTALLED
 
+// for vs code intellisense
+#ifndef __CUDACC__
+#define __CUDACC__
+#endif
+
 #include <cuda_runtime.h>
 
 #define GPU_KERNAL __global__
@@ -51,6 +56,12 @@ inline cudaError_t cudaMalloc(void**, size_t){ return cudaSuccess; }
 inline cudaError_t cudaMallocManaged(void**, size_t){ return cudaSuccess; }
 inline cudaError_t cudaFree(void *){ return cudaSuccess; }
 
+// TODO: streams
+
+#define cuda_launch_kernel(kernel_name, n_blocks, blocksize, ...) \
+    kernel_name (__VA_ARGS__);
+
+
 class FakeCudaPt
 {
 public:
@@ -62,11 +73,6 @@ public:
 constexpr FakeCudaPt blockDim = { 0, 0, 0 };
 constexpr FakeCudaPt blockIdx = { 0, 0, 0 };
 constexpr FakeCudaPt threadIdx = { 0, 0, 0 };
-
-// TODO: streams
-
-#define cuda_launch_kernel(kernel_name, n_blocks, blocksize, ...) \
-    kernel_name (__VA_ARGS__);
 
 #endif
 

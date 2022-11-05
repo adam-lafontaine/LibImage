@@ -362,11 +362,13 @@ namespace libimage
 
 			r32* channels[3] = {};
 		};
-
-		// for_each_xy
+		
+		// undefined in device code
+		/*
 		r32& red() { return *rgb.R; }
 		r32& green() { return *rgb.G; }
 		r32& blue() { return *rgb.B; }
+		*/
 	};
 
 
@@ -383,13 +385,12 @@ namespace libimage
 			r32* channels[3] = {};
 		};
 
+		// undefined in device code
+		/*
 		r32& hue() { return *hsv.H; }
 		r32& sat() { return *hsv.S; }
 		r32& val() { return *hsv.V; }
-
-		/*r32 hue() const { return *hsv.H; }
-		r32 sat() const { return *hsv.S; }
-		r32 val() const { return *hsv.V; }*/
+		*/
 	};
 }
 
@@ -503,16 +504,14 @@ namespace libimage
 
 namespace libimage
 {
-	void map_hsv(ViewHSVr32 const& device_src, Image const& host_dst);
+	void map_rgb_hsv(ViewRGBr32 const& src, ViewHSVr32 const& dst);
 
-	void map_hsv(Image const& host_src, ViewHSVr32 const& device_dst);
-
-	void map_hsv(ViewHSVr32 const& device_src, View const& host_dst);
-
-	void map_hsv(View const& host_src, ViewHSVr32 const& device_dst);
+	void map_hsv_rgb(ViewHSVr32 const& src, ViewRGBr32 const& dst);
 
 
-	void map_hsv(ViewRGBr32 const& src, ViewHSVr32 const& dst);
+	//void map_hsv(View const& host_src, ViewHSVr32 const& device_dst);
+
+	//void map_hsv(ViewHSVr32 const& device_src, View const& host_dst);
 }
 
 

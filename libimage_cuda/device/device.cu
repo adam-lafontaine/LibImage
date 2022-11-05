@@ -2,6 +2,7 @@
 #include "cuda_def.cuh"
 
 #include <cassert>
+#include <cstddef>
 
 #ifdef CUDA_PRINT_ERROR
 
@@ -13,7 +14,7 @@
 
 static void check_error(cudaError_t err, cstr label = "")
 {
-    if(err == cudaSuccess)
+    if (err == cudaSuccess)
     {
         return;
     }
@@ -24,7 +25,7 @@ static void check_error(cudaError_t err, cstr label = "")
     printf("\n*** CUDA ERROR ***\n\n");
     printf("%s", cudaGetErrorString(err));
 
-    if(std::strlen(label))
+    if (std::strlen(label))
     {
         printf("\n%s", label);
     }
@@ -43,7 +44,7 @@ namespace cuda
         assert(n_bytes);
         assert(!buffer.data);
 
-        if(!n_bytes || buffer.data)
+        if (!n_bytes || buffer.data)
         {
             return false;
         }
@@ -53,7 +54,7 @@ namespace cuda
 
         bool result = err == cudaSuccess;
 
-        if(result)
+        if (result)
         {
             buffer.capacity = n_bytes;
             buffer.size = 0;
@@ -68,7 +69,7 @@ namespace cuda
         assert(n_bytes);
         assert(!buffer.data);
 
-        if(!n_bytes || buffer.data)
+        if (!n_bytes || buffer.data)
         {
             return false;
         }
@@ -78,7 +79,7 @@ namespace cuda
 
         bool result = err == cudaSuccess;
 
-        if(result)
+        if (result)
         {
             buffer.capacity = n_bytes;
             buffer.size = 0;
@@ -88,12 +89,33 @@ namespace cuda
     }
 
 
+    bool host_malloc(ByteBuffer& buffer, size_t n_bytes)
+    {
+        assert(n_bytes);
+        assert(!buffer.data);
+
+        if (!n_bytes || buffer.data)
+        {
+            return false;
+        }
+
+        buffer.data = (u8*)std::malloc(n_bytes);
+
+        if (!buffer.data)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+
     bool free(ByteBuffer& buffer)
     {
         buffer.capacity = 0;
         buffer.size = 0;
 
-        if(buffer.data)
+        if (buffer.data)
         {
             cudaError_t err = cudaFree(buffer.data);
             check_error(err, "free");
@@ -101,6 +123,20 @@ namespace cuda
             buffer.data = nullptr;
 
             return err == cudaSuccess;
+        }
+
+        return true;
+    }
+
+
+    bool host_free(ByteBuffer& buffer)
+    {
+        buffer.capacity = 0;
+        buffer.size = 0;
+
+        if (buffer.data)
+        {
+            std::free(buffer.data);
         }
 
         return true;
@@ -121,7 +157,7 @@ namespace cuda
         auto bytes_available = (buffer.capacity - buffer.size) >= n_bytes;
         assert(bytes_available);
 
-        if(!is_valid || !bytes_available)
+        if (!is_valid || !bytes_available)
         {
             return nullptr;
         }
@@ -149,7 +185,7 @@ namespace cuda
             n_bytes <= buffer.capacity &&
             n_bytes <= buffer.size;
 
-        if(is_valid)
+        if (is_valid)
         {
             buffer.size -= n_bytes;
             return true;

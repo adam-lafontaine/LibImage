@@ -87,6 +87,7 @@ void resize_test();
 void map_test();
 void map_rgb_test();
 void sub_view_test();
+void map_hsv_test();
 
 
 int main()
@@ -104,6 +105,7 @@ int main()
 	map_test();
 	map_rgb_test();
 	sub_view_test();
+	map_hsv_test();
 
 
     auto time = sw.get_time_milli();
@@ -334,6 +336,49 @@ void sub_view_test()
 
 	img::destroy_image(vette);
 	img::destroy_image(caddy);
+	buffer.free();
+}
+
+
+void map_hsv_test()
+{
+	auto title = "map_hsv_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH + title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
+
+	Image image;
+	img::read_image_from_file(CORVETTE_PATH, image);
+	auto width = image.width;
+	auto height = image.height;
+
+	Image image_dst;
+	img::make_image(image_dst, width, height);
+
+	img::Buffer32 buffer(3 * width * height * 3, cuda::Malloc::Device);
+
+	img::ViewRGBr32 rgb_src;
+	img::make_view(rgb_src, width, height, buffer);
+
+	img::ViewHSVr32 hsv;
+	img::make_view(hsv, width, height, buffer);
+
+	img::ViewRGBr32 rgb_dst;
+	img::make_view(rgb_dst, width, height, buffer);
+
+	img::map_rgb(img::make_view(image), rgb_src);
+
+	img::map_rgb_hsv(rgb_src, hsv);
+
+	img::map_hsv_rgb(hsv, rgb_dst);
+
+	img::map_rgb(rgb_dst, img::make_view(image_dst));
+
+	write_image(image_dst, "map_hsv.bmp");
+
+	img::destroy_image(image);
+	img::destroy_image(image_dst);
 	buffer.free();
 }
 

@@ -2,7 +2,7 @@
 
 #include "../defines.hpp"
 
-#include <cstddef>
+
 
 class ByteBuffer
 {
@@ -19,7 +19,11 @@ namespace cuda
 
     bool unified_malloc(ByteBuffer& buffer, size_t n_bytes);
 
+    bool host_malloc(ByteBuffer& buffer, size_t n_bytes);
+
     bool free(ByteBuffer& buffer);
+
+    bool host_free(ByteBuffer& buffer);
 
 
     u8* push_bytes(ByteBuffer& buffer, size_t n_bytes);
@@ -40,7 +44,8 @@ namespace cuda
     enum class Malloc : int
     {
         Device,
-        Unified
+        Unified,
+        Host
     };
 
 
@@ -52,22 +57,28 @@ namespace cuda
         size_t capacity_ = 0;
         size_t size_ = 0;
 
+        Malloc m_;
+
     public:
         MemoryBuffer(size_t n_elements, Malloc m)
         {
-            constexpr auto S = sizeof(T);
+            m_ = m;
+            auto const n_bytes = sizeof(T) * n_elements;
 
             ByteBuffer b{};
 
             bool result = false;
 
-            switch(m)
+            switch(m_)
             {
                 case Malloc::Device:
-                    result = device_malloc(b, S * n_elements);
+                    result = device_malloc(b, n_bytes);
                     break;
                 case Malloc::Unified:
-                    result = unified_malloc(b, S * n_elements);
+                    result = unified_malloc(b, n_bytes);
+                    break;
+                case Malloc::Host:
+                    result = host_malloc(b, n_bytes);
                     break;
             }
 
@@ -116,17 +127,30 @@ namespace cuda
 
 
         void free()
-        {
-            if (data_)
-            {
-                ByteBuffer b{};
-                b.data = (u8*)data_;
-                cuda::free(b);
-                data_ = nullptr;
-            }
-
+        {          
             capacity_ = 0;
             size_ = 0;
+
+            if(!data_)
+            {
+                return;
+            }
+
+            ByteBuffer b{};
+            b.data = (u8*)data_;
+
+            switch(m_)
+            {
+                case Malloc::Device:
+                    cuda::free(b);
+                    break;
+                case Malloc::Unified:
+                    cuda::free(b);
+                    break;
+                case Malloc::Host:
+                    cuda::host_free(b);
+                    break;
+            }
         }
     };
     
