@@ -524,6 +524,7 @@ void fill_test()
 
 	img::destroy_image(image);
 	img::destroy_image(gray);
+	buffer.free();
 }
 
 

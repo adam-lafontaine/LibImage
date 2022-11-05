@@ -692,6 +692,8 @@ namespace libimage
 	template <size_t N>
 	static void do_make_view(ViewCHr32<N>& view, u32 width, u32 height, Buffer32& buffer)
 	{
+		assert(buffer.avail() >= N * width * height);
+
 		view.image_width = width;
 		view.x_begin = 0;
 		view.y_begin = 0;
@@ -727,6 +729,8 @@ namespace libimage
 
 	void make_view(View1r32& view, u32 width, u32 height, Buffer32& buffer)
 	{
+		assert(buffer.avail() >= width * height);
+
 		view.image_data = buffer.push(width * height);
 		view.image_width = width;
 		view.x_begin = 0;
@@ -738,53 +742,18 @@ namespace libimage
 	}
 
 
-    void make_host_view(View1r32& view, u32 width, u32 height)
-	{		
-		view.image_width = width;
-		view.x_begin = 0;
-		view.y_begin = 0;
-		view.x_end = width;
-		view.y_end = height;
-		view.width = width;
-		view.height = height;
-
-        view.image_data = (r32*)std::malloc(sizeof(r32) * width * height);
+	template <size_t N>
+	static void pop_view(Buffer32& buffer, ViewCHr32<N> const& view)
+	{
+		buffer.pop(N * view.width * view.height);
 	}
 
 
-    template <size_t N>
-    static void make_host_view(ViewCHr32<N>& view, u32 width, u32 height)
-    {
-        view.image_width = width;
-		view.x_begin = 0;
-		view.y_begin = 0;
-		view.x_end = width;
-		view.y_end = height;
-		view.width = width;
-		view.height = height;
+	static void pop_view(Buffer32& buffer, View1r32 const& view)
+	{
+		buffer.pop(view.width * view.height);
+	}
 
-        auto data = (r32*)std::malloc(N * sizeof(r32) * width * height);
-
-        assert(data);
-
-		for (u32 ch = 0; ch < N; ++ch)
-        {
-            view.image_channel_data[ch] = data + ch * width * height;
-        }
-    }
-
-
-    static void destroy_host_view(View1r32& view)
-    {
-        std::free(view.image_data);
-    }
-
-
-    template <size_t N>
-    static void destroy_host_view(ViewCHr32<N>& view)
-    {
-        std::free(view.image_channel_data[0]);
-    }
 }
 
 
@@ -881,15 +850,14 @@ namespace libimage
 	using r32_to_u8_f = std::function<u8(r32)>;
 
 
-    template <class IMG_U8>
-    static void map_device_to_host(View1r32 const& device_src, IMG_U8 const& host_dst, r32_to_u8_f const& func)
-    {
-        auto const width = device_src.width;
+	template <class IMG_U8>
+	static void map_device_to_host(View1r32 const& device_src, IMG_U8 const& host_dst, View1r32 const& host_v, r32_to_u8_f const& func)
+	{
+		assert(verify(device_src, host_v));
+
+		auto const width = device_src.width;
         auto const height = device_src.height;
         auto const bytes_per_row = sizeof(r32) * width;
-
-        View1r32 host_v;
-        make_host_view(host_v, width, height);
 
         auto const row_func = [&](u32 y)
 		{
@@ -907,21 +875,18 @@ namespace libimage
 		};
 
 		process_rows(height, row_func);
-
-        destroy_host_view(host_v);
-    }
+	}
 
 
-    template <class IMG_U8>
-    static void map_host_to_device(IMG_U8 const& host_src, View1r32 const& device_dst, u8_to_r32_f const& func)
-    {
-        auto const width = device_dst.width;
+	template <class IMG_U8>
+	static void map_host_to_device(IMG_U8 const& host_src, View1r32 const& device_dst, View1r32 const& host_v, u8_to_r32_f const& func)
+	{
+		assert(verify(device_dst, host_v));
+
+		auto const width = device_dst.width;
         auto const height = device_dst.height;
 
         auto const bytes_per_row = sizeof(r32) * width;
-
-        View1r32 host_v;
-        make_host_view(host_v, width, height);
 
         auto const row_func = [&](u32 y)
 		{
@@ -939,44 +904,62 @@ namespace libimage
 		};
 
 		process_rows(height, row_func);
-
-        destroy_host_view(host_v);
-    }
+	}
 
 
-	void map(View1r32 const& device_src, gray::View const& host_dst)
+	void map(View1r32 const& device_src, gray::View const& host_dst, Buffer32& host_buffer)
     {
         assert(verify(device_src, host_dst));
 
-        map_device_to_host(device_src, host_dst, to_channel_u8);
+		View1r32 host_v;
+		make_view(host_v, device_src.width, device_src.height, host_buffer);
+
+        map_device_to_host(device_src, host_dst, host_v, to_channel_u8);
+
+		pop_view(host_buffer, host_v);
     }
 
 
-	void map(gray::View const& host_src, View1r32 const& device_dst)
+	void map(gray::View const& host_src, View1r32 const& device_dst, Buffer32& host_buffer)
     {
         assert(verify(host_src, device_dst));
 
-        map_host_to_device(host_src, device_dst, to_channel_r32);
+		View1r32 host_v;
+		make_view(host_v, device_dst.width, device_dst.height, host_buffer);
+
+        map_host_to_device(host_src, device_dst, host_v, to_channel_r32);
+
+		pop_view(host_buffer, host_v);
     }
 
 
-	void map(View1r32 const& device_src, gray::View const& host_dst, r32 gray_min, r32 gray_max)
+	void map(View1r32 const& device_src, gray::View const& host_dst, Buffer32& host_buffer, r32 gray_min, r32 gray_max)
     {
         assert(verify(device_src, host_dst));
 
 		auto const func = [&](r32 p) { return lerp_to_u8(p, gray_min, gray_max); };
 
-        map_device_to_host(device_src, host_dst, func);
+		View1r32 host_v;
+		make_view(host_v, device_src.width, device_src.height, host_buffer);
+
+        map_device_to_host(device_src, host_dst, host_v, func);
+
+		pop_view(host_buffer, host_v);
     }
 
 
-	void map(gray::View const& host_src, View1r32 const& device_dst, r32 gray_min, r32 gray_max)
+	void map(gray::View const& host_src, View1r32 const& device_dst, Buffer32& host_buffer, r32 gray_min, r32 gray_max)
     {
         assert(verify(host_src, device_dst));
 
 		auto const func = [&](u8 p) { return lerp_to_r32(p, gray_min, gray_max); };
 
-        map_host_to_device(host_src, device_dst, func);
+        View1r32 host_v;
+		make_view(host_v, device_dst.width, device_dst.height, host_buffer);
+
+        map_host_to_device(host_src, device_dst, host_v, func);
+
+		pop_view(host_buffer, host_v);
     }
 }
 
@@ -985,9 +968,9 @@ namespace libimage
 
 namespace libimage
 {
-	void map_rgb(ViewRGBAr32 const& device_src, View const& host_dst)
-    {
-        assert(verify(device_src, host_dst));
+	static void map_rgba_device_to_host(ViewRGBAr32 const& device_src, View const& host_dst, ViewRGBAr32 const& host_v)
+	{
+		assert(verify(device_src, host_v));
 
 		constexpr auto r = id_cast(RGBA::R);
 		constexpr auto g = id_cast(RGBA::G);
@@ -997,10 +980,7 @@ namespace libimage
         auto const width = device_src.width;
         auto const height = device_src.height;
 
-        auto const bytes_per_row = sizeof(r32) * width;
-
-        ViewRGBAr32 host_v;
-        make_host_view(host_v, width, height);
+        auto const bytes_per_row = sizeof(r32) * width;       
 
 		auto const row_func = [&](u32 y)
 		{			
@@ -1031,16 +1011,14 @@ namespace libimage
 		};
 
 		process_rows(height, row_func);
-
-        destroy_host_view(host_v);
-    }
+	}
 
 
-	void map_rgb(View const& host_src, ViewRGBAr32 const& device_dst)
-    {
-        assert(verify(host_src, device_dst));
+	static void map_rgba_host_to_device(View const& host_src, ViewRGBAr32 const& device_dst, ViewRGBAr32 const& host_v)
+	{
+		assert(verify(device_dst, host_v));
 
-        constexpr auto r = id_cast(RGBA::R);
+		constexpr auto r = id_cast(RGBA::R);
 		constexpr auto g = id_cast(RGBA::G);
 		constexpr auto b = id_cast(RGBA::B);
 		constexpr auto a = id_cast(RGBA::A);
@@ -1049,9 +1027,6 @@ namespace libimage
         auto const height = device_dst.height;
 
         auto const bytes_per_row = sizeof(r32) * width;
-
-        ViewRGBAr32 host_v;
-        make_host_view(host_v, width, height);
 
         auto const row_func = [&](u32 y)
         {
@@ -1081,16 +1056,14 @@ namespace libimage
         };
 
         process_rows(height, row_func);
-
-        destroy_host_view(host_v);
-    }
+	}
 
 
-	void map_rgb(ViewRGBr32 const& device_src, View const& host_dst)
-    {
-        assert(verify(device_src, host_dst));
+	static void map_rgb_device_to_host(ViewRGBr32 const& device_src, View const& host_dst, ViewRGBr32 const& host_v)
+	{
+		assert(verify(device_src, host_v));
 
-        constexpr auto r = id_cast(RGBA::R);
+		constexpr auto r = id_cast(RGBA::R);
 		constexpr auto g = id_cast(RGBA::G);
 		constexpr auto b = id_cast(RGBA::B);
 		constexpr auto a = id_cast(RGBA::A);
@@ -1101,9 +1074,6 @@ namespace libimage
         auto const height = device_src.height;
 
         auto const bytes_per_row = sizeof(r32) * width;
-
-        ViewRGBr32 host_v;
-        make_host_view(host_v, width, height);
 
 		auto const row_func = [&](u32 y)
         {
@@ -1131,16 +1101,14 @@ namespace libimage
         };
 
         process_rows(height, row_func);
-
-        destroy_host_view(host_v);
-    }
+	}
 
 
-	void map_rgb(View const& host_src, ViewRGBr32 const& device_dst)
-    {
-        assert(verify(host_src, device_dst));
+	static void map_rgb_host_to_device(View const& host_src, ViewRGBr32 const& device_dst, ViewRGBr32 const& host_v)
+	{
+		assert(verify(device_dst, host_v));
 
-        constexpr auto r = id_cast(RGBA::R);
+		constexpr auto r = id_cast(RGBA::R);
 		constexpr auto g = id_cast(RGBA::G);
 		constexpr auto b = id_cast(RGBA::B);
 		constexpr auto a = id_cast(RGBA::A);
@@ -1149,9 +1117,6 @@ namespace libimage
         auto const height = device_dst.height;
 
         auto const bytes_per_row = sizeof(r32) * width;
-
-        ViewRGBr32 host_v;
-        make_host_view(host_v, width, height);
 
         auto const row_func = [&](u32 y)
         {
@@ -1177,8 +1142,58 @@ namespace libimage
         };
 
         process_rows(height, row_func);
+	}
 
-        destroy_host_view(host_v);
+
+	void map_rgb(ViewRGBAr32 const& device_src, View const& host_dst, Buffer32& host_buffer)
+    {
+        assert(verify(device_src, host_dst));
+
+		ViewRGBAr32 host_v;
+		make_view(host_v, device_src.width, device_src.height, host_buffer);
+
+		map_rgba_device_to_host(device_src, host_dst, host_v);
+
+		pop_view(host_buffer, host_v);
+    }
+
+
+	void map_rgb(View const& host_src, ViewRGBAr32 const& device_dst, Buffer32& host_buffer)
+    {
+        assert(verify(host_src, device_dst));
+
+        ViewRGBAr32 host_v;
+		make_view(host_v, device_dst.width, device_dst.height, host_buffer);
+
+		map_rgba_host_to_device(host_src, device_dst, host_v);
+
+		pop_view(host_buffer, host_v);
+    }
+
+
+	void map_rgb(ViewRGBr32 const& device_src, View const& host_dst, Buffer32& host_buffer)
+    {
+        assert(verify(device_src, host_dst));
+
+        ViewRGBr32 host_v;
+		make_view(host_v, device_src.width, device_src.height, host_buffer);
+
+        map_rgb_device_to_host(device_src, host_dst, host_v);
+
+		pop_view(host_buffer, host_v);
+    }
+
+
+	void map_rgb(View const& host_src, ViewRGBr32 const& device_dst, Buffer32& host_buffer)
+    {
+        assert(verify(host_src, device_dst));
+
+        ViewRGBr32 host_v;
+		make_view(host_v, device_dst.width, device_dst.height, host_buffer);
+
+        map_rgb_host_to_device(host_src, device_dst, host_v);
+
+		pop_view(host_buffer, host_v);
     }
 }
 

@@ -470,13 +470,13 @@ namespace libimage
 
 namespace libimage
 {
-	void map(View1r32 const& device_src, gray::View const& host_dst);
+	void map(View1r32 const& device_src, gray::View const& host_dst, Buffer32& host_buffer);
 
-	void map(gray::View const& host_src, View1r32 const& device_dst);
+	void map(gray::View const& host_src, View1r32 const& device_dst, Buffer32& host_buffer);
 
-	void map(View1r32 const& device_src, gray::View const& host_dst, r32 gray_min, r32 gray_max);
+	void map(View1r32 const& device_src, gray::View const& host_dst, Buffer32& host_buffer, r32 gray_min, r32 gray_max);
 
-	void map(gray::View const& host_src, View1r32 const& device_dst, r32 gray_min, r32 gray_max);
+	void map(gray::View const& host_src, View1r32 const& device_dst, Buffer32& host_buffer, r32 gray_min, r32 gray_max);
 }
 
 
@@ -484,14 +484,14 @@ namespace libimage
 
 namespace libimage
 {
-	void map_rgb(ViewRGBAr32 const& device_src, View const& host_dst);
+	void map_rgb(ViewRGBAr32 const& device_src, View const& host_dst, Buffer32& host_buffer);
 
-	void map_rgb(View const& host_src, ViewRGBAr32 const& device_dst);
+	void map_rgb(View const& host_src, ViewRGBAr32 const& device_dst, Buffer32& host_buffer);
 
 
-	void map_rgb(ViewRGBr32 const& device_src, View const& host_dst);
+	void map_rgb(ViewRGBr32 const& device_src, View const& host_dst, Buffer32& host_buffer);
 
-	void map_rgb(View const& host_src, ViewRGBr32 const& device_dst);
+	void map_rgb(View const& host_src, ViewRGBr32 const& device_dst, Buffer32& host_buffer);
 }
 
 

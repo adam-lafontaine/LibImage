@@ -120,6 +120,31 @@ namespace cuda
         }
 
 
+        bool pop(size_t n_elements)
+        {
+            assert(data_);
+            assert(capacity_);
+            assert(size_ <= capacity_);
+            assert(n_elements <= capacity_);
+            assert(n_elements <= size_);
+
+            auto is_valid = 
+                data_ &&
+                capacity_ &&
+                size_ <= capacity_ &&
+                n_elements <= capacity_ &&
+                n_elements <= size_;
+
+            if (is_valid)
+            {
+                size_ -= n_elements;
+                return true;
+            }
+
+            return false;
+        }
+
+
         void reset()
         {
             size_ = 0;
@@ -151,6 +176,12 @@ namespace cuda
                     cuda::host_free(b);
                     break;
             }
+        }
+
+
+        size_t avail()
+        {
+            return capacity_ - size_;
         }
     };
     
