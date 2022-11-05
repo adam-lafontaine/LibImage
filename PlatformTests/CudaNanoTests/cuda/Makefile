@@ -299,8 +299,8 @@ stb_include_h += $(stb_resize_h)
 libimage_h := $(libimage)/libimage.hpp
 libimage_h += $(defines_h)
 
-verify_h := $(libimage)/verify.hpp
-verify_h += $(libimage_h)
+include_h := $(libimage)/include.hpp
+include_h += $(libimage_h)
 
 device_h := $(device)/device.hpp
 device_h += $(defines_h)
@@ -348,11 +348,11 @@ $(device_o): $(device_c) $(device_h) $(cuda_def_h)
 	@echo "\n device"
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
-$(libimage_cuda_o): $(libimage_cuda_c) $(verify_h) $(device_h) $(cuda_def_h)
+$(libimage_cuda_o): $(libimage_cuda_c) $(include_h) $(device_h) $(cuda_def_h)
 	@echo "\n libimage_cuda"
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
-$(libimage_o): $(libimage_c) $(verify_h)
+$(libimage_o): $(libimage_c) $(include_h)
 	@echo "\n libimage"
 	$(GPP) $(CCFLAGS) -o $@ -c $<
 

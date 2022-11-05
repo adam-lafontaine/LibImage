@@ -342,11 +342,13 @@ namespace libimage
 			r32* channels[4] = {};
 		};
 
-		// for_each_xy
+		// undefined in device code
+		/*
 		r32& red() { return *rgba.R; }
 		r32& green() { return *rgba.G; }
 		r32& blue() { return *rgba.B; }
 		r32& alpha() { return *rgba.A; }
+		*/
 	};
 
 
@@ -450,24 +452,27 @@ namespace libimage
 }
 
 
+/* sub_view */
+
+namespace libimage
+{
+	View4r32 sub_view(View4r32 const& view, Range2Du32 const& range);
+
+	View3r32 sub_view(View3r32 const& view, Range2Du32 const& range);
+
+	View2r32 sub_view(View2r32 const& view, Range2Du32 const& range);
+
+	View1r32 sub_view(View1r32 const& view, Range2Du32 const& range);
+}
+
+
 /* map */
 
 namespace libimage
 {
-	void map(View1r32 const& device_src, gray::Image const& host_dst);
-
-	void map(gray::Image const& host_src, View1r32 const& device_dst);
-
-
 	void map(View1r32 const& device_src, gray::View const& host_dst);
 
 	void map(gray::View const& host_src, View1r32 const& device_dst);
-
-
-	void map(View1r32 const& device_src, gray::Image const& host_dst, r32 gray_min, r32 gray_max);
-
-	void map(gray::Image const& host_src, View1r32 const& device_dst, r32 gray_min, r32 gray_max);
-
 
 	void map(View1r32 const& device_src, gray::View const& host_dst, r32 gray_min, r32 gray_max);
 
@@ -479,19 +484,9 @@ namespace libimage
 
 namespace libimage
 {
-	void map_rgb(ViewRGBAr32 const& device_src, Image const& host_dst);
-
-	void map_rgb(Image const& host_src, ViewRGBAr32 const& device_dst);
-
-
 	void map_rgb(ViewRGBAr32 const& device_src, View const& host_dst);
 
 	void map_rgb(View const& host_src, ViewRGBAr32 const& device_dst);
-
-
-	void map_rgb(ViewRGBr32 const& device_src, Image const& host_dst);
-
-	void map_rgb(Image const& host_src, ViewRGBr32 const& device_dst);
 
 
 	void map_rgb(ViewRGBr32 const& device_src, View const& host_dst);
@@ -515,35 +510,17 @@ namespace libimage
 }
 
 
-/* sub_view */
-
-namespace libimage
-{
-	View4r32 sub_view(View4r32 const& view, Range2Du32 const& range);
-
-	View3r32 sub_view(View3r32 const& view, Range2Du32 const& range);
-
-	View2r32 sub_view(View2r32 const& view, Range2Du32 const& range);
-
-	View1r32 sub_view(View1r32 const& view, Range2Du32 const& range);
-}
-
-
 /* fill */
 
 namespace libimage
 {
-	void fill(Image const& image, Pixel color);
-
 	void fill(View const& view, Pixel color);
-
-	void fill(gray::Image const& image, u8 gray);
 
 	void fill(gray::View const& view, u8 gray);
 
-	void fill(View4r32 const& view, Pixel color);
+	void fill(ViewRGBAr32 const& view, Pixel color);
 
-	void fill(View3r32 const& view, Pixel color);
+	void fill(ViewRGBr32 const& view, Pixel color);
 
 	void fill(View1r32 const& view, r32 gray32);
 

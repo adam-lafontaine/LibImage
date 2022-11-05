@@ -88,6 +88,7 @@ void map_test();
 void map_rgb_test();
 void sub_view_test();
 void map_hsv_test();
+void fill_test();
 
 
 int main()
@@ -106,6 +107,7 @@ int main()
 	map_rgb_test();
 	sub_view_test();
 	map_hsv_test();
+	fill_test();
 
 
     auto time = sw.get_time_milli();
@@ -212,8 +214,8 @@ void map_test()
 	img::View1r32 view1;
 	img::make_view(view1, width, height, buffer);
 
-	img::map(gray, view1);
-	img::map(view1, gray_dst);
+	img::map(img::make_view(gray), view1);
+	img::map(view1, img::make_view(gray_dst));
 
 	write_image(gray_dst, "map1.bmp");
 	
@@ -239,13 +241,16 @@ void map_rgb_test()
 	Image image_dst;
 	img::make_image(image_dst, width, height);
 
+	auto view = img::make_view(image);
+	auto view_dst = img::make_view(image_dst);
+
 	img::Buffer32 buffer(width * height * 4, cuda::Malloc::Device);
 
 	img::View4r32 view4;
 	img::make_view(view4, width, height, buffer);
 
-	img::map_rgb(image, view4);
-	img::map_rgb(view4, image_dst);
+	img::map_rgb(view, view4);
+	img::map_rgb(view4, view_dst);
 	buffer.reset();
 
 	write_image(image_dst, "map_rgba.bmp");
@@ -253,8 +258,8 @@ void map_rgb_test()
 	img::View3r32 view3;
 	img::make_view(view3, width, height, buffer);
 
-	img::map_rgb(image, view3);
-	img::map_rgb(view3, image_dst);
+	img::map_rgb(view, view3);
+	img::map_rgb(view3, view_dst);
 	buffer.reset();
 
 	write_image(image_dst, "map_rgb.bmp");
@@ -277,16 +282,18 @@ void sub_view_test()
 	img::read_image_from_file(CORVETTE_PATH, vette);
 	auto width = vette.width;
 	auto height = vette.height;
+
+	auto view = img::make_view(vette);
 	
 	img::Buffer32 buffer(width * height * 7, cuda::Malloc::Device);
 
 	img::View3r32 vette3;
 	img::make_view(vette3, width, height, buffer);
-	img::map_rgb(vette, vette3);
+	img::map_rgb(view, vette3);
 
 	img::View4r32 vette4;
 	img::make_view(vette4, width, height, buffer);
-	img::map_rgb(vette, vette4);
+	img::map_rgb(view, vette4);
 
 	Range2Du32 r{};
 	r.x_begin = 0;
@@ -316,7 +323,7 @@ void sub_view_test()
 
 	img::View1r32 caddy1;
 	img::make_view(caddy1, width, height, buffer);
-	img::map(caddy, caddy1);
+	img::map(img::make_view(caddy), caddy1);
 
 	r.x_begin = 0;
 	r.x_end = width / 2;
@@ -380,6 +387,126 @@ void map_hsv_test()
 	img::destroy_image(image);
 	img::destroy_image(image_dst);
 	buffer.free();
+}
+
+
+void fill_test()
+{
+	auto title = "fill_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH + title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
+
+	u32 width = 800;
+	u32 height = 800;
+
+	auto const red = img::to_pixel(255, 0, 0);
+	auto const green = img::to_pixel(0, 255, 0);
+	auto const blue = img::to_pixel(0, 0, 255);
+	//auto const black = img::to_pixel(0, 0, 0);
+	auto const white = img::to_pixel(255, 255, 255);
+
+	Range2Du32 left{};
+	left.x_begin = 0;
+	left.x_end = width / 2;
+	left.y_begin = 0;
+	left.y_end = height;
+
+	Range2Du32 top_left{};
+	top_left.x_begin = 0;
+	top_left.x_end = width / 2;
+	top_left.y_begin = 0;
+	top_left.y_end = height / 2;
+
+	Range2Du32 bottom_right{};
+	bottom_right.x_begin = width / 2;
+	bottom_right.x_end = width;
+	bottom_right.y_begin = height / 2;
+	bottom_right.y_end = height;
+
+	Image image;
+	img::make_image(image, width, height);
+
+	auto view = img::make_view(image);
+	auto left_view = img::sub_view(image, left);
+	auto top_left_view = img::sub_view(image, top_left);
+	auto bottom_right_view = img::sub_view(image, bottom_right);
+
+	img::fill(view, red);
+	write_image(image, "fill_01.bmp");
+
+	img::fill(left_view, green);
+	write_image(image, "fill_02.bmp");
+
+	GrayImage gray;
+	img::make_image(gray, width, height);
+
+	auto gr_top_left_view = img::sub_view(gray, top_left);
+	auto gr_bottom_right_view = img::sub_view(gray, bottom_right);
+
+	img::fill(img::make_view(gray), 128);
+	write_image(gray, "gray_fill_01.bmp");
+
+	img::fill(gr_top_left_view, 0);
+	img::fill(gr_bottom_right_view, 255);
+	write_image(gray, "gray_fill_02.bmp");
+	
+	img::Buffer32 buffer(width * height * 4, cuda::Malloc::Device);
+	
+	img::View3r32 view3;
+	img::make_view(view3, width / 2, height / 2, buffer);
+	img::fill(view3, blue);
+	img::map_rgb(view3, top_left_view);
+	buffer.reset();
+	write_image(image, "fill_03.bmp");
+
+	img::View4r32 view4;
+	img::make_view(view4, width / 2, height / 2, buffer);
+
+	img::fill(view4, white);
+	img::map_rgb(view4, bottom_right_view);
+	buffer.reset();
+	write_image(image, "fill_04.bmp");
+
+
+	img::make_view(view3, width, height, buffer);
+	u32 x_step = width / 5;
+	Range2Du32 r{};
+	r.y_begin = 0;
+	r.y_end = height;
+	for (u32 x = 0; x < width; x +=x_step)
+	{
+		r.x_begin = x;
+		r.x_end = x + x_step;
+
+		auto view = img::sub_view(view3, r);
+		auto red = (u8)(255.0f * r.x_end / width);
+		img::fill(view, img::to_pixel(red, 255, 0));
+	}
+	img::map_rgb(view3, view);
+	buffer.reset();
+	write_image(image, "fill_view3.bmp");
+
+	img::make_view(view4, width, height, buffer);
+	u32 y_step = height / 5;
+	r.x_begin = 0;
+	r.x_end = width;
+	for (u32 y = 0; y < height; y += y_step)
+	{
+		r.y_begin = y;
+		r.y_end = y + y_step;
+
+		auto view = img::sub_view(view4, r);
+		auto blue = (u8)(255.0f * r.y_end / height);
+		img::fill(view, img::to_pixel(255, 0, blue));
+	}
+	img::map_rgb(view4, view);
+	buffer.reset();
+	write_image(image, "fill_view4.bmp");	
+
+	img::destroy_image(image);
+	img::destroy_image(gray);
 }
 
 
