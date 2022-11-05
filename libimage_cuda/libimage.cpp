@@ -1234,3 +1234,41 @@ namespace libimage
 		fill_1_channel(view, gray);
 	}
 }
+
+
+/* copy */
+
+namespace libimage
+{
+	template <class IMG_SRC, class IMG_DST>
+	static void copy_1_channel(IMG_SRC const& src, IMG_DST const& dst)
+	{
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = s[x];
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void copy(View const& src, View const& dst)
+	{
+		assert(verify(src, dst));
+
+		copy_1_channel(src, dst);
+	}
+
+	
+	void copy(gray::View const& src, gray::View const& dst)
+	{
+		assert(verify(src, dst));
+
+		copy_1_channel(src, dst);
+	}
+}

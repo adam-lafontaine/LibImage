@@ -689,3 +689,163 @@ namespace libimage
 		assert(result);
 	}
 }
+
+
+/* copy */
+
+namespace gpu
+{
+	GPU_KERNAL
+	static void copy_rgba(ViewRGBAr32 src, ViewRGBAr32 dst, u32 n_threads)
+	{
+		auto t = blockDim.x * blockIdx.x + threadIdx.x;
+		if (t >= n_threads)
+		{
+			return;
+		}
+
+		auto xy = gpuf::get_thread_xy(src, t);
+
+		auto s = gpuf::rgba_xy_at(src, xy.x, xy.y).rgba;
+		auto d = gpuf::rgba_xy_at(dst, xy.x, xy.y).rgba;
+
+		*d.R = *s.R;
+		*d.G = *s.G;
+		*d.B = *s.B;
+		*d.A = *s.A;
+	}
+
+
+	GPU_KERNAL
+	static void copy_rgb(ViewRGBr32 src, ViewRGBr32 dst, u32 n_threads)
+	{
+		auto t = blockDim.x * blockIdx.x + threadIdx.x;
+		if (t >= n_threads)
+		{
+			return;
+		}
+
+		auto xy = gpuf::get_thread_xy(src, t);
+
+		auto s = gpuf::rgb_xy_at(src, xy.x, xy.y).rgb;
+		auto d = gpuf::rgb_xy_at(dst, xy.x, xy.y).rgb;
+
+		*d.R = *s.R;
+		*d.G = *s.G;
+		*d.B = *s.B;
+	}
+
+
+	GPU_KERNAL
+	static void copy_2(View2r32 src, View2r32 dst, u32 n_threads)
+	{
+		auto t = blockDim.x * blockIdx.x + threadIdx.x;
+		if (t >= n_threads)
+		{
+			return;
+		}
+
+		auto xy = gpuf::get_thread_xy(src, t);
+
+		auto s = gpuf::xy_at(src, xy.x, xy.y);
+		auto d = gpuf::xy_at(dst, xy.x, xy.y);
+
+		for(u32 ch = 0; ch < s.n_channels; ++ch)
+		{
+			*d.channels[ch] = *s.channels[ch];
+		}
+	}
+
+
+	GPU_KERNAL
+	static void copy_1(View1r32 src, View1r32 dst, u32 n_threads)
+	{
+		auto t = blockDim.x * blockIdx.x + threadIdx.x;
+		if (t >= n_threads)
+		{
+			return;
+		}
+
+		auto xy = gpuf::get_thread_xy(src, t);
+
+		auto s = gpuf::xy_at(src, xy.x, xy.y);
+		auto d = gpuf::xy_at(dst, xy.x, xy.y);
+
+		*d = *s;
+	}
+}
+
+
+namespace libimage
+{
+	void copy(View4r32 const& src, View4r32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		auto const width = src.width;
+		auto const height = src.height;
+
+		auto const n_threads = width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
+
+		cuda_launch_kernel(gpu::copy_rgba, n_blocks, block_size, src, dst, n_threads);
+
+		auto result = cuda::launch_success("gpu::copy_rgba");
+		assert(result);
+	}
+
+
+	void copy(View3r32 const& src, View3r32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		auto const width = src.width;
+		auto const height = src.height;
+
+		auto const n_threads = width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
+
+		cuda_launch_kernel(gpu::copy_rgb, n_blocks, block_size, src, dst, n_threads);
+
+		auto result = cuda::launch_success("gpu::copy_rgb");
+		assert(result);
+	}
+
+
+	void copy(View2r32 const& src, View2r32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		auto const width = src.width;
+		auto const height = src.height;
+
+		auto const n_threads = width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
+
+		cuda_launch_kernel(gpu::copy_2, n_blocks, block_size, src, dst, n_threads);
+
+		auto result = cuda::launch_success("gpu::copy_2");
+		assert(result);
+	}
+
+
+	void copy(View1r32 const& src, View1r32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		auto const width = src.width;
+		auto const height = src.height;
+
+		auto const n_threads = width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
+
+		cuda_launch_kernel(gpu::copy_1, n_blocks, block_size, src, dst, n_threads);
+
+		auto result = cuda::launch_success("gpu::copy_1");
+		assert(result);
+	}
+}

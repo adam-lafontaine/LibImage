@@ -81,6 +81,8 @@ bool directory_files_test()
 
 
 void empty_dir(path_t& dir);
+void clear_image(Image const& img);
+void clear_image(GrayImage const& img);
 
 void read_write_image_test();
 void resize_test();
@@ -89,6 +91,7 @@ void map_rgb_test();
 void sub_view_test();
 void map_hsv_test();
 void fill_test();
+void copy_test();
 
 
 int main()
@@ -108,6 +111,7 @@ int main()
 	sub_view_test();
 	map_hsv_test();
 	fill_test();
+	copy_test();
 
 
     auto time = sw.get_time_milli();
@@ -521,6 +525,105 @@ void fill_test()
 }
 
 
+void copy_test()
+{
+	auto title = "copy_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH + title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
+
+	Image image;
+	img::read_image_from_file(CORVETTE_PATH, image);
+	auto width = image.width;
+	auto height = image.height;
+
+	auto view = img::make_view(image);
+
+	Range2Du32 left{};
+	left.x_begin = 0;
+	left.x_end = width / 2;
+	left.y_begin = 0;
+	left.y_end = height;
+
+	Range2Du32 right{};
+	right.x_begin = width / 2;
+	right.x_end = width;
+	right.y_begin = 0;
+	right.y_end = height;
+
+	auto left_view = img::sub_view(image, left);
+	auto right_view = img::sub_view(image, right);
+	
+	img::Buffer32 d_buffer(width * height * 7, cuda::Malloc::Device);
+	img::Buffer32 h_buffer(width * height * 4, cuda::Malloc::Host);
+
+	img::View3r32 view3;
+	img::make_view(view3, width, height, d_buffer);
+	img::map_rgb(view, view3, h_buffer);
+	auto left_view3 = img::sub_view(view3, left);
+	auto right_view3 = img::sub_view(view3, right);
+
+	img::View4r32 view4;
+	img::make_view(view4, width, height, d_buffer);
+	img::map_rgb(view, view4, h_buffer);
+	auto left_view4 = img::sub_view(view4, left);
+	auto right_view4 = img::sub_view(view4, right);
+
+	img::copy(left_view3, right_view3);
+	img::copy(right_view4, left_view4);	
+
+	clear_image(image);
+
+	img::map_rgb(right_view3, right_view, h_buffer);
+	img::map_rgb(left_view4, left_view, h_buffer);
+	write_image(image, "image.bmp");
+
+	d_buffer.reset();
+
+	GrayImage gray;
+	img::read_image_from_file(CADILLAC_PATH, gray);
+	width = gray.width;
+	height = gray.height;
+
+	auto view_height = height / 3;
+
+	Range2Du32 top{};
+	top.x_begin = 0;
+	top.x_end = width;
+	top.y_begin = 0;
+	top.y_end = view_height;
+
+	Range2Du32 bottom{};
+	bottom.x_begin = 0;
+	bottom.x_end = width;
+	bottom.y_begin = height - view_height;
+	bottom.y_end = height;	
+
+	auto gr_top_view = img::sub_view(gray, top);
+	auto gr_bottom_view = img::sub_view(gray, bottom);
+
+	img::View1r32 top1;
+	img::make_view(top1, width, view_height, d_buffer);
+	img::map(gr_top_view, top1, h_buffer);
+
+	img::View1r32 bottom1;
+	img::make_view(bottom1, width, view_height, d_buffer);
+	img::map(gr_bottom_view, bottom1, h_buffer);
+
+	img::copy(bottom1, top1);
+
+	img::map(top1, gr_top_view, h_buffer);
+
+	write_image(gray, "gray.bmp");
+
+	img::destroy_image(image);
+	img::destroy_image(gray);
+	d_buffer.free();
+	h_buffer.free();
+}
+
+
 void empty_dir(path_t& dir)
 {
 	auto last = dir[dir.length() - 1];
@@ -534,6 +637,19 @@ void empty_dir(path_t& dir)
 
 	command = std::string("rm -rfv ") + dir + '*' + " > /dev/null";
 	system(command.c_str());
+}
+
+
+void clear_image(Image const& img)
+{
+	constexpr auto black = img::to_pixel(0, 0, 0);
+	img::fill(img::make_view(img), black);
+}
+
+
+void clear_image(GrayImage const& img)
+{
+	img::fill(img::make_view(img), 0);
 }
 
 

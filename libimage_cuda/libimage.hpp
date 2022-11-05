@@ -532,21 +532,8 @@ namespace libimage
 
 namespace libimage
 {
-	void copy(Image const& src, Image const& dst);
-
-	void copy(Image const& src, View const& dst);
-
-	void copy(View const& src, Image const& dst);
-
 	void copy(View const& src, View const& dst);
-
-
-	void copy(gray::Image const& src, gray::Image const& dst);
-
-	void copy(gray::Image const& src, gray::View const& dst);
-
-	void copy(gray::View const& src, gray::Image const& dst);
-
+	
 	void copy(gray::View const& src, gray::View const& dst);
 
 
