@@ -29,10 +29,12 @@ using Pixel2r32 = PixelCHr32<2>;
 using ViewRGBAr32 = libimage::ViewRGBAr32;
 using ViewRGBr32 = libimage::ViewRGBr32;
 using ViewHSVr32 = libimage::ViewHSVr32;
+using ViewGAr32 = libimage::ViewGAr32;
 
 using PixelRGBAr32 = libimage::PixelRGBAr32;
 using PixelRGBr32 = libimage::PixelRGBr32;
 using PixelHSVr32 = libimage::PixelHSVr32;
+using PixelGAr32 = libimage::PixelGAr32;
 
 using Pixel = libimage::Pixel;
 
@@ -328,7 +330,7 @@ namespace gpuf
 
 
 	GPU_FUNCTION
-	PixelRGBr32 rgb_xy_at(ViewRGBr32 const& view, u32 x, u32 y)
+	static PixelRGBr32 rgb_xy_at(ViewRGBr32 const& view, u32 x, u32 y)
 	{
 		constexpr auto R = gpuf::id_cast(RGB::R);
 		constexpr auto G = gpuf::id_cast(RGB::G);
@@ -350,7 +352,7 @@ namespace gpuf
 
 
 	GPU_FUNCTION
-	PixelHSVr32 hsv_xy_at(ViewHSVr32 const& view, u32 x, u32 y)
+	static PixelHSVr32 hsv_xy_at(ViewHSVr32 const& view, u32 x, u32 y)
 	{
 		constexpr auto H = gpuf::id_cast(HSV::H);
 		constexpr auto S = gpuf::id_cast(HSV::S);
@@ -369,13 +371,41 @@ namespace gpuf
 
 		return p;
 	}
+
+
+	GPU_FUNCTION
+	static PixelGAr32 ga_xy_at(ViewGAr32 const& view, u32 x, u32 y)
+	{
+		constexpr auto G = gpuf::id_cast(GA::G);
+		constexpr auto A = gpuf::id_cast(GA::A);
+
+		assert(y < view.height);
+		assert(x < view.width);
+
+		auto offset = (size_t)((view.y_begin + y) * view.image_width + view.x_begin) + x;
+
+		PixelGAr32 p{};
+
+		p.ga.G = view.image_channel_data[G] + offset;
+		p.ga.A = view.image_channel_data[A] + offset;
+
+		return p;
+	}
 }
 
 
+constexpr int THREADS_PER_BLOCK = 512;
+
+constexpr int calc_thread_blocks(u32 n_threads)
+{
+    return (n_threads + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+}
+
+
+/* map_hsv */
+
 namespace gpuf
 {    
-	
-
     GPU_FUNCTION
     static HSVr32 rgb_hsv(r32 r, r32 g, r32 b)
 	{
@@ -459,17 +489,6 @@ namespace gpuf
 	}
 }
 
-
-
-constexpr int THREADS_PER_BLOCK = 512;
-
-constexpr int calc_thread_blocks(u32 n_threads)
-{
-    return (n_threads + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-}
-
-
-/* map_hsv */
 
 namespace gpu
 {
@@ -613,7 +632,6 @@ namespace gpu
 		*p = gray;
 	}
 }
-
 
 
 namespace libimage
@@ -867,6 +885,7 @@ namespace gpuf
 	}
 }
 
+
 namespace gpu
 {
 	GPU_KERNAL
@@ -904,6 +923,106 @@ namespace libimage
 		cuda_launch_kernel(gpu::grayscale, n_blocks, block_size, src, dst, n_threads);
 
 		auto result = cuda::launch_success("gpu::grayscale");
+		assert(result);
+	}
+}
+
+
+/* alpha_blend */
+
+namespace gpuf
+{
+	GPU_FUNCTION
+	static r32 blend_linear(r32 lhs, r32 rhs, r32 alpha)
+	{
+		assert(alpha >= 0.0f);
+		assert(alpha <= 1.0f);
+
+		return alpha * lhs + (1.0f - alpha) * rhs;
+	}
+}
+
+
+namespace gpu
+{
+	GPU_KERNAL
+	static void alpha_blend_rgba(ViewRGBAr32 src, ViewRGBr32 cur, ViewRGBr32 dst, u32 n_threads)
+	{
+		auto t = blockDim.x * blockIdx.x + threadIdx.x;
+		if (t >= n_threads)
+		{
+			return;
+		}
+
+		auto xy = gpuf::get_thread_xy(src, t);
+
+		auto s = gpuf::rgba_xy_at(src, xy.x, xy.y).rgba;
+		auto c = gpuf::rgb_xy_at(cur, xy.x, xy.y).rgb;
+		auto d = gpuf::rgb_xy_at(dst, xy.x, xy.y).rgb;
+
+		auto a = *s.A;
+
+		*d.R = gpuf::blend_linear(*s.R, *c.R, a);
+		*d.G = gpuf::blend_linear(*s.G, *c.G, a);
+		*d.B = gpuf::blend_linear(*s.B, *c.B, a);
+	}
+
+
+	GPU_KERNAL
+	static void alpha_blend_ga(ViewGAr32 src, View1r32 cur, View1r32 dst, u32 n_threads)
+	{
+		auto t = blockDim.x * blockIdx.x + threadIdx.x;
+		if (t >= n_threads)
+		{
+			return;
+		}
+
+		auto xy = gpuf::get_thread_xy(src, t);
+
+		auto s = gpuf::ga_xy_at(src, xy.x, xy.y).ga;
+		auto c = gpuf::xy_at(cur, xy.x, xy.y);
+		auto d = gpuf::xy_at(dst, xy.x, xy.y);
+
+		*d = gpuf::blend_linear(*s.G, *c, *s.A);
+	}
+}
+
+namespace libimage
+{
+	void alpha_blend(ViewRGBAr32 const& src, ViewRGBr32 const& cur, ViewRGBr32 const& dst)
+	{
+		assert(verify(src, dst));
+		assert(verify(src, cur));
+
+		auto const width = src.width;
+		auto const height = src.height;
+
+		auto const n_threads = width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
+
+		cuda_launch_kernel(gpu::alpha_blend_rgba, n_blocks, block_size, src, cur, dst, n_threads);
+
+		auto result = cuda::launch_success("gpu::alpha_blend_rgba");
+		assert(result);
+	}
+
+
+	void alpha_blend(ViewGAr32 const& src, View1r32 const& cur, View1r32 const& dst)
+	{
+		assert(verify(src, dst));
+		assert(verify(src, cur));
+
+		auto const width = src.width;
+		auto const height = src.height;
+
+		auto const n_threads = width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
+
+		cuda_launch_kernel(gpu::alpha_blend_ga, n_blocks, block_size, src, cur, dst, n_threads);
+
+		auto result = cuda::launch_success("gpu::alpha_blend_ga");
 		assert(result);
 	}
 }

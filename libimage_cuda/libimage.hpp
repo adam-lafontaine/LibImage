@@ -42,6 +42,14 @@ namespace libimage
 	};
 
 
+	class GAr32p
+	{
+	public:
+		r32* G;
+		r32* A;
+	};
+
+
 	class RGBAu8
 	{
 	public:
@@ -309,6 +317,8 @@ namespace libimage
 
 	using ViewHSVr32 = View3r32;
 
+	using ViewGAr32 = View2r32;
+
 
 	ViewRGBr32 make_rgb_view(ViewRGBAr32 const& image);
 
@@ -393,6 +403,22 @@ namespace libimage
 		r32& sat() { return *hsv.S; }
 		r32& val() { return *hsv.V; }
 		*/
+	};
+
+
+	class PixelGAr32
+	{
+	public:
+
+		static constexpr u32 n_channels = 2;
+
+		union 
+		{
+			GAr32p ga;
+
+			r32* channels[2];
+		};
+		
 	};
 }
 
@@ -606,9 +632,9 @@ namespace libimage
 
 namespace libimage
 {
-	void alpha_blend(View4r32 const& src, View3r32 const& cur, View3r32 const& dst);
+	void alpha_blend(ViewRGBAr32 const& src, ViewRGBr32 const& cur, ViewRGBr32 const& dst);
 
-	void alpha_blend(View2r32 const& src, View1r32 const& cur, View1r32 const& dst);
+	void alpha_blend(ViewGAr32 const& src, View1r32 const& cur, View1r32 const& dst);
 }
 
 
