@@ -554,15 +554,11 @@ namespace libimage
 	using u8_f = std::function<void(u8& p)>;
 
 	using r32_f = std::function<void(r32& p)>;
+	
 
-
-	void for_each_pixel(gray::Image const& image, u8_f const& func);
+	//void for_each_pixel(View const& image, u8_f const& func);
 
 	void for_each_pixel(gray::View const& image, u8_f const& func);
-
-
-	void for_each_pixel(View1r32 const& image, r32_f const& func);
-
 }
 
 
@@ -571,25 +567,11 @@ namespace libimage
 namespace libimage
 {
 	using xy_f = std::function<void(u32 x, u32 y)>;
-
-
-	void for_each_xy(Image const& image, xy_f const& func);
+	
 
 	void for_each_xy(View const& view, xy_f const& func);
 
-
-	void for_each_xy(gray::Image const& image, xy_f const& func);
-
 	void for_each_xy(gray::View const& view, xy_f const& func);
-
-
-	void for_each_xy(View4r32 const& view, xy_f const& func);
-
-	void for_each_xy(View3r32 const& view, xy_f const& func);
-
-	void for_each_xy(View2r32 const& view, xy_f const& func);
-
-	void for_each_xy(View1r32 const& view, xy_f const& func);
 }
 
 
@@ -597,16 +579,10 @@ namespace libimage
 
 namespace libimage
 {
-	void grayscale(Image const& src, gray::Image const& dst);
-
-	void grayscale(Image const& src, gray::View const& dst);
-
-	void grayscale(View const& src, gray::Image const& dst);
-
 	void grayscale(View const& src, gray::View const& dst);
 
 
-	void grayscale(View3r32 const& src, View1r32 const& dst);
+	void grayscale(ViewRGBr32 const& src, View1r32 const& dst);
 }
 
 

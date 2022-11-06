@@ -89,9 +89,11 @@ void resize_test();
 void map_test();
 void map_rgb_test();
 void sub_view_test();
+void select_channel_test();
 void map_hsv_test();
 void fill_test();
 void copy_test();
+void grayscale_test();
 
 
 int main()
@@ -109,9 +111,11 @@ int main()
 	map_test();
 	map_rgb_test();
 	sub_view_test();
+	select_channel_test();
 	map_hsv_test();
 	fill_test();
 	copy_test();
+	grayscale_test();
 
 
     auto time = sw.get_time_milli();
@@ -352,6 +356,57 @@ void sub_view_test()
 
 	img::destroy_image(vette);
 	img::destroy_image(caddy);
+	d_buffer.free();
+	h_buffer.free();
+}
+
+
+void select_channel_test()
+{
+	auto title = "select_channel_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH + title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
+
+	Image vette;
+	img::read_image_from_file(CORVETTE_PATH, vette);
+	auto width = vette.width;
+	auto height = vette.height;
+	
+	img::Buffer32 d_buffer(width * height * 7, cuda::Malloc::Device);
+	img::Buffer32 h_buffer(width * height * 4, cuda::Malloc::Host);
+
+	img::View3r32 vette3;
+	img::make_view(vette3, width, height, d_buffer);
+	img::map_rgb(img::make_view(vette), vette3, h_buffer);
+
+	GrayImage vette_dst;
+	img::make_image(vette_dst, vette.width, vette.height);
+
+	Image caddy;
+	img::read_image_from_file(CADILLAC_PATH, caddy);
+
+	img::View4r32 caddy4;
+	img::make_view(caddy4, caddy.width, caddy.height, d_buffer);
+	img::map_rgb(img::make_view(caddy), caddy4, h_buffer);
+
+	GrayImage caddy_dst;
+	img::make_image(caddy_dst, caddy.width, caddy.height);
+
+	auto red = img::select_channel(vette3, img::RGB::R);
+	auto blue = img::select_channel(caddy4, img::RGBA::B);
+
+	img::map(red, img::make_view(vette_dst), h_buffer);
+	write_image(vette_dst, "red.bmp");
+
+	img::map(blue, img::make_view(caddy_dst), h_buffer);
+	write_image(caddy_dst, "blue.bmp");
+
+	img::destroy_image(vette);
+	img::destroy_image(vette_dst);
+	img::destroy_image(caddy);
+	img::destroy_image(caddy_dst);
 	d_buffer.free();
 	h_buffer.free();
 }
@@ -619,6 +674,70 @@ void copy_test()
 
 	img::destroy_image(image);
 	img::destroy_image(gray);
+	d_buffer.free();
+	h_buffer.free();
+}
+
+
+void grayscale_test()
+{
+	auto title = "grayscale_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH + title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
+
+	Image image;
+	img::read_image_from_file(CORVETTE_PATH, image);
+	auto width = image.width;
+	auto height = image.height;
+
+	Range2Du32 left{};
+	left.x_begin = 0;
+	left.x_end = width / 2;
+	left.y_begin = 0;
+	left.y_end = height;
+
+	Range2Du32 right{};
+	right.x_begin = width / 2;
+	right.x_end = width;
+	right.y_begin = 0;
+	right.y_end = height;
+
+	auto left_view = img::sub_view(image, left);
+	auto right_view = img::sub_view(image, right);
+	
+	img::Buffer32 d_buffer(width * height * 5, cuda::Malloc::Device);
+	img::Buffer32 h_buffer(width * height * 4, cuda::Malloc::Host);
+
+	img::View3r32 view3;
+	img::make_view(view3, width / 2, height, d_buffer);
+
+	img::View4r32 view4;
+	img::make_view(view4, width / 2, height, d_buffer);
+
+	img::map_rgb(left_view, view3, h_buffer);
+	img::map_rgb(right_view, view4, h_buffer);
+
+	GrayImage dst;
+	img::make_image(dst, width, height);
+
+	img::View1r32 view1;
+	img::make_view(view1, width, height, d_buffer);
+
+	auto gr_left = img::sub_view(view1, left);
+	auto gr_right = img::sub_view(view1, right);
+
+	img::grayscale(view3, gr_right);
+	img::grayscale(img::make_rgb_view(view4), gr_left);
+
+	img::map(view1, img::make_view(dst), h_buffer);
+
+	write_image(image, "image.bmp");
+	write_image(dst, "gray.bmp");
+
+	img::destroy_image(image);
+	img::destroy_image(dst);
 	d_buffer.free();
 	h_buffer.free();
 }

@@ -849,3 +849,61 @@ namespace libimage
 		assert(result);
 	}
 }
+
+
+/* grayscale */
+
+namespace gpuf
+{
+	constexpr r32 COEFF_RED = 0.299f;
+	constexpr r32 COEFF_GREEN = 0.587f;
+	constexpr r32 COEFF_BLUE = 0.114f;
+
+
+	GPU_CONSTEXPR_FUNCTION
+	r32 rgb_grayscale_standard(r32 red, r32 green, r32 blue)
+	{
+		return COEFF_RED * red + COEFF_GREEN * green + COEFF_BLUE * blue;
+	}
+}
+
+namespace gpu
+{
+	GPU_KERNAL
+	static void grayscale(ViewRGBr32 src, View1r32 dst, u32 n_threads)
+	{
+		auto t = blockDim.x * blockIdx.x + threadIdx.x;
+		if (t >= n_threads)
+		{
+			return;
+		}
+
+		auto xy = gpuf::get_thread_xy(src, t);
+
+		auto s = gpuf::rgb_xy_at(src, xy.x, xy.y).rgb;
+		auto d = gpuf::xy_at(dst, xy.x, xy.y);
+
+		*d = gpuf::rgb_grayscale_standard(*s.R, *s.G, *s.B);
+	}
+}
+
+
+namespace libimage
+{
+	void grayscale(ViewRGBr32 const& src, View1r32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		auto const width = src.width;
+		auto const height = src.height;
+
+		auto const n_threads = width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
+
+		cuda_launch_kernel(gpu::grayscale, n_blocks, block_size, src, dst, n_threads);
+
+		auto result = cuda::launch_success("gpu::grayscale");
+		assert(result);
+	}
+}

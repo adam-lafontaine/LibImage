@@ -842,6 +842,101 @@ namespace libimage
 }
 
 
+/* select_channel */
+
+namespace libimage
+{
+	template <size_t N>
+	View1r32 select_channel(ViewCHr32<N> const& view, u32 ch)
+	{
+		View1r32 view1{};
+
+		view1.image_width = view.image_width;
+		view1.range = view.range;
+		view1.width = view.width;
+		view1.height = view.height;
+
+		view1.image_data = view.image_channel_data[ch];
+
+		return view1;
+	}
+
+
+	View1r32 select_channel(ViewRGBAr32 const& view, RGBA channel)
+	{
+		assert(verify(view));
+
+		auto ch = id_cast(channel);
+
+		auto view1 = select_channel(view, ch);
+
+		assert(verify(view1));
+
+		return view1;
+	}
+
+
+	View1r32 select_channel(ViewRGBr32 const& view, RGB channel)
+	{
+		assert(verify(view));
+
+		auto ch = id_cast(channel);
+
+		auto view1 = select_channel(view, ch);
+
+		assert(verify(view1));
+
+		return view1;
+	}
+
+
+	View1r32 select_channel(ViewHSVr32 const& view, HSV channel)
+	{
+		assert(verify(view));
+
+		auto ch = id_cast(channel);
+
+		auto view1 = select_channel(view, ch);
+
+		assert(verify(view1));
+
+		return view1;
+	}
+
+
+	View1r32 select_channel(View2r32 const& view, GA channel)
+	{
+		assert(verify(view));
+
+		auto ch = id_cast(channel);
+		assert(ch >= 0);
+		assert(ch < 2);
+
+		auto view1 = select_channel(view, ch);
+
+		assert(verify(view1));
+
+		return view1;
+	}
+
+
+	View1r32 select_channel(View2r32 const& view, XY channel)
+	{
+		assert(verify(view));
+
+		auto ch = id_cast(channel);
+		assert(ch >= 0);
+		assert(ch < 2);
+
+		auto view1 = select_channel(view, ch);
+
+		assert(verify(view1));
+
+		return view1;
+	}	
+}
+
+
 /* map */
 
 namespace libimage
@@ -1271,4 +1366,104 @@ namespace libimage
 
 		copy_1_channel(src, dst);
 	}
+}
+
+
+/* for_each_pixel */
+
+namespace libimage
+{
+	void for_each_pixel(gray::View const& view, u8_f const& func)
+	{
+		assert(verify(view));
+
+		auto const row_func = [&](u32 y)
+		{
+			auto row = row_begin(view, y);
+			for (u32 x = 0; x < view.width; ++x)
+			{
+				func(row[x]);
+			}
+		};
+
+		process_rows(view.height, row_func);
+	}
+}
+
+
+/* for_each_xy */
+
+namespace libimage
+{
+	template <class IMG>
+	static void do_for_each_xy(IMG const& image, xy_f const& func)
+	{
+		auto const row_func = [&](u32 y)
+		{
+			for (u32 x = 0; x < image.width; ++x)
+			{
+				func(x, y);
+			}
+		};
+
+		process_rows(image.height, row_func);
+	}
+
+
+	void for_each_xy(View const& view, xy_f const& func)
+	{
+		assert(verify(view));
+
+		do_for_each_xy(view, func);
+	}
+
+
+	void for_each_xy(gray::View const& view, xy_f const& func)
+	{
+		assert(verify(view));
+
+		do_for_each_xy(view, func);
+	}
+}
+
+
+/* grayscale */
+
+namespace libimage
+{
+	constexpr r32 COEFF_RED = 0.299f;
+	constexpr r32 COEFF_GREEN = 0.587f;
+	constexpr r32 COEFF_BLUE = 0.114f;
+
+
+	static constexpr r32 rgb_grayscale_standard(r32 red, r32 green, r32 blue)
+	{
+		return COEFF_RED * red + COEFF_GREEN * green + COEFF_BLUE * blue;
+	}
+
+	
+	void grayscale(View const& src, gray::View const& dst)
+	{
+		assert(verify(src, dst));
+
+		static constexpr auto red = id_cast(RGB::R);
+		static constexpr auto green = id_cast(RGB::G);
+		static constexpr auto blue = id_cast(RGB::B);
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				auto r = (r32)(s[x].channels[red]);
+				auto g = (r32)(s[x].channels[green]);
+				auto b = (r32)(s[x].channels[blue]);
+				d[x] = (u8)rgb_grayscale_standard(r, g, b);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+	
 }
