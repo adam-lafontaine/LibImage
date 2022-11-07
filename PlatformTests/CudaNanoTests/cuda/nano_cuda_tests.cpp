@@ -371,27 +371,30 @@ void select_channel_test()
 	empty_dir(out_dir);
 	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
 
-	Image vette;
-	img::read_image_from_file(CORVETTE_PATH, vette);
-	auto width = vette.width;
-	auto height = vette.height;
+	Image vette_img;
+	img::read_image_from_file(CORVETTE_PATH, vette_img);
+	auto width = vette_img.width;
+	auto height = vette_img.height;
+
+	auto vette = img::make_view(vette_img);
 	
 	img::Buffer32 d_buffer(width * height * 7, cuda::Malloc::Device);
 	img::Buffer32 h_buffer(width * height * 4, cuda::Malloc::Host);
 
 	img::View3r32 vette3;
 	img::make_view(vette3, width, height, d_buffer);
-	img::map_rgb(img::make_view(vette), vette3, h_buffer);
+	img::map_rgb(vette, vette3, h_buffer);
 
 	GrayImage vette_dst;
 	img::make_image(vette_dst, vette.width, vette.height);
 
-	Image caddy;
-	img::read_image_from_file(CADILLAC_PATH, caddy);
+	Image caddy_img;
+	img::read_image_from_file(CADILLAC_PATH, caddy_img);
+	auto caddy = img::make_view(caddy_img);
 
 	img::View4r32 caddy4;
 	img::make_view(caddy4, caddy.width, caddy.height, d_buffer);
-	img::map_rgb(img::make_view(caddy), caddy4, h_buffer);
+	img::map_rgb(caddy, caddy4, h_buffer);
 
 	GrayImage caddy_dst;
 	img::make_image(caddy_dst, caddy.width, caddy.height);
@@ -405,10 +408,53 @@ void select_channel_test()
 	img::map(blue, img::make_view(caddy_dst), h_buffer);
 	write_image(caddy_dst, "blue.bmp");
 
-	img::destroy_image(vette);
+	Image image_dst;
+	img::make_image(image_dst, width, height);
+	auto view_dst = img::make_view(image_dst);
+
+	img::map_rgb(vette, vette3, h_buffer);
+	auto view_ch = img::select_channel(vette3, img::RGB::R);
+	img::multiply(view_ch, 0.5f);
+
+	img::map_rgb_hsv(vette3, view_dst);
+	write_image(image_dst, "reduce_r.bmp");
+
+	img::map_rgb(vette, vette3);
+	view_ch = img::select_channel(vette3, img::RGB::G);
+	img::for_each_pixel(view_ch, to_half);
+	img::map_hsv(vette3, image_dst);
+	write_image(image_dst, "reduce_g.bmp");
+
+	img::map_rgb(vette, vette3);
+	view_ch = img::select_channel(vette3, img::RGB::B);
+	img::for_each_pixel(view_ch, to_half);
+	img::map_hsv(vette3, image_dst);
+	write_image(image_dst, "reduce_b.bmp");
+
+	img::map_hsv(vette, vette3);
+	view_ch = img::select_channel(vette3, img::HSV::H);
+	img::for_each_pixel(view_ch, [](r32& p) { p = 0.5f; });
+	img::map_hsv(vette3, image_dst);
+	write_image(image_dst, "change_h.bmp");
+
+	img::map_hsv(vette, vette3);
+	view_ch = img::select_channel(vette3, img::HSV::S);
+	img::for_each_pixel(view_ch, to_half);
+	img::map_hsv(vette3, image_dst);
+	write_image(image_dst, "reduce_s.bmp");
+
+	img::map_hsv(vette, vette3);
+	view_ch = img::select_channel(vette3, img::HSV::V);
+	img::for_each_pixel(view_ch, to_half);
+	img::map_hsv(vette3, image_dst);
+	write_image(image_dst, "reduce_v.bmp");
+	
+
+	img::destroy_image(vette_img);
 	img::destroy_image(vette_dst);
-	img::destroy_image(caddy);
+	img::destroy_image(caddy_img);
 	img::destroy_image(caddy_dst);
+	img::destroy_image(image_dst);
 	d_buffer.free();
 	h_buffer.free();
 }

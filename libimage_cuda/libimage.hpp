@@ -536,6 +536,34 @@ namespace libimage
 }
 
 
+/* for_each_pixel */
+
+namespace libimage
+{
+	using u8_f = std::function<void(u8& p)>;
+
+	using r32_f = std::function<void(r32& p)>;
+	
+
+	//void for_each_pixel(View const& image, u8_f const& func);
+
+	void for_each_pixel(gray::View const& image, u8_f const& func);
+}
+
+
+/* for_each_xy */
+
+namespace libimage
+{
+	using xy_f = std::function<void(u32 x, u32 y)>;
+	
+
+	void for_each_xy(View const& view, xy_f const& func);
+
+	void for_each_xy(gray::View const& view, xy_f const& func);
+}
+
+
 /* fill */
 
 namespace libimage
@@ -573,31 +601,11 @@ namespace libimage
 }
 
 
-/* for_each_pixel */
+/* multiply */
 
 namespace libimage
 {
-	using u8_f = std::function<void(u8& p)>;
-
-	using r32_f = std::function<void(r32& p)>;
-	
-
-	//void for_each_pixel(View const& image, u8_f const& func);
-
-	void for_each_pixel(gray::View const& image, u8_f const& func);
-}
-
-
-/* for_each_xy */
-
-namespace libimage
-{
-	using xy_f = std::function<void(u32 x, u32 y)>;
-	
-
-	void for_each_xy(View const& view, xy_f const& func);
-
-	void for_each_xy(gray::View const& view, xy_f const& func);
+	void multiply(View1r32 const& view, r32 factor);
 }
 
 

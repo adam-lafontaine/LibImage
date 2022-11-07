@@ -869,6 +869,58 @@ namespace libimage
 }
 
 
+namespace gpu
+{
+	GPU_KERNAL
+	static void multiply(View1r32 const& view, r32 factor, u32 n_threads)
+	{
+		auto t = blockDim.x * blockIdx.x + threadIdx.x;
+		if (t >= n_threads)
+		{
+			return;
+		}
+
+		auto xy = gpuf::get_thread_xy(view, t);
+
+		auto s = gpuf::xy_at(view, xy.x, xy.y);
+
+		*s *= factor;
+	}
+}
+
+
+/* multiply */
+
+namespace libimage
+{
+	void multiply(View1r32 const& view, r32 factor)
+	{
+		assert(verify(view));
+
+		if (factor < 0.0f)
+		{
+			factor = 0.0f;
+		}
+		else if (factor > 1.0f)
+		{
+			return;
+		}
+
+		auto const width = view.width;
+		auto const height = view.height;
+
+		auto const n_threads = width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
+
+		cuda_launch_kernel(gpu::multiply, n_blocks, block_size, view, factor, n_threads);
+
+		auto result = cuda::launch_success("gpu::multiply");
+		assert(result);
+	}
+}
+
+
 /* grayscale */
 
 namespace gpuf
@@ -986,6 +1038,7 @@ namespace gpu
 		*d = gpuf::blend_linear(*s.G, *c, *s.A);
 	}
 }
+
 
 namespace libimage
 {

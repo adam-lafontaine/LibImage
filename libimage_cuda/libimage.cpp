@@ -1293,6 +1293,63 @@ namespace libimage
 }
 
 
+/* for_each_pixel */
+
+namespace libimage
+{
+	void for_each_pixel(gray::View const& view, u8_f const& func)
+	{
+		assert(verify(view));
+
+		auto const row_func = [&](u32 y)
+		{
+			auto row = row_begin(view, y);
+			for (u32 x = 0; x < view.width; ++x)
+			{
+				func(row[x]);
+			}
+		};
+
+		process_rows(view.height, row_func);
+	}
+}
+
+
+/* for_each_xy */
+
+namespace libimage
+{
+	template <class IMG>
+	static void do_for_each_xy(IMG const& image, xy_f const& func)
+	{
+		auto const row_func = [&](u32 y)
+		{
+			for (u32 x = 0; x < image.width; ++x)
+			{
+				func(x, y);
+			}
+		};
+
+		process_rows(image.height, row_func);
+	}
+
+
+	void for_each_xy(View const& view, xy_f const& func)
+	{
+		assert(verify(view));
+
+		do_for_each_xy(view, func);
+	}
+
+
+	void for_each_xy(gray::View const& view, xy_f const& func)
+	{
+		assert(verify(view));
+
+		do_for_each_xy(view, func);
+	}
+}
+
 
 /* fill */
 
@@ -1369,64 +1426,6 @@ namespace libimage
 }
 
 
-/* for_each_pixel */
-
-namespace libimage
-{
-	void for_each_pixel(gray::View const& view, u8_f const& func)
-	{
-		assert(verify(view));
-
-		auto const row_func = [&](u32 y)
-		{
-			auto row = row_begin(view, y);
-			for (u32 x = 0; x < view.width; ++x)
-			{
-				func(row[x]);
-			}
-		};
-
-		process_rows(view.height, row_func);
-	}
-}
-
-
-/* for_each_xy */
-
-namespace libimage
-{
-	template <class IMG>
-	static void do_for_each_xy(IMG const& image, xy_f const& func)
-	{
-		auto const row_func = [&](u32 y)
-		{
-			for (u32 x = 0; x < image.width; ++x)
-			{
-				func(x, y);
-			}
-		};
-
-		process_rows(image.height, row_func);
-	}
-
-
-	void for_each_xy(View const& view, xy_f const& func)
-	{
-		assert(verify(view));
-
-		do_for_each_xy(view, func);
-	}
-
-
-	void for_each_xy(gray::View const& view, xy_f const& func)
-	{
-		assert(verify(view));
-
-		do_for_each_xy(view, func);
-	}
-}
-
-
 /* grayscale */
 
 namespace libimage
@@ -1441,7 +1440,7 @@ namespace libimage
 		return COEFF_RED * red + COEFF_GREEN * green + COEFF_BLUE * blue;
 	}
 
-	
+
 	void grayscale(View const& src, gray::View const& dst)
 	{
 		assert(verify(src, dst));
