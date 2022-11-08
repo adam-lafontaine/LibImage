@@ -673,13 +673,6 @@ namespace libimage
 
 	using r32_to_r32_f = std::function<r32(r32)>;
 
-
-	void transform(gray::Image const& src, gray::Image const& dst, lut_t const& lut);
-
-	void transform(gray::Image const& src, gray::View const& dst, lut_t const& lut);
-
-	void transform(gray::View const& src, gray::Image const& dst, lut_t const& lut);
-
 	void transform(gray::View const& src, gray::View const& dst, lut_t const& lut);
 
 
@@ -691,16 +684,12 @@ namespace libimage
 
 namespace libimage
 {
-	void threshold(gray::Image const& src, gray::Image const& dst, u8 min, u8 max);
-
-	void threshold(gray::Image const& src, gray::View const& dst, u8 min, u8 max);
-
-	void threshold(gray::View const& src, gray::Image const& dst, u8 min, u8 max);
-
 	void threshold(gray::View const& src, gray::View const& dst, u8 min, u8 max);
 
 
 	void threshold(View1r32 const& src, View1r32 const& dst, r32 min, r32 max);
+
+	void threshold(View1r32 const& src_dst, r32 min, r32 max);
 }
 
 

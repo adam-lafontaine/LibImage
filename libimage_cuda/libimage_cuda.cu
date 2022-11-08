@@ -1126,3 +1126,65 @@ namespace libimage
 		assert(result);
 	}
 }
+
+
+/* threshold */
+
+namespace gpu
+{
+	GPU_KERNAL
+	static void threshold(View1r32 src, View1r32 dst, r32 min, r32 max, u32 n_threads)
+	{
+		auto t = blockDim.x * blockIdx.x + threadIdx.x;
+		if (t >= n_threads)
+		{
+			return;
+		}
+
+		auto xy = gpuf::get_thread_xy(src, t);
+
+		auto& s = *gpuf::xy_at(src, xy.x, xy.y);
+		auto& d = *gpuf::xy_at(dst, xy.x, xy.y);
+
+		d = s >= min && s <= max ? 1.0f : 0.0f;
+	}
+}
+
+
+namespace libimage
+{
+	void threshold(View1r32 const& src, View1r32 const& dst, r32 min, r32 max)
+	{
+		assert(verify(src, dst));
+
+		auto const width = src.width;
+		auto const height = src.height;
+
+		auto const n_threads = width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
+
+		cuda_launch_kernel(gpu::threshold, n_blocks, block_size, src, dst, min, max, n_threads);
+
+		auto result = cuda::launch_success("gpu::threshold");
+		assert(result);
+	}
+
+
+	void threshold(View1r32 const& src_dst, r32 min, r32 max)
+	{
+		assert(verify(src_dst));
+
+		auto const width = src_dst.width;
+		auto const height = src_dst.height;
+
+		auto const n_threads = width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
+
+		cuda_launch_kernel(gpu::threshold, n_blocks, block_size, src_dst, src_dst, min, max, n_threads);
+
+		auto result = cuda::launch_success("gpu::threshold in place");
+		assert(result);
+	}
+}

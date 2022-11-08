@@ -95,6 +95,7 @@ void fill_test();
 void copy_test();
 void grayscale_test();
 void alpha_blend_test();
+void threshold_test();
 
 
 int main()
@@ -118,6 +119,7 @@ int main()
 	copy_test();
 	grayscale_test();
 	alpha_blend_test();
+	threshold_test();
 
 
     auto time = sw.get_time_milli();
@@ -883,6 +885,52 @@ void alpha_blend_test()
 	img::destroy_image(caddy_img);	
 	img::destroy_image(gr_caddy_img);
 	d_buffer.free();
+}
+
+
+void threshold_test()
+{
+	auto title = "threshold_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH + title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
+
+	GrayImage vette;
+	img::read_image_from_file(CORVETTE_PATH, vette);
+	auto width = vette.width;
+	auto height = vette.height;
+
+	GrayImage gr_dst;
+	img::make_image(gr_dst, width, height);
+
+	img::threshold(img::make_view(vette), img::make_view(gr_dst), 127, 255);
+
+	write_image(gr_dst, "threshold.bmp");
+	
+	img::DeviceBuffer32 d_buffer(width * height, cuda::Malloc::Device);
+	img::HostBuffer32 h_buffer(width * height);
+
+	img::View1r32 vette1;
+	img::make_view(vette1, width, height, d_buffer);
+	img::map(img::make_view(vette), vette1, h_buffer);
+
+	Range2Du32 left{};
+	left.x_begin = 0;
+	left.x_end = width / 2;
+	left.y_begin = 0;
+	left.y_end = height;
+
+	auto vette_left = img::sub_view(vette1, left);
+
+	img::threshold(vette_left, vette_left, 0.0f, 0.5f);
+	img::map(vette1, img::make_view(gr_dst), h_buffer);
+	write_image(gr_dst, "threshold1.bmp");
+
+	img::destroy_image(vette);
+	img::destroy_image(gr_dst);
+	d_buffer.free();
+	h_buffer.free();
 }
 
 

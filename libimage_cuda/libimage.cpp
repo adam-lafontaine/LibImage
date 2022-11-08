@@ -1527,3 +1527,83 @@ namespace libimage
 	}
 	
 }
+
+
+/* transform */
+
+namespace libimage
+{
+	lut_t to_lut(u8_to_u8_f const& f)
+	{
+		lut_t lut = { 0 };
+
+		for (u32 i = 0; i < 256; ++i)
+		{
+			lut[i] = f(i);
+		}
+
+		//process_rows(256, [&](u32 i) { lut[i] = f(i); });
+
+		return lut;
+	}
+
+
+	template <class IMG_S, class IMG_D>
+	static void do_transform_lut(IMG_S const& src, IMG_D const& dst, lut_t const& lut)
+	{
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = lut[s[x]];
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+
+	void transform(gray::View const& src, gray::View const& dst, lut_t const& lut)
+	{
+		assert(verify(src, dst));
+
+		do_transform_lut(src, dst, lut);
+	}
+
+
+	void transform(View1r32 const& src, View1r32 const& dst, r32_to_r32_f const& func)
+	{
+		assert(verify(src, dst));
+
+		auto const row_func = [&](u32 y)
+		{
+			auto s = row_begin(src, y);
+			auto d = row_begin(dst, y);
+			for (u32 x = 0; x < src.width; ++x)
+			{
+				d[x] = func(s[x]);
+			}
+		};
+
+		process_rows(src.height, row_func);
+	}
+
+}
+
+
+/* threshold */
+
+namespace libimage
+{
+	void threshold(gray::View const& src, gray::View const& dst, u8 min, u8 max)
+	{
+		assert(verify(src, dst));
+		assert(min < max);
+
+		auto const lut = to_lut([&](u8 p) { return p >= min && p <= max ? 255 : 0; });
+
+		do_transform_lut(src, dst, lut);
+	}
+}
