@@ -1098,10 +1098,10 @@ namespace libimage
 	{
 		assert(verify(device_src, host_v));
 
-		constexpr auto r = id_cast(RGBA::R);
-		constexpr auto g = id_cast(RGBA::G);
-		constexpr auto b = id_cast(RGBA::B);
-		constexpr auto a = id_cast(RGBA::A);
+		constexpr auto R = id_cast(RGBA::R);
+		constexpr auto G = id_cast(RGBA::G);
+		constexpr auto B = id_cast(RGBA::B);
+		constexpr auto A = id_cast(RGBA::A);
 
         auto const width = device_src.width;
         auto const height = device_src.height;
@@ -1110,15 +1110,15 @@ namespace libimage
 
 		auto const row_func = [&](u32 y)
 		{			
-			auto sr = channel_row_begin(device_src, y, r);
-			auto sg = channel_row_begin(device_src, y, g);
-			auto sb = channel_row_begin(device_src, y, b);
-			auto sa = channel_row_begin(device_src, y, a);
+			auto sr = channel_row_begin(device_src, y, R);
+			auto sg = channel_row_begin(device_src, y, G);
+			auto sb = channel_row_begin(device_src, y, B);
+			auto sa = channel_row_begin(device_src, y, A);
 
-            auto hr = channel_row_begin(host_v, y, r);
-			auto hg = channel_row_begin(host_v, y, g);
-			auto hb = channel_row_begin(host_v, y, b);
-			auto ha = channel_row_begin(host_v, y, a);
+            auto hr = channel_row_begin(host_v, y, R);
+			auto hg = channel_row_begin(host_v, y, G);
+			auto hb = channel_row_begin(host_v, y, B);
+			auto ha = channel_row_begin(host_v, y, A);
 
             if(!cuda::memcpy_to_host(sr, hr, bytes_per_row)) { assert(false); }
             if(!cuda::memcpy_to_host(sg, hg, bytes_per_row)) { assert(false); }
@@ -1129,10 +1129,10 @@ namespace libimage
 
 			for (u32 x = 0; x < width; ++x)
 			{
-				d[x].channels[r] = to_channel_u8(hr[x]);
-				d[x].channels[g] = to_channel_u8(hg[x]);
-				d[x].channels[b] = to_channel_u8(hb[x]);
-				d[x].channels[a] = to_channel_u8(ha[x]);
+				d[x].channels[R] = to_channel_u8(hr[x]);
+				d[x].channels[G] = to_channel_u8(hg[x]);
+				d[x].channels[B] = to_channel_u8(hb[x]);
+				d[x].channels[A] = to_channel_u8(ha[x]);
 			}            
 		};
 
@@ -1144,10 +1144,10 @@ namespace libimage
 	{
 		assert(verify(device_dst, host_v));
 
-		constexpr auto r = id_cast(RGBA::R);
-		constexpr auto g = id_cast(RGBA::G);
-		constexpr auto b = id_cast(RGBA::B);
-		constexpr auto a = id_cast(RGBA::A);
+		constexpr auto R = id_cast(RGBA::R);
+		constexpr auto G = id_cast(RGBA::G);
+		constexpr auto B = id_cast(RGBA::B);
+		constexpr auto A = id_cast(RGBA::A);
 
         auto const width = device_dst.width;
         auto const height = device_dst.height;
@@ -1157,23 +1157,23 @@ namespace libimage
         auto const row_func = [&](u32 y)
         {
             auto s = row_begin(host_src, y);
-            auto hr = channel_row_begin(host_v, y, r);
-            auto hg = channel_row_begin(host_v, y, g);
-            auto hb = channel_row_begin(host_v, y, b);
-            auto ha = channel_row_begin(host_v, y, a);
+            auto hr = channel_row_begin(host_v, y, R);
+            auto hg = channel_row_begin(host_v, y, G);
+            auto hb = channel_row_begin(host_v, y, B);
+            auto ha = channel_row_begin(host_v, y, A);
 
             for (u32 x = 0; x < width; ++x)
             {
-                hr[x] = to_channel_r32(s[x].channels[r]);
-                hg[x] = to_channel_r32(s[x].channels[g]);
-                hb[x] = to_channel_r32(s[x].channels[b]);
-                ha[x] = to_channel_r32(s[x].channels[a]);
+                hr[x] = to_channel_r32(s[x].channels[R]);
+                hg[x] = to_channel_r32(s[x].channels[G]);
+                hb[x] = to_channel_r32(s[x].channels[B]);
+                ha[x] = to_channel_r32(s[x].channels[A]);
             }
 
-            auto dr = channel_row_begin(device_dst, y, r);
-            auto dg = channel_row_begin(device_dst, y, g);
-            auto db = channel_row_begin(device_dst, y, b);
-            auto da = channel_row_begin(device_dst, y, a);
+            auto dr = channel_row_begin(device_dst, y, R);
+            auto dg = channel_row_begin(device_dst, y, G);
+            auto db = channel_row_begin(device_dst, y, B);
+            auto da = channel_row_begin(device_dst, y, A);
 
             if(!cuda::memcpy_to_device(hr, dr, bytes_per_row)) { assert(false); }
             if(!cuda::memcpy_to_device(hg, dg, bytes_per_row)) { assert(false); }
@@ -1189,10 +1189,10 @@ namespace libimage
 	{
 		assert(verify(device_src, host_v));
 
-		constexpr auto r = id_cast(RGBA::R);
-		constexpr auto g = id_cast(RGBA::G);
-		constexpr auto b = id_cast(RGBA::B);
-		constexpr auto a = id_cast(RGBA::A);
+		constexpr auto R = id_cast(RGBA::R);
+		constexpr auto G = id_cast(RGBA::G);
+		constexpr auto B = id_cast(RGBA::B);
+		constexpr auto A = id_cast(RGBA::A);
 
 		constexpr auto ch_max = to_channel_u8(1.0f);
 
@@ -1203,13 +1203,13 @@ namespace libimage
 
 		auto const row_func = [&](u32 y)
         {
-            auto sr = channel_row_begin(device_src, y, r);
-            auto sg = channel_row_begin(device_src, y, g);
-            auto sb = channel_row_begin(device_src, y, b);
+            auto sr = channel_row_begin(device_src, y, R);
+			auto sg = channel_row_begin(device_src, y, G);
+			auto sb = channel_row_begin(device_src, y, B);
 
-            auto hr = channel_row_begin(host_v, y, r);
-			auto hg = channel_row_begin(host_v, y, g);
-			auto hb = channel_row_begin(host_v, y, b);
+            auto hr = channel_row_begin(host_v, y, R);
+			auto hg = channel_row_begin(host_v, y, G);
+			auto hb = channel_row_begin(host_v, y, B);
 
             if(!cuda::memcpy_to_host(sr, hr, bytes_per_row)) { assert(false); }
             if(!cuda::memcpy_to_host(sg, hg, bytes_per_row)) { assert(false); }
@@ -1219,10 +1219,10 @@ namespace libimage
 
             for (u32 x = 0; x < width; ++x)
             {
-                d[x].channels[r] = to_channel_u8(hr[x]);
-				d[x].channels[g] = to_channel_u8(hg[x]);
-				d[x].channels[b] = to_channel_u8(hb[x]);
-				d[x].channels[a] = ch_max;
+                d[x].channels[R] = to_channel_u8(hr[x]);
+				d[x].channels[G] = to_channel_u8(hg[x]);
+				d[x].channels[B] = to_channel_u8(hb[x]);
+				d[x].channels[A] = ch_max;
             }
         };
 
@@ -1234,10 +1234,10 @@ namespace libimage
 	{
 		assert(verify(device_dst, host_v));
 
-		constexpr auto r = id_cast(RGBA::R);
-		constexpr auto g = id_cast(RGBA::G);
-		constexpr auto b = id_cast(RGBA::B);
-		constexpr auto a = id_cast(RGBA::A);
+		constexpr auto R = id_cast(RGBA::R);
+		constexpr auto G = id_cast(RGBA::G);
+		constexpr auto B = id_cast(RGBA::B);
+		constexpr auto A = id_cast(RGBA::A);
 
         auto const width = device_dst.width;
         auto const height = device_dst.height;
@@ -1247,20 +1247,20 @@ namespace libimage
         auto const row_func = [&](u32 y)
         {
             auto s = row_begin(host_src, y);
-            auto hr = channel_row_begin(host_v, y, r);
-            auto hg = channel_row_begin(host_v, y, g);
-            auto hb = channel_row_begin(host_v, y, b);
+            auto hr = channel_row_begin(host_v, y, R);
+            auto hg = channel_row_begin(host_v, y, G);
+            auto hb = channel_row_begin(host_v, y, B);
 
             for (u32 x = 0; x < width; ++x)
             {
-                hr[x] = to_channel_r32(s[x].channels[r]);
-                hg[x] = to_channel_r32(s[x].channels[g]);
-                hb[x] = to_channel_r32(s[x].channels[b]);
+                hr[x] = to_channel_r32(s[x].channels[R]);
+                hg[x] = to_channel_r32(s[x].channels[G]);
+                hb[x] = to_channel_r32(s[x].channels[B]);
             }
 
-            auto dr = channel_row_begin(device_dst, y, r);
-            auto dg = channel_row_begin(device_dst, y, g);
-            auto db = channel_row_begin(device_dst, y, b);
+            auto dr = channel_row_begin(device_dst, y, R);
+            auto dg = channel_row_begin(device_dst, y, G);
+            auto db = channel_row_begin(device_dst, y, B);
 
             if(!cuda::memcpy_to_device(hr, dr, bytes_per_row)) { assert(false); }
             if(!cuda::memcpy_to_device(hg, dg, bytes_per_row)) { assert(false); }
@@ -1321,6 +1321,36 @@ namespace libimage
 
 		pop_view(host_buffer, host_v);
     }
+}
+
+
+/* map_hsv */
+
+namespace libimage
+{
+	void map_rgb_hsv(View const& host_src, ViewHSVr32 const& device_dst, HostBuffer32& host_buffer)
+	{
+		assert(verify(host_src, device_dst));
+
+		ViewRGBr32 device_rgb = device_dst;
+		map_rgb(host_src, device_rgb, host_buffer);
+
+		map_rgb_hsv(device_rgb, device_dst);
+
+		assert(verify(host_src, device_dst));
+	}
+
+
+	void map_hsv_rgb(ViewHSVr32 const& device_src, View const& host_dst, HostBuffer32& host_buffer)
+	{
+		assert(verify(device_src, host_dst));
+
+		ViewRGBr32 device_rgb = device_src;
+		map_hsv_rgb(device_src, device_rgb);
+
+		map_rgb(device_rgb, host_dst, host_buffer);
+	}
+	
 }
 
 

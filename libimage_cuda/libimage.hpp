@@ -540,9 +540,14 @@ namespace libimage
 	void map_hsv_rgb(ViewHSVr32 const& src, ViewRGBr32 const& dst);
 
 
-	//void map_hsv(View const& host_src, ViewHSVr32 const& device_dst);
+	void map_rgb_hsv(View3r32 const& view);
 
-	//void map_hsv(ViewHSVr32 const& device_src, View const& host_dst);
+	void map_hsv_rgb(View3r32 const& view);
+
+
+	void map_rgb_hsv(View const& host_src, ViewHSVr32 const& device_dst, HostBuffer32& host_buffer);
+
+	void map_hsv_rgb(ViewHSVr32 const& device_src, View const& host_dst, HostBuffer32& host_buffer);
 }
 
 

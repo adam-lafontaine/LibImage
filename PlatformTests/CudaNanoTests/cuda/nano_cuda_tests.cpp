@@ -429,26 +429,24 @@ void select_channel_test()
 	img::multiply(view_ch, 0.5f);
 	img::map_rgb(vette3, view_dst, h_buffer);
 	write_image(image_dst, "reduce_b.bmp");
-/*
-	img::map_hsv(vette, vette3);
+
+	img::map_rgb_hsv(vette, vette3, h_buffer);
 	view_ch = img::select_channel(vette3, img::HSV::H);
-	img::for_each_pixel(view_ch, [](r32& p) { p = 0.5f; });
-	img::map_hsv(vette3, image_dst);
+	img::fill(view_ch, 0.5f);
+	img::map_hsv_rgb(vette3, view_dst, h_buffer);
 	write_image(image_dst, "change_h.bmp");
 
-	img::map_hsv(vette, vette3);
+	img::map_rgb_hsv(vette, vette3, h_buffer);
 	view_ch = img::select_channel(vette3, img::HSV::S);
-	img::for_each_pixel(view_ch, to_half);
-	img::map_hsv(vette3, image_dst);
+	img::multiply(view_ch, 0.5f);
+	img::map_hsv_rgb(vette3, view_dst, h_buffer);
 	write_image(image_dst, "reduce_s.bmp");
 
-	img::map_hsv(vette, vette3);
+	img::map_rgb_hsv(vette, vette3, h_buffer);
 	view_ch = img::select_channel(vette3, img::HSV::V);
-	img::for_each_pixel(view_ch, to_half);
-	img::map_hsv(vette3, image_dst);
+	img::multiply(view_ch, 0.5f);
+	img::map_hsv_rgb(vette3, view_dst, h_buffer);
 	write_image(image_dst, "reduce_v.bmp");
-	
-	*/
 
 	img::destroy_image(vette_img);
 	img::destroy_image(vette_dst);

@@ -541,7 +541,7 @@ namespace libimage
 {
 	void map_rgb_hsv(ViewRGBr32 const& src, ViewHSVr32 const& dst)
 	{
-		assert(verify(src,dst));
+		assert(verify(src, dst));
 
 		auto const width = src.width;
 		auto const height = src.height;
@@ -559,7 +559,17 @@ namespace libimage
 
 	void map_hsv_rgb(ViewHSVr32 const& src, ViewRGBr32 const& dst)
 	{
-		assert(verify(src,dst));
+		assert(src.image_channel_data[0]);
+		assert(src.width);
+		assert(src.height);
+		assert(dst.image_channel_data[0]);
+		assert(dst.width);
+		assert(dst.height);
+		assert(src.width == dst.width);
+		assert(src.height == dst.height);
+
+		assert(verify(src, dst));
+
 
 		auto const width = src.width;
 		auto const height = src.height;
@@ -571,6 +581,42 @@ namespace libimage
 		cuda_launch_kernel(gpu::map_hsv_rgb, n_blocks, block_size, src, dst, n_threads);
 
 		auto result = cuda::launch_success("gpu::map_hsv_rgb");
+		assert(result);
+	}
+
+
+	void map_rgb_hsv(View3r32 const& view)
+	{
+		assert(verify(view));
+
+		auto const width = view.width;
+		auto const height = view.height;
+
+		auto const n_threads = width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
+
+		cuda_launch_kernel(gpu::map_rgb_hsv, n_blocks, block_size, view, view, n_threads);
+
+		auto result = cuda::launch_success("gpu::map_rgb_hsv in place");
+		assert(result);
+	}
+
+
+	void map_hsv_rgb(View3r32 const& view)
+	{
+		assert(verify(view));
+
+		auto const width = view.width;
+		auto const height = view.height;
+
+		auto const n_threads = width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
+
+		cuda_launch_kernel(gpu::map_hsv_rgb, n_blocks, block_size, view, view, n_threads);
+
+		auto result = cuda::launch_success("gpu::map_hsv_rgb in place");
 		assert(result);
 	}
 }
