@@ -869,10 +869,12 @@ namespace libimage
 }
 
 
+/* multiply */
+
 namespace gpu
 {
 	GPU_KERNAL
-	static void multiply(View1r32 const& view, r32 factor, u32 n_threads)
+	static void multiply(View1r32 view, r32 factor, u32 n_threads)
 	{
 		auto t = blockDim.x * blockIdx.x + threadIdx.x;
 		if (t >= n_threads)
@@ -893,8 +895,6 @@ namespace gpu
 	}
 }
 
-
-/* multiply */
 
 namespace libimage
 {
