@@ -697,16 +697,12 @@ namespace libimage
 
 namespace libimage
 {
-	void contrast(gray::Image const& src, gray::Image const& dst, u8 min, u8 max);
-
-	void contrast(gray::Image const& src, gray::View const& dst, u8 min, u8 max);
-
-	void contrast(gray::View const& src, gray::Image const& dst, u8 min, u8 max);
-
 	void contrast(gray::View const& src, gray::View const& dst, u8 min, u8 max);
 
 
 	void contrast(View1r32 const& src, View1r32 const& dst, r32 min, r32 max);
+
+	void contrast(View1r32 const& src_dst, r32 min, r32 max);
 }
 
 

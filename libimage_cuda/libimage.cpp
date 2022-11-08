@@ -1607,3 +1607,41 @@ namespace libimage
 		do_transform_lut(src, dst, lut);
 	}
 }
+
+
+/* contrast */
+
+namespace libimage
+{
+	static constexpr u8 lerp_clamp(u8 src_low, u8 src_high, u8 dst_low, u8 dst_high, u8 val)
+	{
+		if (val < src_low)
+		{
+			return dst_low;
+		}
+		else if (val > src_high)
+		{
+			return dst_high;
+		}
+
+		auto const ratio = (r32)(val - src_low) / (src_high - src_low);
+
+		assert(ratio >= 0.0f);
+		assert(ratio <= 1.0f);
+
+		auto const diff = ratio * (dst_high - dst_low);
+
+		return dst_low + (u8)diff;
+	}
+
+
+	void contrast(gray::View const& src, gray::View const& dst, u8 min, u8 max)
+	{
+		assert(verify(src, dst));
+		assert(min < max);
+
+		auto const lut = to_lut([&](u8 p) { return lerp_clamp(min, max, 0, 255, p); });
+
+		do_transform_lut(src, dst, lut);
+	}
+}

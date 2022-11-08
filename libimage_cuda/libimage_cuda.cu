@@ -1188,3 +1188,91 @@ namespace libimage
 		assert(result);
 	}
 }
+
+
+/* contrast */
+
+namespace gpuf
+{
+	GPU_FUNCTION
+	static r32 lerp_clamp(r32 src_low, r32 src_high, r32 dst_low, r32 dst_high, r32 val)
+	{
+		if (val < src_low)
+		{
+			return dst_low;
+		}
+		else if (val > src_high)
+		{
+			return dst_high;
+		}
+
+		auto const ratio = (val - src_low) / (src_high - src_low);
+
+		assert(ratio >= 0.0f);
+		assert(ratio <= 1.0f);
+
+		auto const diff = ratio * (dst_high - dst_low);
+
+		return dst_low + diff;
+	}
+}
+
+
+namespace gpu
+{
+	GPU_KERNAL
+	static void contrast(View1r32 src, View1r32 dst, r32 min, r32 max, u32 n_threads)
+	{
+		auto t = blockDim.x * blockIdx.x + threadIdx.x;
+		if (t >= n_threads)
+		{
+			return;
+		}
+
+		auto xy = gpuf::get_thread_xy(src, t);
+
+		auto& s = *gpuf::xy_at(src, xy.x, xy.y);
+		auto& d = *gpuf::xy_at(dst, xy.x, xy.y);
+
+		d = gpuf::lerp_clamp(min, max, 0.0f, 1.0f, s);
+	}
+}
+
+
+namespace libimage
+{
+	void contrast(View1r32 const& src, View1r32 const& dst, r32 min, r32 max)
+	{
+		assert(verify(src, dst));
+
+		auto const width = src.width;
+		auto const height = src.height;
+
+		auto const n_threads = width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
+
+		cuda_launch_kernel(gpu::contrast, n_blocks, block_size, src, dst, min, max, n_threads);
+
+		auto result = cuda::launch_success("gpu::contrast");
+		assert(result);
+	}
+
+
+	void contrast(View1r32 const& src_dst, r32 min, r32 max)
+	{
+		assert(verify(src_dst));
+
+		auto const width = src_dst.width;
+		auto const height = src_dst.height;
+
+		auto const n_threads = width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
+
+		cuda_launch_kernel(gpu::contrast, n_blocks, block_size, src_dst, src_dst, min, max, n_threads);
+
+		auto result = cuda::launch_success("gpu::contrast in place");
+		assert(result);
+	}
+}

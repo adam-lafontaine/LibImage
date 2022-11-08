@@ -2344,14 +2344,14 @@ namespace libimage
 			return dst_high;
 		}
 
-		auto const ratio = (r32)(val - src_low) / (src_high - src_low);
+		auto const ratio = (val - src_low) / (src_high - src_low);
 
 		assert(ratio >= 0.0f);
 		assert(ratio <= 1.0f);
 
 		auto const diff = ratio * (dst_high - dst_low);
 
-		return dst_low + (r32)diff;
+		return dst_low + diff;
 	}
 
 
