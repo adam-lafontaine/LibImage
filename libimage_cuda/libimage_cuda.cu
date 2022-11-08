@@ -882,9 +882,14 @@ namespace gpu
 
 		auto xy = gpuf::get_thread_xy(view, t);
 
-		auto s = gpuf::xy_at(view, xy.x, xy.y);
+		auto& s = *gpuf::xy_at(view, xy.x, xy.y);
 
-		*s *= factor;
+		s *= factor;
+
+		if(s > 1.0f)
+		{
+			s = 1.0f;
+		}
 	}
 }
 
@@ -900,10 +905,6 @@ namespace libimage
 		if (factor < 0.0f)
 		{
 			factor = 0.0f;
-		}
-		else if (factor > 1.0f)
-		{
-			return;
 		}
 
 		auto const width = view.width;

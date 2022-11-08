@@ -19,8 +19,6 @@ namespace cuda
 
     bool unified_malloc(ByteBuffer& buffer, size_t n_bytes);
 
-    bool host_malloc(ByteBuffer& buffer, size_t n_bytes);
-
     bool free(ByteBuffer& buffer);
 
     bool host_free(ByteBuffer& buffer);
@@ -44,13 +42,12 @@ namespace cuda
     enum class Malloc : int
     {
         Device,
-        Unified,
-        Host
+        Unified
     };
 
 
     template <typename T>
-    class MemoryBuffer
+    class DeviceBuffer
     {
     private:
         T* data_ = nullptr;
@@ -60,7 +57,7 @@ namespace cuda
         Malloc m_;
 
     public:
-        MemoryBuffer(size_t n_elements, Malloc m)
+        DeviceBuffer(size_t n_elements, Malloc m)
         {
             m_ = m;
             auto const n_bytes = sizeof(T) * n_elements;
@@ -76,9 +73,6 @@ namespace cuda
                     break;
                 case Malloc::Unified:
                     result = unified_malloc(b, n_bytes);
-                    break;
-                case Malloc::Host:
-                    result = host_malloc(b, n_bytes);
                     break;
             }
 
@@ -171,9 +165,6 @@ namespace cuda
                     break;
                 case Malloc::Unified:
                     cuda::free(b);
-                    break;
-                case Malloc::Host:
-                    cuda::host_free(b);
                     break;
             }
         }

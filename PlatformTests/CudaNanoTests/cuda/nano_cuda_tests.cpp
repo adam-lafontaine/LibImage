@@ -219,8 +219,8 @@ void map_test()
 	GrayImage gray_dst;
 	img::make_image(gray_dst, width, height);
 
-	img::Buffer32 d_buffer(width * height, cuda::Malloc::Device);
-	img::Buffer32 h_buffer(width * height, cuda::Malloc::Host);
+	img::DeviceBuffer32 d_buffer(width * height, cuda::Malloc::Device);
+	img::HostBuffer32 h_buffer(width * height);
 
 	img::View1r32 view1;
 	img::make_view(view1, width, height, d_buffer);
@@ -256,8 +256,8 @@ void map_rgb_test()
 	auto view = img::make_view(image);
 	auto view_dst = img::make_view(image_dst);
 
-	img::Buffer32 d_buffer(width * height * 4, cuda::Malloc::Device);
-	img::Buffer32 h_buffer(width * height * 4, cuda::Malloc::Host);
+	img::DeviceBuffer32 d_buffer(width * height * 4, cuda::Malloc::Device);
+	img::HostBuffer32 h_buffer(width * height * 4);
 
 	img::View4r32 view4;
 	img::make_view(view4, width, height, d_buffer);
@@ -299,8 +299,8 @@ void sub_view_test()
 
 	auto view = img::make_view(vette);
 	
-	img::Buffer32 d_buffer(width * height * 7, cuda::Malloc::Device);
-	img::Buffer32 h_buffer(width * height * 4, cuda::Malloc::Host);
+	img::DeviceBuffer32 d_buffer(width * height * 7, cuda::Malloc::Device);
+	img::HostBuffer32 h_buffer(width * height * 4);
 
 	img::View3r32 vette3;
 	img::make_view(vette3, width, height, d_buffer);
@@ -378,8 +378,8 @@ void select_channel_test()
 
 	auto vette = img::make_view(vette_img);
 	
-	img::Buffer32 d_buffer(width * height * 7, cuda::Malloc::Device);
-	img::Buffer32 h_buffer(width * height * 4, cuda::Malloc::Host);
+	img::DeviceBuffer32 d_buffer(width * height * 7, cuda::Malloc::Device);
+	img::HostBuffer32 h_buffer(width * height * 4);
 
 	img::View3r32 vette3;
 	img::make_view(vette3, width, height, d_buffer);
@@ -411,12 +411,12 @@ void select_channel_test()
 	Image image_dst;
 	img::make_image(image_dst, width, height);
 	auto view_dst = img::make_view(image_dst);
-
+/*
 	img::map_rgb(vette, vette3, h_buffer);
 	auto view_ch = img::select_channel(vette3, img::RGB::R);
 	img::multiply(view_ch, 0.5f);
 
-	img::map_rgb_hsv(vette3, view_dst);
+	img::map(vette3, view_dst, h_buffer);
 	write_image(image_dst, "reduce_r.bmp");
 
 	img::map_rgb(vette, vette3);
@@ -448,6 +448,7 @@ void select_channel_test()
 	img::for_each_pixel(view_ch, to_half);
 	img::map_hsv(vette3, image_dst);
 	write_image(image_dst, "reduce_v.bmp");
+	*/
 	
 
 	img::destroy_image(vette_img);
@@ -476,8 +477,8 @@ void map_hsv_test()
 	Image image_dst;
 	img::make_image(image_dst, width, height);
 
-	img::Buffer32 d_buffer(3 * width * height * 3, cuda::Malloc::Device);
-	img::Buffer32 h_buffer(3 * width * height, cuda::Malloc::Host);
+	img::DeviceBuffer32 d_buffer(3 * width * height * 3, cuda::Malloc::Device);
+	img::HostBuffer32 h_buffer(3 * width * height);
 
 	img::ViewRGBr32 rgb_src;
 	img::make_view(rgb_src, width, height, d_buffer);
@@ -567,8 +568,8 @@ void fill_test()
 	img::fill(gr_bottom_right_view, 255);
 	write_image(gray, "gray_fill_02.bmp");
 	
-	img::Buffer32 d_buffer(width * height * 4, cuda::Malloc::Device);
-	img::Buffer32 h_buffer(width * height * 4, cuda::Malloc::Host);
+	img::DeviceBuffer32 d_buffer(width * height * 4, cuda::Malloc::Device);
+	img::HostBuffer32 h_buffer(width * height * 4);
 	
 	img::View3r32 view3;
 	img::make_view(view3, width / 2, height / 2, d_buffer);
@@ -658,8 +659,8 @@ void copy_test()
 	auto left_view = img::sub_view(image, left);
 	auto right_view = img::sub_view(image, right);
 	
-	img::Buffer32 d_buffer(width * height * 7, cuda::Malloc::Device);
-	img::Buffer32 h_buffer(width * height * 4, cuda::Malloc::Host);
+	img::DeviceBuffer32 d_buffer(width * height * 7, cuda::Malloc::Device);
+	img::HostBuffer32 h_buffer(width * height * 4);
 
 	img::View3r32 view3;
 	img::make_view(view3, width, height, d_buffer);
@@ -755,8 +756,8 @@ void grayscale_test()
 	auto left_view = img::sub_view(image, left);
 	auto right_view = img::sub_view(image, right);
 	
-	img::Buffer32 d_buffer(width * height * 5, cuda::Malloc::Device);
-	img::Buffer32 h_buffer(width * height * 4, cuda::Malloc::Host);
+	img::DeviceBuffer32 d_buffer(width * height * 5, cuda::Malloc::Device);
+	img::HostBuffer32 h_buffer(width * height * 4);
 
 	img::View3r32 view3;
 	img::make_view(view3, width / 2, height, d_buffer);
@@ -829,8 +830,8 @@ void alpha_blend_test()
 	auto caddy = img::make_view(caddy_img);
 	auto gr_caddy = img::make_view(gr_caddy_img);
 	
-	img::Buffer32 d_buffer(width * height * 11, cuda::Malloc::Device);
-	img::Buffer32 h_buffer(width * height * 4, cuda::Malloc::Host);
+	img::DeviceBuffer32 d_buffer(width * height * 11, cuda::Malloc::Device);
+	img::HostBuffer32 h_buffer(width * height * 4);
 
 	img::View4r32 vette4;
 	img::make_view(vette4, width, height, d_buffer);

@@ -465,16 +465,26 @@ namespace libimage
 
 namespace libimage
 {	
-	using Buffer32 = cuda::MemoryBuffer<r32>;
+	using DeviceBuffer32 = cuda::DeviceBuffer<r32>;
+	using HostBuffer32 = MemoryBuffer<r32>;
 
 
-	void make_view(View4r32& view, u32 width, u32 height, Buffer32& buffer);
+	void make_view(View4r32& view, u32 width, u32 height, HostBuffer32& buffer);
 
-	void make_view(View3r32& view, u32 width, u32 height, Buffer32& buffer);
+	void make_view(View3r32& view, u32 width, u32 height, HostBuffer32& buffer);
 
-	void make_view(View2r32& view, u32 width, u32 height, Buffer32& buffer);
+	void make_view(View2r32& view, u32 width, u32 height, HostBuffer32& buffer);
 
-	void make_view(View1r32& view, u32 width, u32 height, Buffer32& buffer);	
+	void make_view(View1r32& view, u32 width, u32 height, HostBuffer32& buffer);
+
+
+	void make_view(View4r32& view, u32 width, u32 height, DeviceBuffer32& buffer);
+
+	void make_view(View3r32& view, u32 width, u32 height, DeviceBuffer32& buffer);
+
+	void make_view(View2r32& view, u32 width, u32 height, DeviceBuffer32& buffer);
+
+	void make_view(View1r32& view, u32 width, u32 height, DeviceBuffer32& buffer);
 }
 
 
@@ -496,13 +506,13 @@ namespace libimage
 
 namespace libimage
 {
-	void map(View1r32 const& device_src, gray::View const& host_dst, Buffer32& host_buffer);
+	void map(View1r32 const& device_src, gray::View const& host_dst, HostBuffer32& host_buffer);
 
-	void map(gray::View const& host_src, View1r32 const& device_dst, Buffer32& host_buffer);
+	void map(gray::View const& host_src, View1r32 const& device_dst, HostBuffer32& host_buffer);
 
-	void map(View1r32 const& device_src, gray::View const& host_dst, Buffer32& host_buffer, r32 gray_min, r32 gray_max);
+	void map(View1r32 const& device_src, gray::View const& host_dst, HostBuffer32& host_buffer, r32 gray_min, r32 gray_max);
 
-	void map(gray::View const& host_src, View1r32 const& device_dst, Buffer32& host_buffer, r32 gray_min, r32 gray_max);
+	void map(gray::View const& host_src, View1r32 const& device_dst, HostBuffer32& host_buffer, r32 gray_min, r32 gray_max);
 }
 
 
@@ -510,14 +520,14 @@ namespace libimage
 
 namespace libimage
 {
-	void map_rgb(ViewRGBAr32 const& device_src, View const& host_dst, Buffer32& host_buffer);
+	void map_rgb(ViewRGBAr32 const& device_src, View const& host_dst, HostBuffer32& host_buffer);
 
-	void map_rgb(View const& host_src, ViewRGBAr32 const& device_dst, Buffer32& host_buffer);
+	void map_rgb(View const& host_src, ViewRGBAr32 const& device_dst, HostBuffer32& host_buffer);
 
 
-	void map_rgb(ViewRGBr32 const& device_src, View const& host_dst, Buffer32& host_buffer);
+	void map_rgb(ViewRGBr32 const& device_src, View const& host_dst, HostBuffer32& host_buffer);
 
-	void map_rgb(View const& host_src, ViewRGBr32 const& device_dst, Buffer32& host_buffer);
+	void map_rgb(View const& host_src, ViewRGBr32 const& device_dst, HostBuffer32& host_buffer);
 }
 
 
@@ -772,9 +782,9 @@ namespace libimage
 
 namespace libimage
 {
-	View3r32 scale_down(View3r32 const& src, Buffer32& buffer);
+	View3r32 scale_down(View3r32 const& src, DeviceBuffer32& buffer);
 
-	View1r32 scale_down(View1r32 const& src, Buffer32& buffer);
+	View1r32 scale_down(View1r32 const& src, DeviceBuffer32& buffer);
 }
 
 

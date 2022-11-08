@@ -689,8 +689,8 @@ namespace libimage
 
 namespace libimage
 {
-	template <size_t N>
-	static void do_make_view(ViewCHr32<N>& view, u32 width, u32 height, Buffer32& buffer)
+	template <size_t N, class BUFFER>
+	static void do_make_view(ViewCHr32<N>& view, u32 width, u32 height, BUFFER& buffer)
 	{
 		assert(buffer.avail() >= N * width * height);
 
@@ -709,25 +709,8 @@ namespace libimage
 	}
 
 
-	void make_view(View4r32& view, u32 width, u32 height, Buffer32& buffer)
-	{
-		do_make_view(view, width, height, buffer);
-	}
-
-
-	void make_view(View3r32& view, u32 width, u32 height, Buffer32& buffer)
-	{
-		do_make_view(view, width, height, buffer);
-	}
-
-
-	void make_view(View2r32& view, u32 width, u32 height, Buffer32& buffer)
-	{
-		do_make_view(view, width, height, buffer);
-	}
-
-
-	void make_view(View1r32& view, u32 width, u32 height, Buffer32& buffer)
+	template <class BUFFER>
+	void do_make_view(View1r32& view, u32 width, u32 height, BUFFER& buffer)
 	{
 		assert(buffer.avail() >= width * height);
 
@@ -742,14 +725,62 @@ namespace libimage
 	}
 
 
+	void make_view(View4r32& view, u32 width, u32 height, HostBuffer32& buffer)
+	{
+		do_make_view(view, width, height, buffer);
+	}
+
+
+	void make_view(View3r32& view, u32 width, u32 height, HostBuffer32& buffer)
+	{
+		do_make_view(view, width, height, buffer);
+	}
+
+
+	void make_view(View2r32& view, u32 width, u32 height, HostBuffer32& buffer)
+	{
+		do_make_view(view, width, height, buffer);
+	}
+
+
+	void make_view(View1r32& view, u32 width, u32 height, HostBuffer32& buffer)
+	{
+		do_make_view(view, width, height, buffer);
+	}
+	
+
+	void make_view(View4r32& view, u32 width, u32 height, DeviceBuffer32& buffer)
+	{
+		do_make_view(view, width, height, buffer);
+	}
+
+
+	void make_view(View3r32& view, u32 width, u32 height, DeviceBuffer32& buffer)
+	{
+		do_make_view(view, width, height, buffer);
+	}
+
+
+	void make_view(View2r32& view, u32 width, u32 height, DeviceBuffer32& buffer)
+	{
+		do_make_view(view, width, height, buffer);
+	}
+
+
+	void make_view(View1r32& view, u32 width, u32 height, DeviceBuffer32& buffer)
+	{
+		do_make_view(view, width, height, buffer);
+	}
+
+
 	template <size_t N>
-	static void pop_view(Buffer32& buffer, ViewCHr32<N> const& view)
+	static void pop_view(HostBuffer32& buffer, ViewCHr32<N> const& view)
 	{
 		buffer.pop(N * view.width * view.height);
 	}
 
 
-	static void pop_view(Buffer32& buffer, View1r32 const& view)
+	static void pop_view(HostBuffer32& buffer, View1r32 const& view)
 	{
 		buffer.pop(view.width * view.height);
 	}
@@ -1002,7 +1033,7 @@ namespace libimage
 	}
 
 
-	void map(View1r32 const& device_src, gray::View const& host_dst, Buffer32& host_buffer)
+	void map(View1r32 const& device_src, gray::View const& host_dst, HostBuffer32& host_buffer)
     {
         assert(verify(device_src, host_dst));
 
@@ -1015,7 +1046,7 @@ namespace libimage
     }
 
 
-	void map(gray::View const& host_src, View1r32 const& device_dst, Buffer32& host_buffer)
+	void map(gray::View const& host_src, View1r32 const& device_dst, HostBuffer32& host_buffer)
     {
         assert(verify(host_src, device_dst));
 
@@ -1028,7 +1059,7 @@ namespace libimage
     }
 
 
-	void map(View1r32 const& device_src, gray::View const& host_dst, Buffer32& host_buffer, r32 gray_min, r32 gray_max)
+	void map(View1r32 const& device_src, gray::View const& host_dst, HostBuffer32& host_buffer, r32 gray_min, r32 gray_max)
     {
         assert(verify(device_src, host_dst));
 
@@ -1043,7 +1074,7 @@ namespace libimage
     }
 
 
-	void map(gray::View const& host_src, View1r32 const& device_dst, Buffer32& host_buffer, r32 gray_min, r32 gray_max)
+	void map(gray::View const& host_src, View1r32 const& device_dst, HostBuffer32& host_buffer, r32 gray_min, r32 gray_max)
     {
         assert(verify(host_src, device_dst));
 
@@ -1240,7 +1271,7 @@ namespace libimage
 	}
 
 
-	void map_rgb(ViewRGBAr32 const& device_src, View const& host_dst, Buffer32& host_buffer)
+	void map_rgb(ViewRGBAr32 const& device_src, View const& host_dst, HostBuffer32& host_buffer)
     {
         assert(verify(device_src, host_dst));
 
@@ -1253,7 +1284,7 @@ namespace libimage
     }
 
 
-	void map_rgb(View const& host_src, ViewRGBAr32 const& device_dst, Buffer32& host_buffer)
+	void map_rgb(View const& host_src, ViewRGBAr32 const& device_dst, HostBuffer32& host_buffer)
     {
         assert(verify(host_src, device_dst));
 
@@ -1266,7 +1297,7 @@ namespace libimage
     }
 
 
-	void map_rgb(ViewRGBr32 const& device_src, View const& host_dst, Buffer32& host_buffer)
+	void map_rgb(ViewRGBr32 const& device_src, View const& host_dst, HostBuffer32& host_buffer)
     {
         assert(verify(device_src, host_dst));
 
@@ -1279,7 +1310,7 @@ namespace libimage
     }
 
 
-	void map_rgb(View const& host_src, ViewRGBr32 const& device_dst, Buffer32& host_buffer)
+	void map_rgb(View const& host_src, ViewRGBr32 const& device_dst, HostBuffer32& host_buffer)
     {
         assert(verify(host_src, device_dst));
 
