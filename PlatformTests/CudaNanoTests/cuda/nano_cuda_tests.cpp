@@ -97,6 +97,7 @@ void grayscale_test();
 void alpha_blend_test();
 void threshold_test();
 void contrast_test();
+void blur_test();
 
 
 int main()
@@ -122,6 +123,7 @@ int main()
 	alpha_blend_test();
 	threshold_test();
 	contrast_test();
+	blur_test();
 
 
     auto time = sw.get_time_milli();
@@ -977,6 +979,65 @@ void contrast_test()
 
 	img::destroy_image(vette);
 	img::destroy_image(gr_dst);
+	d_buffer.free();
+	h_buffer.free();
+}
+
+
+void blur_test()
+{
+	auto title = "blur_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH + title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
+
+	GrayImage vette_img;
+	img::read_image_from_file(CORVETTE_PATH, vette_img);
+	auto vette = img::make_view(vette_img);
+	auto width = vette.width;
+	auto height = vette.height;
+
+	img::DeviceBuffer32 d_buffer(width * height * 6, cuda::Malloc::Device);
+	img::HostBuffer32 h_buffer(width * height * 4);
+
+	img::View1r32 src;
+	img::make_view(src, width, height, d_buffer);
+
+	img::View1r32 dst;
+	img::make_view(dst, width, height, d_buffer);
+
+	img::map(vette, src, h_buffer);
+
+	img::blur(src, dst);
+
+	img::map(dst, vette, h_buffer);
+
+	write_image(vette_img, "blur1.bmp");
+
+	d_buffer.reset();
+
+	Image caddy_img;
+	img::read_image_from_file(CADILLAC_PATH, caddy_img);
+	auto caddy = img::make_view(caddy_img);
+	width = caddy.width;
+	height = caddy.height;
+
+	img::View3r32 src3;
+	img::make_view(src3, width, height, d_buffer);
+
+	img::map_rgb(caddy, src3, h_buffer);
+
+	img::View3r32 dst3;
+	img::make_view(dst3, width, height, d_buffer);
+
+	img::blur(src3, dst3);
+
+	img::map_rgb(dst3, caddy, h_buffer);
+	write_image(caddy_img, "blur3.bmp");
+
+	img::destroy_image(vette_img);
+	img::destroy_image(caddy_img);
 	d_buffer.free();
 	h_buffer.free();
 }

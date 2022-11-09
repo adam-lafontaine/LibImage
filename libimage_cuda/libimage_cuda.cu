@@ -39,6 +39,52 @@ using PixelGAr32 = libimage::PixelGAr32;
 using Pixel = libimage::Pixel;
 
 
+constexpr int THREADS_PER_BLOCK = 512;
+
+constexpr int calc_thread_blocks(u32 n_threads)
+{
+    return (n_threads + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+}
+
+
+GPU_CONSTEXPR_FUNCTION r32 div16(int i) { return i / 16.0f; }
+
+GPU_GLOBAL_CONSTANT r32 GAUSS_3X3[]
+{
+    div16(1), div16(2), div16(1),
+    div16(2), div16(4), div16(2),
+    div16(1), div16(2), div16(1),
+};
+
+
+GPU_CONSTEXPR_FUNCTION r32 div256(int i) { return i / 256.0f; }
+
+GPU_GLOBAL_CONSTANT r32 GAUSS_5X5[]
+{
+    div256(1), div256(4),  div256(6),  div256(4),  div256(1),
+    div256(4), div256(16), div256(24), div256(16), div256(4),
+    div256(6), div256(24), div256(36), div256(24), div256(6),
+    div256(4), div256(16), div256(24), div256(16), div256(4),
+    div256(1), div256(4),  div256(6),  div256(4),  div256(1),
+};
+
+
+GPU_GLOBAL_CONSTANT r32 GRAD_X_3X3[]
+{
+    1.0f, 0.0f, -1.0f,
+    2.0f, 0.0f, -2.0f,
+    1.0f, 0.0f, -1.0f,
+};
+
+
+GPU_GLOBAL_CONSTANT r32 GRAD_Y_3X3[]
+{
+    1.0f,  2.0f,  1.0f,
+    0.0f,  0.0f,  0.0f,
+    -1.0f, -2.0f, -1.0f,
+};
+
+
 class HSVr32
 {
 public:
@@ -64,6 +110,15 @@ public:
     r32 green;
     r32 blue;
 	r32 alpha;
+};
+
+
+class ChannelXY
+{
+public:
+	u32 channel;
+	u32 x;
+	u32 y;
 };
 
 
@@ -109,6 +164,7 @@ namespace gpuf
 	GPU_FUNCTION
 	static Point2Du32 get_thread_xy(VIEW const& view, u32 thread_id)
 	{
+		// n_threads = width * height
 		Point2Du32 p{};
 
 		p.y = thread_id / view.width;
@@ -116,6 +172,25 @@ namespace gpuf
 
 		return p;
 	}
+
+
+	template <size_t N>
+	GPU_FUNCTION
+	static ChannelXY get_thread_channel_xy(ViewCHr32<N> const& view, u32 thread_id)
+	{
+		// n_threads = N * width * height
+		auto width = view.width;
+		auto height = view.height;
+
+		ChannelXY cxy{};
+
+		cxy.channel = thread_id / (width * height);
+		cxy.y = (thread_id - width * height * cxy.channel) / width;
+		cxy.x = (thread_id - width * height * cxy.channel) - cxy.y * width;
+
+		return cxy;
+	}
+
 }
 
 
@@ -394,13 +469,26 @@ namespace gpuf
 }
 
 
-constexpr int THREADS_PER_BLOCK = 512;
+/* select channel */
 
-constexpr int calc_thread_blocks(u32 n_threads)
+namespace gpuf
 {
-    return (n_threads + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-}
+	template <size_t N>
+	GPU_FUNCTION
+	View1r32 select_channel(ViewCHr32<N> const& view, u32 ch)
+	{
+		View1r32 view1{};
 
+		view1.image_width = view.image_width;
+		view1.range = view.range;
+		view1.width = view.width;
+		view1.height = view.height;
+
+		view1.image_data = view.image_channel_data[ch];
+
+		return view1;
+	}
+}
 
 /* map_hsv */
 
@@ -1273,6 +1361,186 @@ namespace libimage
 		cuda_launch_kernel(gpu::contrast, n_blocks, block_size, src_dst, src_dst, min, max, n_threads);
 
 		auto result = cuda::launch_success("gpu::contrast in place");
+		assert(result);
+	}
+}
+
+
+/* blur */
+
+namespace gpuf
+{
+	GPU_FUNCTION
+	inline bool is_outer_edge(u32 width, u32 height, u32 x, u32 y)
+	{
+		return 
+			y == 0 || 
+			y == height - 1 || 
+			x == 0 || 
+			x == width - 1;
+	}
+
+
+	GPU_FUNCTION
+	inline bool is_inner_edge(u32 width, u32 height, u32 x, u32 y)
+	{
+		return 
+			y == 1 || 
+			y == height - 2 || 
+			x == 1 || 
+			x == width - 2;
+	}
+
+
+	GPU_FUNCTION
+	static r32 convolve_gauss_3x3(View1r32 const& view, u32 x, u32 y)
+	{
+		int const ry_begin = -1;
+		int const ry_end = 2;
+		int const rx_begin = -1;
+		int const rx_end = 2;
+
+		u32 w = 0;
+		r32 acc = 0.0f;
+
+		for (int ry = ry_begin; ry < ry_end; ++ry)
+		{
+			auto p = gpuf::row_offset_begin(view, y, ry);
+			for (int rx = rx_begin; rx < rx_end; ++rx)
+			{
+				acc += (p + rx)[x] * GAUSS_3X3[w];
+				++w;
+			}
+		}
+
+		return acc;
+	}
+
+
+	GPU_FUNCTION
+	static r32 convolve_gauss_5x5(View1r32 const& view, u32 x, u32 y)
+	{
+		int const ry_begin = -2;
+		int const ry_end = 3;
+		int const rx_begin = -2;
+		int const rx_end = 3;
+
+		u32 w = 0;
+		r32 acc = 0.0f;
+
+		for (int ry = ry_begin; ry < ry_end; ++ry)
+		{
+			auto p = gpuf::row_offset_begin(view, y, ry);
+			for (int rx = rx_begin; rx < rx_end; ++rx)
+			{
+				acc += (p + rx)[x] * GAUSS_5X5[w];
+				++w;
+			}
+		}
+
+		return acc;
+	}
+
+
+	GPU_FUNCTION
+	static void blur(View1r32 const& src, View1r32 const& dst, u32 x, u32 y)
+	{
+		auto& d = *gpuf::xy_at(dst, x, y);
+
+		auto width = src.width;
+		auto height = src.height;
+
+		if (gpuf::is_outer_edge(width, height, x, y))
+		{
+			d = *gpuf::xy_at(src, x, y);
+		}
+		else if (gpuf::is_inner_edge(width, height, x, y))
+		{
+			d = gpuf::convolve_gauss_3x3(src, x, y);
+		}
+		else
+		{
+			d = gpuf::convolve_gauss_5x5(src, x, y);
+		}
+	}
+}
+
+
+namespace gpu
+{
+	GPU_KERNAL
+	static void blur_1(View1r32 src, View1r32 dst, u32 n_threads)
+	{
+		auto t = blockDim.x * blockIdx.x + threadIdx.x;
+		if (t >= n_threads)
+		{
+			return;
+		}
+
+		assert(n_threads == src.width * src.height);
+
+		auto xy = gpuf::get_thread_xy(src, t);
+
+		gpuf::blur(src, dst, xy.y, xy.y);
+	}
+
+
+	template <size_t N>
+	GPU_KERNAL
+	static void blur_n(ViewCHr32<N> src, ViewCHr32<N> dst, u32 n_threads)
+	{
+		auto t = blockDim.x * blockIdx.x + threadIdx.x;
+		if (t >= n_threads)
+		{
+			return;
+		}
+
+		assert(n_threads == N * src.width * src.height);
+
+		auto cxy = gpuf::get_thread_channel_xy(src, t);
+
+		auto src_ch = gpuf::select_channel(src, cxy.channel);
+		auto dst_ch = gpuf::select_channel(dst, cxy.channel);
+
+		gpuf::blur(src_ch, dst_ch, cxy.x, cxy.y);
+	}
+}
+
+
+namespace libimage
+{
+	void blur(View1r32 const& src, View1r32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		auto const width = src.width;
+		auto const height = src.height;
+
+		auto const n_threads = width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
+
+		cuda_launch_kernel(gpu::blur_1, n_blocks, block_size, src, dst, n_threads);
+
+		auto result = cuda::launch_success("gpu::blur_1");
+		assert(result);
+	}
+
+
+	void blur(View3r32 const& src, View3r32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		auto const width = src.width;
+		auto const height = src.height;
+
+		auto const n_threads = 3 * width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
+
+		cuda_launch_kernel(gpu::blur_n, n_blocks, block_size, src, dst, n_threads);
+
+		auto result = cuda::launch_success("gpu::blur_3");
 		assert(result);
 	}
 }

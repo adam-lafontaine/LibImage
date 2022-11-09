@@ -1,5 +1,9 @@
 #pragma once
 
+// for vs code intellisense
+#ifndef __CUDACC__
+#define __CUDACC__
+#endif
 #include <cuda_runtime.h>
 
 #define GPU_KERNAL __global__
