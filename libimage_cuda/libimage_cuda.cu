@@ -116,7 +116,7 @@ public:
 class ChannelXY
 {
 public:
-	u32 channel;
+	u32 ch;
 	u32 x;
 	u32 y;
 };
@@ -184,9 +184,9 @@ namespace gpuf
 
 		ChannelXY cxy{};
 
-		cxy.channel = thread_id / (width * height);
-		cxy.y = (thread_id - width * height * cxy.channel) / width;
-		cxy.x = (thread_id - width * height * cxy.channel) - cxy.y * width;
+		cxy.ch = thread_id / (width * height);
+		cxy.y = (thread_id - width * height * cxy.ch) / width;
+		cxy.x = (thread_id - width * height * cxy.ch) - cxy.y * width;
 
 		return cxy;
 	}
@@ -589,6 +589,8 @@ namespace gpu
 			return;
 		}
 
+		assert(n_threads == src.width * src.height);
+
 		auto xy = gpuf::get_thread_xy(src, t);
 
 		auto s = gpuf::rgb_xy_at(src, xy.x, xy.y).rgb;
@@ -610,6 +612,8 @@ namespace gpu
 		{
 			return;
 		}
+
+		assert(n_threads == src.width * src.height);
 
 		auto xy = gpuf::get_thread_xy(src, t);
 
@@ -723,6 +727,8 @@ namespace gpu
 			return;
 		}
 
+		assert(n_threads == view.width * view.height);
+
 		auto xy = gpuf::get_thread_xy(view, t);
 
 		auto p = gpuf::rgba_xy_at(view, xy.x, xy.y).rgba;
@@ -742,6 +748,8 @@ namespace gpu
 			return;
 		}
 
+		assert(n_threads == view.width * view.height);
+
 		auto xy = gpuf::get_thread_xy(view, t);
 
 		auto p = gpuf::rgb_xy_at(view, xy.x, xy.y).rgb;
@@ -752,7 +760,7 @@ namespace gpu
 
 
 	GPU_KERNAL
-	static void fill_gray(View1r32 view, r32 gray, u32 n_threads)
+	static void fill_1(View1r32 view, r32 gray, u32 n_threads)
 	{
 		auto t = blockDim.x * blockIdx.x + threadIdx.x;
 		if (t >= n_threads)
@@ -760,10 +768,13 @@ namespace gpu
 			return;
 		}
 
+		assert(n_threads = view.width * view.height);
+
 		auto xy = gpuf::get_thread_xy(view, t);
 
-		auto p = gpuf::xy_at(view, xy.x, xy.y);
-		*p = gray;
+		auto& p = *gpuf::xy_at(view, xy.x, xy.y);
+
+		p = gray;
 	}
 }
 
@@ -817,9 +828,9 @@ namespace libimage
 		auto const n_blocks = calc_thread_blocks(n_threads);
 		constexpr auto block_size = THREADS_PER_BLOCK;
 
-		cuda_launch_kernel(gpu::fill_gray, n_blocks, block_size, view, gray32, n_threads);
+		cuda_launch_kernel(gpu::fill_1, n_blocks, block_size, view, gray32, n_threads);
 
-		auto result = cuda::launch_success("gpu::fill_gray");
+		auto result = cuda::launch_success("gpu::fill_1");
 		assert(result);
 	}
 
@@ -835,9 +846,9 @@ namespace libimage
 		auto const n_blocks = calc_thread_blocks(n_threads);
 		constexpr auto block_size = THREADS_PER_BLOCK;
 
-		cuda_launch_kernel(gpu::fill_gray, n_blocks, block_size, view, to_channel_r32(gray), n_threads);
+		cuda_launch_kernel(gpu::fill_1, n_blocks, block_size, view, to_channel_r32(gray), n_threads);
 
-		auto result = cuda::launch_success("gpu::fill_gray - u8");
+		auto result = cuda::launch_success("gpu::fill_1 - u8");
 		assert(result);
 	}
 }
@@ -845,70 +856,21 @@ namespace libimage
 
 /* copy */
 
+namespace gpuf
+{
+	GPU_FUNCTION
+	static void copy(View1r32 const& src, View1r32 const& dst, u32 x, u32 y)
+	{
+		auto& s = *gpuf::xy_at(src, x, y);
+		auto& d = *gpuf::xy_at(dst, x, y);
+
+		d = s;
+	}
+}
+
+
 namespace gpu
 {
-	GPU_KERNAL
-	static void copy_rgba(ViewRGBAr32 src, ViewRGBAr32 dst, u32 n_threads)
-	{
-		auto t = blockDim.x * blockIdx.x + threadIdx.x;
-		if (t >= n_threads)
-		{
-			return;
-		}
-
-		auto xy = gpuf::get_thread_xy(src, t);
-
-		auto s = gpuf::rgba_xy_at(src, xy.x, xy.y).rgba;
-		auto d = gpuf::rgba_xy_at(dst, xy.x, xy.y).rgba;
-
-		*d.R = *s.R;
-		*d.G = *s.G;
-		*d.B = *s.B;
-		*d.A = *s.A;
-	}
-
-
-	GPU_KERNAL
-	static void copy_rgb(ViewRGBr32 src, ViewRGBr32 dst, u32 n_threads)
-	{
-		auto t = blockDim.x * blockIdx.x + threadIdx.x;
-		if (t >= n_threads)
-		{
-			return;
-		}
-
-		auto xy = gpuf::get_thread_xy(src, t);
-
-		auto s = gpuf::rgb_xy_at(src, xy.x, xy.y).rgb;
-		auto d = gpuf::rgb_xy_at(dst, xy.x, xy.y).rgb;
-
-		*d.R = *s.R;
-		*d.G = *s.G;
-		*d.B = *s.B;
-	}
-
-
-	GPU_KERNAL
-	static void copy_2(View2r32 src, View2r32 dst, u32 n_threads)
-	{
-		auto t = blockDim.x * blockIdx.x + threadIdx.x;
-		if (t >= n_threads)
-		{
-			return;
-		}
-
-		auto xy = gpuf::get_thread_xy(src, t);
-
-		auto s = gpuf::xy_at(src, xy.x, xy.y);
-		auto d = gpuf::xy_at(dst, xy.x, xy.y);
-
-		for(u32 ch = 0; ch < s.n_channels; ++ch)
-		{
-			*d.channels[ch] = *s.channels[ch];
-		}
-	}
-
-
 	GPU_KERNAL
 	static void copy_1(View1r32 src, View1r32 dst, u32 n_threads)
 	{
@@ -918,12 +880,32 @@ namespace gpu
 			return;
 		}
 
+		assert(n_threads == src.width * src.height);
+
 		auto xy = gpuf::get_thread_xy(src, t);
 
-		auto s = gpuf::xy_at(src, xy.x, xy.y);
-		auto d = gpuf::xy_at(dst, xy.x, xy.y);
+		gpuf::copy(src, dst, xy.x, xy.y);
+	}
 
-		*d = *s;
+
+	template <size_t N>
+	GPU_KERNAL
+	static void copy_n(ViewCHr32<N> src, ViewCHr32<N> dst, u32 n_threads)
+	{
+		auto t = blockDim.x * blockIdx.x + threadIdx.x;
+		if (t >= n_threads)
+		{
+			return;
+		}
+
+		assert(n_threads == N * src.width * src.height);
+
+		auto cxy = gpuf::get_thread_channel_xy(src, t);
+
+		auto src_ch = gpuf::select_channel(src, cxy.ch);
+		auto dst_ch = gpuf::select_channel(dst, cxy.ch);
+
+		gpuf::copy(src_ch, dst_ch, cxy.x, cxy.y);
 	}
 }
 
@@ -937,13 +919,13 @@ namespace libimage
 		auto const width = src.width;
 		auto const height = src.height;
 
-		auto const n_threads = width * height;
+		auto const n_threads = 4 * width * height;
 		auto const n_blocks = calc_thread_blocks(n_threads);
 		constexpr auto block_size = THREADS_PER_BLOCK;
 
-		cuda_launch_kernel(gpu::copy_rgba, n_blocks, block_size, src, dst, n_threads);
+		cuda_launch_kernel(gpu::copy_n, n_blocks, block_size, src, dst, n_threads);
 
-		auto result = cuda::launch_success("gpu::copy_rgba");
+		auto result = cuda::launch_success("gpu::copy_4");
 		assert(result);
 	}
 
@@ -955,13 +937,13 @@ namespace libimage
 		auto const width = src.width;
 		auto const height = src.height;
 
-		auto const n_threads = width * height;
+		auto const n_threads = 3 * width * height;
 		auto const n_blocks = calc_thread_blocks(n_threads);
 		constexpr auto block_size = THREADS_PER_BLOCK;
 
-		cuda_launch_kernel(gpu::copy_rgb, n_blocks, block_size, src, dst, n_threads);
+		cuda_launch_kernel(gpu::copy_n, n_blocks, block_size, src, dst, n_threads);
 
-		auto result = cuda::launch_success("gpu::copy_rgb");
+		auto result = cuda::launch_success("gpu::copy_3");
 		assert(result);
 	}
 
@@ -973,11 +955,11 @@ namespace libimage
 		auto const width = src.width;
 		auto const height = src.height;
 
-		auto const n_threads = width * height;
+		auto const n_threads = 2 * width * height;
 		auto const n_blocks = calc_thread_blocks(n_threads);
 		constexpr auto block_size = THREADS_PER_BLOCK;
 
-		cuda_launch_kernel(gpu::copy_2, n_blocks, block_size, src, dst, n_threads);
+		cuda_launch_kernel(gpu::copy_n, n_blocks, block_size, src, dst, n_threads);
 
 		auto result = cuda::launch_success("gpu::copy_2");
 		assert(result);
@@ -1016,16 +998,13 @@ namespace gpu
 			return;
 		}
 
+		assert(n_threads == view.width * view.height);
+
 		auto xy = gpuf::get_thread_xy(view, t);
 
 		auto& s = *gpuf::xy_at(view, xy.x, xy.y);
 
 		s *= factor;
-
-		if(s > 1.0f)
-		{
-			s = 1.0f;
-		}
 	}
 }
 
@@ -1084,6 +1063,8 @@ namespace gpu
 			return;
 		}
 
+		assert(n_threads == src.width * src.height);
+
 		auto xy = gpuf::get_thread_xy(src, t);
 
 		auto s = gpuf::rgb_xy_at(src, xy.x, xy.y).rgb;
@@ -1141,6 +1122,8 @@ namespace gpu
 			return;
 		}
 
+		assert(n_threads == src.width * src.height);
+
 		auto xy = gpuf::get_thread_xy(src, t);
 
 		auto s = gpuf::rgba_xy_at(src, xy.x, xy.y).rgba;
@@ -1163,6 +1146,8 @@ namespace gpu
 		{
 			return;
 		}
+
+		assert(n_threads == src.width * src.height);
 
 		auto xy = gpuf::get_thread_xy(src, t);
 
@@ -1228,6 +1213,8 @@ namespace gpu
 		{
 			return;
 		}
+
+		assert(n_threads == src.width * src.height);
 
 		auto xy = gpuf::get_thread_xy(src, t);
 
@@ -1316,6 +1303,8 @@ namespace gpu
 		{
 			return;
 		}
+
+		assert(n_threads == src.width * src.height);
 
 		auto xy = gpuf::get_thread_xy(src, t);
 
@@ -1499,8 +1488,8 @@ namespace gpu
 
 		auto cxy = gpuf::get_thread_channel_xy(src, t);
 
-		auto src_ch = gpuf::select_channel(src, cxy.channel);
-		auto dst_ch = gpuf::select_channel(dst, cxy.channel);
+		auto src_ch = gpuf::select_channel(src, cxy.ch);
+		auto dst_ch = gpuf::select_channel(dst, cxy.ch);
 
 		gpuf::blur(src_ch, dst_ch, cxy.x, cxy.y);
 	}
@@ -1543,4 +1532,15 @@ namespace libimage
 		auto result = cuda::launch_success("gpu::blur_3");
 		assert(result);
 	}
+}
+
+
+/* gradients */
+
+namespace libimage
+{
+	void gradients(View1r32 const& src, View1r32 const& dst);
+
+
+	void gradients_xy(View1r32 const& src, View2r32 const& xy_dst);
 }
