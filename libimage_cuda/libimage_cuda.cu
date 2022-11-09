@@ -1481,7 +1481,7 @@ namespace gpu
 
 		auto xy = gpuf::get_thread_xy(src, t);
 
-		gpuf::blur(src, dst, xy.y, xy.y);
+		gpuf::blur(src, dst, xy.x, xy.y);
 	}
 
 
