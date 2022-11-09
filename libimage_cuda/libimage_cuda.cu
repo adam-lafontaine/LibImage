@@ -1537,6 +1537,37 @@ namespace libimage
 
 /* gradients */
 
+namespace gpuf
+{
+	GPU_FUNCTION
+	static r32 gradient_3x3(View1r32 const& view, u32 x, u32 y)
+	{
+		int const ry_begin = -1;
+		int const ry_end = 2;
+		int const rx_begin = -1;
+		int const rx_end = 2;
+
+		u32 w = 0;
+		r32 gx = 0.0f;
+		r32 gy = 0.0f;
+
+		for (int ry = ry_begin; ry < ry_end; ++ry)
+		{
+			auto p = gpuf::row_offset_begin(view, y, ry);
+
+			for (int rx = rx_begin; rx < rx_end; ++rx)
+			{
+				auto val = (p + rx)[x];
+				gx += val * GRAD_X_3X3[w];
+				gy += val * GRAD_Y_3X3[w];
+				++w;
+			}
+		}
+
+		return hypotf(gx, gy);
+	}
+}
+
 namespace libimage
 {
 	void gradients(View1r32 const& src, View1r32 const& dst);
