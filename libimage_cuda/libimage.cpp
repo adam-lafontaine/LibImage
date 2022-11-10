@@ -90,8 +90,6 @@ static r32 lerp_to_r32(u8 value, r32 min, r32 max)
 static u8 lerp_to_u8(r32 value, r32 min, r32 max)
 {
 	assert(min < max);
-	assert(value >= min);
-	assert(value <= max);
 
 	if (value < min)
 	{
