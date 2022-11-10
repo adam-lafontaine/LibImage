@@ -1274,10 +1274,10 @@ void edges_test()
 
 	img::edges_xy(src, xy_dst, 0.2f);
 
-	img::map(img::select_channel(xy_dst, img::XY::X), vette, -1.0f, 1.0f);
+	img::map(img::select_channel(xy_dst, img::XY::X), vette);
 	write_image(vette, "edges_x.bmp");
 
-	img::map(img::select_channel(xy_dst, img::XY::Y), vette, -1.0f, 1.0f);
+	img::map(img::select_channel(xy_dst, img::XY::Y), vette);
 	write_image(vette, "edges_y.bmp");
 
 	img::destroy_image(vette);

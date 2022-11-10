@@ -3068,7 +3068,11 @@ namespace libimage
 		inner.y_begin = 1;
 		inner.y_end = src.height - 1;
 
-		auto const grad_func = [threshold](r32 g) { return fabs(g) < threshold ? 0.0f : (g > 0.0f ? 1.0f : -1.0f); };
+		auto const grad_func = [threshold](r32 g) 
+		{ 
+			g = fabs(g);
+			return g < threshold ? 0.0f : 1.0f; 
+		};
 
 		for_each_gradient_3x3(sub_view(src, inner), sub_view(xy_dst, inner), grad_func);
 	}
