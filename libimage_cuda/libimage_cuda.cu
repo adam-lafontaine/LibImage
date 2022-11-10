@@ -1387,10 +1387,10 @@ namespace gpuf
 	GPU_FUNCTION
 	static r32 convolve_gauss_3x3(View1r32 const& view, u32 x, u32 y)
 	{
-		int const ry_begin = -1;
-		int const ry_end = 2;
-		int const rx_begin = -1;
-		int const rx_end = 2;
+		constexpr int ry_begin = -1;
+		constexpr int ry_end = 2;
+		constexpr int rx_begin = -1;
+		constexpr int rx_end = 2;
 
 		u32 w = 0;
 		r32 acc = 0.0f;
@@ -1412,10 +1412,10 @@ namespace gpuf
 	GPU_FUNCTION
 	static r32 convolve_gauss_5x5(View1r32 const& view, u32 x, u32 y)
 	{
-		int const ry_begin = -2;
-		int const ry_end = 3;
-		int const rx_begin = -2;
-		int const rx_end = 3;
+		constexpr int ry_begin = -2;
+		constexpr int ry_end = 3;
+		constexpr int rx_begin = -2;
+		constexpr int rx_end = 3;
 
 		u32 w = 0;
 		r32 acc = 0.0f;
@@ -1543,12 +1543,12 @@ namespace libimage
 namespace gpuf
 {
 	GPU_FUNCTION
-	static Point2Dr32 gradient_xy_3x3(View1r32 const& view, u32 x, u32 y)
+	static Point2Dr32 xy_gradient_3x3_at(View1r32 const& view, u32 x, u32 y)
 	{
-		int const ry_begin = -1;
-		int const ry_end = 2;
-		int const rx_begin = -1;
-		int const rx_end = 2;
+		constexpr int ry_begin = -1;
+		constexpr int ry_end = 2;
+		constexpr int rx_begin = -1;
+		constexpr int rx_end = 2;
 
 		u32 w = 0;
 		r32 gx = 0.0f;
@@ -1576,7 +1576,7 @@ namespace gpuf
 
 
 	GPU_FUNCTION
-	static void gradients_hypot(View1r32 const& src, View1r32 const& dst, u32 x, u32 y)
+	static void hypot_gradient_at(View1r32 const& src, View1r32 const& dst, u32 x, u32 y)
 	{
 		auto& d = *gpuf::xy_at(dst, x, y);
 
@@ -1589,14 +1589,14 @@ namespace gpuf
 		}
 		else
 		{
-			auto grad = gpuf::gradient_xy_3x3(src, x, y);
+			auto grad = gpuf::xy_gradient_3x3_at(src, x, y);
 			d = hypotf(grad.x, grad.y);
 		}
 	}
 
 
 	GPU_FUNCTION
-	static void gradients_xy(View1r32 const& src, View2r32 const& xy_dst, u32 x, u32 y)
+	static void xy_gradient_at(View1r32 const& src, View2r32 const& xy_dst, u32 x, u32 y)
 	{
 		constexpr auto X = gpuf::id_cast(XY::X);
 		constexpr auto Y = gpuf::id_cast(XY::Y);
@@ -1614,7 +1614,7 @@ namespace gpuf
 		}
 		else
 		{
-			auto grad = gpuf::gradient_xy_3x3(src, x, y);
+			auto grad = gpuf::xy_gradient_3x3_at(src, x, y);
 			dx = grad.x;
 			dy = grad.y;
 		}
@@ -1638,7 +1638,7 @@ namespace gpu
 
 		auto xy = gpuf::get_thread_xy(src, t);
 
-		gpuf::gradients_hypot(src, dst, xy.x, xy.y);
+		gpuf::hypot_gradient_at(src, dst, xy.x, xy.y);
 	}
 
 
@@ -1655,7 +1655,7 @@ namespace gpu
 
 		auto xy = gpuf::get_thread_xy(src, t);
 
-		gpuf::gradients_xy(src, dst, xy.x, xy.y);
+		gpuf::xy_gradient_at(src, dst, xy.x, xy.y);
 	}
 }
 
@@ -1704,7 +1704,7 @@ namespace libimage
 namespace gpuf
 {
 	GPU_FUNCTION
-	static void edges_hypot(View1r32 const& src, View1r32 const& dst, r32 threshold, u32 x, u32 y)
+	static void hypot_edge_at(View1r32 const& src, View1r32 const& dst, r32 threshold, u32 x, u32 y)
 	{
 		auto& d = *gpuf::xy_at(dst, x, y);
 
@@ -1717,13 +1717,13 @@ namespace gpuf
 			return;
 		}
 		
-		auto grad = gpuf::gradient_xy_3x3(src, x, y);
+		auto grad = gpuf::xy_gradient_3x3_at(src, x, y);
 		d = hypotf(grad.x, grad.y) < threshold ? 0.0f : 1.0f;
 	}
 
 
 	GPU_FUNCTION
-	static void edges_xy(View1r32 const& src, View2r32 const& xy_dst, r32 threshold, u32 x, u32 y)
+	static void xy_edge_at(View1r32 const& src, View2r32 const& xy_dst, r32 threshold, u32 x, u32 y)
 	{
 		constexpr auto x_ch = gpuf::id_cast(XY::X);
 		constexpr auto y_ch = gpuf::id_cast(XY::Y);
@@ -1741,7 +1741,7 @@ namespace gpuf
 			return;
 		}
 		
-		auto grad = gpuf::gradient_xy_3x3(src, x, y);
+		auto grad = gpuf::xy_gradient_3x3_at(src, x, y);
 
 		dx = grad.x < threshold ? 0.0f : 1.0f;
 		dy = grad.y < threshold ? 0.0f : 1.0f;
@@ -1764,7 +1764,7 @@ namespace gpu
 
 		auto xy = gpuf::get_thread_xy(src, t);
 
-		gpuf::edges_hypot(src, dst, threshold, xy.x, xy.y);
+		gpuf::hypot_edge_at(src, dst, threshold, xy.x, xy.y);
 	}
 
 
@@ -1781,7 +1781,7 @@ namespace gpu
 
 		auto xy = gpuf::get_thread_xy(src, t);
 
-		gpuf::edges_xy(src, xy_dst, threshold, xy.x, xy.y);
+		gpuf::xy_edge_at(src, xy_dst, threshold, xy.x, xy.y);
 	}
 }
 
@@ -1820,6 +1820,114 @@ namespace libimage
 		cuda_launch_kernel(gpu::edges_xy, n_blocks, block_size, src, xy_dst, threshold, n_threads);
 
 		auto result = cuda::launch_success("gpu::edges_xy");
+		assert(result);
+	}
+}
+
+
+/* corners */
+
+namespace gpuf
+{
+	GPU_FUNCTION
+	static void corner_at(View2r32 const& grad_xy_src, View1r32 const& dst, u32 x, u32 y)
+	{
+		constexpr int ry_begin = -4;
+		constexpr int ry_end = 5;
+		constexpr int rx_begin = -4;
+		constexpr int rx_end = 5;
+
+		constexpr auto X = gpuf::id_cast(XY::X);
+		constexpr auto Y = gpuf::id_cast(XY::Y);
+
+		constexpr auto norm = (rx_end - rx_begin) * (ry_end - ry_begin);
+
+		auto const lamda_min = 0.3f; // TODO: param
+
+		auto const src_x = gpuf::select_channel(grad_xy_src, X);
+		auto const src_y = gpuf::select_channel(grad_xy_src, Y);
+
+		r32 a = 0.0f;
+		r32 b = 0.0f;
+		r32 c = 0.0f;
+
+		for (int ry = ry_begin; ry < ry_end; ++ry)
+		{
+			auto sx = gpuf::row_offset_begin(src_x, y, ry);
+			auto sy = gpuf::row_offset_begin(src_y, y, ry);
+
+			for (int rx = rx_begin; rx < rx_end; ++rx)
+			{
+				auto x_grad = (sx + rx)[x];
+				auto y_grad = (sy + rx)[x];
+
+				a += fabsf(x_grad);
+				c += fabsf(y_grad);
+
+				if (x_grad && y_grad)
+				{
+					b += 2.0f * (x_grad == y_grad ? 1.0f : -1.0f);
+				}
+			}			
+		}
+
+		a /= norm;
+		b /= norm;
+		c /= norm;
+
+		auto bac = std::sqrt(b * b + (a - c) * (a - c));
+		auto lamda1 = 0.5f * (a + c + bac);
+		auto lamda2 = 0.5f * (a + c - bac);
+
+		auto& d = *gpuf::xy_at(dst, x, y);
+
+		d = (lamda1 <= lamda_min || lamda2 <= lamda_min) ? 0.0f : (lamda1 > lamda2 ? lamda1 : lamda2);
+	}
+}
+
+
+namespace gpu
+{
+	GPU_KERNAL
+	static void corners(View2r32 grad_xy_src, View1r32 dst, u32 n_threads)
+	{
+		auto t = blockDim.x * blockIdx.x + threadIdx.x;
+		if (t >= n_threads)
+		{
+			return;
+		}
+
+		assert(n_threads == dst.width * dst.height);
+
+		auto xy = gpuf::get_thread_xy(dst, t);
+
+		gpuf::corner_at(grad_xy_src, dst, xy.x, xy.y);
+	}
+}
+
+
+namespace libimage
+{
+	void corners(View1r32 const& src, View2r32 const& temp, View1r32 const& dst)
+	{
+		assert(verify(src, dst));
+		assert(verify(src, temp));	
+
+		auto const width = src.width;
+		auto const height = src.height;
+
+		auto const n_threads = width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
+
+		cuda_launch_kernel(gpu::gradients_xy, n_blocks, block_size, src, temp, n_threads);
+
+		auto result = cuda::launch_success("gpu::gradients_xy - corners");
+		assert(result);
+
+		cuda_launch_kernel(gpu::corners, n_blocks, block_size, temp, dst, n_threads);
+
+		result = cuda::launch_success("gpu::corners");
 		assert(result);
 	}
 }

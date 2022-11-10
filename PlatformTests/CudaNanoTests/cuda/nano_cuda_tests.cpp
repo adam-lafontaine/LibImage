@@ -100,6 +100,7 @@ void contrast_test();
 void blur_test();
 void gradients_test();
 void edges_test();
+void corners_test();
 
 
 int main()
@@ -128,6 +129,7 @@ int main()
 	blur_test();
 	gradients_test();
 	edges_test();
+	corners_test();
 
 
     auto time = sw.get_time_milli();
@@ -1137,6 +1139,45 @@ void edges_test()
 	write_image(vette_img, "edges_y.bmp");
 
 	img::destroy_image(vette_img);
+	d_buffer.free();
+	h_buffer.free();
+}
+
+
+void corners_test()
+{
+	auto title = "corners_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH + title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
+
+	GrayImage chess_img;
+	img::read_image_from_file(CHESS_PATH, chess_img);
+	auto chess = img::make_view(chess_img);
+	auto width = chess.width;
+	auto height = chess.height;
+
+	img::DeviceBuffer32 d_buffer(width * height * 4, cuda::Malloc::Device);
+	img::HostBuffer32 h_buffer(width * height);
+
+	img::View1r32 src1;
+	img::make_view(src1, width, height, d_buffer);
+
+	img::View1r32 dst1;
+	img::make_view(dst1, width, height, d_buffer);
+
+	img::View2r32 temp2;
+	img::make_view(temp2, width, height, d_buffer);
+
+	img::map(chess, src1, h_buffer);
+
+	img::corners(src1, temp2, dst1);
+
+	img::map(dst1, chess, h_buffer);
+	write_image(chess_img, "corners.bmp");
+
+	img::destroy_image(chess_img);
 	d_buffer.free();
 	h_buffer.free();
 }

@@ -1334,9 +1334,6 @@ void corners_test()
 	img::map(dst1, chess);
 	write_image(chess, "corners.bmp");
 
-
-
-
 	img::destroy_image(chess);
 	buffer.free();
 }
