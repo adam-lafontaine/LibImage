@@ -99,6 +99,7 @@ void threshold_test();
 void contrast_test();
 void blur_test();
 void gradients_test();
+void edges_test();
 
 
 int main()
@@ -126,6 +127,7 @@ int main()
 	contrast_test();
 	blur_test();
 	gradients_test();
+	edges_test();
 
 
     auto time = sw.get_time_milli();
@@ -1085,6 +1087,54 @@ void gradients_test()
 
 	img::map(img::select_channel(xy_dst, img::XY::Y), vette, h_buffer, -1.0f, 1.0f);
 	write_image(vette_img, "gradients_y.bmp");
+
+	img::destroy_image(vette_img);
+	d_buffer.free();
+	h_buffer.free();
+}
+
+
+void edges_test()
+{
+	auto title = "edges_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH + title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
+
+	GrayImage vette_img;
+	img::read_image_from_file(CORVETTE_PATH, vette_img);
+	auto vette = img::make_view(vette_img);
+	auto width = vette.width;
+	auto height = vette.height;
+
+	img::DeviceBuffer32 d_buffer(width * height * 4, cuda::Malloc::Device);
+	img::HostBuffer32 h_buffer(width * height);
+
+	img::View1r32 src;
+	img::make_view(src, width, height, d_buffer);
+
+	img::View1r32 dst;
+	img::make_view(dst, width, height, d_buffer);
+
+	img::map(vette, src, h_buffer);
+
+	img::edges(src, dst, 0.2f);
+
+	img::map(dst, vette, h_buffer);
+
+	write_image(vette_img, "edges.bmp");
+
+	img::View2r32 xy_dst;
+	img::make_view(xy_dst, width, height, d_buffer);
+
+	img::edges_xy(src, xy_dst, 0.2f);
+
+	img::map(img::select_channel(xy_dst, img::XY::X), vette, h_buffer);
+	write_image(vette_img, "edges_x.bmp");
+
+	img::map(img::select_channel(xy_dst, img::XY::Y), vette, h_buffer);
+	write_image(vette_img, "edges_y.bmp");
 
 	img::destroy_image(vette_img);
 	d_buffer.free();

@@ -3053,8 +3053,8 @@ namespace libimage
 
 	void edges_xy(View1r32 const& src, View2r32 const& xy_dst, r32 threshold)
 	{
-		auto x_dst = select_channel(xy_dst, 0);
-		auto y_dst = select_channel(xy_dst, 1);
+		auto x_dst = select_channel(xy_dst, XY::X);
+		auto y_dst = select_channel(xy_dst, XY::Y);
 
 		assert(verify(src, x_dst));
 		assert(verify(src, y_dst));
