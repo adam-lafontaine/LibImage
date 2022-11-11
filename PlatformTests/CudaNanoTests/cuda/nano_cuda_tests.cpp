@@ -101,6 +101,7 @@ void blur_test();
 void gradients_test();
 void edges_test();
 void corners_test();
+void rotate_test();
 
 
 int main()
@@ -130,6 +131,7 @@ int main()
 	gradients_test();
 	edges_test();
 	//corners_test();
+	rotate_test();
 
 
     auto time = sw.get_time_milli();
@@ -1178,6 +1180,68 @@ void corners_test()
 	write_image(chess_img, "corners.bmp");
 
 	img::destroy_image(chess_img);
+	d_buffer.free();
+	h_buffer.free();
+}
+
+
+void rotate_test()
+{
+	auto title = "rotate_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH + title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
+
+	GrayImage vette_img;
+	img::read_image_from_file(CORVETTE_PATH, vette_img);
+	auto vette = img::make_view(vette_img);
+	auto width = vette.width;
+	auto height = vette.height;
+
+	img::DeviceBuffer32 d_buffer(width * height * 6, cuda::Malloc::Device);
+	img::HostBuffer32 h_buffer(width * height * 3);
+
+	img::View1r32 src;
+	img::make_view(src, width, height, d_buffer);
+
+	img::View1r32 dst;
+	img::make_view(dst, width, height, d_buffer);
+
+	img::map(vette, src, h_buffer);
+
+	Point2Du32 origin = { width / 2, height / 2 };
+	r32 theta = 0.6f * 2 * 3.14159f;
+
+	img::rotate(src, dst, origin, theta);
+	
+	img::map(dst, vette, h_buffer);
+	write_image(vette_img, "rotate1.bmp");
+
+	d_buffer.reset();
+
+	Image caddy_img;
+	img::read_image_from_file(CADILLAC_PATH, caddy_img);
+	auto caddy = img::make_view(caddy_img);
+	width = caddy.width;
+	height = caddy.height;
+
+	img::View3r32 src3;
+	img::make_view(src3, width, height, d_buffer);
+
+	img::map_rgb(caddy, src3, h_buffer);
+
+	img::View3r32 dst3;
+	img::make_view(dst3, width, height, d_buffer);
+
+	img::rotate(src3, dst3, origin, theta);
+
+	img::map_rgb(dst3, caddy, h_buffer);
+
+	write_image(caddy_img, "rotate3.bmp");
+
+	img::destroy_image(vette_img);
+	img::destroy_image(caddy_img);
 	d_buffer.free();
 	h_buffer.free();
 }
