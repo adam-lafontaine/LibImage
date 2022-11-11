@@ -16,7 +16,7 @@
 //#define LIBIMAGE_NO_CPP17
 
 //#define RPI_3B_PLUS
-#define JETSON_NANO
+//#define JETSON_NANO
 
 
 #ifdef RPI_3B_PLUS
