@@ -789,7 +789,7 @@ namespace libimage
 
 namespace libimage
 {
-	void overlay(View3r32 const& src, View1r32 const& binary, Pixel color, View3r32 const& dst);
+	void overlay(ViewRGBr32 const& src, View1r32 const& binary, Pixel color, ViewRGBr32 const& dst);
 
 	void overlay(View1r32 const& src, View1r32 const& binary, u8 gray, View1r32 const& dst);
 }

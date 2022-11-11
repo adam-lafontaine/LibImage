@@ -102,6 +102,7 @@ void gradients_test();
 void edges_test();
 void corners_test();
 void rotate_test();
+void overlay_test();
 
 
 int main()
@@ -132,6 +133,7 @@ int main()
 	edges_test();
 	//corners_test();
 	rotate_test();
+	overlay_test();
 
 
     auto time = sw.get_time_milli();
@@ -1242,6 +1244,77 @@ void rotate_test()
 
 	img::destroy_image(vette_img);
 	img::destroy_image(caddy_img);
+	d_buffer.free();
+	h_buffer.free();
+}
+
+
+void overlay_test()
+{
+	auto title = "overlay_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH + title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
+
+	Image vette_img;
+	img::read_image_from_file(CORVETTE_PATH, vette_img);
+	auto vette = img::make_view(vette_img);
+	auto width = vette.width;
+	auto height = vette.height;
+
+	GrayImage gr_caddy_img;
+	img::read_image_from_file(CADILLAC_PATH, gr_caddy_img);
+	auto gr_caddy = img::make_view(gr_caddy_img);
+
+	img::DeviceBuffer32 d_buffer(width * height * 5, cuda::Malloc::Device);
+	img::HostBuffer32 h_buffer(width * height * 4);
+
+	img::View3r32 view3;
+	img::make_view(view3, width, height, d_buffer);
+	img::map_rgb(vette, view3, h_buffer);
+
+	img::View1r32 view1;
+	img::make_view(view1, gr_caddy.width, gr_caddy.height, d_buffer);
+	img::map(gr_caddy, view1, h_buffer);
+
+	img::View1r32 binary;
+	img::make_view(binary, width / 2, height / 2, d_buffer);
+	img::fill(binary, -1.0f);
+
+	Range2Du32 r{};
+	r.x_begin = 0;
+	r.x_end = binary.width;
+	r.y_begin = 0;
+	r.y_end = 5;
+	img::fill(img::sub_view(binary, r), 1.0f);
+	r.y_begin = binary.height - 5;
+	r.y_end = binary.height;
+	img::fill(img::sub_view(binary, r), 1.0f);
+	r.y_begin = 0;
+	r.x_end = 5;
+	img::fill(img::sub_view(binary, r), 1.0f);
+	r.x_begin = binary.width - 5;
+	r.x_end = binary.width;
+	img::fill(img::sub_view(binary, r), 1.0f);
+
+	r.x_begin = width / 4;
+	r.x_end = r.x_begin + binary.width;
+	r.y_begin = height / 4;
+	r.y_end = r.y_begin + binary.height;
+
+	auto sub3 = img::sub_view(view3, r);
+	img::overlay(sub3, binary, img::to_pixel(0, 255, 0), sub3);
+	img::map_rgb(view3, vette, h_buffer);
+	write_image(vette_img, "overlay.bmp");
+
+	auto sub1 = img::sub_view(view1, r);
+	img::overlay(sub1, binary, 255, sub1);
+	img::map(view1, gr_caddy, h_buffer);
+	write_image(gr_caddy_img, "overlay_gray.bmp");
+
+	img::destroy_image(vette_img);
+	img::destroy_image(gr_caddy_img);
 	d_buffer.free();
 	h_buffer.free();
 }

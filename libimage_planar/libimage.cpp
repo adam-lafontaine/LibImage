@@ -3283,25 +3283,46 @@ namespace libimage
 
 namespace libimage
 {
-	void overlay(View3r32 const& src, View1r32 const& binary, Pixel color, View3r32 const& dst)
+	void overlay(ViewRGBr32 const& src, View1r32 const& binary, Pixel color, View3r32 const& dst)
 	{
 		assert(verify(src, binary));
 		assert(verify(src, dst));
 
+		constexpr auto R = id_cast(RGB::R);
+		constexpr auto G = id_cast(RGB::G);
+		constexpr auto B = id_cast(RGB::B);
+
 		auto const row_func = [&](u32 y) 
 		{
-			auto b = row_begin(binary, y);
+			auto bin = row_begin(binary, y);
 
-			for (u32 ch = 0; ch < 3; ++ch)
+			auto sr = channel_row_begin(src, y, R);
+			auto sg = channel_row_begin(src, y, G);
+			auto sb = channel_row_begin(src, y, B);
+
+			auto dr = channel_row_begin(dst, y, R);
+			auto dg = channel_row_begin(dst, y, G);
+			auto db = channel_row_begin(dst, y, B);
+
+			auto r = to_channel_r32(color.channels[R]);
+			auto g = to_channel_r32(color.channels[G]);
+			auto b = to_channel_r32(color.channels[B]);
+
+			for (u32 x = 0; x < src.width; ++x)
 			{
-				auto s = channel_row_begin(src, y, ch);
-				auto d = channel_row_begin(dst, y, ch);
-				auto c = to_channel_r32(color.channels[ch]);
-				for (u32 x = 0; x < src.width; ++x)
+				if(bin[x] > 0.0f)
 				{
-					d[x] = b[x] > 0.0f ? c : s[x];
+					dr[x] = r;
+					dg[x] = g;
+					db[x] = b;
 				}
-			}			
+				else
+				{
+					dr[x] = sr[x];
+					dg[x] = sg[x];
+					db[x] = sb[x];
+				}
+			}		
 		};
 
 		process_rows(src.height, row_func);

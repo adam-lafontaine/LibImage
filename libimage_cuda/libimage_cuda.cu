@@ -147,6 +147,18 @@ namespace libimage
 
 		return rgba32;
 	}
+
+
+	static RGBr32 to_RGBr32(Pixel const& p)
+	{
+		RGBr32 rgb32 {};
+
+		rgb32.red = to_channel_r32(p.rgba.red);
+		rgb32.green = to_channel_r32(p.rgba.green);
+		rgb32.blue = to_channel_r32(p.rgba.blue);
+
+		return rgb32;
+	}
 }
 
 
@@ -2086,6 +2098,121 @@ namespace libimage
 		cuda_launch_kernel(gpu::rotate_1, n_blocks, block_size, src, dst, origin, radians, n_threads);
 
 		auto result = cuda::launch_success("gpu::rotate_1");
+		assert(result);
+	}
+}
+
+
+/* overlay */
+
+namespace gpuf
+{
+	GPU_FUNCTION
+	static void overlay_at(View1r32 const& src, View1r32 const& binary, r32 val, View1r32 const& dst, u32 x, u32 y)
+	{
+		auto& s = *gpuf::xy_at(src, x, y);
+		auto& b = *gpuf::xy_at(binary, x, y);
+		auto& d = *gpuf::xy_at(dst, x, y);
+
+		d = b > 0.0f ? val : s;
+	}
+}
+
+
+namespace gpu
+{
+	GPU_KERNAL
+	static void overlay_1(View1r32 src, View1r32 binary, r32 val, View1r32 dst, u32 n_threads)
+	{
+		auto t = blockDim.x * blockIdx.x + threadIdx.x;
+		if (t >= n_threads)
+		{
+			return;
+		}
+
+		assert(n_threads == src.width * src.height);
+
+		auto xy = gpuf::get_thread_xy(src, t);
+
+		gpuf::overlay_at(src, binary, val, dst, xy.x, xy.y);
+	}
+
+
+	GPU_KERNAL
+	static void overlay_3(ViewRGBr32 src, View1r32 binary, RGBr32 color, ViewRGBr32 dst, u32 n_threads)
+	{
+		auto t = blockDim.x * blockIdx.x + threadIdx.x;
+		if (t >= n_threads)
+		{
+			return;
+		}
+
+		assert(n_threads == 3 * src.width * src.height);
+
+		constexpr auto R = (u32)gpuf::id_cast(RGB::R);
+		constexpr auto G = (u32)gpuf::id_cast(RGB::G);
+		constexpr auto B = (u32)gpuf::id_cast(RGB::B);
+
+		auto cxy = gpuf::get_thread_channel_xy(src, t);
+		r32 val = 0.0f;
+
+		switch (cxy.ch)
+		{
+			case R:
+				val = color.red;
+				break;
+			case G:
+				val = color.green;
+				break;
+			case B:
+				val = color.blue;
+				break;		
+			default:
+				break;
+		}
+
+		auto src_ch = gpuf::select_channel(src, cxy.ch);
+		auto dst_ch = gpuf::select_channel(dst, cxy.ch);
+
+		gpuf::overlay_at(src_ch, binary, val, dst_ch, cxy.x, cxy.y);
+	}
+}
+
+
+namespace libimage
+{
+	void overlay(ViewRGBr32 const& src, View1r32 const& binary, Pixel color, ViewRGBr32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		auto const width = src.width;
+		auto const height = src.height;
+
+		auto const n_threads = 3 * width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
+
+		cuda_launch_kernel(gpu::overlay_3, n_blocks, block_size, src, binary, to_RGBr32(color), dst, n_threads);
+
+		auto result = cuda::launch_success("gpu::overlay_3");
+		assert(result);
+	}
+
+
+	void overlay(View1r32 const& src, View1r32 const& binary, u8 gray, View1r32 const& dst)
+	{
+		assert(verify(src, dst));
+
+		auto const width = src.width;
+		auto const height = src.height;
+
+		auto const n_threads = width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
+
+		cuda_launch_kernel(gpu::overlay_1, n_blocks, block_size, src, binary, to_channel_r32(gray), dst, n_threads);
+
+		auto result = cuda::launch_success("gpu::overlay_1");
 		assert(result);
 	}
 }
