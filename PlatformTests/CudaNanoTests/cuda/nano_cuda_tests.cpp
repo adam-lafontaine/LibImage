@@ -129,7 +129,7 @@ int main()
 	blur_test();
 	gradients_test();
 	edges_test();
-	corners_test();
+	//corners_test();
 
 
     auto time = sw.get_time_milli();

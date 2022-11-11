@@ -1832,6 +1832,14 @@ namespace gpuf
 	GPU_FUNCTION
 	static void corner_at(View2r32 const& grad_xy_src, View1r32 const& dst, u32 x, u32 y)
 	{
+		auto& d = *gpuf::xy_at(dst, x, y);
+
+		if (gpuf::is_outer_edge(dst.width, dst.height, x, y))
+		{
+			d = 0.0f;
+			return;
+		}
+
 		constexpr int ry_begin = -4;
 		constexpr int ry_end = 5;
 		constexpr int rx_begin = -4;
@@ -1842,7 +1850,7 @@ namespace gpuf
 
 		constexpr auto norm = (rx_end - rx_begin) * (ry_end - ry_begin);
 
-		auto const lamda_min = 0.3f; // TODO: param
+		constexpr auto lambda_min = 0.3f; // TODO: param
 
 		auto const src_x = gpuf::select_channel(grad_xy_src, X);
 		auto const src_y = gpuf::select_channel(grad_xy_src, Y);
@@ -1851,6 +1859,9 @@ namespace gpuf
 		r32 b = 0.0f;
 		r32 c = 0.0f;
 
+		r32 x_grad = 0.0f;
+		r32 y_grad = 0.0f;
+
 		for (int ry = ry_begin; ry < ry_end; ++ry)
 		{
 			auto sx = gpuf::row_offset_begin(src_x, y, ry);
@@ -1858,8 +1869,8 @@ namespace gpuf
 
 			for (int rx = rx_begin; rx < rx_end; ++rx)
 			{
-				auto x_grad = (sx + rx)[x];
-				auto y_grad = (sy + rx)[x];
+				x_grad = (sx + rx)[x];
+				y_grad = (sy + rx)[x];
 
 				a += fabsf(x_grad);
 				c += fabsf(y_grad);
@@ -1871,17 +1882,17 @@ namespace gpuf
 			}			
 		}
 
+		// too much for the nano
+
 		a /= norm;
 		b /= norm;
 		c /= norm;
 
-		auto bac = std::sqrt(b * b + (a - c) * (a - c));
-		auto lamda1 = 0.5f * (a + c + bac);
-		auto lamda2 = 0.5f * (a + c - bac);
+		auto bac = sqrtf(b * b + (a - c) * (a - c));
+		auto lambda1 = 0.5f * (a + c + bac);
+		auto lambda2 = 0.5f * (a + c - bac);
 
-		auto& d = *gpuf::xy_at(dst, x, y);
-
-		d = (lamda1 <= lamda_min || lamda2 <= lamda_min) ? 0.0f : (lamda1 > lamda2 ? lamda1 : lamda2);
+		d = (lambda1 <= lambda_min || lambda2 <= lambda_min) ? 0.0f : fmaxf(lambda1, lambda2);
 	}
 }
 
