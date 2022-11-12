@@ -244,48 +244,6 @@ namespace gpuf
 
 
 	GPU_FUNCTION
-	static PixelRGBr32 rgb_row_begin(ViewRGBr32 const& view, u32 y)
-	{
-		constexpr auto R = gpuf::id_cast(RGB::R);
-		constexpr auto G = gpuf::id_cast(RGB::G);
-		constexpr auto B = gpuf::id_cast(RGB::B);
-
-		assert(y < view.height);
-
-		auto offset = (view.y_begin + y) * view.image_width + view.x_begin;
-
-		PixelRGBr32 p{};
-
-		p.rgb.R = view.image_channel_data[R] + offset;
-		p.rgb.G = view.image_channel_data[G] + offset;
-		p.rgb.B = view.image_channel_data[B] + offset;
-
-		return p;
-	}
-
-
-	GPU_FUNCTION
-	static PixelHSVr32 hsv_row_begin(ViewHSVr32 const& view, u32 y)
-	{
-		constexpr auto H = gpuf::id_cast(HSV::H);
-		constexpr auto S = gpuf::id_cast(HSV::S);
-		constexpr auto V = gpuf::id_cast(HSV::V);
-
-		assert(y < view.height);
-
-		auto offset = (view.y_begin + y) * view.image_width + view.x_begin;
-
-		PixelHSVr32 p{};
-
-		p.hsv.H = view.image_channel_data[H] + offset;
-		p.hsv.S = view.image_channel_data[S] + offset;
-		p.hsv.V = view.image_channel_data[V] + offset;
-
-		return p;
-	}
-
-
-	GPU_FUNCTION
 	static r32* row_offset_begin(View1r32 const& view, u32 y, int y_offset)
 	{
 		int y_eff = y + y_offset;
@@ -355,27 +313,6 @@ namespace gpuf
 		}
 
 		return p;
-	}
-
-
-	GPU_FUNCTION
-	static Pixel4r32 xy_at(View4r32 const& view, u32 x, u32 y)
-	{
-		return gpuf::xy_at_n(view, x, y);
-	}
-
-
-	GPU_FUNCTION
-	static Pixel3r32 xy_at(View3r32 const& view, u32 x, u32 y)
-	{
-		return gpuf::xy_at_n(view, x, y);
-	}
-
-
-	GPU_FUNCTION
-	static Pixel2r32 xy_at(View2r32 const& view, u32 x, u32 y)
-	{
-		return gpuf::xy_at_n(view, x, y);
 	}
 
 
@@ -479,6 +416,7 @@ namespace gpuf
 
 		return p;
 	}
+	
 }
 
 
