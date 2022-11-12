@@ -103,6 +103,7 @@ void edges_test();
 void corners_test();
 void rotate_test();
 void overlay_test();
+void scale_down_test();
 
 
 int main()
@@ -134,6 +135,7 @@ int main()
 	//corners_test();
 	rotate_test();
 	overlay_test();
+	scale_down_test();
 
 
     auto time = sw.get_time_milli();
@@ -1315,6 +1317,73 @@ void overlay_test()
 
 	img::destroy_image(vette_img);
 	img::destroy_image(gr_caddy_img);
+	d_buffer.free();
+	h_buffer.free();
+}
+
+
+void scale_down_test()
+{
+	auto title = "scale_down_test";
+	printf("\n%s:\n", title);
+	auto out_dir = IMAGE_OUT_PATH + title;
+	empty_dir(out_dir);
+	auto const write_image = [&out_dir](auto const& image, const char* name) { img::write_image(image, out_dir + name); };
+
+	Image image;
+	img::read_image_from_file(CHESS_PATH, image);
+	auto chess = img::make_view(image);
+	auto width = image.width;
+	auto height = image.height;
+
+	img::DeviceBuffer32 d_buffer(width * height * 5, cuda::Malloc::Device);
+	img::HostBuffer32 h_buffer(width * height * 3);
+
+	img::View3r32 src3;
+	img::make_view(src3, width, height, d_buffer);
+	img::map_rgb(chess, src3, h_buffer);
+
+	auto scaled3 = img::scale_down(src3, d_buffer);
+
+	Range2Du32 r{};
+	r.x_begin = src3.width / 4;
+	r.x_end = r.x_begin + scaled3.width;
+	r.y_begin = src3.height / 4;
+	r.y_end = r.y_begin + scaled3.height;
+
+	auto view3 = img::sub_view(src3, r);
+	img::copy(scaled3, view3);
+
+	img::map_rgb(src3, chess, h_buffer);	
+	write_image(image, "scale_down3.bmp");
+
+	GrayImage gray;
+	img::read_image_from_file(CHESS_PATH, gray);
+	auto gr_chess = img::make_view(gray);
+	width = gray.width;
+	height = gray.height;
+
+	d_buffer.reset();
+
+	img::View1r32 src1;
+	img::make_view(src1, width, height, d_buffer);
+	img::map(gr_chess, src1, h_buffer);
+
+	auto scaled1 = img::scale_down(src1, d_buffer);
+
+	r.x_begin = src3.width / 4;
+	r.x_end = r.x_begin + scaled3.width;
+	r.y_begin = src3.height / 4;
+	r.y_end = r.y_begin + scaled3.height;
+
+	auto view1 = img::sub_view(src1, r);
+	img::copy(scaled1, view1);
+
+	img::map(src1, gr_chess, h_buffer);
+	write_image(gray, "scale_down1.bmp");
+
+	img::destroy_image(image);
+	img::destroy_image(gray);
 	d_buffer.free();
 	h_buffer.free();
 }

@@ -2216,3 +2216,115 @@ namespace libimage
 		assert(result);
 	}
 }
+
+
+/* scale_down */
+
+namespace gpuf
+{
+	GPU_FUNCTION
+	static void scale_down_at(View1r32 const& src, View1r32 const& dst, u32 x, u32 y)
+	{
+		auto& d = *gpuf::xy_at(dst, x, y);
+
+		auto xs = 2 * x;
+		auto ys = 2 * y;
+
+		auto s1 = *gpuf::xy_at(src, xs, ys);
+		auto s2 = *gpuf::xy_at(src, xs + 1, ys);
+		auto s3 = *gpuf::xy_at(src, xs, ys + 1);
+		auto s4 = *gpuf::xy_at(src, xs + 1, ys + 1);
+
+		d = 0.25f * (s1 + s2 + s3 + s4);
+	}
+}
+
+
+namespace gpu
+{
+	GPU_KERNAL
+	static void scale_down_1(View1r32 src, View1r32 dst, u32 n_threads)
+	{
+		auto t = blockDim.x * blockIdx.x + threadIdx.x;
+		if (t >= n_threads)
+		{
+			return;
+		}
+
+		assert(n_threads == dst.width * dst.height);
+
+		auto xy = gpuf::get_thread_xy(dst, t);
+
+		gpuf::scale_down_at(src, dst, xy.x, xy.y);
+	}
+
+
+	template <size_t N>
+	GPU_KERNAL
+	static void scale_down_n(ViewCHr32<N> src, ViewCHr32<N> dst, u32 n_threads)
+	{
+		auto t = blockDim.x * blockIdx.x + threadIdx.x;
+		if (t >= n_threads)
+		{
+			return;
+		}
+
+		assert(n_threads == N * dst.width * dst.height);
+
+		auto cxy = gpuf::get_thread_channel_xy(dst, t);
+
+		auto src_ch = gpuf::select_channel(src, cxy.ch);
+		auto dst_ch = gpuf::select_channel(dst, cxy.ch);
+
+		gpuf::scale_down_at(src_ch, dst_ch, cxy.x, cxy.y);
+	}
+}
+
+
+namespace libimage
+{
+	View3r32 scale_down(View3r32 const& src, DeviceBuffer32& buffer)
+	{
+		assert(verify(src));
+
+		auto const width = src.width / 2;
+		auto const height = src.height / 2;
+
+		View3r32 dst;
+		make_view(dst, width, height, buffer);
+
+		auto const n_threads = 3 * width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
+
+		cuda_launch_kernel(gpu::scale_down_n, n_blocks, block_size, src, dst, n_threads);
+
+		auto result = cuda::launch_success("gpu::scale_down_3");
+		assert(result);
+
+		return dst;
+	}
+
+
+	View1r32 scale_down(View1r32 const& src, DeviceBuffer32& buffer)
+	{
+		assert(verify(src));
+
+		auto const width = src.width / 2;
+		auto const height = src.height / 2;
+
+		View1r32 dst;
+		make_view(dst, width, height, buffer);
+
+		auto const n_threads = width * height;
+		auto const n_blocks = calc_thread_blocks(n_threads);
+		constexpr auto block_size = THREADS_PER_BLOCK;
+
+		cuda_launch_kernel(gpu::scale_down_1, n_blocks, block_size, src, dst, n_threads);
+
+		auto result = cuda::launch_success("gpu::scale_down_1");
+		assert(result);
+
+		return dst;
+	}
+}
