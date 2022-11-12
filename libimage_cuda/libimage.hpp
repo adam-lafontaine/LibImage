@@ -1,6 +1,6 @@
 #pragma once
 
-#include "defines.hpp"
+#include "./device/device.hpp"
 
 #include <functional>
 #include <array>
@@ -39,6 +39,14 @@ namespace libimage
 		r32* H;
 		r32* S;
 		r32* V;
+	};
+
+
+	class GAr32p
+	{
+	public:
+		r32* G;
+		r32* A;
 	};
 
 
@@ -309,6 +317,8 @@ namespace libimage
 
 	using ViewHSVr32 = View3r32;
 
+	using ViewGAr32 = View2r32;
+
 
 	ViewRGBr32 make_rgb_view(ViewRGBAr32 const& image);
 
@@ -342,11 +352,13 @@ namespace libimage
 			r32* channels[4] = {};
 		};
 
-		// for_each_xy
+		// undefined in device code
+		/*
 		r32& red() { return *rgba.R; }
 		r32& green() { return *rgba.G; }
 		r32& blue() { return *rgba.B; }
 		r32& alpha() { return *rgba.A; }
+		*/
 	};
 
 
@@ -362,11 +374,13 @@ namespace libimage
 
 			r32* channels[3] = {};
 		};
-
-		// for_each_xy
+		
+		// undefined in device code
+		/*
 		r32& red() { return *rgb.R; }
 		r32& green() { return *rgb.G; }
 		r32& blue() { return *rgb.B; }
+		*/
 	};
 
 
@@ -383,13 +397,28 @@ namespace libimage
 			r32* channels[3] = {};
 		};
 
+		// undefined in device code
+		/*
 		r32& hue() { return *hsv.H; }
 		r32& sat() { return *hsv.S; }
 		r32& val() { return *hsv.V; }
+		*/
+	};
 
-		/*r32 hue() const { return *hsv.H; }
-		r32 sat() const { return *hsv.S; }
-		r32 val() const { return *hsv.V; }*/
+
+	class PixelGAr32
+	{
+	public:
+
+		static constexpr u32 n_channels = 2;
+
+		union 
+		{
+			GAr32p ga;
+
+			r32* channels[2];
+		};
+		
 	};
 }
 
@@ -436,83 +465,26 @@ namespace libimage
 
 namespace libimage
 {	
-	using Buffer32 = MemoryBuffer<r32>;
+	using DeviceBuffer32 = cuda::DeviceBuffer<r32>;
+	using HostBuffer32 = MemoryBuffer<r32>;
 
 
-	void make_view(View4r32& view, u32 width, u32 height, Buffer32& buffer);
+	void make_view(View4r32& view, u32 width, u32 height, HostBuffer32& buffer);
 
-	void make_view(View3r32& view, u32 width, u32 height, Buffer32& buffer);
+	void make_view(View3r32& view, u32 width, u32 height, HostBuffer32& buffer);
 
-	void make_view(View2r32& view, u32 width, u32 height, Buffer32& buffer);
+	void make_view(View2r32& view, u32 width, u32 height, HostBuffer32& buffer);
 
-	void make_view(View1r32& view, u32 width, u32 height, Buffer32& buffer);	
-}
-
-
-/* map */
-
-namespace libimage
-{
-	void map(View1r32 const& src, gray::Image const& dst);
-
-	void map(gray::Image const& src, View1r32 const& dst);
+	void make_view(View1r32& view, u32 width, u32 height, HostBuffer32& buffer);
 
 
-	void map(View1r32 const& src, gray::View const& dst);
+	void make_view(View4r32& view, u32 width, u32 height, DeviceBuffer32& buffer);
 
-	void map(gray::View const& src, View1r32 const& dst);
+	void make_view(View3r32& view, u32 width, u32 height, DeviceBuffer32& buffer);
 
+	void make_view(View2r32& view, u32 width, u32 height, DeviceBuffer32& buffer);
 
-	void map(View1r32 const& src, gray::Image const& dst, r32 gray_min, r32 gray_max);
-
-	void map(gray::Image const& src, View1r32 const& dst, r32 gray_min, r32 gray_max);
-
-
-	void map(View1r32 const& src, gray::View const& dst, r32 gray_min, r32 gray_max);
-
-	void map(gray::View const& src, View1r32 const& dst, r32 gray_min, r32 gray_max);
-}
-
-
-/* map_rgb */
-
-namespace libimage
-{
-	void map_rgb(ViewRGBAr32 const& src, Image const& dst);
-
-	void map_rgb(Image const& src, ViewRGBAr32 const& dst);
-
-
-	void map_rgb(ViewRGBAr32 const& src, View const& dst);
-
-	void map_rgb(View const& src, ViewRGBAr32 const& dst);
-
-
-	void map_rgb(ViewRGBr32 const& src, Image const& dst);
-
-	void map_rgb(Image const& src, ViewRGBr32 const& dst);
-
-
-	void map_rgb(ViewRGBr32 const& src, View const& dst);
-
-	void map_rgb(View const& src, ViewRGBr32 const& dst);
-}
-
-
-/* map_hsv */
-
-namespace libimage
-{
-	void map_hsv(ViewHSVr32 const& src, Image const& dst);
-
-	void map_hsv(Image const& src, ViewHSVr32 const& dst);
-
-	void map_hsv(ViewHSVr32 const& src, View const& dst);
-
-	void map_hsv(View const& src, ViewHSVr32 const& dst);
-
-
-	void map_hsv(ViewRGBr32 const& src, ViewHSVr32 const& dst);
+	void make_view(View1r32& view, u32 width, u32 height, DeviceBuffer32& buffer);
 }
 
 
@@ -530,21 +502,94 @@ namespace libimage
 }
 
 
+/* map */
+
+namespace libimage
+{
+	void map(View1r32 const& device_src, gray::View const& host_dst, HostBuffer32& host_buffer);
+
+	void map(gray::View const& host_src, View1r32 const& device_dst, HostBuffer32& host_buffer);
+
+	void map(View1r32 const& device_src, gray::View const& host_dst, HostBuffer32& host_buffer, r32 gray_min, r32 gray_max);
+
+	void map(gray::View const& host_src, View1r32 const& device_dst, HostBuffer32& host_buffer, r32 gray_min, r32 gray_max);
+}
+
+
+/* map_rgb */
+
+namespace libimage
+{
+	void map_rgb(ViewRGBAr32 const& device_src, View const& host_dst, HostBuffer32& host_buffer);
+
+	void map_rgb(View const& host_src, ViewRGBAr32 const& device_dst, HostBuffer32& host_buffer);
+
+
+	void map_rgb(ViewRGBr32 const& device_src, View const& host_dst, HostBuffer32& host_buffer);
+
+	void map_rgb(View const& host_src, ViewRGBr32 const& device_dst, HostBuffer32& host_buffer);
+}
+
+
+/* map_hsv */
+
+namespace libimage
+{
+	void map_rgb_hsv(ViewRGBr32 const& src, ViewHSVr32 const& dst);
+
+	void map_hsv_rgb(ViewHSVr32 const& src, ViewRGBr32 const& dst);
+
+
+	void map_rgb_hsv(View3r32 const& view);
+
+	void map_hsv_rgb(View3r32 const& view);
+
+
+	void map_rgb_hsv(View const& host_src, ViewHSVr32 const& device_dst, HostBuffer32& host_buffer);
+
+	void map_hsv_rgb(ViewHSVr32 const& device_src, View const& host_dst, HostBuffer32& host_buffer);
+}
+
+
+/* for_each_pixel */
+
+namespace libimage
+{
+	using u8_f = std::function<void(u8& p)>;
+
+	using r32_f = std::function<void(r32& p)>;
+	
+
+	//void for_each_pixel(View const& image, u8_f const& func);
+
+	void for_each_pixel(gray::View const& image, u8_f const& func);
+}
+
+
+/* for_each_xy */
+
+namespace libimage
+{
+	using xy_f = std::function<void(u32 x, u32 y)>;
+	
+
+	void for_each_xy(View const& view, xy_f const& func);
+
+	void for_each_xy(gray::View const& view, xy_f const& func);
+}
+
+
 /* fill */
 
 namespace libimage
 {
-	void fill(Image const& image, Pixel color);
-
 	void fill(View const& view, Pixel color);
-
-	void fill(gray::Image const& image, u8 gray);
 
 	void fill(gray::View const& view, u8 gray);
 
-	void fill(View4r32 const& view, Pixel color);
+	void fill(ViewRGBAr32 const& view, Pixel color);
 
-	void fill(View3r32 const& view, Pixel color);
+	void fill(ViewRGBr32 const& view, Pixel color);
 
 	void fill(View1r32 const& view, r32 gray32);
 
@@ -556,21 +601,8 @@ namespace libimage
 
 namespace libimage
 {
-	void copy(Image const& src, Image const& dst);
-
-	void copy(Image const& src, View const& dst);
-
-	void copy(View const& src, Image const& dst);
-
 	void copy(View const& src, View const& dst);
-
-
-	void copy(gray::Image const& src, gray::Image const& dst);
-
-	void copy(gray::Image const& src, gray::View const& dst);
-
-	void copy(gray::View const& src, gray::Image const& dst);
-
+	
 	void copy(gray::View const& src, gray::View const& dst);
 
 
@@ -584,49 +616,11 @@ namespace libimage
 }
 
 
-/* for_each_pixel */
+/* multiply */
 
 namespace libimage
 {
-	using u8_f = std::function<void(u8& p)>;
-
-	using r32_f = std::function<void(r32& p)>;
-
-
-	void for_each_pixel(gray::Image const& image, u8_f const& func);
-
-	void for_each_pixel(gray::View const& image, u8_f const& func);
-
-
-	void for_each_pixel(View1r32 const& image, r32_f const& func);
-
-}
-
-
-/* for_each_xy */
-
-namespace libimage
-{
-	using xy_f = std::function<void(u32 x, u32 y)>;
-
-
-	void for_each_xy(Image const& image, xy_f const& func);
-
-	void for_each_xy(View const& view, xy_f const& func);
-
-
-	void for_each_xy(gray::Image const& image, xy_f const& func);
-
-	void for_each_xy(gray::View const& view, xy_f const& func);
-
-
-	void for_each_xy(View4r32 const& view, xy_f const& func);
-
-	void for_each_xy(View3r32 const& view, xy_f const& func);
-
-	void for_each_xy(View2r32 const& view, xy_f const& func);
-
-	void for_each_xy(View1r32 const& view, xy_f const& func);
+	void multiply(View1r32 const& view, r32 factor);
 }
 
 
@@ -634,16 +628,10 @@ namespace libimage
 
 namespace libimage
 {
-	void grayscale(Image const& src, gray::Image const& dst);
-
-	void grayscale(Image const& src, gray::View const& dst);
-
-	void grayscale(View const& src, gray::Image const& dst);
-
 	void grayscale(View const& src, gray::View const& dst);
 
 
-	void grayscale(View3r32 const& src, View1r32 const& dst);
+	void grayscale(ViewRGBr32 const& src, View1r32 const& dst);
 }
 
 
@@ -667,9 +655,9 @@ namespace libimage
 
 namespace libimage
 {
-	void alpha_blend(View4r32 const& src, View3r32 const& cur, View3r32 const& dst);
+	void alpha_blend(ViewRGBAr32 const& src, ViewRGBr32 const& cur, ViewRGBr32 const& dst);
 
-	void alpha_blend(View2r32 const& src, View1r32 const& cur, View1r32 const& dst);
+	void alpha_blend(ViewGAr32 const& src, View1r32 const& cur, View1r32 const& dst);
 }
 
 
@@ -685,13 +673,6 @@ namespace libimage
 
 	using r32_to_r32_f = std::function<r32(r32)>;
 
-
-	void transform(gray::Image const& src, gray::Image const& dst, lut_t const& lut);
-
-	void transform(gray::Image const& src, gray::View const& dst, lut_t const& lut);
-
-	void transform(gray::View const& src, gray::Image const& dst, lut_t const& lut);
-
 	void transform(gray::View const& src, gray::View const& dst, lut_t const& lut);
 
 
@@ -703,16 +684,12 @@ namespace libimage
 
 namespace libimage
 {
-	void threshold(gray::Image const& src, gray::Image const& dst, u8 min, u8 max);
-
-	void threshold(gray::Image const& src, gray::View const& dst, u8 min, u8 max);
-
-	void threshold(gray::View const& src, gray::Image const& dst, u8 min, u8 max);
-
 	void threshold(gray::View const& src, gray::View const& dst, u8 min, u8 max);
 
 
 	void threshold(View1r32 const& src, View1r32 const& dst, r32 min, r32 max);
+
+	void threshold(View1r32 const& src_dst, r32 min, r32 max);
 }
 
 
@@ -720,16 +697,12 @@ namespace libimage
 
 namespace libimage
 {
-	void contrast(gray::Image const& src, gray::Image const& dst, u8 min, u8 max);
-
-	void contrast(gray::Image const& src, gray::View const& dst, u8 min, u8 max);
-
-	void contrast(gray::View const& src, gray::Image const& dst, u8 min, u8 max);
-
 	void contrast(gray::View const& src, gray::View const& dst, u8 min, u8 max);
 
 
 	void contrast(View1r32 const& src, View1r32 const& dst, r32 min, r32 max);
+
+	void contrast(View1r32 const& src_dst, r32 min, r32 max);
 }
 
 
@@ -799,9 +772,9 @@ namespace libimage
 
 namespace libimage
 {
-	View3r32 scale_down(View3r32 const& src, Buffer32& buffer);
+	View3r32 scale_down(View3r32 const& src, DeviceBuffer32& buffer);
 
-	View1r32 scale_down(View1r32 const& src, Buffer32& buffer);
+	View1r32 scale_down(View1r32 const& src, DeviceBuffer32& buffer);
 }
 
 

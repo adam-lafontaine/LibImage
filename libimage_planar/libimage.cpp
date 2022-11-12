@@ -2344,14 +2344,14 @@ namespace libimage
 			return dst_high;
 		}
 
-		auto const ratio = (r32)(val - src_low) / (src_high - src_low);
+		auto const ratio = (val - src_low) / (src_high - src_low);
 
 		assert(ratio >= 0.0f);
 		assert(ratio <= 1.0f);
 
 		auto const diff = ratio * (dst_high - dst_low);
 
-		return dst_low + (r32)diff;
+		return dst_low + diff;
 	}
 
 
@@ -3053,8 +3053,8 @@ namespace libimage
 
 	void edges_xy(View1r32 const& src, View2r32 const& xy_dst, r32 threshold)
 	{
-		auto x_dst = select_channel(xy_dst, 0);
-		auto y_dst = select_channel(xy_dst, 1);
+		auto x_dst = select_channel(xy_dst, XY::X);
+		auto y_dst = select_channel(xy_dst, XY::Y);
 
 		assert(verify(src, x_dst));
 		assert(verify(src, y_dst));
@@ -3068,7 +3068,11 @@ namespace libimage
 		inner.y_begin = 1;
 		inner.y_end = src.height - 1;
 
-		auto const grad_func = [threshold](r32 g) { return fabs(g) < threshold ? 0.0f : (g > 0.0f ? 1.0f : -1.0f); };
+		auto const grad_func = [threshold](r32 g) 
+		{ 
+			g = fabs(g);
+			return g < threshold ? 0.0f : 1.0f; 
+		};
 
 		for_each_gradient_3x3(sub_view(src, inner), sub_view(xy_dst, inner), grad_func);
 	}
@@ -3279,25 +3283,46 @@ namespace libimage
 
 namespace libimage
 {
-	void overlay(View3r32 const& src, View1r32 const& binary, Pixel color, View3r32 const& dst)
+	void overlay(ViewRGBr32 const& src, View1r32 const& binary, Pixel color, View3r32 const& dst)
 	{
 		assert(verify(src, binary));
 		assert(verify(src, dst));
 
+		constexpr auto R = id_cast(RGB::R);
+		constexpr auto G = id_cast(RGB::G);
+		constexpr auto B = id_cast(RGB::B);
+
 		auto const row_func = [&](u32 y) 
 		{
-			auto b = row_begin(binary, y);
+			auto bin = row_begin(binary, y);
 
-			for (u32 ch = 0; ch < 3; ++ch)
+			auto sr = channel_row_begin(src, y, R);
+			auto sg = channel_row_begin(src, y, G);
+			auto sb = channel_row_begin(src, y, B);
+
+			auto dr = channel_row_begin(dst, y, R);
+			auto dg = channel_row_begin(dst, y, G);
+			auto db = channel_row_begin(dst, y, B);
+
+			auto r = to_channel_r32(color.channels[R]);
+			auto g = to_channel_r32(color.channels[G]);
+			auto b = to_channel_r32(color.channels[B]);
+
+			for (u32 x = 0; x < src.width; ++x)
 			{
-				auto s = channel_row_begin(src, y, ch);
-				auto d = channel_row_begin(dst, y, ch);
-				auto c = to_channel_r32(color.channels[ch]);
-				for (u32 x = 0; x < src.width; ++x)
+				if(bin[x] > 0.0f)
 				{
-					d[x] = b[x] > 0.0f ? c : s[x];
+					dr[x] = r;
+					dg[x] = g;
+					db[x] = b;
 				}
-			}			
+				else
+				{
+					dr[x] = sr[x];
+					dg[x] = sg[x];
+					db[x] = sb[x];
+				}
+			}		
 		};
 
 		process_rows(src.height, row_func);
