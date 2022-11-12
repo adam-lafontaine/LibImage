@@ -37,9 +37,11 @@ A Basic image processing libray for C++
 * "make build" or "make run"
 
 ## CUDA
-* Typesafe wrapper for preallocating memory on the GPU
-* Developed on the Jetson Nano.  C++14
-* See /CudaTests/cuda_test_main.cpp for demonstration
-* Makefile in /CudaTests/
-* "make setup" to create build directory
+* C++17 for host code
+* C++14 for device code
+* Developed on the Jetson Nano (C++14)
+* Images are converted to planar 32 bit float channels
+* MemoryBuffer classes for managing memory on the host and GPU
+* Makefile in /CudaNanoTests/planar
+* "make setup" to create build and output directories
 * "make build" or "make run"
