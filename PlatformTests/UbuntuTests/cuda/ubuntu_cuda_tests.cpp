@@ -125,7 +125,7 @@ int main()
 	blur_test();
 	gradients_test();
 	edges_test();
-	//corners_test();
+	corners_test();
 	rotate_test();
 	overlay_test();
 	scale_down_test();
@@ -1173,7 +1173,7 @@ void corners_test()
 
 	img::corners(src1, temp2, dst1);
 
-	img::map(dst1, chess, h_buffer);
+	img::map(img::select_channel(temp2, img::XY::X), chess, h_buffer);
 	write_image(chess_img, "corners.bmp");
 
 	img::destroy_image(chess_img);
