@@ -1,6 +1,9 @@
 #include "../utils/stopwatch.hpp"
 #include "../../../libimage_cuda/libimage.hpp"
 
+// Properties > Configuration Properties > CUDA C/C++ > Command Line
+// -std=c++17 -Xcompiler "/std:c++17"
+
 #include <cstdio>
 #include <locale.h>
 #include <string>
