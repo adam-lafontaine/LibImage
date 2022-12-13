@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{0e14c241-245d-4d7c-b7bd-919229d45450}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{273a57c8-7e84-46fc-84c4-f7030d7f0108}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\libimage_cuda">
+      <UniqueIdentifier>{9b6b36a3-51be-4dc9-905c-6d7d1e191424}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\libimage_cuda\device">
+      <UniqueIdentifier>{f22c1510-bff2-4d4d-a7ab-2bac4efa9479}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\device">
+      <UniqueIdentifier>{628e2e29-4b19-41e7-8c82-66da006e00ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\stb_wrapper">
+      <UniqueIdentifier>{7f3fd5ef-65a8-4302-803e-baa3ba130ed8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\stb_wrapper">
+      <UniqueIdentifier>{39981e0f-9248-4116-8c29-d81ef7616bb5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="cuda_tests_main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\libimage_cuda\stb_wrapper\stb_libimage.cpp">
+      <Filter>Source Files\stb_wrapper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\libimage_cuda\libimage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\libimage_cuda\device\cuda_def.cuh">
+      <Filter>Header Files\libimage_cuda\device</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\libimage_cuda\device\device.hpp">
+      <Filter>Header Files\libimage_cuda\device</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\libimage_cuda\stb_wrapper\stb_include.hpp">
+      <Filter>Header Files\stb_wrapper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\libimage_cuda\defines.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\libimage_cuda\include.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\libimage_cuda\libimage.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="..\..\..\libimage_cuda\device\device.cu">
+      <Filter>Source Files\device</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\libimage_cuda\libimage_cuda.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+  </ItemGroup>
+</Project>
