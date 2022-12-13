@@ -1324,6 +1324,17 @@ namespace gpuf
 
 
 	GPU_FUNCTION
+	inline bool is_outer_n_edge(u32 width, u32 height, u32 x, u32 y, u32 n_row_col)
+	{
+		return 
+			y < n_row_col || 
+			y >= height - n_row_col || 
+			x < n_row_col || 
+			x >= width - n_row_col;
+	}
+
+
+	GPU_FUNCTION
 	inline bool is_inner_edge(u32 width, u32 height, u32 x, u32 y)
 	{
 		return 
@@ -1501,27 +1512,24 @@ namespace gpuf
 		constexpr int rx_end = 2;
 
 		u32 w = 0;
-		r32 gx = 0.0f;
-		r32 gy = 0.0f;
+		Point2Dr32 g{};
+		g.x = 0.0f;
+		g.y = 0.0f;
 
 		for (int ry = ry_begin; ry < ry_end; ++ry)
 		{
-			auto p = gpuf::row_offset_begin(view, y, ry);
+			auto s = gpuf::row_offset_begin(view, y, ry);
 
 			for (int rx = rx_begin; rx < rx_end; ++rx)
 			{
-				auto val = (p + rx)[x];
-				gx += val * GRAD_X_3X3[w];
-				gy += val * GRAD_Y_3X3[w];
+				auto val = (s + rx)[x];
+				g.x += val * GRAD_X_3X3[w];
+				g.y += val * GRAD_Y_3X3[w];
 				++w;
 			}
 		}
 
-		Point2Dr32 p{};
-		p.x = gx;
-		p.y = gy;
-
-		return p;
+		return g;
 	}
 
 
@@ -1784,7 +1792,7 @@ namespace gpuf
 	{
 		auto& d = *gpuf::xy_at(dst, x, y);
 
-		if (gpuf::is_outer_edge(dst.width, dst.height, x, y))
+		if (gpuf::is_outer_n_edge(dst.width, dst.height, x, y, 4))
 		{
 			d = 0.0f;
 			return;
@@ -1798,7 +1806,7 @@ namespace gpuf
 		constexpr auto X = gpuf::id_cast(XY::X);
 		constexpr auto Y = gpuf::id_cast(XY::Y);
 
-		constexpr auto norm = (rx_end - rx_begin) * (ry_end - ry_begin);
+		constexpr auto norm = (r32)(rx_end - rx_begin) * (ry_end - ry_begin);
 
 		constexpr auto lambda_min = 0.3f; // TODO: param
 
@@ -1809,9 +1817,6 @@ namespace gpuf
 		r32 b = 0.0f;
 		r32 c = 0.0f;
 
-		r32 x_grad = 0.0f;
-		r32 y_grad = 0.0f;
-
 		for (int ry = ry_begin; ry < ry_end; ++ry)
 		{
 			auto sx = gpuf::row_offset_begin(src_x, y, ry);
@@ -1819,8 +1824,8 @@ namespace gpuf
 
 			for (int rx = rx_begin; rx < rx_end; ++rx)
 			{
-				x_grad = (sx + rx)[x];
-				y_grad = (sy + rx)[x];
+				auto x_grad = (sx + rx)[x];
+				auto y_grad = (sy + rx)[x];
 
 				a += fabsf(x_grad);
 				c += fabsf(y_grad);
@@ -1832,8 +1837,6 @@ namespace gpuf
 			}			
 		}
 
-		// too much for the nano
-
 		a /= norm;
 		b /= norm;
 		c /= norm;
@@ -1842,7 +1845,17 @@ namespace gpuf
 		auto lambda1 = 0.5f * (a + c + bac);
 		auto lambda2 = 0.5f * (a + c - bac);
 
-		d = (lambda1 <= lambda_min || lambda2 <= lambda_min) ? 0.0f : fmaxf(lambda1, lambda2);
+		if (lambda1 <= lambda_min || lambda2 <= lambda_min)
+		{
+			d = 0.0f;
+		}
+		else
+		{
+			d = fmaxf(lambda1, lambda2);
+			assert(false);
+		}
+
+		//d = (lambda1 <= lambda_min || lambda2 <= lambda_min) ? 0.0f : fmaxf(lambda1, lambda2);
 	}
 }
 
