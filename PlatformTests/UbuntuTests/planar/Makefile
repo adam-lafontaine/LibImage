@@ -1,5 +1,7 @@
 GPP := g++-11 -std=c++17
 
+TBB := -ltbb
+
 build := ./build_files
 out := ../../../TestImages/out_files
 
@@ -64,11 +66,11 @@ $(stb_libimage_o): $(stb_libimage_c) $(libimage_h) $(stb_h)
 
 $(libimage_o): $(libimage_c) $(libimage_h)
 	@echo "\n libimage"
-	$(GPP) $(CCFLAGS) -o $@ -c $<
+	$(GPP) $(CCFLAGS) -o $@ -c $< $(TBB)
 
 $(ubuntu_tests_exe): $(object_files)
 	@echo "\n ubuntu_tests"
-	$(GPP) $(CCFLAGS) -o $@ $+ $(LIBRARIES)
+	$(GPP) $(CCFLAGS) -o $@ $+ $(LIBRARIES) $(TBB)
 
 
 build: $(ubuntu_tests_exe)
